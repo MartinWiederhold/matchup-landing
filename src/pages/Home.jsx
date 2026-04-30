@@ -23,7 +23,7 @@ function AppleGlyph(props) {
   return (
     <svg
       viewBox="0 0 384 512"
-      className={props.className ?? 'w-4 h-4 fill-current'}
+      className={props.className ?? 'w-[18px] h-[18px] fill-current'}
       aria-hidden="true"
     >
       <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
@@ -34,12 +34,61 @@ function AppleGlyph(props) {
 function AndroidGlyph(props) {
   return (
     <svg
+      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      className={props.className ?? 'w-4 h-4 fill-current'}
+      fill="currentColor"
+      className={props.className ?? 'w-[18px] h-[18px] fill-current'}
       aria-hidden="true"
     >
-      <path d="M17.523 15.341a.96.96 0 1 1 0-1.92.96.96 0 0 1 0 1.92m-11.046 0a.96.96 0 1 1 0-1.92.96.96 0 0 1 0 1.92m11.39-6.05 1.916-3.319a.4.4 0 0 0-.146-.546.4.4 0 0 0-.547.146l-1.94 3.36a12.06 12.06 0 0 0-9.39 0L5.86 5.572a.4.4 0 0 0-.546-.146.4.4 0 0 0-.146.546l1.916 3.319C3.798 11.034 1.616 14.42 1.27 18.42h21.46c-.346-4-2.528-7.386-5.863-9.129" />
+      <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.4-.59-2.93-.92-4.47-.92s-3.07.33-4.47.92L5.65 5.67c-.19-.29-.54-.38-.83-.22-.31.16-.43.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z" />
     </svg>
+  );
+}
+
+/// Subtle background: a tennis ball flies along a dashed bezier curve.
+function TennisBallBackdrop() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+    >
+      <svg
+        viewBox="0 0 1200 600"
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-0 w-full h-full opacity-[0.18]"
+      >
+        {/* Trajectory */}
+        <path
+          id="ballPath"
+          d="M -80 520 Q 350 60 1280 30"
+          stroke="#1A1A1A"
+          strokeWidth="1.4"
+          strokeDasharray="6 9"
+          fill="none"
+        />
+        {/* The ball — yellow-green disc with two seam curves */}
+        <g>
+          <circle cx="0" cy="0" r="16" fill="#D7E84F" />
+          <path
+            d="M -13 -4 Q 0 -14 13 -4"
+            stroke="#FFFFFF"
+            strokeWidth="1.6"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M -13 5 Q 0 15 13 5"
+            stroke="#FFFFFF"
+            strokeWidth="1.6"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <animateMotion dur="9s" repeatCount="indefinite" rotate="auto">
+            <mpath xlinkHref="#ballPath" />
+          </animateMotion>
+        </g>
+      </svg>
+    </div>
   );
 }
 
@@ -60,8 +109,9 @@ export default function Home() {
       </header>
 
       {/* Hero — text left, mockup right */}
-      <section className="px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-28 overflow-hidden">
+        <TennisBallBackdrop />
+        <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
               Tennis · Padel · Schweiz
@@ -83,7 +133,7 @@ export default function Home() {
               <a
                 href="/matchup.apk"
                 download
-                className="inline-flex items-center justify-center gap-2.5 border border-line text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
+                className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
               >
                 <AndroidGlyph />
                 Android Download
