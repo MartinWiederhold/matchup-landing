@@ -23,7 +23,7 @@ function AppleGlyph(props) {
   return (
     <svg
       viewBox="0 0 384 512"
-      className={props.className ?? 'w-[18px] h-[18px] fill-current'}
+      className={props.className ?? 'w-5 h-5 fill-current'}
       aria-hidden="true"
     >
       <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
@@ -36,13 +36,15 @@ function AndroidGlyph(props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={props.className ?? 'w-[18px] h-[18px]'}
+      className={props.className ?? 'w-5 h-5'}
       aria-hidden="true"
     >
       <rect x="5" y="11" width="14" height="10" rx="2" />
@@ -58,6 +60,8 @@ function AndroidGlyph(props) {
 }
 
 /// Subtle background: a tennis ball flies along a dashed bezier curve.
+/// `href` + `xlinkHref` are both set so it works in older Safari and modern
+/// Chrome alike (some engines have dropped xlink:* support).
 function TennisBallBackdrop() {
   return (
     <div
@@ -69,7 +73,6 @@ function TennisBallBackdrop() {
         preserveAspectRatio="xMidYMid slice"
         className="absolute inset-0 w-full h-full"
       >
-        {/* Trajectory — barely visible */}
         <path
           id="ballPath"
           d="M -80 520 Q 350 60 1280 30"
@@ -79,7 +82,6 @@ function TennisBallBackdrop() {
           fill="none"
           opacity="0.08"
         />
-        {/* The ball — yellow-green disc with two seam curves */}
         <g opacity="0.18">
           <circle cx="0" cy="0" r="14" fill="#D7E84F" />
           <path
@@ -104,13 +106,17 @@ function TennisBallBackdrop() {
             keyTimes="0;1"
             keySplines="0.42 0 0.58 1"
           >
-            <mpath xlinkHref="#ballPath" />
+            <mpath href="#ballPath" xlinkHref="#ballPath" />
           </animateMotion>
         </g>
       </svg>
     </div>
   );
 }
+
+// Bumped per-deploy cache-buster so updates always pull a fresh asset
+// even when CDN/browser caches think the URL is unchanged.
+const SCREENSHOT_SRC = '/app-screenshot.jpg?v=4';
 
 export default function Home() {
   return (
@@ -161,7 +167,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mockup */}
+          {/* Mockup — wider white inner ring for a real-iPhone look */}
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
               <div
@@ -170,11 +176,11 @@ export default function Home() {
               />
               <div className="relative w-[260px] sm:w-[300px] aspect-[9/19.5] rounded-[48px] bg-ink p-[10px] shadow-2xl shadow-black/30 ring-1 ring-black/5">
                 <div className="absolute left-1/2 -translate-x-1/2 top-[18px] w-28 h-6 rounded-full bg-ink z-10" />
-                <div className="w-full h-full rounded-[40px] bg-white p-[5px]">
+                <div className="w-full h-full rounded-[40px] bg-white p-[7px]">
                   <img
-                    src="/app-screenshot.png"
+                    src={SCREENSHOT_SRC}
                     alt="Matchup App"
-                    className="w-full h-full object-cover rounded-[36px]"
+                    className="w-full h-full object-cover rounded-[34px]"
                   />
                 </div>
               </div>
