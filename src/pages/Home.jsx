@@ -19,6 +19,30 @@ const features = [
   },
 ];
 
+function AppleGlyph(props) {
+  return (
+    <svg
+      viewBox="0 0 384 512"
+      className={props.className ?? 'w-4 h-4 fill-current'}
+      aria-hidden="true"
+    >
+      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+    </svg>
+  );
+}
+
+function AndroidGlyph(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={props.className ?? 'w-4 h-4 fill-current'}
+      aria-hidden="true"
+    >
+      <path d="M17.523 15.341a.96.96 0 1 1 0-1.92.96.96 0 0 1 0 1.92m-11.046 0a.96.96 0 1 1 0-1.92.96.96 0 0 1 0 1.92m11.39-6.05 1.916-3.319a.4.4 0 0 0-.146-.546.4.4 0 0 0-.547.146l-1.94 3.36a12.06 12.06 0 0 0-9.39 0L5.86 5.572a.4.4 0 0 0-.546-.146.4.4 0 0 0-.146.546l1.916 3.319C3.798 11.034 1.616 14.42 1.27 18.42h21.46c-.346-4-2.528-7.386-5.863-9.129" />
+    </svg>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-ink">
@@ -35,46 +59,54 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-6">
-            Tennis · Padel · Schweiz
-          </p>
-          <h1 className="text-5xl sm:text-7xl font-extrabold leading-[1.02] tracking-tight">
-            Matchup
-          </h1>
-          <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl mx-auto leading-relaxed">
-            Finde deinen perfekten Spielpartner.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="#download"
-              className="inline-flex items-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
-            >
-              <svg viewBox="0 0 384 512" className="w-4 h-4 fill-current" aria-hidden="true">
-                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-              </svg>
-              App Store · bald
-            </a>
-            <a
-              href="/matchup.apk"
-              download
-              className="inline-flex items-center gap-2.5 border border-line text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
-            >
-              Android Download
-            </a>
+      {/* Hero — text left, mockup right */}
+      <section className="px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
+              Tennis · Padel · Schweiz
+            </p>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.02] tracking-tight">
+              Matchup
+            </h1>
+            <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl lg:max-w-none leading-relaxed mx-auto lg:mx-0">
+              Finde deinen perfekten Spielpartner.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:items-start items-stretch sm:justify-start justify-center">
+              <a
+                href="#download"
+                className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
+              >
+                <AppleGlyph />
+                App Store · bald
+              </a>
+              <a
+                href="/matchup.apk"
+                download
+                className="inline-flex items-center justify-center gap-2.5 border border-line text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
+              >
+                <AndroidGlyph />
+                Android Download
+              </a>
+            </div>
           </div>
-        </div>
 
-        {/* iPhone mockup */}
-        <div className="mt-16 flex justify-center">
-          <div className="relative">
-            <div aria-hidden className="absolute inset-0 -z-10 rounded-[60px] blur-3xl opacity-20 bg-ink" />
-            <div className="relative w-[280px] sm:w-[320px] aspect-[9/19.5] rounded-[48px] bg-ink p-[10px] shadow-2xl shadow-black/30 ring-1 ring-black/5">
-              <div className="absolute left-1/2 -translate-x-1/2 top-[18px] w-28 h-6 rounded-full bg-ink z-10" />
-              <div className="w-full h-full rounded-[40px] overflow-hidden bg-white">
-                <img src="/app-screenshot.png" alt="Matchup App" className="w-full h-full object-cover" />
+          {/* Mockup */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="relative">
+              <div
+                aria-hidden
+                className="absolute inset-0 -z-10 rounded-[60px] blur-3xl opacity-20 bg-ink"
+              />
+              <div className="relative w-[260px] sm:w-[300px] aspect-[9/19.5] rounded-[48px] bg-ink p-[10px] shadow-2xl shadow-black/30 ring-1 ring-black/5">
+                <div className="absolute left-1/2 -translate-x-1/2 top-[18px] w-28 h-6 rounded-full bg-ink z-10" />
+                <div className="w-full h-full rounded-[40px] overflow-hidden bg-white">
+                  <img
+                    src="/app-screenshot.png"
+                    alt="Matchup App"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -111,13 +143,12 @@ export default function Home() {
             Bereit zu spielen?
           </h2>
           <p className="text-muted mt-4 max-w-xl mx-auto">
-            Matchup startet bald im App Store. Android-User können die App schon jetzt direkt herunterladen.
+            Matchup startet bald im App Store. Android-User können die App schon jetzt
+            direkt herunterladen.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <span className="inline-flex items-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full">
-              <svg viewBox="0 0 384 512" className="w-4 h-4 fill-current" aria-hidden="true">
-                <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-              </svg>
+              <AppleGlyph />
               App Store · bald
             </span>
             <a
@@ -125,12 +156,16 @@ export default function Home() {
               download
               className="inline-flex items-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
             >
+              <AndroidGlyph />
               Android Download
             </a>
           </div>
           <p className="mt-6 text-xs text-muted">
             Beta-Zugang oder Fragen?{' '}
-            <a href="mailto:wiederhold.martin@web.de" className="underline hover:text-ink">
+            <a
+              href="mailto:wiederhold.martin@web.de"
+              className="underline hover:text-ink"
+            >
               wiederhold.martin@web.de
             </a>
           </p>
