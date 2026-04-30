@@ -31,16 +31,28 @@ function AppleGlyph(props) {
   );
 }
 
+/// Outline-style Android robot icon (Lucide-inspired).
 function AndroidGlyph(props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      fill="currentColor"
-      className={props.className ?? 'w-[18px] h-[18px] fill-current'}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={props.className ?? 'w-[18px] h-[18px]'}
       aria-hidden="true"
     >
-      <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.4-.59-2.93-.92-4.47-.92s-3.07.33-4.47.92L5.65 5.67c-.19-.29-.54-.38-.83-.22-.31.16-.43.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z" />
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+      <circle cx="9" cy="15" r="1" />
+      <circle cx="15" cy="15" r="1" />
+      <path d="M3 13h1" />
+      <path d="M20 13h1" />
+      <path d="M7 3l1.5 3" />
+      <path d="M17 3l-1.5 3" />
     </svg>
   );
 }
@@ -55,9 +67,9 @@ function TennisBallBackdrop() {
       <svg
         viewBox="0 0 1200 600"
         preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 w-full h-full opacity-[0.18]"
+        className="absolute inset-0 w-full h-full"
       >
-        {/* Trajectory */}
+        {/* Trajectory — barely visible */}
         <path
           id="ballPath"
           d="M -80 520 Q 350 60 1280 30"
@@ -65,25 +77,33 @@ function TennisBallBackdrop() {
           strokeWidth="1.4"
           strokeDasharray="6 9"
           fill="none"
+          opacity="0.08"
         />
         {/* The ball — yellow-green disc with two seam curves */}
-        <g>
-          <circle cx="0" cy="0" r="16" fill="#D7E84F" />
+        <g opacity="0.18">
+          <circle cx="0" cy="0" r="14" fill="#D7E84F" />
           <path
-            d="M -13 -4 Q 0 -14 13 -4"
+            d="M -11 -3 Q 0 -12 11 -3"
             stroke="#FFFFFF"
-            strokeWidth="1.6"
+            strokeWidth="1.5"
             fill="none"
             strokeLinecap="round"
           />
           <path
-            d="M -13 5 Q 0 15 13 5"
+            d="M -11 4 Q 0 13 11 4"
             stroke="#FFFFFF"
-            strokeWidth="1.6"
+            strokeWidth="1.5"
             fill="none"
             strokeLinecap="round"
           />
-          <animateMotion dur="9s" repeatCount="indefinite" rotate="auto">
+          <animateMotion
+            dur="8s"
+            repeatCount="indefinite"
+            rotate="auto"
+            calcMode="spline"
+            keyTimes="0;1"
+            keySplines="0.42 0 0.58 1"
+          >
             <mpath xlinkHref="#ballPath" />
           </animateMotion>
         </g>
@@ -150,11 +170,11 @@ export default function Home() {
               />
               <div className="relative w-[260px] sm:w-[300px] aspect-[9/19.5] rounded-[48px] bg-ink p-[10px] shadow-2xl shadow-black/30 ring-1 ring-black/5">
                 <div className="absolute left-1/2 -translate-x-1/2 top-[18px] w-28 h-6 rounded-full bg-ink z-10" />
-                <div className="w-full h-full rounded-[40px] overflow-hidden bg-white">
+                <div className="w-full h-full rounded-[40px] bg-white p-[5px]">
                   <img
                     src="/app-screenshot.png"
                     alt="Matchup App"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-[36px]"
                   />
                 </div>
               </div>
