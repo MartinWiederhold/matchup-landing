@@ -107,41 +107,89 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Realistic tennis ball — flat green disc with subtle radial highlight
-/// for depth, white border, and two white seam curves.
+/// Photoreal tennis ball — radial gradient body, two J-shaped seams that
+/// match the wrap of a real ball, and a soft specular highlight.
 function TennisBall({ className = '' }) {
   return (
     <svg
-      viewBox="0 0 90 90"
+      viewBox="0 0 120 120"
       className={className}
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="mu-ball-grad" cx="36%" cy="32%" r="68%">
-          <stop offset="0%"  stopColor="#E8FF66" />
-          <stop offset="55%" stopColor="#C8E611" />
-          <stop offset="100%" stopColor="#8DA00A" />
+        <radialGradient id="mu-ball-body" cx="40%" cy="32%" r="65%">
+          <stop offset="0%"   stopColor="#FFFF7A" />
+          <stop offset="35%"  stopColor="#E8E800" />
+          <stop offset="70%"  stopColor="#C8D200" />
+          <stop offset="100%" stopColor="#7E8A05" />
+        </radialGradient>
+        {/* Subtle inner darkening on the lower-right for spherical shading */}
+        <radialGradient id="mu-ball-shade" cx="70%" cy="78%" r="55%">
+          <stop offset="0%"   stopColor="#000" stopOpacity="0.22" />
+          <stop offset="60%"  stopColor="#000" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <circle cx="45" cy="45" r="42" fill="url(#mu-ball-grad)" stroke="#fff" strokeWidth="2" />
-      <path d="M 15 45 Q 45 20 75 45"  fill="none" stroke="#fff" strokeWidth="2.5" opacity="0.9" strokeLinecap="round" />
-      <path d="M 15 45 Q 45 70 75 45"  fill="none" stroke="#fff" strokeWidth="2.5" opacity="0.9" strokeLinecap="round" />
+      {/* Body */}
+      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-body)" />
+      {/* Spherical shading */}
+      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-shade)" />
+      {/* Two J-shaped seams — left side curves into the centre and back out,
+          right side mirrors. Outer light line + inner thin shadow give the
+          seam itself a tiny carved-in depth. */}
+      <path
+        d="M 18 35 Q 42 60 18 85"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        opacity="0.95"
+      />
+      <path
+        d="M 18 35 Q 42 60 18 85"
+        fill="none"
+        stroke="#000000"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        opacity="0.18"
+      />
+      <path
+        d="M 102 35 Q 78 60 102 85"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        opacity="0.95"
+      />
+      <path
+        d="M 102 35 Q 78 60 102 85"
+        fill="none"
+        stroke="#000000"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        opacity="0.18"
+      />
       {/* Specular highlight */}
-      <ellipse cx="32" cy="28" rx="12" ry="7" fill="#fff" opacity="0.28" />
+      <ellipse cx="42" cy="32" rx="14" ry="8" fill="#FFFFFF" opacity="0.32" />
+      {/* Tiny secondary highlight for extra glossiness */}
+      <ellipse cx="36" cy="28" rx="5" ry="3" fill="#FFFFFF" opacity="0.55" />
     </svg>
   );
 }
 
-/// Single slowly-rotating tennis ball, sitting in the upper-right corner
-/// of the hero (partially behind the carousel on lg).
+/// One photoreal tennis ball, bottom-left of the hero. The wrapper bobs
+/// up and down (mu-ball-float, 4s) while the inner element rotates
+/// continuously (mu-ball-spin, 8s).
 function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
-      <div className="absolute top-[10%] right-[6%] w-[64px] h-[64px] sm:w-[70px] sm:h-[70px] opacity-85 mu-ball-spin">
-        <TennisBall className="w-full h-full" />
+      <div className="absolute bottom-[12%] left-[3%] sm:left-[6%] w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] opacity-90 mu-ball-float">
+        <div className="w-full h-full mu-ball-spin">
+          <TennisBall className="w-full h-full" />
+        </div>
       </div>
     </div>
   );

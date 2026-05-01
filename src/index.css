@@ -14,18 +14,30 @@ body {
   color: #1a1a1a;
 }
 
-/* ── Hero tennis ball: slow continuous spin ────────────────── */
+/* ── Hero tennis ball: float (Y bob) on the wrapper, spin on the ball ── */
+
+@keyframes mu-ball-float {
+  0%, 100% { transform: translateY(-8px); }
+  50%      { transform: translateY( 8px); }
+}
+
 @keyframes mu-ball-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
+.mu-ball-float {
+  animation: mu-ball-float 4s ease-in-out infinite;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.22));
+  will-change: transform;
+}
+
 .mu-ball-spin {
   animation: mu-ball-spin 8s linear infinite;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.18));
   will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mu-ball-float,
   .mu-ball-spin { animation: none; }
 }
