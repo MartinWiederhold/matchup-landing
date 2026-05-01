@@ -194,23 +194,11 @@ function MockupCarousel() {
 
   return (
     <div
-      className="relative w-full max-w-[820px] mx-auto"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-    >
-      <div className="flex items-center justify-center gap-1">
-        <button
-          type="button"
-          aria-label="Previous"
-          onClick={prev}
-          className="shrink-0 w-7 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-
-        <div className="flex-1 max-w-[700px] overflow-hidden">
+      className="relative w-full max-w-[920px] mx-auto"
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+      >
+        <div className="relative w-full max-w-[800px] mx-auto overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
@@ -225,35 +213,45 @@ function MockupCarousel() {
               />
             ))}
           </div>
+
+          {/* Chevrons hug the mockup edges */}
+          <button
+            type="button"
+            aria-label="Previous"
+            onClick={prev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label="Next"
+            onClick={next}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
         </div>
 
-        <button
-          type="button"
-          aria-label="Next"
-          onClick={next}
-          className="shrink-0 w-7 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+        <div className="mt-5 flex items-center justify-center gap-2">
+          {MOCKUPS.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Slide ${i + 1}`}
+              onClick={() => setIndex(i)}
+              className={`w-2 h-2 rounded-full transition ${
+                i === index ? 'bg-ink' : 'bg-[#D0D0D0] hover:bg-[#999]'
+              }`}
+            />
+          ))}
+        </div>
       </div>
-
-      <div className="mt-5 flex items-center justify-center gap-2">
-        {MOCKUPS.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label={`Slide ${i + 1}`}
-            onClick={() => setIndex(i)}
-            className={`w-2 h-2 rounded-full transition ${
-              i === index ? 'bg-ink' : 'bg-[#D0D0D0] hover:bg-[#999]'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
+    );
 }
 
 const APP_STORE_URL =
@@ -264,7 +262,7 @@ export default function Home() {
   const t = COPY[lang];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-ink">
+    <div className="min-h-screen flex flex-col bg-white text-ink">
       {/* Navbar */}
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">

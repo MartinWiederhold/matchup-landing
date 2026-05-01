@@ -41,12 +41,13 @@ export default function TennisBalls3D() {
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
-    // Warm studio lighting — verbatim from courtswiss.
-    scene.add(new THREE.AmbientLight(0xfff8e7, 0.7));
-    const key = new THREE.DirectionalLight(0xfffaf0, 1.0);
+    // Brighter studio lighting — pure white background needs stronger
+    // ambient + key so the felt reads as vivid neon yellow.
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
     key.position.set(-2, 4, 5);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xfff0d4, 0.35);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.55);
     fill.position.set(3, 0, -3);
     scene.add(fill);
 
@@ -87,8 +88,8 @@ export default function TennisBalls3D() {
       const group = new THREE.Group();
       const geo = new THREE.SphereGeometry(radius, 64, 64);
       const mat = new THREE.MeshStandardMaterial({
-        color: 0xc6d631,
-        roughness: 0.95,
+        color: 0xdfff00,
+        roughness: 0.7,
         metalness: 0.0,
         bumpMap: bumpTex,
         bumpScale: 0.01 * radius,
@@ -111,28 +112,30 @@ export default function TennisBalls3D() {
       return group;
     }
 
-    const r = 0.42;
+    // Smaller balls (was 0.42) and pushed further out so each one is
+    // partially clipped by the page edge — the courtswiss "peek-in" feel.
+    const r = 0.34;
     const balls = [];
 
     if (isMobile) {
-      const mobileR = r * 0.7;
+      const mobileR = r * 0.8;
       const ballM = makeBall(mobileR);
       const vFov = (camera.fov * Math.PI) / 180;
       const visH = 2 * Math.tan(vFov / 2) * camera.position.z;
       const visW = visH * camera.aspect;
-      const mx = visW * 0.32;
-      const myBase = visH * 0.42;
+      const mx = visW * 0.36;
+      const myBase = visH * 0.4;
       ballM.position.set(mx, myBase, 0);
       scene.add(ballM);
       balls.push({ obj: ballM, base: myBase, kind: 'm' });
     } else {
       const ballL = makeBall(r);
-      ballL.position.set(-3.2, 0.5, 0);
+      ballL.position.set(-3.7, 0.5, 0);
       scene.add(ballL);
       balls.push({ obj: ballL, base: 0.5, kind: 'l' });
 
       const ballR = makeBall(r);
-      ballR.position.set(3.2, -0.4, 0);
+      ballR.position.set(3.7, -0.4, 0);
       scene.add(ballR);
       balls.push({ obj: ballR, base: -0.4, kind: 'r' });
     }
