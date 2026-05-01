@@ -10,6 +10,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #ffffff;
+  /* Warm off-white from courtswiss/lineup — pure white kills the warm
+     ball lighting and makes the felt look olive instead of yellow. */
+  background: #FAF9F6;
   color: #1a1a1a;
 }

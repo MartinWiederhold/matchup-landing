@@ -264,7 +264,7 @@ export default function Home() {
   const t = COPY[lang];
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-ink">
+    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-ink">
       {/* Navbar */}
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -276,42 +276,47 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero — centered, with 3D balls in the background */}
+      {/* Hero — split on lg+ (text left, mockup right), stacked + centered
+          on mobile. 3D tennis balls float in the background canvas. */}
       <section className="relative">
         <TennisBalls3D />
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-6">
-            {t.eyebrow}
-          </p>
-          <h1 className="text-6xl sm:text-7xl lg:text-[92px] font-extrabold leading-[1.02] tracking-tight">
-            {t.title}
-          </h1>
-          <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl mx-auto leading-relaxed">
-            {t.tagline}
-          </p>
+        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-16 sm:pt-24 sm:pb-24">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="text-center lg:text-left">
+              <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
+                {t.eyebrow}
+              </p>
+              <h1 className="text-6xl sm:text-7xl lg:text-[88px] font-extrabold leading-[1.02] tracking-tight">
+                {t.title}
+              </h1>
+              <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl lg:max-w-none mx-auto lg:mx-0 leading-relaxed">
+                {t.tagline}
+              </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-center">
-            <a
-              href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
-            >
-              <AppleGlyph />
-              {t.appStore}
-            </a>
-            <a
-              href="/matchup.apk"
-              download
-              className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
-            >
-              <AndroidGlyph />
-              {t.androidDownload}
-            </a>
-          </div>
+              <div className="mt-10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-center lg:justify-start">
+                <a
+                  href={APP_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
+                >
+                  <AppleGlyph />
+                  {t.appStore}
+                </a>
+                <a
+                  href="/matchup.apk"
+                  download
+                  className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
+                >
+                  <AndroidGlyph />
+                  {t.androidDownload}
+                </a>
+              </div>
+            </div>
 
-          <div className="mt-16">
-            <MockupCarousel />
+            <div className="mt-4 lg:mt-0">
+              <MockupCarousel />
+            </div>
           </div>
         </div>
       </section>
