@@ -107,54 +107,112 @@ function AndroidGlyph(props) {
   );
 }
 
+/// Realistic tennis ball SVG with radial gradient highlight + white seams.
+/// `uid` makes the gradient id unique per instance.
+function TennisBall({ uid, className = '' }) {
+  const gradId = `mu-ball-${uid}`;
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className={className}
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id={gradId} cx="32%" cy="28%" r="78%">
+          <stop offset="0%" stopColor="#F5FF8A" />
+          <stop offset="55%" stopColor="#CDE611" />
+          <stop offset="100%" stopColor="#7E9408" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill={`url(#${gradId})`} />
+      {/* Soft inner shadow on the lower-right quadrant for depth */}
+      <circle cx="50" cy="50" r="48" fill="black" opacity="0.05" />
+      {/* Two seam curves */}
+      <path
+        d="M 8 52 Q 50 14 92 52"
+        stroke="white"
+        strokeWidth="2.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 8 52 Q 50 90 92 52"
+        stroke="white"
+        strokeWidth="2.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* Specular highlight */}
+      <ellipse
+        cx="32"
+        cy="28"
+        rx="14"
+        ry="9"
+        fill="white"
+        opacity="0.25"
+      />
+    </svg>
+  );
+}
+
+/// Floating tennis-ball backdrop. Three balls with staggered float + spin
+/// timings and a subtle dashed trajectory hint at the back.
 function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
+      {/* Subtle trajectory hint */}
       <svg
         viewBox="0 0 1200 600"
         preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full opacity-[0.08]"
       >
         <path
-          id="ballPath"
           d="M -80 520 Q 350 60 1280 30"
           stroke="#1A1A1A"
           strokeWidth="1.4"
           strokeDasharray="6 9"
           fill="none"
-          opacity="0.08"
         />
-        <g opacity="0.18">
-          <circle cx="0" cy="0" r="14" fill="#D7E84F" />
-          <path
-            d="M -11 -3 Q 0 -12 11 -3"
-            stroke="#FFFFFF"
-            strokeWidth="1.5"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <path
-            d="M -11 4 Q 0 13 11 4"
-            stroke="#FFFFFF"
-            strokeWidth="1.5"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <animateMotion
-            dur="8s"
-            repeatCount="indefinite"
-            rotate="auto"
-            calcMode="spline"
-            keyTimes="0;1"
-            keySplines="0.42 0 0.58 1"
-          >
-            <mpath href="#ballPath" xlinkHref="#ballPath" />
-          </animateMotion>
-        </g>
       </svg>
+
+      {/* Hauptball — top-right, partially behind the mockup */}
+      <div
+        className="absolute hidden sm:block w-[110px] h-[110px] lg:w-[130px] lg:h-[130px] right-[6%] top-[8%] opacity-90 mu-tennisball"
+        style={{
+          '--mu-float-dur': '5s',
+          '--mu-spin-dur': '14s',
+          '--mu-delay': '0s',
+        }}
+      >
+        <TennisBall uid="a" className="w-full h-full" />
+      </div>
+
+      {/* Mid ball — left-center */}
+      <div
+        className="absolute hidden md:block w-[60px] h-[60px] lg:w-[70px] lg:h-[70px] left-[6%] top-[55%] opacity-80 mu-tennisball"
+        style={{
+          '--mu-float-dur': '6.5s',
+          '--mu-spin-dur': '20s',
+          '--mu-delay': '-2s',
+        }}
+      >
+        <TennisBall uid="b" className="w-full h-full" />
+      </div>
+
+      {/* Far ball — small, mid-right for depth */}
+      <div
+        className="absolute hidden lg:block w-[42px] h-[42px] right-[42%] bottom-[15%] opacity-70 mu-tennisball"
+        style={{
+          '--mu-float-dur': '7.5s',
+          '--mu-spin-dur': '24s',
+          '--mu-delay': '-4s',
+        }}
+      >
+        <TennisBall uid="c" className="w-full h-full" />
+      </div>
     </div>
   );
 }
@@ -249,11 +307,11 @@ export default function Home() {
           </div>
 
           {/* Mockup — bare image, the export already includes a phone frame */}
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center lg:justify-center">
             <img
               src={SCREENSHOT_SRC}
               alt="Matchup App"
-              className="w-full max-w-[420px] h-auto object-contain"
+              className="w-full max-w-[480px] sm:max-w-[520px] h-auto object-contain"
             />
           </div>
         </div>

@@ -13,3 +13,44 @@ body {
   background: #ffffff;
   color: #1a1a1a;
 }
+
+/* ── Tennis ball backdrop animations ───────────────────────── */
+/* `float` = subtle vertical bob, `spin` = slow continuous rotation. */
+/* Combined on the same element via `transform: translateY() rotate()` */
+/* to keep both transforms on a single matrix. */
+
+@keyframes mu-float-a {
+  0%, 100% { transform: translate3d(0, -10px, 0) rotate(var(--mu-rot, 0deg)); }
+  50%      { transform: translate3d(0,  10px, 0) rotate(var(--mu-rot, 0deg)); }
+}
+
+@keyframes mu-spin {
+  from { --mu-rot: 0deg; }
+  to   { --mu-rot: 360deg; }
+}
+
+@property --mu-rot {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.mu-tennisball {
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.18));
+  animation:
+    mu-float-a var(--mu-float-dur, 5s) ease-in-out infinite,
+    mu-spin    var(--mu-spin-dur,  16s) linear      infinite;
+  animation-delay: var(--mu-delay, 0s);
+  will-change: transform;
+}
+
+/* Safari fallback (no @property): plain rotate-only spin */
+@supports not (background: paint(something)) {
+  @keyframes mu-spin-fb {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .mu-tennisball {
+    animation: mu-spin-fb var(--mu-spin-dur, 16s) linear infinite;
+  }
+}
