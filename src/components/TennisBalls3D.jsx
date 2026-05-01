@@ -16,6 +16,12 @@ export default function TennisBalls3D() {
     let frame = 0;
     let stopped = false;
 
+    // CourtSwiss runs Three.js r128, which used the legacy linear color
+    // pipeline. r152+ enables sRGB output by default, which makes hex
+    // colors like 0xC6D631 render visibly darker. Restore the r128
+    // behaviour so the felt yellow lands at the same brightness.
+    THREE.ColorManagement.enabled = false;
+
     const isMobile = window.innerWidth < 768;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -33,6 +39,7 @@ export default function TennisBalls3D() {
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     // Warm studio lighting — verbatim from courtswiss.netlify.app/app/.
     scene.add(new THREE.AmbientLight(0xfff8e7, 0.7));
