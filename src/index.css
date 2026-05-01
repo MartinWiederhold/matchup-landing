@@ -14,43 +14,18 @@ body {
   color: #1a1a1a;
 }
 
-/* ── Tennis ball bounce: rolls in from left, bounces with decaying
-       amplitude, lands next to the mockup. Plays once on load. ─── */
-
-@keyframes mu-ball-bounce {
-  0%   { transform: translateX(-6vw) translateY(0)    rotate(0deg);    animation-timing-function: ease-out; }
-  10%  { transform: translateX(10vw) translateY(-150px) rotate(180deg); animation-timing-function: ease-in;  }
-  20%  { transform: translateX(20vw) translateY(0)    rotate(360deg);  animation-timing-function: ease-out; }
-  30%  { transform: translateX(30vw) translateY(-80px)  rotate(540deg); animation-timing-function: ease-in;  }
-  40%  { transform: translateX(40vw) translateY(0)    rotate(720deg);  animation-timing-function: ease-out; }
-  48%  { transform: translateX(45vw) translateY(-40px)  rotate(840deg); animation-timing-function: ease-in;  }
-  56%  { transform: translateX(50vw) translateY(0)    rotate(960deg);  animation-timing-function: ease-out; }
-  62%  { transform: translateX(53vw) translateY(-15px)  rotate(1020deg); animation-timing-function: ease-in; }
-  68%  { transform: translateX(55vw) translateY(0)    rotate(1080deg); }
-  100% { transform: translateX(55vw) translateY(0)    rotate(1080deg); }
+/* ── Hero tennis ball: slow continuous spin ────────────────── */
+@keyframes mu-ball-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-.mu-bouncing-ball {
-  animation: mu-ball-bounce 4s 1s ease-in-out 1 forwards;
-  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.18));
+.mu-ball-spin {
+  animation: mu-ball-spin 8s linear infinite;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.18));
   will-change: transform;
 }
 
-/* When the ball lands (≈68% of 4s + 1s delay = 3.72s), the mockup gives
-   a tiny scale bump so the impact feels physical. */
-@keyframes mu-mockup-bounce {
-  0%, 68%  { transform: scale(1);    }
-  72%      { transform: scale(1.02); }
-  78%      { transform: scale(1);    }
-  100%     { transform: scale(1);    }
-}
-
-.mu-mockup-bounce {
-  animation: mu-mockup-bounce 4s 1s ease-out 1 forwards;
-  transform-origin: center center;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .mu-bouncing-ball,
-  .mu-mockup-bounce { animation: none; }
+  .mu-ball-spin { animation: none; }
 }

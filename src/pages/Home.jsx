@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Footer from '../components/Footer.jsx';
 
 const COPY = {
@@ -107,7 +107,8 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Small, flat tennis ball — yellow-green disc with two white seam curves.
+/// Realistic tennis ball — flat green disc with subtle radial highlight
+/// for depth, white border, and two white seam curves.
 function TennisBall({ className = '' }) {
   return (
     <svg
@@ -115,41 +116,123 @@ function TennisBall({ className = '' }) {
       className={className}
       aria-hidden="true"
     >
-      <circle cx="45" cy="45" r="42" fill="#C8E611" stroke="#fff" strokeWidth="2" />
-      <path
-        d="M 15 45 Q 45 20 75 45"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2.5"
-        opacity="0.85"
-        strokeLinecap="round"
-      />
-      <path
-        d="M 15 45 Q 45 70 75 45"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2.5"
-        opacity="0.85"
-        strokeLinecap="round"
-      />
+      <defs>
+        <radialGradient id="mu-ball-grad" cx="36%" cy="32%" r="68%">
+          <stop offset="0%"  stopColor="#E8FF66" />
+          <stop offset="55%" stopColor="#C8E611" />
+          <stop offset="100%" stopColor="#8DA00A" />
+        </radialGradient>
+      </defs>
+      <circle cx="45" cy="45" r="42" fill="url(#mu-ball-grad)" stroke="#fff" strokeWidth="2" />
+      <path d="M 15 45 Q 45 20 75 45"  fill="none" stroke="#fff" strokeWidth="2.5" opacity="0.9" strokeLinecap="round" />
+      <path d="M 15 45 Q 45 70 75 45"  fill="none" stroke="#fff" strokeWidth="2.5" opacity="0.9" strokeLinecap="round" />
+      {/* Specular highlight */}
+      <ellipse cx="32" cy="28" rx="12" ry="7" fill="#fff" opacity="0.28" />
     </svg>
   );
 }
 
-/// One-shot bounce: ball rolls in from the left, bounces with decaying
-/// amplitude and lands next to the mockup. Plays once on load.
+/// Single slowly-rotating tennis ball, sitting in the upper-right corner
+/// of the hero (partially behind the carousel on lg).
 function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
-      {/* The ball sits just above the bottom edge of the hero so the
-          parabolic arcs read like real bounces on a surface. */}
-      <div
-        className="absolute bottom-[22%] left-0 w-[34px] h-[34px] mu-bouncing-ball"
-      >
+      <div className="absolute top-[10%] right-[6%] w-[64px] h-[64px] sm:w-[70px] sm:h-[70px] opacity-85 mu-ball-spin">
         <TennisBall className="w-full h-full" />
+      </div>
+    </div>
+  );
+}
+
+const MOCKUPS = [
+  '/mockup-1.png?v=1',
+  '/mockup-2.png?v=1',
+  '/mockup-3.png?v=1',
+  '/mockup-4.png?v=1',
+  '/mockup-5.png?v=1',
+];
+
+function MockupCarousel() {
+  const [index, setIndex] = useState(0);
+  const [hovering, setHovering] = useState(false);
+  const timerRef = useRef(null);
+
+  // Auto-advance every 5s; pause while the user hovers.
+  useEffect(() => {
+    if (hovering) return;
+    timerRef.current = setTimeout(() => {
+      setIndex((i) => (i + 1) % MOCKUPS.length);
+    }, 5000);
+    return () => clearTimeout(timerRef.current);
+  }, [index, hovering]);
+
+  const prev = () => setIndex((i) => (i - 1 + MOCKUPS.length) % MOCKUPS.length);
+  const next = () => setIndex((i) => (i + 1) % MOCKUPS.length);
+
+  return (
+    <div
+      className="relative z-10 w-full max-w-[640px] mx-auto"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+    >
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Previous"
+          onClick={prev}
+          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-80 transition"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
+            {MOCKUPS.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt={`Matchup screen ${i + 1}`}
+                className="w-full shrink-0 h-auto object-contain"
+                draggable={false}
+              />
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          aria-label="Next"
+          onClick={next}
+          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-80 transition"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="mt-5 flex items-center justify-center gap-2">
+        {MOCKUPS.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`Slide ${i + 1}`}
+            onClick={() => setIndex(i)}
+            className={`w-2 h-2 rounded-full transition ${
+              i === index ? 'bg-ink' : 'bg-[#D0D0D0] hover:bg-[#999]'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -183,7 +266,6 @@ function LangSwitch({ lang, onChange }) {
   );
 }
 
-const SCREENSHOT_SRC = '/app-screenshot.jpg?v=6';
 const APP_STORE_URL =
   'https://apps.apple.com/us/app/matchup-app/id6764099315';
 
@@ -244,16 +326,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mockup — bare image, the export already includes a phone frame.
-              The ball lands right next to it ≈3.7s after load and the wrapper
-              gives a tiny scale bump in sync (mu-mockup-bounce). */}
-          <div className="flex justify-center lg:justify-center relative z-10">
-            <img
-              src={SCREENSHOT_SRC}
-              alt="Matchup App"
-              className="w-full max-w-[560px] sm:max-w-[620px] lg:max-w-[640px] h-auto object-contain mu-mockup-bounce"
-            />
-          </div>
+          {/* Mockup carousel — 5 slides, autoplay 5s, paused on hover */}
+          <MockupCarousel />
         </div>
       </section>
 
