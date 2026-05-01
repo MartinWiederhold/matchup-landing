@@ -13,32 +13,3 @@ body {
   background: #ffffff;
   color: #1a1a1a;
 }
-
-/* ── Hero tennis ball: float + spin compose on nested wrappers, ground
-       shadow scales inversely so the ball reads as lifting off. ─── */
-
-@keyframes mu-ball-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-15px); }
-}
-
-@keyframes mu-ball-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* The ground shadow is positioned with `left: 50%` and centred via
-   translateX(-50%); the scale animation has to keep the centring in
-   the same transform, hence the explicit translateX. */
-@keyframes mu-ball-shadow {
-  0%, 100% { transform: translateX(-50%) scale(1);    opacity: 0.20; }
-  50%      { transform: translateX(-50%) scale(0.6);  opacity: 0.10; }
-}
-
-.mu-ball-float  { animation: mu-ball-float  4s  ease-in-out infinite; will-change: transform; }
-.mu-ball-spin   { animation: mu-ball-spin   20s linear      infinite; will-change: transform; }
-.mu-ball-shadow { animation: mu-ball-shadow 4s  ease-in-out infinite; will-change: transform, opacity; }
-
-@media (prefers-reduced-motion: reduce) {
-  .mu-ball-float, .mu-ball-spin, .mu-ball-shadow { animation: none; }
-}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Footer from '../components/Footer.jsx';
+import TennisBalls3D from '../components/TennisBalls3D.jsx';
 
 const COPY = {
   en: {
@@ -14,29 +15,29 @@ const COPY = {
       'From the first like to game time — Matchup walks with you every step.',
     features: [
       {
-        title: 'Find a partner',
+        title: 'Discover Players',
         body:
-          'Players near you — filtered by sport, level and club.',
+          'Scroll through profiles near you. Filter by skill, sport, club and distance.',
       },
       {
-        title: 'Open matches',
+        title: 'Match & Chat',
         body:
-          'Schedule games or join open matches — singles or doubles.',
+          "Like each other and it's a match. Chat directly and set up a game.",
+      },
+      {
+        title: 'Open Games',
+        body:
+          'Create open games or join existing ones. Perfect for spontaneous matches.',
       },
       {
         title: 'Community',
         body:
-          'Follow other players, post updates and plan your next match.',
-      },
-      {
-        title: 'Clubs & groups',
-        body:
-          'Connect with your home club and join themed groups.',
+          'Share updates, follow players and become part of the community.',
       },
     ],
     ctaTitle: 'Ready to play?',
     ctaBody:
-      'Matchup is launching on the App Store soon. Android users can download the app directly today.',
+      'Matchup is on the App Store now. Android users can download the app directly today.',
     ctaContact: 'Beta access or questions?',
   },
   de: {
@@ -51,29 +52,29 @@ const COPY = {
       'Vom ersten Like bis zum Spiel — Matchup begleitet dich durch jeden Schritt.',
     features: [
       {
-        title: 'Spielpartner finden',
+        title: 'Spieler entdecken',
         body:
-          'Spieler:innen in deiner Nähe — gefiltert nach Sport, Niveau und Club.',
+          'Scrolle durch Profile in deiner Nähe. Filter nach Niveau, Sport, Club und Distanz.',
+      },
+      {
+        title: 'Matchen & Chatten',
+        body:
+          'Liked ihr euch gegenseitig, ist es ein Match. Chatte direkt und plane das nächste Spiel.',
       },
       {
         title: 'Offene Spiele',
         body:
-          'Plane Matches oder tritt offenen Partien bei — Einzel oder Doppel.',
+          'Erstelle offene Spiele oder tritt bestehenden bei. Perfekt für spontane Matches.',
       },
       {
         title: 'Community',
         body:
-          'Folge anderen Spieler:innen, schreibe Posts und plane das nächste Match.',
-      },
-      {
-        title: 'Clubs & Gruppen',
-        body:
-          'Verbinde dich mit deinem Heimclub und tritt thematischen Gruppen bei.',
+          'Teile Updates, folge Spieler:innen und werde Teil der Community.',
       },
     ],
     ctaTitle: 'Bereit zu spielen?',
     ctaBody:
-      'Matchup startet bald im App Store. Android-User können die App schon jetzt direkt herunterladen.',
+      'Matchup ist jetzt im App Store. Android-User können die App direkt herunterladen.',
     ctaContact: 'Beta-Zugang oder Fragen?',
   },
 };
@@ -90,7 +91,6 @@ function AppleGlyph(props) {
   );
 }
 
-/// Classic Android robot — body, antennas, eyes (Material-style filled).
 function AndroidGlyph(props) {
   return (
     <svg
@@ -107,74 +107,16 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Cartoon-3D tennis ball — radial body gradient + a soft top-left
-/// shine pass + two C-curve seams. Uses an SVG drop-shadow filter so
-/// the ball has a soft halo even when the parent isn't filtered.
-function TennisBall({ className = '' }) {
+function LangSwitch({ lang, onChange }) {
+  const cls = (active) =>
+    `text-xs font-bold tracking-[0.15em] transition ${
+      active ? 'text-ink' : 'text-muted hover:text-ink'
+    }`;
   return (
-    <svg
-      viewBox="0 0 140 140"
-      className={className}
-      aria-hidden="true"
-    >
-      <defs>
-        <radialGradient id="mu-ball-3d" cx="35%" cy="30%" r="65%">
-          <stop offset="0%"   stopColor="#E5F026" />
-          <stop offset="30%"  stopColor="#D4E000" />
-          <stop offset="70%"  stopColor="#B8C600" />
-          <stop offset="100%" stopColor="#8A9500" />
-        </radialGradient>
-        <radialGradient id="mu-ball-shine" cx="30%" cy="25%" r="30%">
-          <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-        </radialGradient>
-        <filter id="mu-ball-soft" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="3" dy="6" stdDeviation="8"
-                        floodColor="#000" floodOpacity="0.18" />
-        </filter>
-      </defs>
-      <circle cx="70" cy="70" r="64" fill="url(#mu-ball-3d)" filter="url(#mu-ball-soft)" />
-      <circle cx="70" cy="70" r="64" fill="url(#mu-ball-shine)" />
-      <path
-        d="M 24 38 C 35 55, 35 85, 24 102"
-        fill="none" stroke="#FFFFFF" strokeWidth="4"
-        strokeLinecap="round" opacity="0.9"
-      />
-      <path
-        d="M 116 38 C 105 55, 105 85, 116 102"
-        fill="none" stroke="#FFFFFF" strokeWidth="4"
-        strokeLinecap="round" opacity="0.9"
-      />
-    </svg>
-  );
-}
-
-/// Hero ball: floats on the wrapper, spins on the inner element, and
-/// drops a separate ground-shadow that scales inversely with the lift.
-function TennisBallBackdrop() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-    >
-      {/* 140px ball, vertically centred on the left side of the hero. */}
-      <div className="absolute left-[3%] sm:left-[5%] top-1/2 -translate-y-1/2 w-[120px] h-[120px] sm:w-[140px] sm:h-[140px]">
-        <div className="relative w-full h-full">
-          {/* Ground shadow — anchored to the bottom of the wrapper, scales
-              with the same 4s rhythm as the float so the perspective
-              reads correctly. */}
-          <div
-            className="absolute left-1/2 -bottom-2 h-3 w-[100px] sm:w-[110px] rounded-full bg-black mu-ball-shadow"
-          />
-          {/* Float wrapper bobs translateY ±15px */}
-          <div className="w-full h-full mu-ball-float">
-            {/* Spin wrapper rotates 360°/20s */}
-            <div className="w-full h-full mu-ball-spin">
-              <TennisBall className="w-full h-full" />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="flex items-center gap-2">
+      <button type="button" className={cls(lang === 'de')} onClick={() => onChange('de')} aria-pressed={lang === 'de'}>DE</button>
+      <span className="text-line">|</span>
+      <button type="button" className={cls(lang === 'en')} onClick={() => onChange('en')} aria-pressed={lang === 'en'}>EN</button>
     </div>
   );
 }
@@ -192,7 +134,6 @@ function MockupCarousel() {
   const [hovering, setHovering] = useState(false);
   const timerRef = useRef(null);
 
-  // Auto-advance every 5s; pause while the user hovers.
   useEffect(() => {
     if (hovering) return;
     timerRef.current = setTimeout(() => {
@@ -206,24 +147,23 @@ function MockupCarousel() {
 
   return (
     <div
-      className="relative z-10 w-full max-w-[640px] mx-auto"
+      className="relative w-full max-w-[760px] mx-auto"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-center gap-2 sm:gap-4">
         <button
           type="button"
           aria-label="Previous"
           onClick={prev}
-          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-80 transition"
+          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 max-w-[560px] overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
@@ -244,10 +184,9 @@ function MockupCarousel() {
           type="button"
           aria-label="Next"
           onClick={next}
-          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-80 transition"
+          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
@@ -270,34 +209,6 @@ function MockupCarousel() {
   );
 }
 
-function LangSwitch({ lang, onChange }) {
-  const cls = (active) =>
-    `text-xs font-bold tracking-[0.15em] transition ${
-      active ? 'text-ink' : 'text-muted hover:text-ink'
-    }`;
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        className={cls(lang === 'de')}
-        onClick={() => onChange('de')}
-        aria-pressed={lang === 'de'}
-      >
-        DE
-      </button>
-      <span className="text-line">|</span>
-      <button
-        type="button"
-        className={cls(lang === 'en')}
-        onClick={() => onChange('en')}
-        aria-pressed={lang === 'en'}
-      >
-        EN
-      </button>
-    </div>
-  );
-}
-
 const APP_STORE_URL =
   'https://apps.apple.com/us/app/matchup-app/id6764099315';
 
@@ -311,12 +222,7 @@ export default function Home() {
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 select-none">
-            <img
-              src="/logo.png"
-              alt=""
-              className="h-8 sm:h-9 w-auto"
-              draggable={false}
-            />
+            <img src="/logo.png" alt="" className="h-8 sm:h-9 w-auto" draggable={false} />
             <span className="text-xl font-extrabold tracking-tight">Matchup</span>
           </a>
           <div className="flex items-center gap-5">
@@ -331,43 +237,43 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
-        <TennisBallBackdrop />
-        <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="text-center lg:text-left">
-            <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
-              {t.eyebrow}
-            </p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.02] tracking-tight">
-              {t.title}
-            </h1>
-            <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl lg:max-w-none leading-relaxed mx-auto lg:mx-0">
-              {t.tagline}
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:items-start items-stretch sm:justify-start justify-center">
-              <a
-                href={APP_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
-              >
-                <AppleGlyph />
-                {t.appStore}
-              </a>
-              <a
-                href="/matchup.apk"
-                download
-                className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
-              >
-                <AndroidGlyph />
-                {t.androidDownload}
-              </a>
-            </div>
+      {/* Hero — centered, with 3D balls in the background */}
+      <section className="relative">
+        <TennisBalls3D />
+        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 text-center">
+          <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-6">
+            {t.eyebrow}
+          </p>
+          <h1 className="text-6xl sm:text-7xl lg:text-[92px] font-extrabold leading-[1.02] tracking-tight">
+            {t.title}
+          </h1>
+          <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl mx-auto leading-relaxed">
+            {t.tagline}
+          </p>
+
+          <div className="mt-10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-center">
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
+            >
+              <AppleGlyph />
+              {t.appStore}
+            </a>
+            <a
+              href="/matchup.apk"
+              download
+              className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
+            >
+              <AndroidGlyph />
+              {t.androidDownload}
+            </a>
           </div>
 
-          {/* Mockup carousel — 5 slides, autoplay 5s, paused on hover */}
-          <MockupCarousel />
+          <div className="mt-16">
+            <MockupCarousel />
+          </div>
         </div>
       </section>
 
@@ -380,7 +286,7 @@ export default function Home() {
           <p className="text-muted mt-3 max-w-2xl mx-auto text-center">
             {t.featuresSubtitle}
           </p>
-          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {t.features.map((f, i) => (
               <div key={f.title}>
                 <div className="text-xs font-bold tracking-[0.2em] text-muted">
@@ -422,10 +328,7 @@ export default function Home() {
           </div>
           <p className="mt-6 text-xs text-muted">
             {t.ctaContact}{' '}
-            <a
-              href="mailto:wiederhold.martin@web.de"
-              className="underline hover:text-ink"
-            >
+            <a href="mailto:wiederhold.martin@web.de" className="underline hover:text-ink">
               wiederhold.martin@web.de
             </a>
           </p>
