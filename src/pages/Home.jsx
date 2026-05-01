@@ -78,60 +78,66 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Hand-drawn tennis ball as an SVG. Two radial-gradient layers
-/// (body + top-left shine) plus two white seam curves. Each instance
-/// gets a unique `uid` so the gradient ids don't collide.
+/// Cartoon tennis ball: bright yellow circle with a simple gradient,
+/// thick white seams and a thin black outline. Unique gradient id per
+/// instance via `uid`.
 function TennisBallSVG({ uid }) {
   const body = `mu-tb-body-${uid}`;
-  const shine = `mu-tb-shine-${uid}`;
   return (
     <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden="true">
       <defs>
-        <radialGradient id={body} cx="32%" cy="28%" r="72%">
-          <stop offset="0%"   stopColor="#F0FF60" />
-          <stop offset="35%"  stopColor="#DFFF20" />
-          <stop offset="72%"  stopColor="#C0DD00" />
-          <stop offset="100%" stopColor="#A0CC00" />
-        </radialGradient>
-        <radialGradient id={shine} cx="28%" cy="22%" r="38%">
-          <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-        </radialGradient>
+        <linearGradient id={body} x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%"   stopColor="#EFFF40" />
+          <stop offset="100%" stopColor="#C7E600" />
+        </linearGradient>
       </defs>
-      <circle cx="50" cy="50" r="48" fill={`url(#${body})`} />
-      <circle cx="50" cy="50" r="48" fill={`url(#${shine})`} />
-      {/* Two J-shaped seams (left + mirrored right) */}
-      <path d="M 14 38 C 30 50, 30 75, 14 87"
-            fill="none" stroke="#FFFFFF" strokeWidth="2.6"
-            strokeLinecap="round" opacity="0.92" />
-      <path d="M 86 38 C 70 50, 70 75, 86 87"
-            fill="none" stroke="#FFFFFF" strokeWidth="2.6"
-            strokeLinecap="round" opacity="0.92" />
-      {/* Tight specular hot-spot */}
-      <ellipse cx="36" cy="28" rx="6" ry="3.5" fill="#FFFFFF" opacity="0.55" />
+      {/* Body with thin black outline */}
+      <circle
+        cx="50" cy="50" r="46"
+        fill={`url(#${body})`}
+        stroke="#1A1A1A"
+        strokeWidth="1.5"
+      />
+      {/* Two clean white seams — drawn, not photoreal */}
+      <path
+        d="M 14 36 C 32 48, 32 72, 14 84"
+        fill="none" stroke="#FFFFFF" strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 86 36 C 68 48, 68 72, 86 84"
+        fill="none" stroke="#FFFFFF" strokeWidth="4"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-/// Three balls clustered in the upper-right corner, partially clipping
-/// off the right edge for a "floating in" feel.
+/// Three cartoon balls clustered in the upper-right of the hero.
+/// Outer wrapper bobs translateY; inner wrapper handles rotate / bounce.
 function TennisBallCluster() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute top-0 right-0 w-[360px] h-[260px] sm:w-[460px] sm:h-[320px] overflow-hidden z-0"
     >
-      {/* Big ball — half off the right edge */}
-      <div className="absolute top-6 -right-10 w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] mu-ball-a">
-        <TennisBallSVG uid="a" />
+      {/* Big ball — half off the right edge, floats + slow spin */}
+      <div className="absolute top-6 -right-10 w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] mu-float">
+        <div className="w-full h-full mu-spin">
+          <TennisBallSVG uid="a" />
+        </div>
       </div>
-      {/* Mid ball — left of the big one, higher */}
-      <div className="absolute top-2 right-[120px] sm:right-[170px] w-[60px] h-[60px] sm:w-[78px] sm:h-[78px] mu-ball-b">
-        <TennisBallSVG uid="b" />
+      {/* Mid ball — bounces (scale + counter-rotate) */}
+      <div className="absolute top-2 right-[120px] sm:right-[170px] w-[60px] h-[60px] sm:w-[78px] sm:h-[78px] mu-float-d1">
+        <div className="w-full h-full mu-bounce">
+          <TennisBallSVG uid="b" />
+        </div>
       </div>
-      {/* Small ball — depth filler, lower-left of the cluster */}
-      <div className="absolute top-[110px] right-[200px] sm:top-[140px] sm:right-[260px] w-[36px] h-[36px] sm:w-[44px] sm:h-[44px] mu-ball-c">
-        <TennisBallSVG uid="c" />
+      {/* Small ball — depth filler, reverse spin */}
+      <div className="absolute top-[110px] right-[200px] sm:top-[140px] sm:right-[260px] w-[36px] h-[36px] sm:w-[44px] sm:h-[44px] mu-float-d2">
+        <div className="w-full h-full mu-spin-r">
+          <TennisBallSVG uid="c" />
+        </div>
       </div>
     </div>
   );
