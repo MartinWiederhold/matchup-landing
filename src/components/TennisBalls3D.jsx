@@ -119,15 +119,12 @@ export default function TennisBalls3D() {
       scene.add(ballM);
       balls.push({ obj: ballM, base: myBase, kind: 'm' });
     } else {
+      // Single ball on the left of the hero. The right-side ball was
+      // dropped because it overlapped the mockup column on desktop.
       const ballL = makeBall(r);
       ballL.position.set(-3.2, 0.5, 0);
       scene.add(ballL);
       balls.push({ obj: ballL, base: 0.5, kind: 'l' });
-
-      const ballR = makeBall(r);
-      ballR.position.set(3.2, -0.4, 0);
-      scene.add(ballR);
-      balls.push({ obj: ballR, base: -0.4, kind: 'r' });
     }
 
     function tick() {

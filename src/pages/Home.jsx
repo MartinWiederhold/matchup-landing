@@ -194,23 +194,23 @@ function MockupCarousel() {
 
   return (
     <div
-      className="relative w-full max-w-[760px] mx-auto"
+      className="relative w-full max-w-[820px] mx-auto"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <div className="flex items-center justify-center gap-2 sm:gap-4">
+      <div className="flex items-center justify-center gap-1">
         <button
           type="button"
           aria-label="Previous"
           onClick={prev}
-          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
+          className="shrink-0 w-7 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <div className="flex-1 max-w-[560px] overflow-hidden">
+        <div className="flex-1 max-w-[700px] overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
@@ -231,9 +231,9 @@ function MockupCarousel() {
           type="button"
           aria-label="Next"
           onClick={next}
-          className="shrink-0 w-9 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
+          className="shrink-0 w-7 h-9 flex items-center justify-center text-ink opacity-40 hover:opacity-90 transition"
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
@@ -281,7 +281,7 @@ export default function Home() {
       <section className="relative">
         <TennisBalls3D />
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-16 sm:pt-24 sm:pb-24">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-[5fr_7fr] gap-12 lg:gap-12 items-center">
             <div className="text-center lg:text-left">
               <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
                 {t.eyebrow}
