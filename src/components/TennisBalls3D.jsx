@@ -34,13 +34,12 @@ export default function TennisBalls3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
 
-    // Brighter studio lighting — needed against a white background so the
-    // ball reads as a vivid yellow rather than a dim olive.
-    scene.add(new THREE.AmbientLight(0xffffff, 1.05));
-    const key = new THREE.DirectionalLight(0xfffaf0, 1.1);
+    // Warm studio lighting — verbatim from courtswiss.netlify.app/app/.
+    scene.add(new THREE.AmbientLight(0xfff8e7, 0.7));
+    const key = new THREE.DirectionalLight(0xfffaf0, 1.0);
     key.position.set(-2, 4, 5);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xfff0d4, 0.55);
+    const fill = new THREE.DirectionalLight(0xfff0d4, 0.35);
     fill.position.set(3, 0, -3);
     scene.add(fill);
 
@@ -81,8 +80,8 @@ export default function TennisBalls3D() {
       const group = new THREE.Group();
       const geo = new THREE.SphereGeometry(radius, 64, 64);
       const mat = new THREE.MeshStandardMaterial({
-        color: 0xdce210,
-        roughness: 0.78,
+        color: 0xc6d631,
+        roughness: 0.95,
         metalness: 0.0,
         bumpMap: bumpTex,
         bumpScale: 0.01 * radius,
