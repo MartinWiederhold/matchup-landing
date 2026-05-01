@@ -14,26 +14,12 @@ const COPY = {
     featuresSubtitle:
       'From the first like to game time — Matchup walks with you every step.',
     features: [
-      {
-        title: 'Discover Players',
-        body:
-          'Scroll through profiles near you. Filter by skill, sport, club and distance.',
-      },
-      {
-        title: 'Match & Chat',
-        body:
-          "Like each other and it's a match. Chat directly and set up a game.",
-      },
-      {
-        title: 'Open Games',
-        body:
-          'Create open games or join existing ones. Perfect for spontaneous matches.',
-      },
-      {
-        title: 'Community',
-        body:
-          'Share updates, follow players and become part of the community.',
-      },
+      { key: 'discover',  title: 'Discover Players', body: 'Find players near you. Filter by skill level, sport and distance.' },
+      { key: 'chat',      title: 'Match & Chat',     body: 'Like each other and start chatting. Set up your next game directly.' },
+      { key: 'games',     title: 'Open Games',       body: 'Create open games or join existing ones near you.' },
+      { key: 'groups',    title: 'Groups',           body: 'Join groups or create your own. Organize regular meetups.' },
+      { key: 'community', title: 'Community',        body: 'Share updates, follow players and connect with the community.' },
+      { key: 'analytics', title: 'Analytics',        body: 'Track your progress with stats, achievements and your player level.' },
     ],
     ctaTitle: 'Ready to play?',
     ctaBody:
@@ -51,26 +37,12 @@ const COPY = {
     featuresSubtitle:
       'Vom ersten Like bis zum Spiel — Matchup begleitet dich durch jeden Schritt.',
     features: [
-      {
-        title: 'Spieler entdecken',
-        body:
-          'Scrolle durch Profile in deiner Nähe. Filter nach Niveau, Sport, Club und Distanz.',
-      },
-      {
-        title: 'Matchen & Chatten',
-        body:
-          'Liked ihr euch gegenseitig, ist es ein Match. Chatte direkt und plane das nächste Spiel.',
-      },
-      {
-        title: 'Offene Spiele',
-        body:
-          'Erstelle offene Spiele oder tritt bestehenden bei. Perfekt für spontane Matches.',
-      },
-      {
-        title: 'Community',
-        body:
-          'Teile Updates, folge Spieler:innen und werde Teil der Community.',
-      },
+      { key: 'discover',  title: 'Spieler entdecken', body: 'Finde Spieler:innen in deiner Nähe. Filter nach Spielstärke, Sport und Distanz.' },
+      { key: 'chat',      title: 'Matchen & Chatten', body: 'Liked ihr euch gegenseitig, könnt ihr direkt chatten und das nächste Spiel planen.' },
+      { key: 'games',     title: 'Offene Spiele',     body: 'Erstelle offene Spiele oder tritt bestehenden in deiner Nähe bei.' },
+      { key: 'groups',    title: 'Gruppen',           body: 'Tritt Gruppen bei oder erstelle eigene. Organisiere regelmässige Treffen.' },
+      { key: 'community', title: 'Community',         body: 'Teile Updates, folge Spieler:innen und werde Teil der Community.' },
+      { key: 'analytics', title: 'Statistiken',       body: 'Tracke deinen Fortschritt mit Stats, Achievements und deinem Spieler-Level.' },
     ],
     ctaTitle: 'Bereit zu spielen?',
     ctaBody:
@@ -105,6 +77,81 @@ function AndroidGlyph(props) {
       <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z" />
     </svg>
   );
+}
+
+/// Minimal line-style feature icons. Stroke #1A1A1A, 1.6 weight, 48x48.
+function FeatureIcon({ kind }) {
+  const common = {
+    width: 48,
+    height: 48,
+    viewBox: '0 0 48 48',
+    fill: 'none',
+    stroke: '#1A1A1A',
+    strokeWidth: 1.6,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': 'true',
+  };
+  switch (kind) {
+    case 'discover':
+      return (
+        <svg {...common}>
+          <circle cx="20" cy="20" r="9" />
+          <line x1="27" y1="27" x2="36" y2="36" />
+          <circle cx="20" cy="17" r="3" />
+          <path d="M14 24 c1.5 -2 4 -3 6 -3 s4.5 1 6 3" />
+        </svg>
+      );
+    case 'chat':
+      return (
+        <svg {...common}>
+          <path d="M10 14 h22 a4 4 0 0 1 4 4 v10 a4 4 0 0 1 -4 4 H22 l-7 6 v-6 h-5 a4 4 0 0 1 -4 -4 V18 a4 4 0 0 1 4 -4 z" />
+          <path d="M21 24 c-1 0 -2 -1 -2 -2 c0 -1 1 -2 2 -2 c1 0 2 1 2 2 c0 -1 1 -2 2 -2 c1 0 2 1 2 2 c0 1 -1 2 -2 2 c0 1 -2 2 -4 4 c-2 -2 -4 -3 -4 -4 z" />
+        </svg>
+      );
+    case 'games':
+      return (
+        <svg {...common}>
+          <rect x="8"  y="10" width="32" height="28" rx="3" />
+          <line x1="8"  y1="18" x2="40" y2="18" />
+          <line x1="14" y1="6"  x2="14" y2="14" />
+          <line x1="34" y1="6"  x2="34" y2="14" />
+          <line x1="24" y1="22" x2="24" y2="34" />
+          <line x1="14" y1="28" x2="34" y2="28" />
+        </svg>
+      );
+    case 'groups':
+      return (
+        <svg {...common}>
+          <circle cx="24" cy="16" r="5" />
+          <path d="M14 36 c0 -5 4.5 -9 10 -9 s10 4 10 9" />
+          <circle cx="11" cy="20" r="4" />
+          <path d="M4 36 c0 -4 3 -7 7 -7" />
+          <circle cx="37" cy="20" r="4" />
+          <path d="M44 36 c0 -4 -3 -7 -7 -7" />
+        </svg>
+      );
+    case 'community':
+      return (
+        <svg {...common}>
+          <circle cx="24" cy="24" r="16" />
+          <path d="M8 24 h32" />
+          <path d="M24 8 c5 4 7 10 7 16 s-2 12 -7 16" />
+          <path d="M24 8 c-5 4 -7 10 -7 16 s2 12 7 16" />
+        </svg>
+      );
+    case 'analytics':
+      return (
+        <svg {...common}>
+          <line x1="8" y1="40" x2="40" y2="40" />
+          <line x1="8" y1="40" x2="8"  y2="8" />
+          <polyline points="12 32 20 24 26 28 36 14" />
+          <circle cx="36" cy="14" r="1.5" fill="#1A1A1A" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 function LangSwitch({ lang, onChange }) {
@@ -221,19 +268,11 @@ export default function Home() {
       {/* Navbar */}
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5 select-none">
-            <img src="/logo.png" alt="" className="h-8 sm:h-9 w-auto" draggable={false} />
-            <span className="text-xl font-extrabold tracking-tight">Matchup</span>
+          <a href="/" className="flex items-center gap-3 select-none">
+            <img src="/logo.png" alt="" className="h-10 sm:h-11 w-auto" draggable={false} />
+            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">Matchup</span>
           </a>
-          <div className="flex items-center gap-5">
-            <LangSwitch lang={lang} onChange={setLang} />
-            <a
-              href="#download"
-              className="text-sm font-semibold bg-ink text-white px-4 py-2 rounded-full hover:opacity-90 transition"
-            >
-              {t.download}
-            </a>
-          </div>
+          <LangSwitch lang={lang} onChange={setLang} />
         </div>
       </header>
 
@@ -286,14 +325,14 @@ export default function Home() {
           <p className="text-muted mt-3 max-w-2xl mx-auto text-center">
             {t.featuresSubtitle}
           </p>
-          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {t.features.map((f, i) => (
-              <div key={f.title}>
-                <div className="text-xs font-bold tracking-[0.2em] text-muted">
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-                <h3 className="mt-3 text-lg font-bold">{f.title}</h3>
-                <p className="mt-2 text-sm text-muted leading-relaxed">{f.body}</p>
+          <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-14 text-center">
+            {t.features.map((f) => (
+              <div key={f.key} className="flex flex-col items-center px-2">
+                <FeatureIcon kind={f.key} />
+                <h3 className="mt-5 text-[18px] font-bold text-ink">{f.title}</h3>
+                <p className="mt-2 text-[14px] text-muted leading-relaxed max-w-xs">
+                  {f.body}
+                </p>
               </div>
             ))}
           </div>
