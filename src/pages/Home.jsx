@@ -6,7 +6,7 @@ const COPY = {
     eyebrow: 'TENNIS · PADEL · SWITZERLAND',
     title: 'Matchup',
     tagline: 'Find your perfect playing partner.',
-    appStore: 'App Store · soon',
+    appStore: 'App Store',
     androidDownload: 'Android Download',
     download: 'Download',
     featuresTitle: 'Everything for your next match.',
@@ -43,7 +43,7 @@ const COPY = {
     eyebrow: 'TENNIS · PADEL · SCHWEIZ',
     title: 'Matchup',
     tagline: 'Finde deinen perfekten Spielpartner.',
-    appStore: 'App Store · bald',
+    appStore: 'App Store',
     androidDownload: 'Android Download',
     download: 'Download',
     featuresTitle: 'Alles für dein nächstes Match.',
@@ -188,6 +188,8 @@ function LangSwitch({ lang, onChange }) {
 }
 
 const SCREENSHOT_SRC = '/app-screenshot.jpg?v=5';
+const APP_STORE_URL =
+  'https://apps.apple.com/us/app/matchup-app/id6764099315';
 
 export default function Home() {
   const [lang, setLang] = useState('en');
@@ -227,7 +229,9 @@ export default function Home() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:items-start items-stretch sm:justify-start justify-center">
               <a
-                href="#download"
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
               >
                 <AppleGlyph />
@@ -297,10 +301,15 @@ export default function Home() {
           </h2>
           <p className="text-muted mt-4 max-w-xl mx-auto">{t.ctaBody}</p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <span className="inline-flex items-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full">
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
+            >
               <AppleGlyph />
               {t.appStore}
-            </span>
+            </a>
             <a
               href="/matchup.apk"
               download
