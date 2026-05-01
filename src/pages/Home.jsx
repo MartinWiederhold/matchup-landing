@@ -107,74 +107,72 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Photoreal tennis ball — multi-stop radial body, dark rim shading,
-/// two J-shaped seams with carved-in depth, and a layered specular.
+/// Cartoon-3D tennis ball — radial body gradient + a soft top-left
+/// shine pass + two C-curve seams. Uses an SVG drop-shadow filter so
+/// the ball has a soft halo even when the parent isn't filtered.
 function TennisBall({ className = '' }) {
   return (
     <svg
-      viewBox="0 0 120 120"
+      viewBox="0 0 140 140"
       className={className}
       aria-hidden="true"
     >
       <defs>
-        {/* Body: warm highlight upper-left → saturated tennis-ball
-            yellow-green → deep olive in the shaded lower-right. */}
-        <radialGradient id="mu-ball-body" cx="38%" cy="30%" r="70%">
-          <stop offset="0%"   stopColor="#FFFFAA" />
-          <stop offset="22%"  stopColor="#F2F230" />
-          <stop offset="55%"  stopColor="#D4DD0E" />
-          <stop offset="82%"  stopColor="#9DA808" />
-          <stop offset="100%" stopColor="#5E6603" />
+        <radialGradient id="mu-ball-3d" cx="35%" cy="30%" r="65%">
+          <stop offset="0%"   stopColor="#E5F026" />
+          <stop offset="30%"  stopColor="#D4E000" />
+          <stop offset="70%"  stopColor="#B8C600" />
+          <stop offset="100%" stopColor="#8A9500" />
         </radialGradient>
-        {/* Rim shading on the lower-right for spherical depth */}
-        <radialGradient id="mu-ball-shade" cx="74%" cy="80%" r="55%">
-          <stop offset="0%"   stopColor="#000" stopOpacity="0.30" />
-          <stop offset="55%"  stopColor="#000" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        <radialGradient id="mu-ball-shine" cx="30%" cy="25%" r="30%">
+          <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
-        {/* Felt-fuzz suggestion: very faint warm halo on the highlight side */}
-        <radialGradient id="mu-ball-warm" cx="34%" cy="26%" r="42%">
-          <stop offset="0%"   stopColor="#FFFFD0" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#FFFFD0" stopOpacity="0" />
-        </radialGradient>
+        <filter id="mu-ball-soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="3" dy="6" stdDeviation="8"
+                        floodColor="#000" floodOpacity="0.18" />
+        </filter>
       </defs>
-      {/* Body */}
-      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-body)" />
-      {/* Warm highlight halo */}
-      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-warm)" />
-      {/* Rim shading */}
-      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-shade)" />
-      {/* Two J-shaped seams (left, right). Each seam = soft yellow-green
-          shadow underneath + a thick white stroke + a tiny dark inner
-          line, which together read as carved felt on a real ball. */}
-      <g strokeLinecap="round" fill="none">
-        <path d="M 18 35 Q 42 60 18 85" stroke="#000000" strokeOpacity="0.18" strokeWidth="4.6" transform="translate(0.6 1)" />
-        <path d="M 18 35 Q 42 60 18 85" stroke="#FFFFFF" strokeWidth="3.4" />
-        <path d="M 18 35 Q 42 60 18 85" stroke="#000000" strokeOpacity="0.22" strokeWidth="0.9" />
-        <path d="M 102 35 Q 78 60 102 85" stroke="#000000" strokeOpacity="0.18" strokeWidth="4.6" transform="translate(0.6 1)" />
-        <path d="M 102 35 Q 78 60 102 85" stroke="#FFFFFF" strokeWidth="3.4" />
-        <path d="M 102 35 Q 78 60 102 85" stroke="#000000" strokeOpacity="0.22" strokeWidth="0.9" />
-      </g>
-      {/* Layered specular: large soft glaze + tight hot-spot for that
-          glossy real-ball feel. */}
-      <ellipse cx="44" cy="32" rx="18" ry="10" fill="#FFFFFF" opacity="0.28" />
-      <ellipse cx="38" cy="28" rx="6"  ry="3.5" fill="#FFFFFF" opacity="0.7" />
+      <circle cx="70" cy="70" r="64" fill="url(#mu-ball-3d)" filter="url(#mu-ball-soft)" />
+      <circle cx="70" cy="70" r="64" fill="url(#mu-ball-shine)" />
+      <path
+        d="M 24 38 C 35 55, 35 85, 24 102"
+        fill="none" stroke="#FFFFFF" strokeWidth="4"
+        strokeLinecap="round" opacity="0.9"
+      />
+      <path
+        d="M 116 38 C 105 55, 105 85, 116 102"
+        fill="none" stroke="#FFFFFF" strokeWidth="4"
+        strokeLinecap="round" opacity="0.9"
+      />
     </svg>
   );
 }
 
-/// One photoreal tennis ball, bottom-left of the hero. The wrapper bobs
-/// up and down (mu-ball-float, 4s) while the inner element rotates
-/// continuously (mu-ball-spin, 8s).
+/// Hero ball: floats on the wrapper, spins on the inner element, and
+/// drops a separate ground-shadow that scales inversely with the lift.
 function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
-      <div className="absolute bottom-[12%] left-[3%] sm:left-[6%] w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] opacity-90 mu-ball-float">
-        <div className="w-full h-full mu-ball-spin">
-          <TennisBall className="w-full h-full" />
+      {/* 140px ball, vertically centred on the left side of the hero. */}
+      <div className="absolute left-[3%] sm:left-[5%] top-1/2 -translate-y-1/2 w-[120px] h-[120px] sm:w-[140px] sm:h-[140px]">
+        <div className="relative w-full h-full">
+          {/* Ground shadow — anchored to the bottom of the wrapper, scales
+              with the same 4s rhythm as the float so the perspective
+              reads correctly. */}
+          <div
+            className="absolute left-1/2 -bottom-2 h-3 w-[100px] sm:w-[110px] rounded-full bg-black mu-ball-shadow"
+          />
+          {/* Float wrapper bobs translateY ±15px */}
+          <div className="w-full h-full mu-ball-float">
+            {/* Spin wrapper rotates 360°/20s */}
+            <div className="w-full h-full mu-ball-spin">
+              <TennisBall className="w-full h-full" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -312,7 +310,15 @@ export default function Home() {
       {/* Navbar */}
       <header className="border-b border-line">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <span className="text-xl font-extrabold tracking-tight">Matchup</span>
+          <a href="/" className="flex items-center gap-2.5 select-none">
+            <img
+              src="/logo.png"
+              alt=""
+              className="h-8 sm:h-9 w-auto"
+              draggable={false}
+            />
+            <span className="text-xl font-extrabold tracking-tight">Matchup</span>
+          </a>
           <div className="flex items-center gap-5">
             <LangSwitch lang={lang} onChange={setLang} />
             <a
