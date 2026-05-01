@@ -187,7 +187,7 @@ function LangSwitch({ lang, onChange }) {
   );
 }
 
-const SCREENSHOT_SRC = '/app-screenshot.jpg?v=5';
+const SCREENSHOT_SRC = '/app-screenshot.jpg?v=6';
 const APP_STORE_URL =
   'https://apps.apple.com/us/app/matchup-app/id6764099315';
 
@@ -248,24 +248,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mockup — object-contain so the screenshot is fully visible */}
+          {/* Mockup — bare image, the export already includes a phone frame */}
           <div className="flex justify-center lg:justify-end">
-            <div className="relative">
-              <div
-                aria-hidden
-                className="absolute inset-0 -z-10 rounded-[60px] blur-3xl opacity-20 bg-ink"
-              />
-              <div className="relative w-[260px] sm:w-[300px] aspect-[9/19.5] rounded-[48px] bg-ink p-[10px] shadow-2xl shadow-black/30 ring-1 ring-black/5">
-                <div className="absolute left-1/2 -translate-x-1/2 top-[18px] w-28 h-6 rounded-full bg-ink z-10" />
-                <div className="w-full h-full rounded-[40px] bg-white p-[10px] flex items-center justify-center">
-                  <img
-                    src={SCREENSHOT_SRC}
-                    alt="Matchup App"
-                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-[30px]"
-                  />
-                </div>
-              </div>
-            </div>
+            <img
+              src={SCREENSHOT_SRC}
+              alt="Matchup App"
+              className="w-full max-w-[420px] h-auto object-contain"
+            />
           </div>
         </div>
       </section>
