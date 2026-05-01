@@ -107,99 +107,49 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Realistic tennis ball SVG with radial gradient highlight + white seams.
-/// `uid` makes the gradient id unique per instance.
-function TennisBall({ uid, className = '' }) {
-  const gradId = `mu-ball-${uid}`;
+/// Small, flat tennis ball — yellow-green disc with two white seam curves.
+function TennisBall({ className = '' }) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 90 90"
       className={className}
       aria-hidden="true"
     >
-      <defs>
-        <radialGradient id={gradId} cx="32%" cy="28%" r="78%">
-          <stop offset="0%" stopColor="#F5FF8A" />
-          <stop offset="55%" stopColor="#CDE611" />
-          <stop offset="100%" stopColor="#7E9408" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="48" fill={`url(#${gradId})`} />
-      {/* Soft inner shadow on the lower-right quadrant for depth */}
-      <circle cx="50" cy="50" r="48" fill="black" opacity="0.05" />
-      {/* Two seam curves */}
+      <circle cx="45" cy="45" r="42" fill="#C8E611" stroke="#fff" strokeWidth="2" />
       <path
-        d="M 8 52 Q 50 14 92 52"
-        stroke="white"
-        strokeWidth="2.4"
+        d="M 15 45 Q 45 20 75 45"
         fill="none"
+        stroke="#fff"
+        strokeWidth="2.5"
+        opacity="0.85"
         strokeLinecap="round"
       />
       <path
-        d="M 8 52 Q 50 90 92 52"
-        stroke="white"
-        strokeWidth="2.4"
+        d="M 15 45 Q 45 70 75 45"
         fill="none"
+        stroke="#fff"
+        strokeWidth="2.5"
+        opacity="0.85"
         strokeLinecap="round"
-      />
-      {/* Specular highlight */}
-      <ellipse
-        cx="32"
-        cy="28"
-        rx="14"
-        ry="9"
-        fill="white"
-        opacity="0.25"
       />
     </svg>
   );
 }
 
-/// Floating tennis-ball backdrop. Three balls with staggered float + spin
-/// timings and a subtle dashed trajectory hint at the back.
+/// One-shot bounce: ball rolls in from the left, bounces with decaying
+/// amplitude and lands next to the mockup. Plays once on load.
 function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
-      {/* Subtle trajectory hint */}
-      <svg
-        viewBox="0 0 1200 600"
-        preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 w-full h-full opacity-[0.08]"
-      >
-        <path
-          d="M -80 520 Q 350 60 1280 30"
-          stroke="#1A1A1A"
-          strokeWidth="1.4"
-          strokeDasharray="6 9"
-          fill="none"
-        />
-      </svg>
-
-      {/* Hauptball — top-right, partially behind the mockup */}
+      {/* The ball sits just above the bottom edge of the hero so the
+          parabolic arcs read like real bounces on a surface. */}
       <div
-        className="absolute w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] lg:w-[140px] lg:h-[140px] right-[6%] top-[8%] opacity-90 mu-tennisball"
-        style={{ '--mu-dur': '5s', '--mu-delay': '0s' }}
+        className="absolute bottom-[22%] left-0 w-[34px] h-[34px] mu-bouncing-ball"
       >
-        <TennisBall uid="a" className="w-full h-full" />
-      </div>
-
-      {/* Mid ball — left-center */}
-      <div
-        className="absolute w-[55px] h-[55px] sm:w-[65px] sm:h-[65px] lg:w-[80px] lg:h-[80px] left-[5%] top-[60%] opacity-80 mu-tennisball"
-        style={{ '--mu-dur': '6.5s', '--mu-delay': '-2s' }}
-      >
-        <TennisBall uid="b" className="w-full h-full" />
-      </div>
-
-      {/* Far ball — small, mid-right for depth */}
-      <div
-        className="absolute w-[38px] h-[38px] sm:w-[44px] sm:h-[44px] right-[40%] bottom-[12%] opacity-60 mu-tennisball"
-        style={{ '--mu-dur': '7.5s', '--mu-delay': '-4s' }}
-      >
-        <TennisBall uid="c" className="w-full h-full" />
+        <TennisBall className="w-full h-full" />
       </div>
     </div>
   );
@@ -294,12 +244,14 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mockup — bare image, the export already includes a phone frame */}
+          {/* Mockup — bare image, the export already includes a phone frame.
+              The ball lands right next to it ≈3.7s after load and the wrapper
+              gives a tiny scale bump in sync (mu-mockup-bounce). */}
           <div className="flex justify-center lg:justify-center relative z-10">
             <img
               src={SCREENSHOT_SRC}
               alt="Matchup App"
-              className="w-full max-w-[560px] sm:max-w-[620px] lg:max-w-[640px] h-auto object-contain"
+              className="w-full max-w-[560px] sm:max-w-[620px] lg:max-w-[640px] h-auto object-contain mu-mockup-bounce"
             />
           </div>
         </div>
