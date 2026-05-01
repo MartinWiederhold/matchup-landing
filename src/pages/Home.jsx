@@ -161,7 +161,7 @@ function TennisBallBackdrop() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
       {/* Subtle trajectory hint */}
       <svg
@@ -260,9 +260,9 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-28 overflow-hidden">
+      <section className="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
         <TennisBallBackdrop />
-        <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
               {t.eyebrow}
