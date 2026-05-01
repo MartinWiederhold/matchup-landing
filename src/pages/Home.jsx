@@ -107,8 +107,8 @@ function AndroidGlyph(props) {
   );
 }
 
-/// Photoreal tennis ball — radial gradient body, two J-shaped seams that
-/// match the wrap of a real ball, and a soft specular highlight.
+/// Photoreal tennis ball — multi-stop radial body, dark rim shading,
+/// two J-shaped seams with carved-in depth, and a layered specular.
 function TennisBall({ className = '' }) {
   return (
     <svg
@@ -117,62 +117,48 @@ function TennisBall({ className = '' }) {
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="mu-ball-body" cx="40%" cy="32%" r="65%">
-          <stop offset="0%"   stopColor="#FFFF7A" />
-          <stop offset="35%"  stopColor="#E8E800" />
-          <stop offset="70%"  stopColor="#C8D200" />
-          <stop offset="100%" stopColor="#7E8A05" />
+        {/* Body: warm highlight upper-left → saturated tennis-ball
+            yellow-green → deep olive in the shaded lower-right. */}
+        <radialGradient id="mu-ball-body" cx="38%" cy="30%" r="70%">
+          <stop offset="0%"   stopColor="#FFFFAA" />
+          <stop offset="22%"  stopColor="#F2F230" />
+          <stop offset="55%"  stopColor="#D4DD0E" />
+          <stop offset="82%"  stopColor="#9DA808" />
+          <stop offset="100%" stopColor="#5E6603" />
         </radialGradient>
-        {/* Subtle inner darkening on the lower-right for spherical shading */}
-        <radialGradient id="mu-ball-shade" cx="70%" cy="78%" r="55%">
-          <stop offset="0%"   stopColor="#000" stopOpacity="0.22" />
-          <stop offset="60%"  stopColor="#000" stopOpacity="0.08" />
+        {/* Rim shading on the lower-right for spherical depth */}
+        <radialGradient id="mu-ball-shade" cx="74%" cy="80%" r="55%">
+          <stop offset="0%"   stopColor="#000" stopOpacity="0.30" />
+          <stop offset="55%"  stopColor="#000" stopOpacity="0.10" />
           <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        {/* Felt-fuzz suggestion: very faint warm halo on the highlight side */}
+        <radialGradient id="mu-ball-warm" cx="34%" cy="26%" r="42%">
+          <stop offset="0%"   stopColor="#FFFFD0" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#FFFFD0" stopOpacity="0" />
         </radialGradient>
       </defs>
       {/* Body */}
       <circle cx="60" cy="60" r="56" fill="url(#mu-ball-body)" />
-      {/* Spherical shading */}
+      {/* Warm highlight halo */}
+      <circle cx="60" cy="60" r="56" fill="url(#mu-ball-warm)" />
+      {/* Rim shading */}
       <circle cx="60" cy="60" r="56" fill="url(#mu-ball-shade)" />
-      {/* Two J-shaped seams — left side curves into the centre and back out,
-          right side mirrors. Outer light line + inner thin shadow give the
-          seam itself a tiny carved-in depth. */}
-      <path
-        d="M 18 35 Q 42 60 18 85"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        opacity="0.95"
-      />
-      <path
-        d="M 18 35 Q 42 60 18 85"
-        fill="none"
-        stroke="#000000"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        opacity="0.18"
-      />
-      <path
-        d="M 102 35 Q 78 60 102 85"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        opacity="0.95"
-      />
-      <path
-        d="M 102 35 Q 78 60 102 85"
-        fill="none"
-        stroke="#000000"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        opacity="0.18"
-      />
-      {/* Specular highlight */}
-      <ellipse cx="42" cy="32" rx="14" ry="8" fill="#FFFFFF" opacity="0.32" />
-      {/* Tiny secondary highlight for extra glossiness */}
-      <ellipse cx="36" cy="28" rx="5" ry="3" fill="#FFFFFF" opacity="0.55" />
+      {/* Two J-shaped seams (left, right). Each seam = soft yellow-green
+          shadow underneath + a thick white stroke + a tiny dark inner
+          line, which together read as carved felt on a real ball. */}
+      <g strokeLinecap="round" fill="none">
+        <path d="M 18 35 Q 42 60 18 85" stroke="#000000" strokeOpacity="0.18" strokeWidth="4.6" transform="translate(0.6 1)" />
+        <path d="M 18 35 Q 42 60 18 85" stroke="#FFFFFF" strokeWidth="3.4" />
+        <path d="M 18 35 Q 42 60 18 85" stroke="#000000" strokeOpacity="0.22" strokeWidth="0.9" />
+        <path d="M 102 35 Q 78 60 102 85" stroke="#000000" strokeOpacity="0.18" strokeWidth="4.6" transform="translate(0.6 1)" />
+        <path d="M 102 35 Q 78 60 102 85" stroke="#FFFFFF" strokeWidth="3.4" />
+        <path d="M 102 35 Q 78 60 102 85" stroke="#000000" strokeOpacity="0.22" strokeWidth="0.9" />
+      </g>
+      {/* Layered specular: large soft glaze + tight hot-spot for that
+          glossy real-ball feel. */}
+      <ellipse cx="44" cy="32" rx="18" ry="10" fill="#FFFFFF" opacity="0.28" />
+      <ellipse cx="38" cy="28" rx="6"  ry="3.5" fill="#FFFFFF" opacity="0.7" />
     </svg>
   );
 }
@@ -196,11 +182,11 @@ function TennisBallBackdrop() {
 }
 
 const MOCKUPS = [
-  '/mockup-1.png?v=1',
-  '/mockup-2.png?v=1',
-  '/mockup-3.png?v=1',
-  '/mockup-4.png?v=1',
-  '/mockup-5.png?v=1',
+  '/mockup-1.png?v=2',
+  '/mockup-2.png?v=2',
+  '/mockup-3.png?v=2',
+  '/mockup-4.png?v=2',
+  '/mockup-5.png?v=2',
 ];
 
 function MockupCarousel() {
