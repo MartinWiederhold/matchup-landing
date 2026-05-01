@@ -13,11 +13,9 @@ export default function TennisBalls3D() {
     if (!canvas) return;
     const wrap = canvas.parentElement;
 
-    // r128 used the legacy linear color pipeline. Three.js r152+ enables
-    // sRGB output by default, which makes courtswiss's 0xC6D631 render
-    // visibly darker. Restore the r128 behaviour so colours match the
-    // original site.
-    THREE.ColorManagement.enabled = false;
+    // Use Three.js r152+ default colour management (sRGB output). The
+    // earlier "legacy r128" toggle actually made the ball darker because
+    // it skipped gamma correction on the way to the sRGB framebuffer.
 
     let frame = 0;
     let stopped = false;
@@ -39,7 +37,6 @@ export default function TennisBalls3D() {
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     // Brighter studio lighting — pure white background needs stronger
     // ambient + key so the felt reads as vivid neon yellow.
