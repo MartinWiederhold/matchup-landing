@@ -7,7 +7,7 @@ const COPY = {
     title: 'Matchup',
     tagline: 'Find your perfect playing partner.',
     appStore: 'App Store',
-    androidDownload: 'Android Download',
+    androidDownload: 'Android',
     download: 'Download',
     featuresTitle: 'Everything for your next match.',
     featuresSubtitle:
@@ -44,7 +44,7 @@ const COPY = {
     title: 'Matchup',
     tagline: 'Finde deinen perfekten Spielpartner.',
     appStore: 'App Store',
-    androidDownload: 'Android Download',
+    androidDownload: 'Android',
     download: 'Download',
     featuresTitle: 'Alles für dein nächstes Match.',
     featuresSubtitle:
@@ -180,36 +180,24 @@ function TennisBallBackdrop() {
 
       {/* Hauptball — top-right, partially behind the mockup */}
       <div
-        className="absolute hidden sm:block w-[110px] h-[110px] lg:w-[130px] lg:h-[130px] right-[6%] top-[8%] opacity-90 mu-tennisball"
-        style={{
-          '--mu-float-dur': '5s',
-          '--mu-spin-dur': '14s',
-          '--mu-delay': '0s',
-        }}
+        className="absolute w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] lg:w-[140px] lg:h-[140px] right-[6%] top-[8%] opacity-90 mu-tennisball"
+        style={{ '--mu-dur': '5s', '--mu-delay': '0s' }}
       >
         <TennisBall uid="a" className="w-full h-full" />
       </div>
 
       {/* Mid ball — left-center */}
       <div
-        className="absolute hidden md:block w-[60px] h-[60px] lg:w-[70px] lg:h-[70px] left-[6%] top-[55%] opacity-80 mu-tennisball"
-        style={{
-          '--mu-float-dur': '6.5s',
-          '--mu-spin-dur': '20s',
-          '--mu-delay': '-2s',
-        }}
+        className="absolute w-[55px] h-[55px] sm:w-[65px] sm:h-[65px] lg:w-[80px] lg:h-[80px] left-[5%] top-[60%] opacity-80 mu-tennisball"
+        style={{ '--mu-dur': '6.5s', '--mu-delay': '-2s' }}
       >
         <TennisBall uid="b" className="w-full h-full" />
       </div>
 
       {/* Far ball — small, mid-right for depth */}
       <div
-        className="absolute hidden lg:block w-[42px] h-[42px] right-[42%] bottom-[15%] opacity-70 mu-tennisball"
-        style={{
-          '--mu-float-dur': '7.5s',
-          '--mu-spin-dur': '24s',
-          '--mu-delay': '-4s',
-        }}
+        className="absolute w-[38px] h-[38px] sm:w-[44px] sm:h-[44px] right-[40%] bottom-[12%] opacity-60 mu-tennisball"
+        style={{ '--mu-dur': '7.5s', '--mu-delay': '-4s' }}
       >
         <TennisBall uid="c" className="w-full h-full" />
       </div>
@@ -307,11 +295,11 @@ export default function Home() {
           </div>
 
           {/* Mockup — bare image, the export already includes a phone frame */}
-          <div className="flex justify-center lg:justify-center">
+          <div className="flex justify-center lg:justify-center relative z-10">
             <img
               src={SCREENSHOT_SRC}
               alt="Matchup App"
-              className="w-full max-w-[480px] sm:max-w-[520px] h-auto object-contain"
+              className="w-full max-w-[560px] sm:max-w-[620px] lg:max-w-[640px] h-auto object-contain"
             />
           </div>
         </div>
