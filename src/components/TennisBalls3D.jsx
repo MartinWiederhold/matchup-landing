@@ -84,9 +84,14 @@ export default function TennisBalls3D() {
     function makeBall(radius) {
       const group = new THREE.Group();
       const geo = new THREE.SphereGeometry(radius, 64, 64);
+      // emissive + emissiveIntensity gives the ball self-illumination so
+      // it stays vivid against any background instead of relying on
+      // the directional lights alone.
       const mat = new THREE.MeshStandardMaterial({
-        color: 0xdfff00,
-        roughness: 0.7,
+        color: 0xe6ff20,
+        emissive: 0xc7e000,
+        emissiveIntensity: 0.45,
+        roughness: 0.55,
         metalness: 0.0,
         bumpMap: bumpTex,
         bumpScale: 0.01 * radius,
