@@ -169,11 +169,13 @@ function LangSwitch({ lang, onChange }) {
 }
 
 const MOCKUPS = [
-  '/mockup-1.png?v=3',
-  '/mockup-2.png?v=3',
-  '/mockup-3.png?v=3',
-  '/mockup-4.png?v=3',
-  '/mockup-5.png?v=3',
+  '/mockup-1.png?v=4',
+  '/mockup-2.png?v=4',
+  '/mockup-3.png?v=4',
+  '/mockup-4.png?v=4',
+  '/mockup-5.png?v=4',
+  '/mockup-6.png?v=4',
+  '/mockup-7.png?v=4',
 ];
 
 function MockupCarousel() {
