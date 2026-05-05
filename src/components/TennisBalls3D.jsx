@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 /// Three.js tennis-ball backdrop — verbatim port of the recipe from
 /// courtswiss.netlify.app/app/ (~/Downloads/swisscourt/public/app/index.html
-/// lines 380-510). One ball on mobile, two balls (left + right) on desktop.
+/// lines 380-510). One ball on mobile, one ball (left only) on desktop.
 /// Procedural felt bump map + two Catmull-Rom seam tubes per ball.
 export default function TennisBalls3D() {
   const canvasRef = useRef(null);
@@ -131,18 +131,13 @@ export default function TennisBalls3D() {
       scene.add(ballM);
       balls.push({ obj: ballM, base: myBase, kind: 'm' });
     } else {
-      const ballL = makeBall(r);
+      // Left-only on desktop: the right ball was sitting behind the mockup
+      // and added no visual value, so it's been removed. Left ball is
+      // scaled up (~1.5×) to carry the corner on its own.
+      const ballL = makeBall(r * 1.5);
       ballL.position.set(-3.7, 0.5, 0);
       scene.add(ballL);
       balls.push({ obj: ballL, base: 0.5, kind: 'l' });
-
-      const ballR = makeBall(r);
-      // Push the right ball off the right edge so it's half-clipped at the
-      // page border and never sits behind the mockup. 5.2 was still inside
-      // the visible area on tall hero layouts.
-      ballR.position.set(7.0, -0.4, 0);
-      scene.add(ballR);
-      balls.push({ obj: ballR, base: -0.4, kind: 'r' });
     }
 
     function tick() {
@@ -153,14 +148,10 @@ export default function TennisBalls3D() {
           b.obj.rotation.y = t * 1.8;
           b.obj.rotation.x = Math.sin(t * 1.2) * 0.2;
           b.obj.position.y = b.base + Math.sin(t * 2.0) * 0.05;
-        } else if (b.kind === 'l') {
+        } else {
           b.obj.rotation.y = t * 1.5;
           b.obj.rotation.x = Math.sin(t * 1.0) * 0.18;
           b.obj.position.y = b.base + Math.sin(t * 1.8) * 0.08;
-        } else {
-          b.obj.rotation.y = t * 2.2;
-          b.obj.rotation.z = Math.sin(t * 1.4) * 0.2;
-          b.obj.position.y = b.base + Math.sin(t * 2.4) * 0.07;
         }
       }
       renderer.render(scene, camera);
