@@ -169,13 +169,16 @@ function LangSwitch({ lang, onChange }) {
 }
 
 const MOCKUPS = [
-  '/mockup-1.png?v=4',
-  '/mockup-2.png?v=4',
-  '/mockup-3.png?v=4',
-  '/mockup-4.png?v=4',
-  '/mockup-5.png?v=4',
-  '/mockup-6.png?v=4',
-  '/mockup-7.png?v=4',
+  '/mockup-1.png?v=5',
+  '/mockup-2.png?v=5',
+  '/mockup-3.png?v=5',
+  '/mockup-4.png?v=5',
+  '/mockup-5.png?v=5',
+  '/mockup-6.png?v=5',
+  '/mockup-7.png?v=5',
+  '/mockup-8.png?v=5',
+  '/mockup-9.png?v=5',
+  '/mockup-10.png?v=5',
 ];
 
 function MockupCarousel() {

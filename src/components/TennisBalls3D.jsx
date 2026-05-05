@@ -137,7 +137,9 @@ export default function TennisBalls3D() {
       balls.push({ obj: ballL, base: 0.5, kind: 'l' });
 
       const ballR = makeBall(r);
-      ballR.position.set(3.7, -0.4, 0);
+      // Push the right ball further out so it sits at the page edge and is
+      // half-clipped, instead of sitting on top of the mockup.
+      ballR.position.set(5.2, -0.4, 0);
       scene.add(ballR);
       balls.push({ obj: ballR, base: -0.4, kind: 'r' });
     }
