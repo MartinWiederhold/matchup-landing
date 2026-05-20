@@ -13,6 +13,14 @@ export default {
           'Arial',
           'sans-serif',
         ],
+        serif: [
+          'Fraunces',
+          'ui-serif',
+          'Georgia',
+          'Cambria',
+          'Times New Roman',
+          'serif',
+        ],
       },
       colors: {
         ink: '#1A1A1A',

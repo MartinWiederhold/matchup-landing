@@ -4,10 +4,9 @@ import TennisBalls3D from '../components/TennisBalls3D.jsx';
 
 const COPY = {
   en: {
-    eyebrow: 'TENNIS · PADEL · SWITZERLAND',
-    title: 'Matchup',
-    tagline: 'Find your perfect playing partner.',
-    appStore: 'App Store',
+    title: 'Tennis, Padel & Pickleball',
+    tagline: 'Find your playing partner.',
+    appStore: 'Apple',
     androidDownload: 'Android',
     download: 'Download',
     featuresTitle: 'Everything for your next match.',
@@ -27,10 +26,9 @@ const COPY = {
     ctaContact: 'Beta access or questions?',
   },
   de: {
-    eyebrow: 'TENNIS · PADEL · SCHWEIZ',
-    title: 'Matchup',
-    tagline: 'Finde deinen perfekten Spielpartner.',
-    appStore: 'App Store',
+    title: 'Tennis, Padel & Pickleball',
+    tagline: 'Finde deinen Spielpartner.',
+    appStore: 'Apple',
     androidDownload: 'Android',
     download: 'Download',
     featuresTitle: 'Alles für dein nächstes Match.',
@@ -285,22 +283,19 @@ export default function Home() {
         <div className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-16 sm:pt-24 sm:pb-24">
           <div className="grid lg:grid-cols-[5fr_7fr] gap-12 lg:gap-12 items-center">
             <div className="text-center lg:text-left">
-              <p className="text-xs uppercase tracking-[0.25em] text-muted font-semibold mb-5">
-                {t.eyebrow}
-              </p>
-              <h1 className="text-6xl sm:text-7xl lg:text-[88px] font-extrabold leading-[1.02] tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-[64px] font-extrabold leading-[1.04] tracking-tight">
                 {t.title}
               </h1>
-              <p className="mt-6 text-lg sm:text-xl text-muted max-w-xl lg:max-w-none mx-auto lg:mx-0 leading-relaxed">
+              <p className="mt-5 font-serif font-light italic text-2xl sm:text-3xl lg:text-[32px] text-muted leading-snug max-w-xl lg:max-w-none mx-auto lg:mx-0">
                 {t.tagline}
               </p>
 
-              <div className="mt-10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-center lg:justify-start">
+              <div className="mt-10 flex flex-row gap-3 items-center justify-center lg:justify-start max-w-sm mx-auto lg:mx-0">
                 <a
                   href={APP_STORE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2.5 bg-ink text-white text-sm font-semibold px-6 py-3.5 rounded-full hover:opacity-90 transition"
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-ink text-white text-sm font-semibold px-4 py-3.5 rounded-full hover:opacity-90 transition"
                 >
                   <AppleGlyph />
                   {t.appStore}
@@ -308,7 +303,7 @@ export default function Home() {
                 <a
                   href="/matchup.apk"
                   download
-                  className="inline-flex items-center justify-center gap-2.5 border border-line bg-white text-sm font-semibold px-6 py-3.5 rounded-full hover:border-ink transition"
+                  className="flex-1 inline-flex items-center justify-center gap-2 border border-line bg-white text-sm font-semibold px-4 py-3.5 rounded-full hover:border-ink transition"
                 >
                   <AndroidGlyph />
                   {t.androidDownload}
