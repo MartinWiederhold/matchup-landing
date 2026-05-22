@@ -308,7 +308,7 @@ export default function Home() {
                 <h1 className="text-4xl sm:text-5xl font-extrabold leading-[1.04] tracking-tight">
                   {t.mobileTitle}
                 </h1>
-                <p className="mt-5 font-serif font-light italic text-2xl sm:text-3xl text-muted leading-snug max-w-xl mx-auto">
+                <p className="mt-5 text-lg sm:text-xl text-muted leading-relaxed max-w-xl mx-auto">
                   {t.mobileTagline}
                 </p>
               </div>

@@ -9,6 +9,12 @@ export default function TennisBalls3D() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
+    // Mobile: skip WebGL init entirely. The canvas is also hidden via
+    // Tailwind (hidden md:block) — viewport-driven canvas height made the
+    // ball jump in size as the URL bar collapsed, and the section-bound
+    // canvas vanished on scroll. Desktop only.
+    if (window.innerWidth < 768) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const wrap = canvas.parentElement;
@@ -181,7 +187,7 @@ export default function TennisBalls3D() {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none z-0"
+      className="absolute inset-0 w-full h-full pointer-events-none z-0 hidden md:block"
     />
   );
 }
