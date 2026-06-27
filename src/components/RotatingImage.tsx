@@ -1,34 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Image from "next/image";
 
 /**
- * Zeigt mehrere Bilder abwechselnd mit sanftem Crossfade (object-cover, fill).
+ * Gemeinsamer Takt für ALLE RotatingImages → alle Kacheln wechseln synchron
+ * und gemächlich (ein einziger Timer statt mehrerer unabhängiger).
+ */
+const INTERVAL_MS = 6000;
+let tick = 0;
+const listeners = new Set<() => void>();
+let started = false;
+
+function ensureTicker() {
+  if (started || typeof window === "undefined") return;
+  started = true;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  window.setInterval(() => {
+    tick += 1;
+    listeners.forEach((l) => l());
+  }, INTERVAL_MS);
+}
+
+function subscribe(cb: () => void) {
+  ensureTicker();
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+const getSnapshot = () => tick;
+const getServerSnapshot = () => 0;
+
+/**
+ * Zeigt mehrere Bilder mit sanftem Crossfade (object-cover, fill).
  * Der Eltern-Container muss `relative` sein.
  */
 export default function RotatingImage({
   images,
   alt,
-  intervalMs = 3500,
   sizes,
 }: {
   images: string[];
   alt: string;
-  intervalMs?: number;
   sizes?: string;
 }) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (images.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % images.length),
-      intervalMs,
-    );
-    return () => window.clearInterval(id);
-  }, [images.length, intervalMs]);
+  const t = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const index = images.length ? t % images.length : 0;
 
   return (
     <>
@@ -40,7 +58,7 @@ export default function RotatingImage({
           fill
           sizes={sizes}
           priority={i === 0}
-          className={`object-cover transition-opacity duration-1000 ${
+          className={`object-cover transition-opacity duration-[1200ms] ease-in-out ${
             i === index ? "opacity-100" : "opacity-0"
           }`}
         />
