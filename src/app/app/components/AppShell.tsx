@@ -1,0 +1,138 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { Profile } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
+import { AppNavContext, type TabKey, type SubViewState } from "./appNav";
+import DiscoverTab from "./tabs/DiscoverTab";
+import LikesTab from "./tabs/LikesTab";
+import MatchesTab from "./tabs/MatchesTab";
+import GamesTab from "./tabs/GamesTab";
+import ProfileTab from "./tabs/ProfileTab";
+import SubViewRenderer from "./SubViewRenderer";
+
+const TABS: { key: TabKey; label: string; icon: (active: boolean) => string }[] =
+  [
+    { key: "discover", label: "Entdecken", icon: () => "M12 2 4 7v10l8 5 8-5V7z" },
+    { key: "likes", label: "Likes", icon: () => "M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z" },
+    { key: "matches", label: "Matches", icon: () => "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
+    { key: "games", label: "Spiele", icon: () => "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
+    { key: "profile", label: "Profil", icon: () => "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
+  ];
+
+export default function AppShell({ profile }: { profile: Profile }) {
+  const [activeTab, setActiveTab] = useState<TabKey>("discover");
+  const [stack, setStack] = useState<SubViewState[]>([]);
+  const [likeCount, setLikeCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const openSubView = useCallback(
+    (sv: SubViewState) => setStack((s) => [...s, sv]),
+    [],
+  );
+  const closeSubView = useCallback(() => setStack((s) => s.slice(0, -1)), []);
+
+  const refreshBadges = useCallback(async () => {
+    const { count: likes } = await supabase
+      .from("likes")
+      .select("id", { count: "exact", head: true })
+      .eq("to_user_id", profile.id);
+    setLikeCount(likes ?? 0);
+
+    const { count: unread } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("is_read", false)
+      .neq("sender_id", profile.id);
+    setUnreadCount(unread ?? 0);
+  }, [profile.id]);
+
+  useEffect(() => {
+    refreshBadges();
+  }, [refreshBadges, activeTab]);
+
+  const current = stack[stack.length - 1] ?? null;
+
+  return (
+    <AppNavContext.Provider
+      value={{
+        profile,
+        activeTab,
+        setActiveTab: (t) => {
+          setStack([]);
+          setActiveTab(t);
+        },
+        openSubView,
+        closeSubView,
+        refreshBadges,
+      }}
+    >
+      <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-black text-white">
+        {current ? (
+          <SubViewRenderer subView={current} />
+        ) : (
+          <>
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === "discover" && <DiscoverTab />}
+              {activeTab === "likes" && <LikesTab />}
+              {activeTab === "matches" && <MatchesTab />}
+              {activeTab === "games" && <GamesTab />}
+              {activeTab === "profile" && <ProfileTab />}
+            </div>
+
+            <nav className="shrink-0 border-t border-zinc-800 bg-black/95 backdrop-blur-md">
+              <div className="flex h-[72px] items-center justify-around pb-[env(safe-area-inset-bottom)]">
+                {TABS.map((tab) => {
+                  const active = activeTab === tab.key;
+                  const badge =
+                    tab.key === "likes"
+                      ? likeCount
+                      : tab.key === "matches"
+                        ? unreadCount
+                        : 0;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => {
+                        setStack([]);
+                        setActiveTab(tab.key);
+                      }}
+                      className="relative flex flex-col items-center gap-1 pt-2"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={
+                          active ? "text-matchup" : "text-zinc-500"
+                        }
+                      >
+                        <path d={tab.icon(active)} />
+                      </svg>
+                      <span
+                        className={`text-[10px] ${active ? "text-matchup" : "text-zinc-500"}`}
+                      >
+                        {tab.label}
+                      </span>
+                      {badge > 0 && (
+                        <span className="absolute -right-1 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {badge > 9 ? "9+" : badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+          </>
+        )}
+      </div>
+    </AppNavContext.Provider>
+  );
+}
