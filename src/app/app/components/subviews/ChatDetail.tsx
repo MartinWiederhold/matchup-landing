@@ -60,7 +60,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "web",
           table: "messages",
           filter: `match_id=eq.${matchId}`,
         },

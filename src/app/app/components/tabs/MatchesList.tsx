@@ -55,7 +55,7 @@ export default function MatchesList() {
       .channel(`all-messages:${profile.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
+        { event: "INSERT", schema: "web", table: "messages" },
         () => load(),
       )
       .subscribe();

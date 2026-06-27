@@ -29,7 +29,7 @@ export default function TicketChat({ ticketId }: { ticketId: string }) {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "web",
           table: "support_messages",
           filter: `ticket_id=eq.${ticketId}`,
         },

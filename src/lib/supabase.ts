@@ -10,6 +10,9 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "anon-key-placeholder";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  // Die Web-App arbeitet vollständig im isolierten Schema "web" — die echte
+  // App (Schema "public") bleibt dadurch komplett unberührt.
+  db: { schema: "web" },
   auth: {
     persistSession: true,
     autoRefreshToken: true,

@@ -161,6 +161,7 @@ export default function OnboardingFlow() {
         height_cm: state.height_cm,
         city: state.city,
         country: state.country,
+        country_name: state.country === "CH" ? "Schweiz" : state.country,
         latitude: state.latitude,
         longitude: state.longitude,
         club_id: state.club_id,

@@ -45,7 +45,7 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "web",
           table: "group_messages",
           filter: `group_id=eq.${groupId}`,
         },
