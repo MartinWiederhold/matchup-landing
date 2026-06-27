@@ -54,7 +54,7 @@ export default function AppGuard() {
       .from("warnings")
       .select("*")
       .eq("user_id", profile.id)
-      .eq("is_read", false)
+      .eq("read", false)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -126,7 +126,7 @@ export default function AppGuard() {
               onClick={async () => {
                 await supabase
                   .from("warnings")
-                  .update({ is_read: true })
+                  .update({ read: true })
                   .eq("id", warning.id);
                 setWarning(null);
               }}

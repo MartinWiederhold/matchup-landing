@@ -31,7 +31,7 @@ export default function MatchesList() {
       )
       .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
       .eq("is_active", true)
-      .order("updated_at", { ascending: false });
+      .order("created_at", { ascending: false });
 
     const rows = (data as AppMatch[]) ?? [];
     await Promise.all(

@@ -35,13 +35,39 @@ export default function GamesTab() {
       participants:game_participants(*, profile:profiles(display_name, first_name, profile_image))`;
 
     if (mode === "mine") {
-      const { data } = await supabase
-        .from("game_events")
-        .select(select)
-        .or(`created_by.eq.${profile.id},participants.user_id.eq.${profile.id}`)
-        .gte("date_time", nowIso)
-        .order("date_time", { ascending: true });
-      setGames((data as GameEvent[]) ?? []);
+      // „Meine Spiele" = selbst erstellt ODER Teilnehmer. Embedded-Resource-
+      // Filter geht nicht in einem .or(), daher zwei Queries + Merge.
+      const [created, parts] = await Promise.all([
+        supabase
+          .from("game_events")
+          .select(select)
+          .eq("created_by", profile.id)
+          .gte("date_time", nowIso),
+        supabase
+          .from("game_participants")
+          .select("game_event_id")
+          .eq("user_id", profile.id),
+      ]);
+      const partIds = (parts.data ?? [])
+        .map((p) => p.game_event_id)
+        .filter(Boolean);
+      let joined: GameEvent[] = [];
+      if (partIds.length) {
+        const { data } = await supabase
+          .from("game_events")
+          .select(select)
+          .in("id", partIds)
+          .gte("date_time", nowIso);
+        joined = (data as GameEvent[]) ?? [];
+      }
+      const merged = [...((created.data as GameEvent[]) ?? []), ...joined];
+      const uniq = Array.from(
+        new Map(merged.map((g) => [g.id, g])).values(),
+      ).sort(
+        (a, b) =>
+          new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
+      );
+      setGames(uniq);
     } else {
       const { data } = await supabase
         .from("game_events")

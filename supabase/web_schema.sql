@@ -100,4 +100,56 @@ end $$;
 
 grant execute on function web.delete_my_account() to authenticated;
 
+-- 6) Foreign Keys -----------------------------------------------------------
+-- LIKE … INCLUDING ALL kopiert KEINE Foreign Keys. PostgREST braucht sie aber
+-- für eingebettete Queries (z.B. matches → profiles). Hier nachziehen.
+do $$
+declare r record;
+begin
+  for r in select * from (values
+    ('profiles','club_id','clubs','id'),
+    ('likes','from_user_id','profiles','id'),
+    ('likes','to_user_id','profiles','id'),
+    ('skips','user_id','profiles','id'),
+    ('skips','skipped_user_id','profiles','id'),
+    ('matches','user1_id','profiles','id'),
+    ('matches','user2_id','profiles','id'),
+    ('messages','match_id','matches','id'),
+    ('messages','sender_id','profiles','id'),
+    ('groups','created_by','profiles','id'),
+    ('group_members','group_id','groups','id'),
+    ('group_members','user_id','profiles','id'),
+    ('group_messages','group_id','groups','id'),
+    ('group_messages','sender_id','profiles','id'),
+    ('community_posts','author_id','profiles','id'),
+    ('community_comments','post_id','community_posts','id'),
+    ('community_comments','author_id','profiles','id'),
+    ('community_likes','post_id','community_posts','id'),
+    ('community_likes','user_id','profiles','id'),
+    ('game_events','created_by','profiles','id'),
+    ('game_participants','game_event_id','game_events','id'),
+    ('game_participants','user_id','profiles','id'),
+    ('reports','reporter_id','profiles','id'),
+    ('warnings','user_id','profiles','id'),
+    ('support_tickets','user_id','profiles','id'),
+    ('support_messages','ticket_id','support_tickets','id'),
+    ('support_messages','sender_id','profiles','id'),
+    ('blocks','blocker_id','profiles','id'),
+    ('blocks','blocked_id','profiles','id'),
+    ('achievements','user_id','profiles','id'),
+    ('player_stats','user_id','profiles','id')
+  ) as t(tbl,col,rtbl,rcol)
+  loop
+    if not exists (select 1 from information_schema.table_constraints
+       where constraint_schema='web' and constraint_name = r.tbl||'_'||r.col||'_fkey') then
+      begin
+        execute format('alter table web.%I add constraint %I foreign key (%I) references web.%I(%I)',
+          r.tbl, r.tbl||'_'||r.col||'_fkey', r.col, r.rtbl, r.rcol);
+      exception when others then null;
+      end;
+    end if;
+  end loop;
+end $$;
+notify pgrst, 'reload schema';
+
 -- Fertig. Nicht vergessen: "web" unter Settings → API → Exposed schemas ergänzen.
