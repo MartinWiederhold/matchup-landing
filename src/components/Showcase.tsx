@@ -1,0 +1,64 @@
+import Image from "next/image";
+
+const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
+
+const ROWS = [
+  {
+    eyebrow: "BILDSCHIRMFREIES DESIGN",
+    title: "Entwickelt, um rund um die Uhr getragen zu werden",
+    copy: "Ein bildschirmfreies Design bedeutet keine Pings, keine Ablenkungen und keinen unnötigen Schnickschnack — nur kontinuierliche Einblicke, Tag und Nacht.",
+    img: `${IMG}/4Yh8vc5goDh5JgJHv9DVo1/c0366d221c77a0c972cebd4cc30a6b03/Image_desktop.webp`,
+    reverse: false,
+  },
+  {
+    eyebrow: "TRAGEMÖGLICHKEITEN",
+    title: "Ein Gerät, unendlich viele Tragemöglichkeiten",
+    copy: "Aus hochwertigem italienischem Leder und edlen Metallen gefertigt — gestalte einen Look, der einzigartig zu dir passt, oder trage MATCHUP ganz ohne Handgelenk mit MATCHUP Body Smart Apparel.",
+    img: `${IMG}/7GbUUq5XAVbR0XxHZb4X7S/6af554f2573a60cb23ed28976fc33b5c/Leatherluxe_ways_to_wear__3_.webp`,
+    reverse: true,
+  },
+];
+
+export default function Showcase() {
+  return (
+    <section id="shop" className="bg-white px-4 py-24 sm:px-6 lg:px-12">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-24">
+        {ROWS.map((row) => (
+          <div
+            key={row.title}
+            className={`flex flex-col items-center gap-10 lg:gap-16 ${
+              row.reverse ? "lg:flex-row-reverse" : "lg:flex-row"
+            }`}
+          >
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-neutral-100 lg:w-1/2">
+              <Image
+                src={row.img}
+                alt={row.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+            <div className="w-full lg:w-1/2">
+              <p className="text-xs font-bold tracking-[0.2em] text-matchup">
+                {row.eyebrow}
+              </p>
+              <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+                {row.title}
+              </h2>
+              <p className="mt-6 text-base leading-relaxed text-neutral-600 sm:text-lg">
+                {row.copy}
+              </p>
+              <a
+                href="#mitgliedschaft"
+                className="mt-8 inline-block rounded-full border border-black px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
+              >
+                ENTDECKEN
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
