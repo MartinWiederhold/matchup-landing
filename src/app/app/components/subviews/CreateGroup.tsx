@@ -105,7 +105,7 @@ export default function CreateGroup() {
           onClick={() => setIsOpen((v) => !v)}
           className="flex w-full items-center justify-between rounded-xl bg-zinc-800 px-4 py-3 text-sm"
         >
-          <span>{isOpen ? "🔓 Offene Gruppe" : "🔒 Geschlossene Gruppe"}</span>
+          <span>{isOpen ? "Offene Gruppe" : "Geschlossene Gruppe"}</span>
           <span
             className={`relative h-6 w-11 rounded-full ${isOpen ? "bg-matchup" : "bg-zinc-600"}`}
           >

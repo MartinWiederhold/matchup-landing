@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/utils/formatters";
 import type { CommunityComment, CommunityPost } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
+import { SendIcon } from "../shared/icons";
 import { SubViewHeader } from "../shared/ui";
 
 export default function Comments({ postId }: { postId: string }) {
@@ -97,7 +98,7 @@ export default function Comments({ postId }: { postId: string }) {
           className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
           aria-label="Senden"
         >
-          ➤
+          <SendIcon size={18} className="text-white" />
         </button>
       </div>
     </div>

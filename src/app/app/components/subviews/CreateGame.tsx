@@ -137,8 +137,8 @@ export default function CreateGame() {
           </div>
         </Field>
 
-        <Toggle label="🔓 Offen für alle" value={isOpen} onChange={setIsOpen} />
-        <Toggle label="🏟️ Platz gebucht" value={booked} onChange={setBooked} />
+        <Toggle label="Offen für alle" value={isOpen} onChange={setIsOpen} />
+        <Toggle label="Platz gebucht" value={booked} onChange={setBooked} />
       </div>
 
       <div className="shrink-0 border-t border-zinc-800 p-5">

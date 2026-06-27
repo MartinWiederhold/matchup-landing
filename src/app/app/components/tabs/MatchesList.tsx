@@ -6,6 +6,7 @@ import { timeAgo, isOnline } from "@/lib/utils/formatters";
 import type { AppMatch, Message, Profile } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
+import { MessageIcon } from "../shared/icons";
 import { FullLoading, EmptyState } from "../shared/ui";
 
 export default function MatchesList() {
@@ -68,7 +69,7 @@ export default function MatchesList() {
   if (matches.length === 0)
     return (
       <EmptyState
-        icon="💬"
+        icon={<MessageIcon size={44} />}
         title="Noch keine Matches"
         message="Like Spieler im Discover-Tab!"
         actionLabel="Entdecken"
@@ -101,7 +102,7 @@ export default function MatchesList() {
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{u.first_name}</p>
                 <p className="truncate text-sm text-zinc-400">
-                  {m.last_message?.content ?? "Sag Hallo 👋"}
+                  {m.last_message?.content ?? "Sag Hallo"}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">

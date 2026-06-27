@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { skillLabel, sportIcon } from "@/lib/utils/formatters";
+import { skillLabel } from "@/lib/utils/formatters";
+import { SportIcon, HeartIcon, XIcon } from "../shared/icons";
 import type { Like, Profile } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
@@ -70,7 +71,7 @@ export default function LikesTab() {
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 ? (
           <EmptyState
-            icon="💤"
+            icon={<HeartIcon size={44} />}
             title="Noch keine Likes"
             message="Vervollständige dein Profil und werde sichtbar."
             actionLabel="Entdecken"
@@ -96,7 +97,7 @@ export default function LikesTab() {
                       {u.first_name}, {u.age}
                     </p>
                     <p className="truncate text-xs text-zinc-400">
-                      {sportIcon(u.sports?.[0])} {skillLabel(u.skill_level)}
+                      <SportIcon sport={u.sports?.[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {skillLabel(u.skill_level)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -106,15 +107,15 @@ export default function LikesTab() {
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
                       aria-label="Ablehnen"
                     >
-                      ✕
+                      <XIcon size={18} />
                     </button>
                     <button
                       type="button"
                       onClick={() => likeBack(like)}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
                       aria-label="Like zurück"
                     >
-                      ♥
+                      <HeartIcon size={18} filled />
                     </button>
                   </div>
                 </li>

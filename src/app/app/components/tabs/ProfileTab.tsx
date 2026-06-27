@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { skillLabel, sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { skillLabel, sportLabel } from "@/lib/utils/formatters";
+import {
+  SportIcon,
+  TrophyIcon,
+  FlameIcon,
+  StarIcon,
+  GemIcon,
+  UsersIcon,
+  MapPinIcon,
+} from "../shared/icons";
 import { ACHIEVEMENT_DEFS } from "@/lib/types";
 import type { PlayerStats, Achievement } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -38,9 +47,13 @@ export default function ProfileTab() {
         <h1 className="mt-4 text-2xl font-bold">
           {profile.first_name}, {profile.age}
         </h1>
-        {profile.city && <p className="text-sm text-zinc-400">📍 {profile.city}</p>}
+        {profile.city && (
+          <p className="flex items-center justify-center gap-1 text-sm text-zinc-400">
+            <MapPinIcon size={14} /> {profile.city}
+          </p>
+        )}
         <p className="mt-1 text-sm text-zinc-400">
-          {sportIcon(profile.sports[0])} {profile.sports.map(sportLabel).join(", ")} ·{" "}
+          <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {profile.sports.map(sportLabel).join(", ")} ·{" "}
           {skillLabel(profile.skill_level)}
         </p>
         {profile.is_verified && (
@@ -62,7 +75,7 @@ export default function ProfileTab() {
                 key={s}
                 className="rounded-full bg-zinc-800 px-4 py-1.5 text-sm"
               >
-                {sportIcon(s)} {sportLabel(s)}
+                <SportIcon sport={s} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(s)}
               </span>
             ))}
           </div>
@@ -70,11 +83,11 @@ export default function ProfileTab() {
 
         <Section title="Statistiken">
           <div className="grid grid-cols-2 gap-3">
-            <Stat label="🏆 Matches" value={stats?.total_matches ?? 0} />
-            <Stat label="🔥 Streak" value={`${stats?.current_streak ?? 0} Tage`} />
-            <Stat label="⭐ Level" value={stats?.level ?? 1} />
-            <Stat label="💎 XP" value={stats?.xp_points ?? 0} />
-            <Stat label="👥 Partner" value={stats?.different_partners ?? 0} />
+            <Stat icon={<TrophyIcon size={14} />} label="Matches" value={stats?.total_matches ?? 0} />
+            <Stat icon={<FlameIcon size={14} />} label="Streak" value={`${stats?.current_streak ?? 0} Tage`} />
+            <Stat icon={<StarIcon size={14} />} label="Level" value={stats?.level ?? 1} />
+            <Stat icon={<GemIcon size={14} />} label="XP" value={stats?.xp_points ?? 0} />
+            <Stat icon={<UsersIcon size={14} />} label="Partner" value={stats?.different_partners ?? 0} />
           </div>
         </Section>
 
@@ -152,10 +165,20 @@ function Section({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-xl bg-zinc-900 px-4 py-3">
-      <p className="text-xs text-zinc-400">{label}</p>
+      <p className="flex items-center gap-1.5 text-xs text-zinc-400">
+        {icon} {label}
+      </p>
       <p className="text-lg font-bold">{value}</p>
     </div>
   );

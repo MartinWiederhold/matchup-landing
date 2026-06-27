@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/utils/formatters";
 import type { CommunityPost } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
+import { MegaphoneIcon, PlusIcon, HeartIcon, MessageIcon } from "../shared/icons";
 import { FullLoading, EmptyState } from "../shared/ui";
 
 export default function CommunityFeed() {
@@ -69,7 +70,7 @@ export default function CommunityFeed() {
       <div className="h-full overflow-y-auto pb-20">
         {posts.length === 0 ? (
           <EmptyState
-            icon="📣"
+            icon={<MegaphoneIcon size={44} />}
             title="Noch keine Posts"
             message="Sei der erste, der etwas mit der Community teilt."
           />
@@ -95,17 +96,19 @@ export default function CommunityFeed() {
                   <button
                     type="button"
                     onClick={() => toggleLike(post)}
-                    className={post.is_liked_by_me ? "text-matchup" : ""}
+                    className={`flex items-center gap-1.5 ${post.is_liked_by_me ? "text-matchup" : ""}`}
                   >
-                    ♥ {post.likes_count}
+                    <HeartIcon size={15} filled={post.is_liked_by_me} />{" "}
+                    {post.likes_count}
                   </button>
                   <button
                     type="button"
                     onClick={() =>
                       openSubView({ type: "comments", postId: post.id })
                     }
+                    className="flex items-center gap-1.5"
                   >
-                    💬 {post.comments_count}
+                    <MessageIcon size={15} /> {post.comments_count}
                   </button>
                 </div>
               </li>
@@ -117,10 +120,10 @@ export default function CommunityFeed() {
       <button
         type="button"
         onClick={() => openSubView({ type: "create-post" })}
-        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-2xl text-white shadow-lg"
+        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
         aria-label="Post erstellen"
       >
-        +
+        <PlusIcon size={26} />
       </button>
     </div>
   );

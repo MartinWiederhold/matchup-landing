@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import type { SupportMessage } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
+import { SendIcon } from "../shared/icons";
 
 export default function TicketChat({ ticketId }: { ticketId: string }) {
   const { profile } = useAppNav();
@@ -96,7 +97,7 @@ export default function TicketChat({ ticketId }: { ticketId: string }) {
           className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
           aria-label="Senden"
         >
-          ➤
+          <SendIcon size={18} className="text-white" />
         </button>
       </div>
     </div>

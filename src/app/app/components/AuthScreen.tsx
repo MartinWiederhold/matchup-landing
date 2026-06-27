@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { useAuth, translateError } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import {
+  TennisIcon,
+  PadelIcon,
+  PickleballIcon,
+  EyeIcon,
+  EyeOffIcon,
+  AppleIcon,
+  GoogleIcon,
+} from "./shared/icons";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,8 +74,10 @@ export default function AuthScreen() {
           <span className="matchup-wordmark text-3xl font-bold tracking-[0.2em]">
             MATCHUP
           </span>
-          <div className="mt-2 text-2xl" aria-hidden="true">
-            🎾
+          <div className="mt-3 flex justify-center gap-3 text-white/80" aria-hidden="true">
+            <TennisIcon size={26} />
+            <PadelIcon size={26} />
+            <PickleballIcon size={26} />
           </div>
         </div>
 
@@ -115,7 +126,7 @@ export default function AuthScreen() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
               aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
             </button>
           </div>
 
@@ -202,17 +213,14 @@ export default function AuthScreen() {
             onClick={() => handleOAuth("apple")}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3.5 text-sm font-semibold text-black"
           >
-            <span aria-hidden="true"></span> Mit Apple anmelden
+            <AppleIcon size={18} /> Mit Apple anmelden
           </button>
           <button
             type="button"
             onClick={() => handleOAuth("google")}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-800 py-3.5 text-sm font-semibold text-white"
           >
-            <span aria-hidden="true" className="font-bold">
-              G
-            </span>{" "}
-            Mit Google anmelden
+            <GoogleIcon size={18} /> Mit Google anmelden
           </button>
         </div>
       </div>

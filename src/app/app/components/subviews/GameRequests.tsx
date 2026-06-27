@@ -6,6 +6,7 @@ import { skillLabel } from "@/lib/utils/formatters";
 import type { GameParticipant } from "@/lib/types";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
+import { InboxIcon, CheckIcon, XIcon } from "../shared/icons";
 
 export default function GameRequests({ gameId }: { gameId: string }) {
   const [requests, setRequests] = useState<GameParticipant[]>([]);
@@ -44,7 +45,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
         {loading ? (
           <FullLoading />
         ) : requests.length === 0 ? (
-          <EmptyState icon="📭" title="Keine Anfragen" message="Aktuell warten keine Anfragen." />
+          <EmptyState icon={<InboxIcon size={44} />} title="Keine Anfragen" message="Aktuell warten keine Anfragen." />
         ) : (
           <ul className="divide-y divide-zinc-800">
             {requests.map((r) => (
@@ -63,10 +64,10 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                 <button
                   type="button"
                   onClick={() => respond(r.id, "accepted")}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
                   aria-label="Annehmen"
                 >
-                  ✓
+                  <CheckIcon size={18} />
                 </button>
                 <button
                   type="button"
@@ -74,7 +75,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
                   aria-label="Ablehnen"
                 >
-                  ✕
+                  <XIcon size={18} />
                 </button>
               </li>
             ))}

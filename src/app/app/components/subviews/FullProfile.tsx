@@ -2,7 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { skillLabel, sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { skillLabel, sportLabel } from "@/lib/utils/formatters";
+import {
+  SportIcon,
+  FlagIcon,
+  BanIcon,
+  MapPinIcon,
+  CheckIcon,
+  StatsIcon,
+  MedalIcon,
+  RulerIcon,
+  TargetIcon,
+  TrophyIcon,
+  FlameIcon,
+  StarIcon,
+  HeartIcon,
+  XIcon,
+} from "../shared/icons";
 import type { Profile, PlayerStats } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
@@ -84,12 +100,12 @@ export default function FullProfile({
         <button type="button" onClick={closeSubView} className="text-xl" aria-label="Zurück">
           ←
         </button>
-        <div className="flex gap-4 text-lg">
+        <div className="flex gap-4 text-zinc-300">
           <button type="button" onClick={report} aria-label="Melden">
-            ⚑
+            <FlagIcon size={20} />
           </button>
           <button type="button" onClick={block} aria-label="Blockieren">
-            ⊘
+            <BanIcon size={20} />
           </button>
         </div>
       </header>
@@ -122,8 +138,16 @@ export default function FullProfile({
             <h1 className="text-2xl font-bold">
               {p.first_name}, {p.age}
             </h1>
-            {p.city && <p className="text-sm text-zinc-400">📍 {p.city}</p>}
-            {p.is_verified && <p className="text-xs text-matchup">✓ Verifiziert</p>}
+            {p.city && (
+              <p className="flex items-center gap-1 text-sm text-zinc-400">
+                <MapPinIcon size={14} /> {p.city}
+              </p>
+            )}
+            {p.is_verified && (
+              <p className="flex items-center gap-1 text-xs text-matchup">
+                <CheckIcon size={14} /> Verifiziert
+              </p>
+            )}
           </div>
 
           {p.bio && (
@@ -141,12 +165,26 @@ export default function FullProfile({
             </h2>
             <ul className="space-y-1 text-sm text-zinc-300">
               <li>
-                {sportIcon(p.sports[0])} {p.sports.map(sportLabel).join(", ")}
+                <SportIcon sport={p.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {p.sports.map(sportLabel).join(", ")}
               </li>
-              <li>📊 {skillLabel(p.skill_level)}</li>
-              {p.official_rating && <li>🏅 {p.official_rating}</li>}
-              {p.height_cm && <li>📏 {p.height_cm} cm</li>}
-              {p.goals?.length > 0 && <li>🎯 {p.goals.join(", ")}</li>}
+              <li className="flex items-center gap-2">
+                <StatsIcon size={15} /> {skillLabel(p.skill_level)}
+              </li>
+              {p.official_rating && (
+                <li className="flex items-center gap-2">
+                  <MedalIcon size={15} /> {p.official_rating}
+                </li>
+              )}
+              {p.height_cm && (
+                <li className="flex items-center gap-2">
+                  <RulerIcon size={15} /> {p.height_cm} cm
+                </li>
+              )}
+              {p.goals?.length > 0 && (
+                <li className="flex items-center gap-2">
+                  <TargetIcon size={15} /> {p.goals.join(", ")}
+                </li>
+              )}
             </ul>
           </div>
 
@@ -155,9 +193,10 @@ export default function FullProfile({
               <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
                 Statistiken
               </h2>
-              <p className="text-sm text-zinc-300">
-                🏆 {stats.total_matches} Matches · 🔥 {stats.current_streak}-Tage-Streak
-                · ⭐ Level {stats.level}
+              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-zinc-300">
+                <TrophyIcon size={14} /> {stats.total_matches} Matches ·{" "}
+                <FlameIcon size={14} /> {stats.current_streak}-Tage-Streak ·{" "}
+                <StarIcon size={14} /> Level {stats.level}
               </p>
             </div>
           )}
@@ -169,18 +208,18 @@ export default function FullProfile({
           <button
             type="button"
             onClick={skip}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-xl"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-white"
             aria-label="Skip"
           >
-            ✕
+            <XIcon size={22} />
           </button>
           <button
             type="button"
             onClick={like}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-xl"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white"
             aria-label="Like"
           >
-            ♥
+            <HeartIcon size={22} filled />
           </button>
         </div>
       )}

@@ -3,7 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { haversineKm } from "@/lib/utils/haversine";
-import { skillLabel, sportIcon, formatDistance } from "@/lib/utils/formatters";
+import { skillLabel, formatDistance } from "@/lib/utils/formatters";
+import {
+  SportIcon,
+  FilterIcon,
+  GridIcon,
+  CardsIcon,
+  HeartIcon,
+  XIcon,
+  UsersIcon,
+  MapPinIcon,
+  CheckIcon,
+} from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -161,9 +172,9 @@ export default function DiscoverTab() {
         <button
           type="button"
           onClick={() => setShowFilter(true)}
-          className="text-sm text-zinc-300"
+          className="flex items-center gap-1.5 text-sm text-zinc-300"
         >
-          ☰ Filter
+          <FilterIcon size={18} /> Filter
         </button>
         <span className="font-bold tracking-wide">ENTDECKEN</span>
         <button
@@ -172,14 +183,14 @@ export default function DiscoverTab() {
           className="text-sm text-zinc-300"
           aria-label="Ansicht wechseln"
         >
-          {viewMode === "card" ? "▣" : "◫"}
+          {viewMode === "card" ? <GridIcon size={20} /> : <CardsIcon size={20} />}
         </button>
       </header>
 
       <div className="flex-1 overflow-y-auto">
         {remaining.length === 0 ? (
           <EmptyState
-            icon="🎾"
+            icon={<UsersIcon size={44} />}
             title="Keine weiteren Spieler"
             message="Erweitere deinen Suchradius oder ändere die Filter."
             actionLabel="Filter öffnen"
@@ -327,16 +338,21 @@ function CardView({
             {profile.first_name}, {profile.age}
           </h2>
           <p className="mt-1 text-sm text-zinc-200">
-            {sportIcon(profile.sports[0])}{" "}
+            <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" />{" "}
             {profile.sports.map((s) => s).join(", ")} ·{" "}
             {skillLabel(profile.skill_level)}
           </p>
-          <p className="mt-0.5 text-sm text-zinc-400">
-            {dist ? `📍 ${dist}` : ""}
-            {profile.club_name_manual ? ` · ${profile.club_name_manual}` : ""}
+          <p className="mt-0.5 flex items-center gap-1 text-sm text-zinc-400">
+            {dist && <MapPinIcon size={13} />}
+            <span>
+              {dist}
+              {profile.club_name_manual ? ` · ${profile.club_name_manual}` : ""}
+            </span>
           </p>
           {profile.is_verified && (
-            <p className="mt-1 text-xs text-matchup">✓ Verifiziert</p>
+            <p className="mt-1 flex items-center gap-1 text-xs text-matchup">
+              <CheckIcon size={13} /> Verifiziert
+            </p>
           )}
         </div>
       </div>
@@ -345,18 +361,18 @@ function CardView({
         <button
           type="button"
           onClick={onSkip}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-2xl transition-transform active:scale-90"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-white transition-transform active:scale-90"
           aria-label="Skip"
         >
-          ✕
+          <XIcon size={26} />
         </button>
         <button
           type="button"
           onClick={onLike}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-matchup text-2xl transition-transform active:scale-90"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-matchup text-white transition-transform active:scale-90"
           aria-label="Like"
         >
-          ♥
+          <HeartIcon size={26} filled />
         </button>
       </div>
     </div>
@@ -391,14 +407,14 @@ function GridCard({
           {profile.first_name}, {profile.age}
         </p>
         <p className="text-xs text-zinc-400">
-          {sportIcon(profile.sports[0])} {skillLabel(profile.skill_level)}
+          <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {skillLabel(profile.skill_level)}
         </p>
         <button
           type="button"
           onClick={onLike}
-          className="mt-2 w-full rounded-full bg-matchup py-1.5 text-xs font-bold text-white"
+          className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-matchup py-1.5 text-xs font-bold text-white"
         >
-          ♥ Like
+          <HeartIcon size={13} filled /> Like
         </button>
       </div>
     </div>

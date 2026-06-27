@@ -139,7 +139,7 @@ export default function FilterSheet({
           <input
             value={clubQuery}
             onChange={(e) => searchClubs(e.target.value)}
-            placeholder="🔍 Club suchen…"
+            placeholder="Club suchen…"
             className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
           />
           {clubResults.map((c) => (

@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatEventDate, sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { formatEventDate, sportLabel } from "@/lib/utils/formatters";
+import {
+  SportIcon,
+  CalendarIcon,
+  MapPinIcon,
+  UsersIcon,
+  PlusIcon,
+} from "../shared/icons";
 import type { GameEvent } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
@@ -75,7 +82,7 @@ export default function GamesTab() {
           <FullLoading />
         ) : games.length === 0 ? (
           <EmptyState
-            icon="🎾"
+            icon={<CalendarIcon size={44} />}
             title={mode === "mine" ? "Keine Spiele geplant" : "Keine offenen Spiele"}
             message="Erstelle ein Spiel und finde Mitspieler."
           />
@@ -96,18 +103,21 @@ export default function GamesTab() {
                     className="block w-full rounded-2xl bg-zinc-900 p-4 text-left"
                   >
                     <p className="font-semibold">
-                      {sportIcon(g.sport)} {sportLabel(g.sport)} ·{" "}
+                      <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
                       {g.game_type === "singles" ? "Singles" : "Doubles"}
                     </p>
                     <p className="mt-1 text-sm text-zinc-300">
-                      📅 {formatEventDate(g.date_time)}
+                      <CalendarIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                      {formatEventDate(g.date_time)}
                     </p>
                     <p className="text-sm text-zinc-400">
-                      📍 {g.location}
+                      <MapPinIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                      {g.location}
                       {g.court_number ? `, ${g.court_number}` : ""}
                     </p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      👥 {accepted}/{cap} Teilnehmer
+                      <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                      {accepted}/{cap} Teilnehmer
                     </p>
                     <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
                       {STATUS_LABEL[g.status] ?? g.status}
@@ -123,10 +133,10 @@ export default function GamesTab() {
       <button
         type="button"
         onClick={() => openSubView({ type: "create-game" })}
-        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-2xl text-white shadow-lg"
+        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
         aria-label="Spiel erstellen"
       >
-        +
+        <PlusIcon size={26} />
       </button>
     </div>
   );

@@ -1,10 +1,24 @@
 "use client";
 
-import { useReducer, useState } from "react";
+import { useReducer, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
 import type { Sport, SkillLevel, Club } from "@/lib/types";
+import {
+  SportIcon,
+  TennisIcon,
+  PadelIcon,
+  PickleballIcon,
+  MapPinIcon,
+  CheckIcon,
+  TargetIcon,
+  TrophyIcon,
+  DumbbellIcon,
+  UsersIcon,
+  ActivityIcon,
+  CalendarIcon,
+} from "../shared/icons";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -12,27 +26,31 @@ import {
   TOTAL_STEPS,
 } from "./onboardingReducer";
 
-const SPORTS: { value: Sport; label: string; icon: string }[] = [
-  { value: "tennis", label: "Tennis", icon: "🎾" },
-  { value: "padel", label: "Padel", icon: "🏸" },
-  { value: "pickleball", label: "Pickleball", icon: "🏓" },
+const SPORTS: { value: Sport; label: string }[] = [
+  { value: "tennis", label: "Tennis" },
+  { value: "padel", label: "Padel" },
+  { value: "pickleball", label: "Pickleball" },
 ];
 
 const SKILLS: { value: SkillLevel; label: string; desc: string; dot: string }[] =
   [
-    { value: "beginner", label: "Anfänger", desc: "Ich lerne gerade die Basics", dot: "🟢" },
-    { value: "intermediate", label: "Fortgeschritten", desc: "Ich spiele regelmässig", dot: "🟡" },
-    { value: "advanced", label: "Advanced", desc: "Ich beherrsche die meisten Techniken", dot: "🟠" },
-    { value: "competitive", label: "Wettkampf", desc: "Ich spiele Turniere", dot: "🔴" },
+    { value: "beginner", label: "Anfänger", desc: "Ich lerne gerade die Basics", dot: "bg-green-500" },
+    { value: "intermediate", label: "Fortgeschritten", desc: "Ich spiele regelmässig", dot: "bg-yellow-500" },
+    { value: "advanced", label: "Advanced", desc: "Ich beherrsche die meisten Techniken", dot: "bg-orange-500" },
+    { value: "competitive", label: "Wettkampf", desc: "Ich spiele Turniere", dot: "bg-red-500" },
   ];
 
-const GOALS: { value: string; label: string; icon: string }[] = [
-  { value: "fun", label: "Spass", icon: "🎯" },
-  { value: "competitive", label: "Wettkampf", icon: "🏆" },
-  { value: "training", label: "Training", icon: "💪" },
-  { value: "social", label: "Neue Leute", icon: "👋" },
-  { value: "fitness", label: "Fitness", icon: "🏃" },
-  { value: "regular", label: "Regelmässig", icon: "📅" },
+const GOALS: {
+  value: string;
+  label: string;
+  Icon: ComponentType<{ size?: number; className?: string }>;
+}[] = [
+  { value: "fun", label: "Spass", Icon: TargetIcon },
+  { value: "competitive", label: "Wettkampf", Icon: TrophyIcon },
+  { value: "training", label: "Training", Icon: DumbbellIcon },
+  { value: "social", label: "Neue Leute", Icon: UsersIcon },
+  { value: "fitness", label: "Fitness", Icon: ActivityIcon },
+  { value: "regular", label: "Regelmässig", Icon: CalendarIcon },
 ];
 
 const RATINGS_CH = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "N1", "N2", "N3", "N4"];
@@ -140,12 +158,12 @@ export default function OnboardingFlow() {
         const compressed = await compressImage(photo);
         const path = `${user.id}/avatar_${Date.now()}_${photoUrls.length}.jpg`;
         const { error: uploadError } = await supabase.storage
-          .from("avatars")
+          .from("web-avatars")
           .upload(path, compressed, { contentType: "image/jpeg" });
         if (uploadError) throw uploadError;
         const {
           data: { publicUrl },
-        } = supabase.storage.from("avatars").getPublicUrl(path);
+        } = supabase.storage.from("web-avatars").getPublicUrl(path);
         photoUrls.push(publicUrl);
       }
 
@@ -178,10 +196,12 @@ export default function OnboardingFlow() {
       if (insertError) throw insertError;
 
       await refreshProfile();
-    } catch {
-      setSubmitError(
-        "Profil konnte nicht erstellt werden. Bitte versuche es erneut.",
-      );
+    } catch (err) {
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Unbekannter Fehler";
+      setSubmitError(`Profil konnte nicht erstellt werden: ${msg}`);
       setSubmitting(false);
     }
   }
@@ -238,7 +258,11 @@ export default function OnboardingFlow() {
             <span className="matchup-wordmark text-4xl font-bold tracking-[0.2em]">
               MATCHUP
             </span>
-            <div className="mt-3 text-2xl">🎾 🏸 🏓</div>
+            <div className="mt-4 flex justify-center gap-4 text-white/80">
+              <TennisIcon size={30} />
+              <PadelIcon size={30} />
+              <PickleballIcon size={30} />
+            </div>
             <h1 className="mt-8 text-3xl font-bold">
               Finde deinen perfekten Spielpartner
             </h1>
@@ -284,7 +308,8 @@ export default function OnboardingFlow() {
                     })
                   }
                 >
-                  {s.icon} {s.label}
+                  <SportIcon sport={s.value} size={16} className="mr-1 inline-block align-[-3px]" />
+                  {s.label}
                 </Chip>
               ))}
             </div>
@@ -300,7 +325,7 @@ export default function OnboardingFlow() {
             <input
               value={locQuery}
               onChange={(e) => searchLocation(e.target.value)}
-              placeholder="🔍 Stadt oder PLZ eingeben"
+              placeholder="Stadt oder PLZ eingeben"
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             <button
@@ -308,7 +333,8 @@ export default function OnboardingFlow() {
               onClick={useCurrentLocation}
               className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-zinc-300"
             >
-              📍 Aktuellen Standort verwenden
+              <MapPinIcon size={16} className="mr-1.5 inline-block align-[-3px]" />
+              Aktuellen Standort verwenden
             </button>
             {locLoading && <p className="text-sm text-zinc-500">Suche…</p>}
             {locResults.map((r, i) => (
@@ -335,7 +361,8 @@ export default function OnboardingFlow() {
             ))}
             {state.latitude !== null && (
               <div className="rounded-xl bg-matchup/15 px-4 py-3 text-sm text-matchup">
-                ✓ {state.city}
+                <CheckIcon size={16} className="mr-1 inline-block align-[-3px]" />
+                {state.city}
               </div>
             )}
           </Step>
@@ -352,7 +379,7 @@ export default function OnboardingFlow() {
                 <input
                   value={clubQuery}
                   onChange={(e) => searchClubs(e.target.value)}
-                  placeholder="🔍 Club suchen…"
+                  placeholder="Club suchen…"
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 {clubResults.map((c) => (
@@ -475,7 +502,8 @@ export default function OnboardingFlow() {
                 onClick={() => dispatch({ type: "SET_SKILL", payload: s.value })}
               >
                 <span className="block font-semibold">
-                  {s.dot} {s.label}
+                  <span className={`mr-2 inline-block h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                  {s.label}
                 </span>
                 <span className="block text-xs text-zinc-400">{s.desc}</span>
               </SelectRow>
@@ -562,7 +590,8 @@ export default function OnboardingFlow() {
                     })
                   }
                 >
-                  {g.icon} {g.label}
+                  <g.Icon size={16} className="mr-1 inline-block align-[-3px]" />
+                  {g.label}
                 </Chip>
               ))}
             </div>

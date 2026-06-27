@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { sportLabel } from "@/lib/utils/formatters";
 import type { Group, GroupMember, GroupMessage } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, SubViewHeader } from "../shared/ui";
+import { SportIcon, SendIcon } from "../shared/icons";
 
 export default function GroupDetail({ groupId }: { groupId: string }) {
   const { profile, closeSubView } = useAppNav();
@@ -93,7 +94,7 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
         }
       />
       <div className="shrink-0 border-b border-zinc-800 px-4 py-2 text-xs text-zinc-400">
-        {sportIcon(group.sport)} {sportLabel(group.sport)} · {members.length}{" "}
+        <SportIcon sport={group.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(group.sport)} · {members.length}{" "}
         Mitglieder
       </div>
 
@@ -150,7 +151,7 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
               className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
               aria-label="Senden"
             >
-              ➤
+              <SendIcon size={18} className="text-white" />
             </button>
           </div>
         </>

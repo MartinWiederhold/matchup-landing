@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { sportLabel } from "@/lib/utils/formatters";
+import { SportIcon, UsersIcon, PlusIcon, CheckIcon } from "../shared/icons";
 import type { Group, Sport } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
@@ -79,7 +80,7 @@ export default function GroupsList() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="🔍 Gruppe suchen…"
+              placeholder="Gruppe suchen…"
               className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
             />
             <div className="flex gap-2">
@@ -107,7 +108,7 @@ export default function GroupsList() {
           <FullLoading />
         ) : groups.length === 0 ? (
           <EmptyState
-            icon="👥"
+            icon={<UsersIcon size={44} />}
             title="Keine Gruppen"
             message="Erstelle die erste Gruppe für deine Community."
           />
@@ -127,7 +128,7 @@ export default function GroupsList() {
                 >
                   <p className="font-semibold">{g.name}</p>
                   <p className="text-xs text-zinc-400">
-                    {sportIcon(g.sport)} {sportLabel(g.sport)} · max{" "}
+                    <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} · max{" "}
                     {g.max_members} Mitglieder
                   </p>
                   {g.description && (
@@ -138,7 +139,9 @@ export default function GroupsList() {
                 </button>
                 <div className="px-4 pb-4">
                   {myIds.has(g.id) ? (
-                    <span className="text-sm text-matchup">Mitglied ✓</span>
+                    <span className="flex items-center gap-1 text-sm text-matchup">
+                      <CheckIcon size={15} /> Mitglied
+                    </span>
                   ) : (
                     <button
                       type="button"
@@ -158,10 +161,10 @@ export default function GroupsList() {
       <button
         type="button"
         onClick={() => openSubView({ type: "create-group" })}
-        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-2xl text-white shadow-lg"
+        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
         aria-label="Gruppe erstellen"
       >
-        +
+        <PlusIcon size={26} />
       </button>
     </div>
   );

@@ -6,6 +6,7 @@ import { isOnline } from "@/lib/utils/formatters";
 import type { AppMatch, Message, Profile } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
+import { SendIcon } from "../shared/icons";
 
 export default function ChatDetail({ matchId }: { matchId: string }) {
   const { profile, openSubView, closeSubView } = useAppNav();
@@ -236,7 +237,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
               className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
               aria-label="Senden"
             >
-              ➤
+              <SendIcon size={18} className="text-white" />
             </button>
           )}
         </div>

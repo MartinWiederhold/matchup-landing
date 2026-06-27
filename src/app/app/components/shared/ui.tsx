@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useAppNav } from "../appNav";
 
 export function LoadingSpinner({
@@ -30,7 +31,7 @@ export function EmptyState({
   actionLabel,
   onAction,
 }: {
-  icon: string;
+  icon: ReactNode;
   title: string;
   message: string;
   actionLabel?: string;
@@ -38,7 +39,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-      <div className="text-5xl" aria-hidden="true">
+      <div className="text-zinc-600" aria-hidden="true">
         {icon}
       </div>
       <h3 className="mt-4 text-lg font-bold">{title}</h3>

@@ -6,6 +6,7 @@ import type { Block, Profile } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
+import { BanIcon } from "../shared/icons";
 
 type BlockRow = Block & { blocked?: Profile };
 
@@ -41,7 +42,7 @@ export default function BlockedUsers() {
           <FullLoading />
         ) : rows.length === 0 ? (
           <EmptyState
-            icon="🚫"
+            icon={<BanIcon size={44} />}
             title="Niemand blockiert"
             message="Du hast keine Nutzer blockiert."
           />

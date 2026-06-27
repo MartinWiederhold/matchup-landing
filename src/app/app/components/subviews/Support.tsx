@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/utils/formatters";
 import type { SupportTicket } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
+import { TicketIcon } from "../shared/icons";
 
 const STATUS_LABEL: Record<string, string> = {
   open: "Offen",
@@ -42,7 +43,7 @@ export default function Support() {
           <FullLoading />
         ) : tickets.length === 0 ? (
           <EmptyState
-            icon="🎫"
+            icon={<TicketIcon size={44} />}
             title="Keine Tickets"
             message="Erstelle ein Ticket, wenn du Hilfe brauchst."
           />

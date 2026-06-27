@@ -24,7 +24,7 @@ export default function MatchAnimation({
           <Avatar src={other.profile_image} alt={other.first_name} size="xl" />
         </span>
       </div>
-      <h2 className="text-3xl font-bold text-matchup">IT&apos;S A MATCH! 🎾</h2>
+      <h2 className="text-3xl font-bold text-matchup">IT&apos;S A MATCH!</h2>
       <p className="mt-3 max-w-xs text-sm text-zinc-300">
         Du und {other.first_name} habt euch gegenseitig geliked!
       </p>

@@ -43,11 +43,11 @@ export default function Settings() {
     const confirmText = window.prompt('Tippe DELETE zum Bestätigen:');
     if (confirmText !== "DELETE") return;
     const { data: files } = await supabase.storage
-      .from("avatars")
+      .from("web-avatars")
       .list(profile.id);
     if (files?.length) {
       await supabase.storage
-        .from("avatars")
+        .from("web-avatars")
         .remove(files.map((f) => `${profile.id}/${f.name}`));
     }
     await supabase.rpc("delete_my_account");

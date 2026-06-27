@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { formatEventDate, sportIcon, sportLabel } from "@/lib/utils/formatters";
+import { formatEventDate, sportLabel } from "@/lib/utils/formatters";
+import { SportIcon, CalendarIcon, MapPinIcon } from "../shared/icons";
 import type { GameEvent } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
@@ -71,7 +72,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <div>
           <h1 className="text-xl font-bold">
-            {sportIcon(game.sport)} {sportLabel(game.sport)} ·{" "}
+            <SportIcon sport={game.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(game.sport)} ·{" "}
             {game.game_type === "singles" ? "Singles" : "Doubles"}
           </h1>
           <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs">
@@ -80,13 +81,21 @@ export default function GameDetail({ gameId }: { gameId: string }) {
         </div>
 
         <ul className="space-y-1.5 text-sm text-zinc-300">
-          <li>📅 {formatEventDate(game.date_time)}</li>
-          <li>
-            📍 {game.location}
-            {game.court_number ? `, ${game.court_number}` : ""}
+          <li className="flex items-center gap-2">
+            <CalendarIcon size={15} className="shrink-0" />
+            {formatEventDate(game.date_time)}
           </li>
-          <li>🏟️ {game.court_booked ? "Platz gebucht" : "Platz nicht gebucht"}</li>
-          {game.description && <li>📝 {game.description}</li>}
+          <li className="flex items-center gap-2">
+            <MapPinIcon size={15} className="shrink-0" />
+            <span>
+              {game.location}
+              {game.court_number ? `, ${game.court_number}` : ""}
+            </span>
+          </li>
+          <li>
+            {game.court_booked ? "Platz gebucht" : "Platz nicht gebucht"}
+          </li>
+          {game.description && <li>{game.description}</li>}
         </ul>
 
         <div>
