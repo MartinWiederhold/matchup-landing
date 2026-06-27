@@ -110,13 +110,43 @@ const SERVICES: {
    Platzhalter-Grafik für Produktbilder (noch keine echten Produktfotos)
    ────────────────────────────────────────────────────────────────────────── */
 
-function ProductVisual({ cat, brand }: { cat: Cat; brand: string }) {
+const PRODUCT_IMG: Partial<Record<Cat, string>> = {
+  tennis: "/shop/tennis-racket.png",
+  padel: "/shop/padel-racket.png",
+};
+
+function ProductVisual({
+  cat,
+  brand,
+  dense,
+}: {
+  cat: Cat;
+  brand: string;
+  dense?: boolean;
+}) {
+  const img = PRODUCT_IMG[cat];
   return (
-    <div className="relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200">
-      <RacketGlyph cat={cat} className="h-2/3 w-2/3 text-neutral-300" />
-      <span className="absolute bottom-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-        {brand}
-      </span>
+    <div
+      className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200 ${
+        dense ? "p-2" : "p-5"
+      }`}
+    >
+      {img ? (
+        <Image
+          src={img}
+          alt={brand}
+          fill
+          sizes={dense ? "64px" : "(max-width:1024px) 50vw, 25vw"}
+          className={`object-contain ${dense ? "p-1" : "p-5"} transition-transform duration-500 group-hover:scale-105`}
+        />
+      ) : (
+        <RacketGlyph cat={cat} className="h-2/3 w-2/3 text-neutral-300" />
+      )}
+      {!dense && (
+        <span className="absolute bottom-3 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+          {brand}
+        </span>
+      )}
     </div>
   );
 }
@@ -445,7 +475,7 @@ export default function ShopExperience() {
                 className="flex items-center gap-4 border-b border-neutral-100 py-4"
               >
                 <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded">
-                  <ProductVisual cat={c.cat} brand={c.brand} />
+                  <ProductVisual cat={c.cat} brand={c.brand} dense />
                 </div>
                 <div className="flex-1">
                   <div className="text-[10px] uppercase tracking-[0.06em] text-neutral-500">
