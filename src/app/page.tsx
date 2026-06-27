@@ -6,6 +6,7 @@ import CompletePicture from "@/components/CompletePicture";
 import Memberships from "@/components/Memberships";
 import Partners from "@/components/Partners";
 import Showcase from "@/components/Showcase";
+import CtaBanner from "@/components/CtaBanner";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
         <Memberships />
         <Partners />
         <Showcase />
+        <CtaBanner />
       </main>
       <Footer />
     </>

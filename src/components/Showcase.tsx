@@ -4,16 +4,16 @@ const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
 const ROWS = [
   {
-    eyebrow: "BILDSCHIRMFREIES DESIGN",
-    title: "Entwickelt, um rund um die Uhr getragen zu werden",
-    copy: "Ein bildschirmfreies Design bedeutet keine Pings, keine Ablenkungen und keinen unnötigen Schnickschnack — nur kontinuierliche Einblicke, Tag und Nacht.",
+    eyebrow: "SICHERHEIT",
+    title: "Sicher und verifiziert",
+    copy: "Jedes Profil wird geprüft. Melde unangemessenes Verhalten, blockiere Nutzer und vertraue auf automatische Moderation. Deine Daten gehören dir.",
     img: `${IMG}/4Yh8vc5goDh5JgJHv9DVo1/c0366d221c77a0c972cebd4cc30a6b03/Image_desktop.webp`,
     reverse: false,
   },
   {
-    eyebrow: "TRAGEMÖGLICHKEITEN",
-    title: "Ein Gerät, unendlich viele Tragemöglichkeiten",
-    copy: "Aus hochwertigem italienischem Leder und edlen Metallen gefertigt — gestalte einen Look, der einzigartig zu dir passt, oder trage MATCHUP ganz ohne Handgelenk mit MATCHUP Body Smart Apparel.",
+    eyebrow: "EVENTS",
+    title: "Events, Turniere & Spieltreffs",
+    copy: "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen — oder organisiere dein eigenes Event direkt in der App.",
     img: `${IMG}/7GbUUq5XAVbR0XxHZb4X7S/6af554f2573a60cb23ed28976fc33b5c/Leatherluxe_ways_to_wear__3_.webp`,
     reverse: true,
   },
@@ -50,10 +50,10 @@ export default function Showcase() {
                 {row.copy}
               </p>
               <a
-                href="#mitgliedschaft"
+                href="/app"
                 className="mt-8 inline-block rounded-full border border-black px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
               >
-                ENTDECKEN
+                App öffnen
               </a>
             </div>
           </div>

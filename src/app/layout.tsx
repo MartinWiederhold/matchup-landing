@@ -8,9 +8,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MATCHUP – Das Wearable für nachweislich bessere Gesundheit",
+  title: "Matchup — Finde deinen Spielpartner für Tennis, Padel & Pickleball",
   description:
-    "MATCHUP kombiniert 24/7-Gesundheitseinblicke mit personalisiertem Coaching, um dir zu helfen, deine Schlafqualität, dein Training und dein Wohlbefinden zu verbessern – ab dem ersten Tag.",
+    "Matchup verbindet Spieler für Tennis, Padel und Pickleball. Matche, chatte und organisiere Spiele in deiner Nähe.",
 };
 
 export default function RootLayout({

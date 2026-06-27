@@ -4,40 +4,35 @@ const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
 const TIERS = [
   {
-    name: "MATCHUP ONE",
-    tagline: "Fitness-Einblicke in Profiqualität zum besten Preis.",
+    name: "TENNIS",
+    tagline: "Der Klassiker — finde Partner für Singles oder Doubles auf deinem Level.",
     img: `${IMG}/3waVHtJ6R9HOTAreGiUP5a/e9a8df7e641adb0cbf3adc005d31a278/One_card__1_.png`,
     features: [
-      "Einblicke zu Schlaf, Belastung & Erholung",
-      "VO2 Max & Herzfrequenzzonen",
-      "MATCHUP 5.0 mit über 14 Tagen Akkulaufzeit",
+      "Spieler nach Skill-Level & Rating filtern",
+      "Singles & Doubles organisieren",
+      "Plätze und Clubs in deiner Nähe",
     ],
     featured: false,
   },
   {
-    name: "MATCHUP PEAK",
-    tagline:
-      "Erweiterte Einblicke zu Gesundheit, Fitness & Langlebigkeit, damit du länger Höchstleistungen erbringst.",
+    name: "PADEL",
+    tagline: "Die am schnellsten wachsende Sportart — immer im Doppel, immer gesellig.",
     img: `${IMG}/2L5W622UNiYxlnHE3hHGAL/d3443637b907fe3541f32a8d9fe58cbc/Peak_card__1_.png`,
     features: [
-      "Alles aus MATCHUP One, plus",
-      "Health Monitor mit Gesundheitswarnungen",
-      "Hormonelle Einblicke für Frauen",
-      "Kabelloser PowerPack",
+      "Finde drei Mitspieler in Sekunden",
+      "Offene Spiele beitreten oder erstellen",
+      "Padel-Gruppen & Community-Treffs",
     ],
     featured: true,
   },
   {
-    name: "MATCHUP LIFE",
-    tagline:
-      "Das leistungsstärkste MATCHUP aller Zeiten, mit Gesundheits- & Leistungseinblicken in medizinischer Qualität.",
+    name: "PICKLEBALL",
+    tagline: "Schnell zu lernen, schwer zu meistern — perfekt für jedes Level.",
     img: `${IMG}/4jiLfkO6RPmVBkcMtN3jRX/87b712d7ce771cf1d579d619aed659f0/Life_card__3_.webp`,
     features: [
-      "Alles aus MATCHUP Peak, plus",
-      "Heart Screener mit EKG-Messungen",
-      "Benachrichtigungen bei unregelmäßigem Herzrhythmus",
-      "Tägliche Blutdruck-Einblicke (Beta)",
-      "MATCHUP MG mit über 14 Tagen Akkulaufzeit",
+      "Einsteiger und Profis verbinden",
+      "Spontane Matches in deiner Umgebung",
+      "Lokale Events & Turniere entdecken",
     ],
     featured: false,
   },
@@ -49,10 +44,11 @@ export default function Memberships() {
       <div className="mx-auto max-w-[1280px]">
         <div className="text-center">
           <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Wähle eine Mitgliedschaft
+            Wähle deine Sportart
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-            Finde die richtige Mitgliedschaft für dich.
+            Tennis, Padel oder Pickleball — auf Matchup findest du für jede
+            Sportart die passenden Spielpartner.
           </p>
         </div>
 
@@ -110,14 +106,14 @@ export default function Memberships() {
                 </ul>
 
                 <a
-                  href="#mitgliedschaft"
+                  href="/app"
                   className={`mt-8 inline-block rounded-full px-6 py-3.5 text-center text-sm font-bold tracking-wide transition-colors ${
                     tier.featured
                       ? "bg-matchup text-white hover:bg-matchup-hover"
                       : "border border-black text-black hover:bg-black hover:text-white"
                   }`}
                 >
-                  JETZT SHOPPEN
+                  Partner finden
                 </a>
               </div>
             </article>

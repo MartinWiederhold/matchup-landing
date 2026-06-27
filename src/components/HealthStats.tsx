@@ -1,7 +1,7 @@
 const STATS = [
-  { value: "91", unit: "Min.", label: "mehr Aktivität pro Woche" },
-  { value: "2,3", unit: "Std.", label: "mehr Schlaf pro Woche" },
-  { value: "10%", unit: "+", label: "höhere Herzratenvariabilität" },
+  { value: "3", unit: "", label: "Sportarten — Tennis, Padel & Pickleball" },
+  { value: "50", unit: "+", label: "Clubs in der Schweiz vernetzt" },
+  { value: "1000", unit: "+", label: "Aktive Spieler in der Community" },
 ];
 
 export default function HealthStats() {
@@ -9,13 +9,11 @@ export default function HealthStats() {
     <section id="warum" className="bg-black px-4 py-24 text-white sm:px-6 lg:px-12">
       <div className="mx-auto max-w-5xl text-center">
         <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-          Trage MATCHUP täglich, verbessere deine Gesundheit
+          Eine wachsende Community von Spielern
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
-          Tägliches Tragen von MATCHUP steht in Verbindung mit mehr Bewegung,
-          besserem Schlaf und einer höheren HRV. Mitglieder erzielen schnellere
-          Fortschritte, stärkere Gewohnheiten und bessere Ergebnisse bei all
-          ihren Zielen.*
+          Ob Anfänger oder Wettkampfspieler — auf Matchup findest du Partner auf
+          deinem Level, in deiner Sportart und in deiner Nähe.
         </p>
 
         <div className="mt-16 grid gap-10 sm:grid-cols-3">

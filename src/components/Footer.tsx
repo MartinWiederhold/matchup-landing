@@ -2,20 +2,30 @@ import MatchupLogo from "./MatchupLogo";
 
 const COLUMNS = [
   {
-    title: "Support",
-    links: ["Hilfecenter", "Mitgliedschaft verwalten", "Bestellung verfolgen", "Kontakt"],
-  },
-  {
-    title: "Unternehmen",
-    links: ["Über uns", "Karriere", "Presse", "MATCHUP für Unternehmen"],
+    title: "Matchup",
+    links: [
+      { label: "Find a Partner", href: "/find-a-partner" },
+      { label: "Shop", href: "/shop" },
+      { label: "Beratung", href: "/beratung" },
+      { label: "Events", href: "/events" },
+      { label: "App", href: "/app" },
+    ],
   },
   {
     title: "Rechtliches",
-    links: ["Datenschutz", "AGB", "Cookie-Richtlinie", "Barrierefreiheit"],
+    links: [
+      { label: "Datenschutz", href: "/datenschutz" },
+      { label: "AGB", href: "/agb" },
+      { label: "Impressum", href: "/impressum" },
+    ],
   },
   {
-    title: "Partner",
-    links: ["Affiliate-Programm", "Botschafter", "Mannschaften", "Wiederverkäufer"],
+    title: "Support",
+    links: [
+      { label: "Hilfe & FAQ", href: "/faq" },
+      { label: "Kontakt", href: "mailto:hello@matchup.ch" },
+      { label: "Feedback", href: "#" },
+    ],
   },
 ];
 
@@ -23,12 +33,12 @@ export default function Footer() {
   return (
     <footer className="bg-black px-4 pb-12 pt-20 text-white sm:px-6 lg:px-12">
       <div className="mx-auto max-w-[1280px]">
-        <div className="grid gap-12 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
+        <div className="grid gap-12 lg:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
             <MatchupLogo className="text-3xl" />
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-white/60">
-              Unsere Mission bei MATCHUP ist es, menschliche Leistung und
-              Healthspan zu entfalten.
+              Matchup verbindet Spieler für Tennis, Padel und Pickleball. Matche,
+              chatte und organisiere Spiele in deiner Nähe.
             </p>
           </div>
 
@@ -39,12 +49,12 @@ export default function Footer() {
               </h3>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <a
-                      href="#"
+                      href={link.href}
                       className="text-sm text-white/80 transition-colors hover:text-white"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}
@@ -54,7 +64,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-4 border-t border-white/10 pt-8 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {2026} MATCHUP, Inc. Alle Rechte vorbehalten. (Klon zu Demozwecken)</p>
+          <p>© 2026 Matchup. Alle Rechte vorbehalten.</p>
           <p>Schweiz (Deutsch)</p>
         </div>
       </div>

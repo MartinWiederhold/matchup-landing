@@ -39,20 +39,25 @@ export default function Hero() {
       <div className="relative mx-auto flex min-h-[calc(100vh-68px-44px)] max-w-[1600px] flex-col px-4 py-12 sm:px-6 lg:px-12">
         <div className="flex flex-1 flex-col justify-center">
           <h1 className="max-w-5xl text-[2.75rem] font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[6.5rem]">
-            Das Wearable, das nachweislich bessere Gesundheit aufbaut
+            Finde deinen perfekten Spielpartner.
           </h1>
           <p className="mt-7 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
-            MATCHUP kombiniert 24/7-Gesundheitseinblicke mit personalisiertem
-            Coaching, um dir zu helfen, deine Schlafqualität, dein Training und
-            dein Wohlbefinden zu verbessern — ab dem ersten Tag.
+            Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in
+            deiner Nähe. Matche, chatte und spiele — alles in einer App.
           </p>
         </div>
-        <div className="flex justify-center pb-6">
+        <div className="flex flex-col items-center gap-4 pb-6 sm:flex-row sm:justify-center">
           <a
-            href="#mitgliedschaft"
+            href="/app"
             className="inline-block rounded-full bg-matchup px-12 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover"
           >
-            JETZT REGISTRIEREN
+            Jetzt Partner finden
+          </a>
+          <a
+            href="/find-a-partner"
+            className="inline-block rounded-full border border-white/70 px-12 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black"
+          >
+            So funktioniert&apos;s
           </a>
         </div>
       </div>
