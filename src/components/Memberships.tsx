@@ -18,7 +18,7 @@ const TIERS: {
     images: [
       "/tennis/tennis-1.jpg",
       "/tennis/tennis-2.jpg",
-      { src: "/tennis/tennis-3.jpg", position: "center top" },
+      { src: "/tennis/tennis-3.jpg", position: "center 25%" },
     ],
     features: [
       "Spieler nach Skill-Level & Rating filtern",
@@ -45,7 +45,7 @@ const TIERS: {
     img: `${IMG}/4jiLfkO6RPmVBkcMtN3jRX/87b712d7ce771cf1d579d619aed659f0/Life_card__3_.webp`,
     images: [
       "/pickleball/pickleball-1.jpg",
-      { src: "/pickleball/pickleball-2.jpg", position: "center top" },
+      { src: "/pickleball/pickleball-2.jpg", position: "center 25%" },
     ],
     features: [
       "Einsteiger und Profis verbinden",
