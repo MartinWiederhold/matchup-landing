@@ -14,7 +14,7 @@ const ROWS = [
     eyebrow: "EVENTS",
     title: "Events, Turniere & Spieltreffs",
     copy: "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen — oder organisiere dein eigenes Event direkt in der App.",
-    img: `${IMG}/7GbUUq5XAVbR0XxHZb4X7S/6af554f2573a60cb23ed28976fc33b5c/Leatherluxe_ways_to_wear__3_.webp`,
+    img: "/events/event-1.jpg",
     reverse: true,
   },
 ];
