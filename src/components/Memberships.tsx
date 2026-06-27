@@ -1,12 +1,21 @@
 import Image from "next/image";
+import RotatingImage from "./RotatingImage";
 
 const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
-const TIERS = [
+const TIERS: {
+  name: string;
+  tagline: string;
+  img: string;
+  images?: string[];
+  features: string[];
+  featured: boolean;
+}[] = [
   {
     name: "TENNIS",
     tagline: "Der Klassiker — finde Partner für Singles oder Doubles auf deinem Level.",
     img: `${IMG}/3waVHtJ6R9HOTAreGiUP5a/e9a8df7e641adb0cbf3adc005d31a278/One_card__1_.png`,
+    images: ["/tennis/tennis-1.jpg", "/tennis/tennis-2.jpg", "/tennis/tennis-3.jpg"],
     features: [
       "Spieler nach Skill-Level & Rating filtern",
       "Singles & Doubles organisieren",
@@ -63,16 +72,24 @@ export default function Memberships() {
               }`}
             >
               <div className="relative aspect-[4/3] bg-neutral-100">
-                <Image
-                  src={tier.img}
-                  alt={tier.name}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 33vw"
-                  className="object-cover"
-                />
+                {tier.images ? (
+                  <RotatingImage
+                    images={tier.images}
+                    alt={tier.name}
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                  />
+                ) : (
+                  <Image
+                    src={tier.img}
+                    alt={tier.name}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    className="object-cover"
+                  />
+                )}
                 {tier.featured && (
                   <span className="absolute right-4 top-4 rounded-full bg-matchup px-3 py-1 text-xs font-bold tracking-wide text-white">
-                    BELIEBT
+                    IM TREND
                   </span>
                 )}
               </div>
