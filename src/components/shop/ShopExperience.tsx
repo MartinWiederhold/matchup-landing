@@ -282,8 +282,8 @@ export default function ShopExperience() {
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/30" />
-        <h1 className="relative z-10 px-6 text-center font-serif text-6xl italic leading-[0.95] tracking-tight text-white sm:text-8xl lg:text-9xl">
-          Matchup <span className="not-italic">·</span> Shop
+        <h1 className="relative z-10 px-6 text-center text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl">
+          Matchup Shop
         </h1>
         <div className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-between gap-4 p-5 sm:p-8">
           <div className="flex max-w-lg items-center gap-5 rounded-sm bg-neutral-900/80 px-6 py-5 text-sm font-light leading-relaxed text-white backdrop-blur">
@@ -347,7 +347,7 @@ export default function ShopExperience() {
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
-                <span className="absolute left-5 top-5 whitespace-pre-line font-serif text-2xl italic leading-tight text-white drop-shadow sm:text-3xl">
+                <span className="absolute left-5 top-5 whitespace-pre-line text-2xl font-bold leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
                   {c.title}
                 </span>
                 <span className="absolute bottom-4 left-5 text-[11px] font-medium text-white/90 drop-shadow">
@@ -363,7 +363,7 @@ export default function ShopExperience() {
       <section id="shop" className="px-4 pb-20 pt-6 sm:px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="font-serif text-3xl italic sm:text-5xl">Alle Produkte</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">Alle Produkte</h2>
             <div className="flex flex-wrap gap-2">
               {FILTERS.map((f) => (
                 <button
@@ -395,7 +395,7 @@ export default function ShopExperience() {
       {/* SERVICES */}
       <section className="bg-black px-4 py-20 text-white sm:px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
-          <h2 className="font-serif text-3xl italic sm:text-5xl">Unsere Services</h2>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">Unsere Services</h2>
           <p className="mb-14 mt-4 text-base font-light text-neutral-400">
             Drei Säulen, ein Ziel: dein bestes Spiel.
           </p>
@@ -420,7 +420,7 @@ export default function ShopExperience() {
                   <div className="mb-3 text-xs font-semibold tracking-[0.12em] text-neutral-500">
                     {s.num}
                   </div>
-                  <h3 className="font-serif text-2xl italic">{s.title}</h3>
+                  <h3 className="text-2xl font-bold tracking-tight">{s.title}</h3>
                   <p className="mb-6 mt-2 text-sm leading-relaxed text-neutral-300">
                     {s.lead}
                   </p>
@@ -470,7 +470,7 @@ export default function ShopExperience() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h3 className="font-serif text-lg italic">Warenkorb ({count})</h3>
+          <h3 className="text-lg font-bold tracking-tight">Warenkorb ({count})</h3>
           <button
             type="button"
             onClick={() => setCartOpen(false)}
@@ -481,7 +481,7 @@ export default function ShopExperience() {
         </div>
         <div className="flex-1 overflow-y-auto px-6">
           {cartItems.length === 0 ? (
-            <p className="py-16 text-center text-sm italic text-neutral-400">
+            <p className="py-16 text-center text-sm text-neutral-400">
               Dein Warenkorb ist leer
             </p>
           ) : (
@@ -599,7 +599,7 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <h2 className="font-serif text-3xl italic tracking-tight sm:text-5xl">{title}</h2>
+      <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">{title}</h2>
       {children}
     </div>
   );

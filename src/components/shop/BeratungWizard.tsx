@@ -133,7 +133,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
       {/* Kopf */}
       <div className="flex items-start justify-between gap-4 border-b border-neutral-200 px-6 py-5 sm:px-8">
         <div>
-          <h2 className="font-serif text-2xl italic sm:text-3xl">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
             Persönliche Schlägerberatung
           </h2>
           <p className="mt-1 text-sm text-neutral-500">
@@ -172,7 +172,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl text-white">
               ✓
             </div>
-            <h3 className="mt-6 font-serif text-2xl italic">Danke, {form.firstName}!</h3>
+            <h3 className="mt-6 text-2xl font-bold tracking-tight">Danke, {form.firstName}!</h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
               Wir haben deine Anfrage erhalten und melden uns innerhalb von 24
               Stunden mit einer persönlichen Schläger-Empfehlung bei dir.

@@ -14,7 +14,6 @@
   --color-matchup: var(--matchup-blue);
   --color-matchup-hover: var(--matchup-blue-hover);
   --font-sans: var(--font-dm-sans);
-  --font-serif: var(--font-dm-serif), Georgia, serif;
 }
 
 html {

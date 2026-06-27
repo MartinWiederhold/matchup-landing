@@ -43,7 +43,7 @@ export default function BeratungPage() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-matchup">
               Persönliche Beratung
             </p>
-            <h1 className="mt-4 font-serif text-4xl italic leading-[1.05] tracking-tight sm:text-6xl">
+            <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
               Finde deinen perfekten Schläger
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
@@ -54,7 +54,7 @@ export default function BeratungPage() {
             <div className="mx-auto mt-8 flex max-w-md items-center justify-center gap-8">
               {STATS.map((s) => (
                 <div key={s.label} className="text-center">
-                  <div className="font-serif text-2xl italic sm:text-3xl">{s.value}</div>
+                  <div className="text-2xl font-bold tracking-tight sm:text-3xl">{s.value}</div>
                   <div className="mt-1 text-xs uppercase tracking-[0.08em] text-neutral-500">
                     {s.label}
                   </div>
