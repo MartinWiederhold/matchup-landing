@@ -152,4 +152,34 @@ begin
 end $$;
 notify pgrst, 'reload schema';
 
+-- 7) Trigger für Community-Zähler ------------------------------------------
+-- LIKE kopiert keine Trigger. likes_count/comments_count sonst nicht gepflegt.
+create or replace function web.bump_post_likes() returns trigger
+  language plpgsql security definer set search_path=web as $$
+begin
+  if tg_op='INSERT' then
+    update web.community_posts set likes_count = coalesce(likes_count,0) + 1 where id = new.post_id;
+  elsif tg_op='DELETE' then
+    update web.community_posts set likes_count = greatest(0, coalesce(likes_count,0) - 1) where id = old.post_id;
+  end if;
+  return null;
+end $$;
+drop trigger if exists trg_web_post_likes on web.community_likes;
+create trigger trg_web_post_likes after insert or delete on web.community_likes
+  for each row execute function web.bump_post_likes();
+
+create or replace function web.bump_post_comments() returns trigger
+  language plpgsql security definer set search_path=web as $$
+begin
+  if tg_op='INSERT' then
+    update web.community_posts set comments_count = coalesce(comments_count,0) + 1 where id = new.post_id;
+  elsif tg_op='DELETE' then
+    update web.community_posts set comments_count = greatest(0, coalesce(comments_count,0) - 1) where id = old.post_id;
+  end if;
+  return null;
+end $$;
+drop trigger if exists trg_web_post_comments on web.community_comments;
+create trigger trg_web_post_comments after insert or delete on web.community_comments
+  for each row execute function web.bump_post_comments();
+
 -- Fertig. Nicht vergessen: "web" unter Settings → API → Exposed schemas ergänzen.
