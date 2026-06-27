@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { skillLabel } from "@/lib/utils/formatters";
 import { SportIcon, HeartIcon, XIcon } from "../shared/icons";
 import type { Like, Profile } from "@/lib/types";
+import { ensureMatch } from "@/lib/matchmaking";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState } from "../shared/ui";
@@ -54,6 +55,8 @@ export default function LikesTab() {
         { from_user_id: profile.id, to_user_id: like.from_user_id },
         { onConflict: "from_user_id,to_user_id" },
       );
+    // Like-zurück = immer gegenseitig → Match erstellen
+    await ensureMatch(profile.id, like.from_user_id);
     if (like.from_user) setMatchWith(like.from_user);
     refreshBadges();
   }

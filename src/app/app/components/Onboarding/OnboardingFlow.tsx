@@ -4,6 +4,12 @@ import { useReducer, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
+import {
+  searchClubs as searchClubsApi,
+  addClub,
+  SUPPORTED_COUNTRY_NAMES,
+  countryName,
+} from "@/lib/clubs";
 import type { Sport, SkillLevel, Club } from "@/lib/types";
 import {
   SportIcon,
@@ -75,7 +81,11 @@ export default function OnboardingFlow() {
   // Clubs
   const [clubQuery, setClubQuery] = useState("");
   const [clubResults, setClubResults] = useState<Club[]>([]);
-  const [manualClub, setManualClub] = useState(false);
+  const [showAddClub, setShowAddClub] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addCity, setAddCity] = useState("");
+  const [addingClub, setAddingClub] = useState(false);
+  const [clubMsg, setClubMsg] = useState<string | null>(null);
 
   async function searchLocation(q: string) {
     setLocQuery(q);
@@ -128,18 +138,37 @@ export default function OnboardingFlow() {
     });
   }
 
-  async function searchClubs(q: string) {
+  async function handleClubSearch(q: string) {
     setClubQuery(q);
-    if (q.trim().length < 2) {
-      setClubResults([]);
-      return;
+    setClubResults(await searchClubsApi(q));
+  }
+
+  async function handleAddClub() {
+    setAddingClub(true);
+    setClubMsg(null);
+    const res = await addClub(addName, addCity);
+    setAddingClub(false);
+    if (res.status === "added") {
+      dispatch({
+        type: "SET_CLUB",
+        payload: { id: res.club.id, name: res.club.name },
+      });
+      setShowAddClub(false);
+      setClubQuery(res.club.name);
+      setClubResults([res.club]);
+    } else if (res.status === "unsupported_country") {
+      setClubMsg(
+        `${countryName(res.country)} ist noch nicht verfügbar — coming soon. Aktuell: ${Object.values(
+          SUPPORTED_COUNTRY_NAMES,
+        ).join(" & ")}.`,
+      );
+    } else if (res.status === "not_found") {
+      setClubMsg(
+        "Diesen Club konnten wir nicht verifizieren. Bitte prüfe Name und Stadt.",
+      );
+    } else {
+      setClubMsg("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
     }
-    const { data } = await supabase
-      .from("clubs")
-      .select("*")
-      .ilike("name", `%${q}%`)
-      .limit(10);
-    setClubResults((data as Club[]) ?? []);
   }
 
   function toggleArray<T>(arr: T[], value: T): T[] {
@@ -372,14 +401,20 @@ export default function OnboardingFlow() {
         {state.step === 5 && (
           <Step
             title="Spielst du in einem Club?"
-            subtitle="Optional — hilft dir, Clubmitglieder zu finden."
+            subtitle="Optional — so findest du zuerst Spieler aus deinem Club."
           >
-            {!manualClub ? (
+            <p className="-mt-1 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-400">
+              Aktuell verfügbar:{" "}
+              {Object.values(SUPPORTED_COUNTRY_NAMES).join(" & ")}. Weitere
+              Länder folgen bald.
+            </p>
+
+            {!showAddClub ? (
               <>
                 <input
                   value={clubQuery}
-                  onChange={(e) => searchClubs(e.target.value)}
-                  placeholder="Club suchen…"
+                  onChange={(e) => handleClubSearch(e.target.value)}
+                  placeholder="Club oder Stadt suchen…"
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 {clubResults.map((c) => (
@@ -393,31 +428,80 @@ export default function OnboardingFlow() {
                       })
                     }
                   >
-                    {c.name}
-                    {c.city ? ` · ${c.city}` : ""}
+                    <span className="font-medium">{c.name}</span>
+                    {c.city ? (
+                      <span className="text-zinc-400"> · {c.city}</span>
+                    ) : null}
                   </SelectRow>
                 ))}
+                {clubQuery.trim().length >= 2 && clubResults.length === 0 && (
+                  <p className="text-sm text-zinc-500">Kein Club gefunden.</p>
+                )}
                 <button
                   type="button"
-                  onClick={() => setManualClub(true)}
+                  onClick={() => {
+                    setShowAddClub(true);
+                    setAddName(clubQuery);
+                    setAddCity(state.city);
+                    setClubMsg(null);
+                  }}
                   className="text-sm text-matchup underline"
                 >
-                  Mein Club ist nicht dabei
+                  Mein Club ist nicht dabei — hinzufügen
                 </button>
               </>
             ) : (
-              <input
-                value={state.club_name ?? ""}
-                onChange={(e) =>
-                  dispatch({
-                    type: "SET_CLUB",
-                    payload: { id: null, name: e.target.value },
-                  })
-                }
-                placeholder="Club-Name eingeben"
-                className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
-              />
+              <div className="space-y-3">
+                <p className="text-sm text-zinc-400">
+                  Wir prüfen automatisch, ob es den Club gibt, und nehmen ihn
+                  auf.
+                </p>
+                <input
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  placeholder="Club-Name"
+                  className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                />
+                <input
+                  value={addCity}
+                  onChange={(e) => setAddCity(e.target.value)}
+                  placeholder="Stadt / Ort"
+                  className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                />
+                {clubMsg && <p className="text-sm text-red-400">{clubMsg}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddClub(false);
+                      setClubMsg(null);
+                    }}
+                    className="flex-1 rounded-full border border-zinc-700 py-3 text-sm"
+                  >
+                    Zurück
+                  </button>
+                  <button
+                    type="button"
+                    disabled={
+                      addingClub ||
+                      addName.trim().length < 2 ||
+                      addCity.trim().length < 2
+                    }
+                    onClick={handleAddClub}
+                    className="flex-1 rounded-full bg-matchup py-3 text-sm font-bold text-white disabled:opacity-50"
+                  >
+                    {addingClub ? "Prüfe…" : "Hinzufügen"}
+                  </button>
+                </div>
+              </div>
             )}
+
+            {state.club_id && (
+              <div className="flex items-center gap-2 rounded-xl bg-matchup/15 px-4 py-3 text-sm text-matchup">
+                <CheckIcon size={16} /> {state.club_name} ausgewählt
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => {

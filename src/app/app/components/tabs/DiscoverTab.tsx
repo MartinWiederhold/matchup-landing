@@ -17,6 +17,7 @@ import {
 } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
+import { ensureMatch } from "@/lib/matchmaking";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState } from "../shared/ui";
@@ -151,7 +152,10 @@ export default function DiscoverTab() {
       .eq("from_user_id", target.id)
       .eq("to_user_id", profile.id)
       .maybeSingle();
-    if (reverse) setMatchWith(target);
+    if (reverse) {
+      await ensureMatch(profile.id, target.id);
+      setMatchWith(target);
+    }
     refreshBadges();
   }
 
@@ -186,6 +190,27 @@ export default function DiscoverTab() {
           {viewMode === "card" ? <GridIcon size={20} /> : <CardsIcon size={20} />}
         </button>
       </header>
+
+      {profile.club_id && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-4 py-2">
+          <button
+            type="button"
+            onClick={() =>
+              setFilters((f) => ({
+                ...f,
+                clubId: f.clubId === profile.club_id ? null : profile.club_id,
+              }))
+            }
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
+              filters.clubId === profile.club_id
+                ? "bg-matchup text-white"
+                : "bg-zinc-800 text-zinc-300"
+            }`}
+          >
+            Nur aus meinem Club
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto">
         {remaining.length === 0 ? (

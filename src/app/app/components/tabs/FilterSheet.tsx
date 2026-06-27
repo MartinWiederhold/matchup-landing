@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FilterState, Sport, SkillLevel, Club } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
+import { searchClubs as searchClubsApi } from "@/lib/clubs";
 import { skillLabel } from "@/lib/utils/formatters";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
@@ -28,13 +28,7 @@ export default function FilterSheet({
 
   async function searchClubs(q: string) {
     setClubQuery(q);
-    if (q.trim().length < 2) return setClubResults([]);
-    const { data } = await supabase
-      .from("clubs")
-      .select("*")
-      .ilike("name", `%${q}%`)
-      .limit(8);
-    setClubResults((data as Club[]) ?? []);
+    setClubResults(await searchClubsApi(q, 8));
   }
 
   return (
