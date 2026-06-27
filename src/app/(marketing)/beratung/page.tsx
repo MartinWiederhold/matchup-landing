@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
-import PageCta from "@/components/PageCta";
+import BeratungCta from "@/components/BeratungCta";
 
 export const metadata: Metadata = {
   title: "Beratung — Matchup",
@@ -47,12 +47,7 @@ export default function BeratungPage() {
         </div>
       </section>
 
-      <PageCta
-        title="Beratung gewünscht?"
-        text="Schreib uns und wir helfen dir persönlich weiter."
-        buttonLabel="Kontakt aufnehmen"
-        buttonHref="mailto:hello@matchup.ch"
-      />
+      <BeratungCta />
     </>
   );
 }
