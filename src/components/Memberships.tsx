@@ -1,5 +1,5 @@
 import Image from "next/image";
-import RotatingImage from "./RotatingImage";
+import RotatingImage, { type RotatingImg } from "./RotatingImage";
 
 const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
@@ -7,7 +7,7 @@ const TIERS: {
   name: string;
   tagline: string;
   img: string;
-  images?: string[];
+  images?: RotatingImg[];
   features: string[];
   featured: boolean;
 }[] = [
@@ -15,7 +15,11 @@ const TIERS: {
     name: "TENNIS",
     tagline: "Der Klassiker — finde Partner für Singles oder Doubles auf deinem Level.",
     img: `${IMG}/3waVHtJ6R9HOTAreGiUP5a/e9a8df7e641adb0cbf3adc005d31a278/One_card__1_.png`,
-    images: ["/tennis/tennis-1.jpg", "/tennis/tennis-2.jpg", "/tennis/tennis-3.jpg"],
+    images: [
+      "/tennis/tennis-1.jpg",
+      "/tennis/tennis-2.jpg",
+      { src: "/tennis/tennis-3.jpg", position: "center top" },
+    ],
     features: [
       "Spieler nach Skill-Level & Rating filtern",
       "Singles & Doubles organisieren",
@@ -39,7 +43,10 @@ const TIERS: {
     name: "PICKLEBALL",
     tagline: "Schnell zu lernen, schwer zu meistern — perfekt für jedes Level.",
     img: `${IMG}/4jiLfkO6RPmVBkcMtN3jRX/87b712d7ce771cf1d579d619aed659f0/Life_card__3_.webp`,
-    images: ["/pickleball/pickleball-1.jpg", "/pickleball/pickleball-2.jpg"],
+    images: [
+      "/pickleball/pickleball-1.jpg",
+      { src: "/pickleball/pickleball-2.jpg", position: "center top" },
+    ],
     features: [
       "Einsteiger und Profis verbinden",
       "Spontane Matches in deiner Umgebung",

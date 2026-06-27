@@ -32,6 +32,9 @@ function subscribe(cb: () => void) {
 const getSnapshot = () => tick;
 const getServerSnapshot = () => 0;
 
+/** Ein Bild: entweder nur die URL oder URL + object-position (z.B. "top"). */
+export type RotatingImg = string | { src: string; position?: string };
+
 /**
  * Zeigt mehrere Bilder mit sanftem Crossfade (object-cover, fill).
  * Der Eltern-Container muss `relative` sein.
@@ -41,7 +44,7 @@ export default function RotatingImage({
   alt,
   sizes,
 }: {
-  images: string[];
+  images: RotatingImg[];
   alt: string;
   sizes?: string;
 }) {
@@ -50,19 +53,24 @@ export default function RotatingImage({
 
   return (
     <>
-      {images.map((src, i) => (
-        <Image
-          key={src}
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={i === 0}
-          className={`object-cover transition-opacity duration-[1200ms] ease-in-out ${
-            i === index ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
+      {images.map((img, i) => {
+        const src = typeof img === "string" ? img : img.src;
+        const position = typeof img === "string" ? undefined : img.position;
+        return (
+          <Image
+            key={src}
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            priority={i === 0}
+            style={position ? { objectPosition: position } : undefined}
+            className={`object-cover transition-opacity duration-[1200ms] ease-in-out ${
+              i === index ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        );
+      })}
     </>
   );
 }
