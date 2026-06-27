@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import BeratungForm from "./BeratungForm";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Daten
@@ -217,6 +218,7 @@ export default function ShopExperience() {
   const [filter, setFilter] = useState<Cat | "all">("all");
   const [cart, setCart] = useState<{ id: number; qty: number }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [beratungOpen, setBeratungOpen] = useState(false);
   const hscroll = useRef<HTMLDivElement>(null);
 
   const shown = filter === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.cat === filter);
@@ -436,12 +438,24 @@ export default function ShopExperience() {
                   <p className="text-xs font-light leading-relaxed text-neutral-500">
                     {s.note}
                   </p>
+                  {s.num === "03" && (
+                    <button
+                      type="button"
+                      onClick={() => setBeratungOpen(true)}
+                      className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+                    >
+                      Kostenlose Beratung anfragen →
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* BERATUNGS-FORMULAR */}
+      <BeratungForm open={beratungOpen} onClose={() => setBeratungOpen(false)} />
 
       {/* CART DRAWER */}
       <div
