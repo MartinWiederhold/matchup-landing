@@ -71,7 +71,7 @@ const SERVICES: {
     num: "01",
     title: "Besaitungs-Service",
     lead: "Schläger einschicken — frisch besaitet zurück, auf Tour-Niveau.",
-    img: "/tennis/tennis-1.jpg",
+    img: "/shop/service-stringing.jpg",
     rows: [
       ["Express-Besaitung", "24h · 25 €"],
       ["Express + Premium-Saite", "24h · 39 €"],
@@ -84,7 +84,7 @@ const SERVICES: {
     num: "02",
     title: "Test & Verleih",
     lead: "Testen statt raten — finde deinen Schläger auf dem Platz.",
-    img: "/padel/padel-2.jpg",
+    img: "/shop/service-rental.jpg",
     rows: [
       ["Einzel-Demo", "3 Tage · 9 €"],
       ["Vergleichs-Set (2 Schläger)", "5 Tage · 19 €"],
@@ -96,7 +96,7 @@ const SERVICES: {
     num: "03",
     title: "Beratung & Fitting",
     lead: "Persönlich, ehrlich, fundiert — wir finden den Schläger für dein Spiel.",
-    img: "/pickleball/pickleball-1.jpg",
+    img: "/shop/service-consult.jpg",
     rows: [
       ["Schnell-Beratung", "15 Min · kostenlos"],
       ["Video-Fitting", "30 Min · 39 €"],
@@ -110,10 +110,12 @@ const SERVICES: {
    Platzhalter-Grafik für Produktbilder (noch keine echten Produktfotos)
    ────────────────────────────────────────────────────────────────────────── */
 
-const PRODUCT_IMG: Partial<Record<Cat, string>> = {
-  tennis: "/shop/tennis-racket.png",
-  padel: "/shop/padel-racket.png",
-};
+function productImage(cat: Cat, brand: string): string | undefined {
+  if (cat === "tennis")
+    return brand === "Yonex" ? "/shop/tennis-racket.png" : "/shop/babolat-racket.png";
+  if (cat === "padel") return "/shop/padel-racket.png";
+  return undefined;
+}
 
 function ProductVisual({
   cat,
@@ -124,7 +126,7 @@ function ProductVisual({
   brand: string;
   dense?: boolean;
 }) {
-  const img = PRODUCT_IMG[cat];
+  const img = productImage(cat, brand);
   return (
     <div
       className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200 ${
