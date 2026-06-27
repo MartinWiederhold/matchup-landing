@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Profile } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+import { useOnline } from "@/lib/hooks/useOnline";
 import { AppNavContext, type TabKey, type SubViewState } from "./appNav";
 import DiscoverTab from "./tabs/DiscoverTab";
 import LikesTab from "./tabs/LikesTab";
@@ -25,6 +26,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [stack, setStack] = useState<SubViewState[]>([]);
   const [likeCount, setLikeCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const online = useOnline();
 
   const openSubView = useCallback(
     (sv: SubViewState) => setStack((s) => [...s, sv]),
@@ -68,6 +70,11 @@ export default function AppShell({ profile }: { profile: Profile }) {
       }}
     >
       <div className="mx-auto flex h-dvh max-w-[430px] flex-col bg-black text-white">
+        {!online && (
+          <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
+            Keine Internetverbindung
+          </div>
+        )}
         {current ? (
           <SubViewRenderer subView={current} />
         ) : (
