@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import AuthScreen from "./AuthScreen";
@@ -68,12 +69,12 @@ export default function AppGuard() {
         title="Supabase nicht konfiguriert"
         subtitle="Trage NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local ein, um die App zu nutzen."
       >
-        <a
+        <Link
           href="/"
           className="mt-8 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white hover:text-black"
         >
           Zurück zur Startseite
-        </a>
+        </Link>
       </CenteredMessage>
     );
   }
