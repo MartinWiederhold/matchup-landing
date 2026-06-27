@@ -27,6 +27,7 @@ const TIERS: {
     name: "PADEL",
     tagline: "Die am schnellsten wachsende Sportart — immer im Doppel, immer gesellig.",
     img: `${IMG}/2L5W622UNiYxlnHE3hHGAL/d3443637b907fe3541f32a8d9fe58cbc/Peak_card__1_.png`,
+    images: ["/padel/padel-1.jpg", "/padel/padel-2.jpg"],
     features: [
       "Finde drei Mitspieler in Sekunden",
       "Offene Spiele beitreten oder erstellen",
@@ -38,6 +39,7 @@ const TIERS: {
     name: "PICKLEBALL",
     tagline: "Schnell zu lernen, schwer zu meistern — perfekt für jedes Level.",
     img: `${IMG}/4jiLfkO6RPmVBkcMtN3jRX/87b712d7ce771cf1d579d619aed659f0/Life_card__3_.webp`,
+    images: ["/pickleball/pickleball-1.jpg", "/pickleball/pickleball-2.jpg"],
     features: [
       "Einsteiger und Profis verbinden",
       "Spontane Matches in deiner Umgebung",
