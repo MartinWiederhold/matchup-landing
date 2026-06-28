@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MatchupLogo from "./MatchupLogo";
+import AppInstall from "./AppInstall";
 
 const NAV_LINKS = [
   { label: "Find a Partner", href: "/find-a-partner" },
@@ -33,12 +34,9 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <a
-            href="/app"
-            className="hidden rounded-full bg-matchup px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:inline-block"
-          >
+          <AppInstall className="hidden rounded-full bg-matchup px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:inline-block">
             App
-          </a>
+          </AppInstall>
 
           <button
             type="button"
@@ -70,13 +68,12 @@ export default function Header() {
               {link.label}
             </a>
           ))}
-          <a
-            href="/app"
-            onClick={() => setOpen(false)}
-            className="mt-3 rounded-full bg-matchup px-6 py-3 text-center text-sm font-bold tracking-wide text-white"
+          <AppInstall
+            onNavigate={() => setOpen(false)}
+            className="mt-3 block rounded-full bg-matchup px-6 py-3 text-center text-sm font-bold tracking-wide text-white"
           >
             App
-          </a>
+          </AppInstall>
         </nav>
       )}
     </header>
