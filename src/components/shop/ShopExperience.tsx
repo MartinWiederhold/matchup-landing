@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import BeratungForm from "./BeratungForm";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Daten
@@ -60,74 +59,34 @@ const COLLECTIONS: { title: string; meta: string; cat: Cat; img: string }[] = [
   { title: "Zubehör\n& Bälle", meta: "Taschen · Saiten · Griffe", cat: "gear", img: "/tennis/tennis-3.jpg" },
 ];
 
-const SERVICES: {
-  num: string;
-  title: string;
-  lead: string;
-  img: string;
-  rows: [string, string][];
-  note: string;
-}[] = [
-  {
-    num: "01",
-    title: "Besaitungs-Service",
-    lead: "Schläger einschicken — frisch besaitet zurück, auf Tour-Niveau.",
-    img: "/shop/service-stringing.jpg",
-    rows: [
-      ["Express-Besaitung", "24h · 25 €"],
-      ["Express + Premium-Saite", "24h · 39 €"],
-      ["Standard-Besaitung", "3–5 Tage · 19 €"],
-      ["Hybrid-Besaitung", "3–5 Tage · 29 €"],
-    ],
-    note: "Alle gängigen Saiten am Lager: Luxilon, Babolat RPM, Head Hawk, Solinco & mehr. Dein digitales Spieler-Profil speichert dein Setup für die nächste Besaitung.",
-  },
-  {
-    num: "02",
-    title: "Test & Verleih",
-    lead: "Testen statt raten — finde deinen Schläger auf dem Platz.",
-    img: "/shop/service-rental.jpg",
-    rows: [
-      ["Einzel-Demo", "3 Tage · 9 €"],
-      ["Vergleichs-Set (2 Schläger)", "5 Tage · 19 €"],
-      ["Demo-Flat", "2 Schläger/Monat · 29 €"],
-    ],
-    note: "Über 100 Demo-Schläger von Wilson, Babolat, Head, Nox & Joola — frei Haus geliefert. Die Leihgebühr wird beim Kauf voll angerechnet.",
-  },
-  {
-    num: "03",
-    title: "Beratung & Fitting",
-    lead: "Persönlich, ehrlich, fundiert — wir finden den Schläger für dein Spiel.",
-    img: "/shop/service-consult.jpg",
-    rows: [
-      ["Schnell-Beratung", "15 Min · kostenlos"],
-      ["Video-Fitting", "30 Min · 39 €"],
-      ["Custom-Setup", "60 Min · 99 €"],
-    ],
-    note: "Spielstil-Analyse, Gewicht, Balance, Swingweight und Griffstärke — komplett online per Video. Dein vollständiges Setup-Profil wird digital gespeichert.",
-  },
-];
-
 /* ──────────────────────────────────────────────────────────────────────────
    Platzhalter-Grafik für Produktbilder (noch keine echten Produktfotos)
    ────────────────────────────────────────────────────────────────────────── */
 
-function productImage(cat: Cat, brand: string): string | undefined {
+function productImage(cat: Cat, brand: string, name = ""): string | undefined {
   if (cat === "tennis")
     return brand === "Yonex" ? "/shop/tennis-racket.png" : "/shop/babolat-racket.png";
   if (cat === "padel") return "/shop/padel-racket.png";
+  if (cat === "pickleball") return "/shop/pickleball-paddle.png";
+  // Zubehör: nach Produktname
+  const n = name.toLowerCase();
+  if (n.includes("grip")) return "/shop/grips.png";
+  if (n.includes("ball") || n.includes("bälle")) return "/shop/balls.png";
   return undefined;
 }
 
 function ProductVisual({
   cat,
   brand,
+  name,
   dense,
 }: {
   cat: Cat;
   brand: string;
+  name?: string;
   dense?: boolean;
 }) {
-  const img = productImage(cat, brand);
+  const img = productImage(cat, brand, name);
   return (
     <div
       className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200 ${
@@ -218,7 +177,6 @@ export default function ShopExperience() {
   const [filter, setFilter] = useState<Cat | "all">("all");
   const [cart, setCart] = useState<{ id: number; qty: number }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [beratungOpen, setBeratungOpen] = useState(false);
   const hscroll = useRef<HTMLDivElement>(null);
 
   const shown = filter === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.cat === filter);
@@ -393,70 +351,6 @@ export default function ShopExperience() {
         </div>
       </section>
 
-      {/* SERVICES */}
-      <section className="bg-black px-4 py-20 text-white sm:px-6 lg:px-12">
-        <div className="mx-auto max-w-[1400px]">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">Unsere Services</h2>
-          <p className="mb-14 mt-4 text-base font-light text-neutral-400">
-            Drei Säulen, ein Ziel: dein bestes Spiel.
-          </p>
-          <div className="space-y-16">
-            {SERVICES.map((s, i) => (
-              <div
-                key={s.num}
-                className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-12 ${
-                  i % 2 === 1 ? "lg:[&>div:first-child]:order-2" : ""
-                }`}
-              >
-                <div className="relative aspect-[16/11] overflow-hidden rounded-xl">
-                  <Image
-                    src={s.img}
-                    alt={s.title}
-                    fill
-                    sizes="(max-width:1024px) 100vw, 50vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <div className="mb-3 text-xs font-semibold tracking-[0.12em] text-neutral-500">
-                    {s.num}
-                  </div>
-                  <h3 className="text-2xl font-bold tracking-tight">{s.title}</h3>
-                  <p className="mb-6 mt-2 text-sm leading-relaxed text-neutral-300">
-                    {s.lead}
-                  </p>
-                  <div className="mb-5">
-                    {s.rows.map(([l, r]) => (
-                      <div
-                        key={l}
-                        className="flex justify-between border-b border-white/10 py-2.5 text-[13px]"
-                      >
-                        <span className="text-neutral-300">{l}</span>
-                        <span className="font-medium text-white">{r}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs font-light leading-relaxed text-neutral-500">
-                    {s.note}
-                  </p>
-                  {s.num === "03" && (
-                    <button
-                      type="button"
-                      onClick={() => setBeratungOpen(true)}
-                      className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
-                    >
-                      Kostenlose Beratung anfragen →
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* BERATUNGS-FORMULAR */}
-      <BeratungForm open={beratungOpen} onClose={() => setBeratungOpen(false)} />
 
       {/* CART DRAWER */}
       <div
@@ -492,7 +386,7 @@ export default function ShopExperience() {
                 className="flex items-center gap-4 border-b border-neutral-100 py-4"
               >
                 <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded">
-                  <ProductVisual cat={c.cat} brand={c.brand} dense />
+                  <ProductVisual cat={c.cat} brand={c.brand} name={c.name} dense />
                 </div>
                 <div className="flex-1">
                   <div className="text-[10px] uppercase tracking-[0.06em] text-neutral-500">
@@ -553,7 +447,7 @@ function ProductCard({
   return (
     <div className="group">
       <div className="relative aspect-[3/4] overflow-hidden rounded-md">
-        <ProductVisual cat={p.cat} brand={p.brand} />
+        <ProductVisual cat={p.cat} brand={p.brand} name={p.name} />
         {showBadge && p.badge && (
           <span className="absolute left-2.5 top-2.5 rounded bg-black px-2 py-1 text-[9px] font-bold uppercase tracking-[0.06em] text-white">
             {p.badge === "neu" ? "Neu" : "Bestseller"}
