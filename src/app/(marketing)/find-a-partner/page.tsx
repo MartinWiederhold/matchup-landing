@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import PageHero from "@/components/PageHero";
+import Image from "next/image";
 import PageCta from "@/components/PageCta";
 
 export const metadata: Metadata = {
@@ -29,10 +29,26 @@ const STEPS = [
 export default function FindAPartnerPage() {
   return (
     <>
-      <PageHero
-        title="So findest du deinen Spielpartner"
-        subtitle="In drei einfachen Schritten zum perfekten Match."
-      />
+      <section className="relative flex h-[46vh] min-h-[320px] items-center justify-center overflow-hidden">
+        <Image
+          src="/find-a-partner/hero.jpg"
+          alt="Spielpartner finden"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{ objectPosition: "center 40%" }}
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative z-10 max-w-4xl px-6 text-center text-white">
+          <h1 className="text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
+            So findest du deinen Spielpartner
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+            In drei einfachen Schritten zum perfekten Match.
+          </p>
+        </div>
+      </section>
 
       <section className="bg-white px-4 py-24 sm:px-6 lg:px-12">
         <div className="mx-auto flex max-w-[1080px] flex-col gap-12">
