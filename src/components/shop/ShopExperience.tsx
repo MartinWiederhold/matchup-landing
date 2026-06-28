@@ -7,7 +7,7 @@ import Image from "next/image";
    Daten
    ────────────────────────────────────────────────────────────────────────── */
 
-type Cat = "tennis" | "padel" | "pickleball" | "gear";
+type Cat = "tennis" | "padel" | "pickleball" | "gear" | "apparel";
 
 type Product = {
   id: number;
@@ -39,9 +39,11 @@ const PRODUCTS: Product[] = [
   { id: 13, brand: "Wilson", name: "Tennisbälle 4er", sub: "ITF · Allcourt", price: 12, cat: "gear" },
   { id: 14, brand: "Head", name: "Padel-Bälle 3er", sub: "Druckstabil", price: 9, cat: "gear" },
   { id: 15, brand: "Onix", name: "Pickleball-Bälle 6er", sub: "Outdoor · 40 Löcher", price: 18, cat: "gear" },
-  { id: 16, brand: "Matchup", name: "Pro Racketbag", sub: "12 Schläger · Thermo", price: 119, badge: "neu", cat: "gear" },
-  { id: 17, brand: "Luxilon", name: "ALU Power Saite", sub: "1.25mm · 200m Rolle", price: 39, cat: "gear" },
+  { id: 16, brand: "Wilson", name: "Pro Racketbag", sub: "12 Schläger · Thermo", price: 119, badge: "neu", cat: "gear" },
   { id: 18, brand: "Matchup", name: "Overgrip-Set 12er", sub: "Perforiert · Tour", price: 19, badge: "bestseller", cat: "gear" },
+  // Bekleidung
+  { id: 19, brand: "Wilson", name: "Pullover Herren", sub: "Half-Zip · Baumwolle", price: 89, cat: "apparel" },
+  { id: 20, brand: "Wilson", name: "Pullover Damen", sub: "Half-Zip · Baumwolle", price: 89, cat: "apparel" },
 ];
 
 const FILTERS: { key: Cat | "all"; label: string }[] = [
@@ -50,6 +52,7 @@ const FILTERS: { key: Cat | "all"; label: string }[] = [
   { key: "padel", label: "Padel" },
   { key: "pickleball", label: "Pickleball" },
   { key: "gear", label: "Zubehör" },
+  { key: "apparel", label: "Bekleidung" },
 ];
 
 const COLLECTIONS: { title: string; meta: string; cat: Cat; img: string }[] = [
@@ -68,12 +71,22 @@ function productImage(cat: Cat, brand: string, name = ""): string | undefined {
     return brand === "Yonex" ? "/shop/tennis-racket.png" : "/shop/babolat-racket.png";
   if (cat === "padel") return "/shop/padel-racket.png";
   if (cat === "pickleball") return "/shop/pickleball-paddle.png";
-  // Zubehör: nach Produktname
+  // Bekleidung & Zubehör: nach Produktname
   const n = name.toLowerCase();
+  if (n.includes("herren")) return "/shop/pullover-herren.png";
+  if (n.includes("damen") || n.includes("frau")) return "/shop/pullover-frau.png";
   if (n.includes("grip")) return "/shop/grips.png";
   if (n.includes("ball") || n.includes("bälle")) return "/shop/balls.png";
+  if (n.includes("bag") || n.includes("tasche")) return "/shop/bag.png";
   return undefined;
 }
+
+// Vollformat-Fotos (Lifestyle/Produktfoto mit eigenem Hintergrund) -> object-cover
+const COVER_IMAGES = new Set([
+  "/shop/pullover-herren.png",
+  "/shop/pullover-frau.png",
+  "/shop/bag.png",
+]);
 
 function ProductVisual({
   cat,
@@ -87,6 +100,23 @@ function ProductVisual({
   dense?: boolean;
 }) {
   const img = productImage(cat, brand, name);
+  const cover = img ? COVER_IMAGES.has(img) : false;
+
+  // Vollformat-Foto (Pullover, Tasche): randlos füllen
+  if (img && cover) {
+    return (
+      <div className="relative h-full w-full bg-neutral-100">
+        <Image
+          src={img}
+          alt={brand}
+          fill
+          sizes={dense ? "64px" : "(max-width:1024px) 50vw, 25vw"}
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200 ${
@@ -232,13 +262,13 @@ export default function ShopExperience() {
       {/* HERO */}
       <section className="relative flex h-[68vh] min-h-[460px] items-center justify-center overflow-hidden">
         <Image
-          src="/tennis/tennis-1.jpg"
+          src="/shop/hero.jpg"
           alt="Matchup Shop"
           fill
           priority
           sizes="100vw"
           className="object-cover"
-          style={{ objectPosition: "center 30%" }}
+          style={{ objectPosition: "center 40%" }}
         />
         <div className="absolute inset-0 bg-black/30" />
         <h1 className="relative z-10 px-6 text-center text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl">
