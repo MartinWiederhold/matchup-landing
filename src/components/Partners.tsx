@@ -1,12 +1,10 @@
 import Image from "next/image";
 
-const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
-
 export default function Partners() {
   return (
     <section id="warum-matchup" className="relative isolate overflow-hidden bg-black text-white">
       <Image
-        src={`${IMG}/5I95JPiLeukka1icX19lkP/e67704d468c036f5fe152fe463ec45a0/Cristiano_partners_Desktop.png`}
+        src="/landing/partners.png"
         alt="MATCHUP Athlet"
         fill
         sizes="100vw"
