@@ -45,16 +45,16 @@ export default function Hero() {
             deiner Nähe. Matche, chatte und spiele — alles in einer App.
           </p>
         </div>
-        <div className="flex w-full items-stretch gap-3 pb-2 sm:w-auto sm:justify-center sm:gap-4 sm:pb-6">
+        <div className="flex flex-col items-start gap-3 pb-2 sm:flex-row sm:items-center sm:justify-center sm:gap-4 sm:pb-6">
           <a
             href="/app"
-            className="flex flex-1 items-center justify-center rounded-full bg-matchup px-4 py-4 text-center text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:flex-none sm:px-12 sm:text-sm"
+            className="inline-block rounded-full bg-matchup px-10 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:px-12"
           >
             Jetzt Partner finden
           </a>
           <a
             href="/find-a-partner"
-            className="flex flex-1 items-center justify-center rounded-full border border-white/70 px-4 py-4 text-center text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black sm:flex-none sm:px-12 sm:text-sm"
+            className="inline-block rounded-full border border-white/70 px-10 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black sm:px-12"
           >
             So funktioniert&apos;s
           </a>
