@@ -11,6 +11,7 @@ import {
   countryName,
 } from "@/lib/clubs";
 import type { Sport, SkillLevel, Club } from "@/lib/types";
+import AgeRangeSlider from "../shared/AgeRangeSlider";
 import {
   SportIcon,
   TennisIcon,
@@ -776,44 +777,20 @@ export default function OnboardingFlow() {
                 </Chip>
               ))}
             </div>
-            <div className="flex items-center gap-3 pt-2 text-sm">
-              <span className="text-zinc-400">Alter</span>
-              <input
-                type="number"
-                min={18}
-                max={99}
-                value={state.visibility_age_min}
-                onChange={(e) =>
-                  dispatch({
-                    type: "SET_VISIBILITY",
-                    payload: {
-                      gender: state.visibility_gender,
-                      ageMin: Number(e.target.value),
-                      ageMax: state.visibility_age_max,
-                    },
-                  })
-                }
-                className="w-16 rounded-lg bg-zinc-800 px-2 py-1.5 text-center"
-              />
-              <span className="text-zinc-500">–</span>
-              <input
-                type="number"
-                min={18}
-                max={99}
-                value={state.visibility_age_max}
-                onChange={(e) =>
-                  dispatch({
-                    type: "SET_VISIBILITY",
-                    payload: {
-                      gender: state.visibility_gender,
-                      ageMin: state.visibility_age_min,
-                      ageMax: Number(e.target.value),
-                    },
-                  })
-                }
-                className="w-16 rounded-lg bg-zinc-800 px-2 py-1.5 text-center"
-              />
-            </div>
+            <AgeRangeSlider
+              valueMin={state.visibility_age_min}
+              valueMax={state.visibility_age_max}
+              onChange={(ageMin, ageMax) =>
+                dispatch({
+                  type: "SET_VISIBILITY",
+                  payload: {
+                    gender: state.visibility_gender,
+                    ageMin,
+                    ageMax,
+                  },
+                })
+              }
+            />
 
             {submitError && (
               <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-300">

@@ -27,6 +27,36 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Dual-Range-Slider (Altersspanne): überlagerte Inputs, nur Thumbs klickbar */
+.range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+.range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  height: 22px;
+  width: 22px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--matchup-blue);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  height: 22px;
+  width: 22px;
+  border: 2px solid var(--matchup-blue);
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
 /* The MATCHUP wordmark uses tight, all-caps tracking */
 .matchup-wordmark {
   font-weight: 700;
