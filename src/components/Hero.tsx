@@ -2,8 +2,7 @@
 
 import { useRef, useState } from "react";
 
-const HERO_VIDEO =
-  "https://videos.ctfassets.net/rbzqg6pelgqa/1qNUDy3Kalh6nd3sYyy4vD/3ecd2e778352554be72abf7bb1d518a2/WHOOP_Web_HomepageHero_JanJump_16x9_Final__1_.mp4";
+const HERO_VIDEO = "/hero.mp4";
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,7 +30,7 @@ export default function Hero() {
         muted
         loop
         playsInline
-        poster="https://images.ctfassets.net/rbzqg6pelgqa/2NfK4ifx3hmXPavqk5YTLa/ebd21ddc09078d79fdbca9da5351cb60/one_hero_desktop_1184x808__1_.png"
+        poster="/hero-poster.jpg"
       />
       {/* subtle darkening so the white headline stays legible */}
       <div className="absolute inset-0 bg-black/15" />

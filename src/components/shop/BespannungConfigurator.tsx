@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Bespannungs-Konfigurator: Pro-Setup wählen → perfektes Setup ansehen →
@@ -12,6 +13,7 @@ type Setup = {
   pro: string;
   sport: string;
   brand: string;
+  img: string;
   strings: string[]; // eine Zeile = eine Saite (Hybrid = 2 Zeilen)
   tension: string;
   traits: string[];
@@ -25,6 +27,7 @@ const SETUPS: Setup[] = [
     pro: "Carlos Alcaraz",
     sport: "Tennis",
     brand: "Babolat",
+    img: "/beratung/pros/alcaraz.jpg",
     strings: ["Babolat RPM Blast 1.30 (Längs & Quer)"],
     tension: "ca. 25 kg / 55 lbs",
     traits: ["Maximaler Spin", "Kontrolle", "Haltbarkeit"],
@@ -37,6 +40,7 @@ const SETUPS: Setup[] = [
     pro: "Roger Federer",
     sport: "Tennis",
     brand: "Wilson",
+    img: "/beratung/pros/federer.jpg",
     strings: [
       "Längs: Wilson Natural Gut 1.30",
       "Quer: Luxilon ALU Power Rough 1.25",
@@ -48,54 +52,16 @@ const SETUPS: Setup[] = [
     price: 59,
   },
   {
-    id: "djokovic",
-    pro: "Novak Djokovic",
+    id: "zverev",
+    pro: "Alexander Zverev",
     sport: "Tennis",
     brand: "Head",
-    strings: [
-      "Längs: Babolat VS Touch Naturdarm 1.30",
-      "Quer: Luxilon ALU Power 1.25",
-    ],
-    tension: "ca. 25 kg / 55 lbs",
-    traits: ["Kontrolle", "Komfort", "Armschonend"],
+    img: "/beratung/pros/zverev.jpg",
+    strings: ["Head Hawk Touch 1.30 (Längs & Quer)"],
+    tension: "ca. 23 kg / 51 lbs",
+    traits: ["Power", "Komfort", "Kontrolle"],
     instruction:
-      "Hybrid für maximale Ballkontrolle bei gleichzeitig hohem Komfort — die Wahl für präzises, defensiv-stabiles Grundlinienspiel.",
-    price: 59,
-  },
-  {
-    id: "sinner",
-    pro: "Jannik Sinner",
-    sport: "Tennis",
-    brand: "Head",
-    strings: ["Head Lynx Tour 1.25 (Längs & Quer)"],
-    tension: "ca. 25 kg / 55 lbs",
-    traits: ["Power", "Kontrolle", "Flaches Spiel"],
-    instruction:
-      "Glattes Polyester für flaches, druckvolles Spiel mit sauberer Kontrolle. Für Spieler, die hart und früh den Ball nehmen.",
-    price: 45,
-  },
-  {
-    id: "swiatek",
-    pro: "Iga Świątek",
-    sport: "Tennis",
-    brand: "Tecnifibre",
-    strings: ["Tecnifibre Razor Code 1.25 (Längs & Quer)"],
-    tension: "ca. 26 kg / 57 lbs",
-    traits: ["Spin", "Kontrolle", "Snapback"],
-    instruction:
-      "Kantiges Polyester für extremen Spin und scharfe Kontrolle — perfekt für aggressives, drehungsreiches Damen- wie Herrenspiel.",
-    price: 45,
-  },
-  {
-    id: "nadal",
-    pro: "Rafael Nadal",
-    sport: "Tennis",
-    brand: "Babolat",
-    strings: ["Babolat RPM Blast 1.35 (Längs & Quer)"],
-    tension: "ca. 25 kg / 55 lbs",
-    traits: ["Extremer Spin", "Haltbarkeit", "Power"],
-    instruction:
-      "Dickes Polyester für brutalen Topspin und maximale Haltbarkeit. Für kräftige Schwünge und langes Grundlinien-Duell.",
+      "Weiches Polyester bei niedriger Spannung — viel Power und Armschonung bei stabiler Kontrolle. Ideal für druckvolles Grundlinienspiel von der hinteren Position.",
     price: 45,
   },
 ];
@@ -147,7 +113,7 @@ export default function BespannungConfigurator() {
       </p>
 
       {/* Pro-Auswahl */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-3 gap-3">
         {SETUPS.map((s) => {
           const active = selected?.id === s.id;
           return (
@@ -155,17 +121,27 @@ export default function BespannungConfigurator() {
               key={s.id}
               type="button"
               onClick={() => setSelected(s)}
-              className={`rounded-2xl border p-4 text-left transition-colors ${
-                active
-                  ? "border-black bg-black text-white"
-                  : "border-neutral-200 hover:border-black"
+              className={`group relative overflow-hidden rounded-2xl ring-2 transition-all ${
+                active ? "ring-matchup" : "ring-transparent hover:ring-neutral-300"
               }`}
             >
-              <div className="text-sm font-bold tracking-tight">{s.pro}</div>
-              <div
-                className={`mt-0.5 text-[11px] ${active ? "text-white/60" : "text-neutral-500"}`}
-              >
-                {s.brand} · {s.sport}
+              <div className="relative aspect-[3/4]">
+                <Image
+                  src={s.img}
+                  alt={s.pro}
+                  fill
+                  sizes="(max-width: 768px) 33vw, 200px"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-3 text-left">
+                  <div className="text-xs font-bold leading-tight text-white sm:text-sm">
+                    {s.pro}
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-white/70">
+                    {s.brand} · {s.sport}
+                  </div>
+                </div>
               </div>
             </button>
           );
