@@ -92,6 +92,50 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      case "deleteEvent": {
+        const id = String(body.id);
+        // Bild aus dem Bucket entfernen (best effort), falls eigenes Upload.
+        const { data: ev } = await svc
+          .from("events")
+          .select("image_url")
+          .eq("id", id)
+          .maybeSingle();
+        const url = ev?.image_url as string | undefined;
+        if (url && url.includes("/storage/v1/object/public/")) {
+          const parts = url.split("/storage/v1/object/public/");
+          const slash = parts[1].indexOf("/");
+          const bucket = parts[1].substring(0, slash);
+          const path = parts[1].substring(slash + 1);
+          await svc.storage.from(bucket).remove([path]);
+        }
+        const { error } = await svc.from("events").delete().eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
+      case "updateEvent": {
+        const id = String(body.id);
+        const patch = (body.patch || {}) as Record<string, unknown>;
+        const allowed = [
+          "title",
+          "short_description",
+          "description",
+          "location",
+          "sport",
+          "event_date",
+          "max_participants",
+          "status",
+        ];
+        const update: Record<string, unknown> = {};
+        for (const k of allowed) if (k in patch) update[k] = patch[k];
+        if (Object.keys(update).length === 0) {
+          return NextResponse.json({ error: "Nichts zu ändern" }, { status: 400 });
+        }
+        const { error } = await svc.from("events").update(update).eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
       case "reportStatus": {
         const id = String(body.id);
         const status = String(body.status);

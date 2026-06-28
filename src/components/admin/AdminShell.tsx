@@ -13,6 +13,7 @@ import {
   UsersIcon,
   BanIcon,
   LogoutIcon,
+  CalendarIcon,
 } from "@/components/admin/icons";
 
 const FALLBACK_ADMIN = "wiederhold.martin@web.de";
@@ -35,6 +36,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", Icon: DashboardIcon },
+  { href: "/admin/events", label: "Events", Icon: CalendarIcon },
   { href: "/admin/reports", label: "Reports", Icon: FlagIcon },
   { href: "/admin/support", label: "Support", Icon: MessageIcon },
   { href: "/admin/users", label: "Alle User", Icon: UsersIcon },
