@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -41,6 +42,7 @@ export default function RootLayout({
     <html lang="de" className={`${dmSans.variable} h-full bg-black antialiased`}>
       <body className="min-h-full flex flex-col bg-black text-black">
         {children}
+        <ServiceWorkerRegister />
         <Analytics />
       </body>
     </html>

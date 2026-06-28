@@ -48,10 +48,7 @@ export default function AppInstall({
     };
     window.addEventListener("beforeinstallprompt", onBIP);
 
-    // Service Worker registrieren (Voraussetzung für Installierbarkeit)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
+    // SW-Registrierung passiert zentral in ServiceWorkerRegister (app-weit).
 
     return () => window.removeEventListener("beforeinstallprompt", onBIP);
   }, []);
