@@ -35,7 +35,7 @@ export default function Hero() {
       {/* subtle darkening so the white headline stays legible */}
       <div className="absolute inset-0 bg-black/15" />
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-68px-44px)] max-w-[1600px] flex-col px-4 py-12 sm:px-6 lg:px-12">
+      <div className="relative mx-auto flex min-h-[calc(100svh-68px-44px)] max-w-[1600px] flex-col px-4 py-10 sm:py-12 sm:px-6 lg:px-12">
         <div className="flex flex-1 flex-col justify-center">
           <h1 className="max-w-5xl text-[2.75rem] font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[6.5rem]">
             Finde deinen perfekten Spielpartner.
@@ -45,16 +45,16 @@ export default function Hero() {
             deiner Nähe. Matche, chatte und spiele — alles in einer App.
           </p>
         </div>
-        <div className="flex flex-col items-center gap-4 pb-6 sm:flex-row sm:justify-center">
+        <div className="flex w-full items-stretch gap-3 pb-2 sm:w-auto sm:justify-center sm:gap-4 sm:pb-6">
           <a
             href="/app"
-            className="inline-block rounded-full bg-matchup px-12 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover"
+            className="flex flex-1 items-center justify-center rounded-full bg-matchup px-4 py-4 text-center text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:flex-none sm:px-12 sm:text-sm"
           >
             Jetzt Partner finden
           </a>
           <a
             href="/find-a-partner"
-            className="inline-block rounded-full border border-white/70 px-12 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black"
+            className="flex flex-1 items-center justify-center rounded-full border border-white/70 px-4 py-4 text-center text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black sm:flex-none sm:px-12 sm:text-sm"
           >
             So funktioniert&apos;s
           </a>
