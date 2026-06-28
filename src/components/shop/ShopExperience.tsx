@@ -280,7 +280,7 @@ export default function ShopExperience() {
           priority
           sizes="100vw"
           className="object-cover"
-          style={{ objectPosition: "center 70%" }}
+          style={{ objectPosition: "center 30%" }}
         />
         <div className="absolute inset-0 bg-black/30" />
         <h1 className="relative z-10 px-6 text-center text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl">
