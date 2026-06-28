@@ -409,6 +409,30 @@ export interface OnboardingState {
   visibility_age_max: number;
 }
 
+// ============================================================
+//  EVENT (öffentliche Community-Events / Turniere / Spieltreffs)
+// ============================================================
+export interface EventItem {
+  id: string;
+  created_by: string | null;
+  creator_name: string | null;
+  sport: Sport;
+  title: string;
+  short_description: string;
+  description: string | null;
+  image_url: string | null;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+  event_date: string | null; // ISO timestamp
+  max_participants: number;
+  status: string;
+  created_at: string;
+  // Eingebettet / clientseitig:
+  participants?: { id: string; user_id: string }[];
+  _distance?: number;
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
