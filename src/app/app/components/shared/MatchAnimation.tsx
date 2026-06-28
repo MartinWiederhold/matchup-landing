@@ -24,9 +24,10 @@ export default function MatchAnimation({
           <Avatar src={other.profile_image} alt={other.first_name} size="xl" />
         </span>
       </div>
-      <h2 className="text-3xl font-bold text-matchup">IT&apos;S A MATCH!</h2>
+      <h2 className="text-3xl font-bold text-matchup">IHR SEID VERBUNDEN!</h2>
       <p className="mt-3 max-w-xs text-sm text-zinc-300">
-        Du und {other.first_name} habt euch gegenseitig geliked!
+        Du und {other.first_name} möchtet beide spielen — schreib direkt los und
+        plant euer Match.
       </p>
       <div className="mt-8 w-full max-w-xs space-y-3">
         <button

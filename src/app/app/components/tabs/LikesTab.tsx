@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { skillLabel } from "@/lib/utils/formatters";
-import { SportIcon, HeartIcon, XIcon } from "../shared/icons";
+import { SportIcon, XIcon, CheckIcon, UsersIcon } from "../shared/icons";
 import type { Like, Profile } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
 import { useAppNav } from "../appNav";
@@ -68,14 +68,14 @@ export default function LikesTab() {
   return (
     <div className="flex h-full flex-col">
       <header className="flex h-14 shrink-0 items-center justify-center border-b border-zinc-800">
-        <span className="font-bold tracking-wide">LIKES ({visible.length})</span>
+        <span className="font-bold tracking-wide">ANFRAGEN ({visible.length})</span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 ? (
           <EmptyState
-            icon={<HeartIcon size={44} />}
-            title="Noch keine Likes"
+            icon={<UsersIcon size={44} />}
+            title="Noch keine Anfragen"
             message="Vervollständige dein Profil und werde sichtbar."
             actionLabel="Entdecken"
             onAction={() => setActiveTab("discover")}
@@ -115,10 +115,10 @@ export default function LikesTab() {
                     <button
                       type="button"
                       onClick={() => likeBack(like)}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
-                      aria-label="Like zurück"
+                      className="flex h-10 items-center justify-center gap-1.5 rounded-full bg-matchup px-4 text-xs font-bold text-white"
+                      aria-label="Verbinden"
                     >
-                      <HeartIcon size={18} filled />
+                      <CheckIcon size={16} /> Verbinden
                     </button>
                   </div>
                 </li>

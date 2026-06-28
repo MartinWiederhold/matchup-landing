@@ -7,34 +7,48 @@ import { skillLabel, formatDistance } from "@/lib/utils/formatters";
 import {
   SportIcon,
   FilterIcon,
-  GridIcon,
-  CardsIcon,
-  HeartIcon,
-  XIcon,
+  CheckIcon,
   UsersIcon,
   MapPinIcon,
-  CheckIcon,
 } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
 import { useAppNav } from "../appNav";
-import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
 
+function ConnectIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" />
+    </svg>
+  );
+}
+
 export default function DiscoverTab() {
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"card" | "grid">("card");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [matchWith, setMatchWith] = useState<Profile | null>(null);
+  const [requested, setRequested] = useState<Set<string>>(new Set());
 
   const loadCandidates = useCallback(async () => {
     setIsLoading(true);
@@ -65,9 +79,13 @@ export default function DiscoverTab() {
       exclude.add(b.blocked_id);
       exclude.add(b.blocker_id);
     });
-    (likesRes.data ?? []).forEach((l) => exclude.add(l.to_user_id));
+    // bereits gesendete Anfragen / Matches NICHT ausschliessen — wir zeigen sie
+    // im Feed als „Angefragt" markiert. Geblockte & ältere Skips bleiben raus.
+    const alreadyRequested = new Set<string>(
+      (likesRes.data ?? []).map((l) => l.to_user_id),
+    );
     (matchesRes.data ?? []).forEach((m) =>
-      exclude.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
+      alreadyRequested.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
     );
     (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
 
@@ -129,8 +147,8 @@ export default function DiscoverTab() {
       );
     });
 
-    setCandidates(filtered.slice(0, 20));
-    setCurrentIndex(0);
+    setRequested(alreadyRequested);
+    setCandidates(filtered.slice(0, 40));
     setIsLoading(false);
   }, [profile, filters]);
 
@@ -138,8 +156,8 @@ export default function DiscoverTab() {
     loadCandidates();
   }, [loadCandidates]);
 
-  async function handleLike(target: Profile) {
-    setCurrentIndex((i) => i + 1);
+  async function connect(target: Profile) {
+    setRequested((prev) => new Set(prev).add(target.id));
     await supabase
       .from("likes")
       .upsert(
@@ -159,16 +177,7 @@ export default function DiscoverTab() {
     refreshBadges();
   }
 
-  async function handleSkip(target: Profile) {
-    setCurrentIndex((i) => i + 1);
-    await supabase
-      .from("skips")
-      .insert({ user_id: profile.id, skipped_user_id: target.id });
-  }
-
   if (isLoading) return <FullLoading />;
-
-  const remaining = candidates.slice(currentIndex);
 
   return (
     <div className="flex h-full flex-col">
@@ -181,14 +190,9 @@ export default function DiscoverTab() {
           <FilterIcon size={18} /> Filter
         </button>
         <span className="font-bold tracking-wide">ENTDECKEN</span>
-        <button
-          type="button"
-          onClick={() => setViewMode((v) => (v === "card" ? "grid" : "card"))}
-          className="text-sm text-zinc-300"
-          aria-label="Ansicht wechseln"
-        >
-          {viewMode === "card" ? <GridIcon size={20} /> : <CardsIcon size={20} />}
-        </button>
+        <span className="w-12 text-right text-xs text-zinc-500">
+          {candidates.length}
+        </span>
       </header>
 
       {profile.club_id && (
@@ -213,7 +217,7 @@ export default function DiscoverTab() {
       )}
 
       <div className="flex-1 overflow-y-auto">
-        {remaining.length === 0 ? (
+        {candidates.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
             title="Keine weiteren Spieler"
@@ -221,27 +225,17 @@ export default function DiscoverTab() {
             actionLabel="Filter öffnen"
             onAction={() => setShowFilter(true)}
           />
-        ) : viewMode === "card" ? (
-          <CardView
-            profile={remaining[0]}
-            onLike={() => handleLike(remaining[0])}
-            onSkip={() => handleSkip(remaining[0])}
-            onOpen={() =>
-              openSubView({ type: "full-profile", userId: remaining[0].id })
-            }
-            myLat={profile.latitude}
-            myLng={profile.longitude}
-          />
         ) : (
           <div className="grid grid-cols-2 gap-3 p-3">
-            {remaining.map((c) => (
-              <GridCard
+            {candidates.map((c) => (
+              <FeedCard
                 key={c.id}
-                profile={c}
-                onLike={() => handleLike(c)}
-                onOpen={() =>
-                  openSubView({ type: "full-profile", userId: c.id })
-                }
+                player={c}
+                requested={requested.has(c.id)}
+                onConnect={() => connect(c)}
+                onOpen={() => openSubView({ type: "full-profile", userId: c.id })}
+                myLat={profile.latitude}
+                myLng={profile.longitude}
               />
             ))}
           </div>
@@ -293,153 +287,86 @@ function distanceLabel(
   return null;
 }
 
-function CardView({
-  profile,
-  onLike,
-  onSkip,
+function FeedCard({
+  player,
+  requested,
+  onConnect,
   onOpen,
   myLat,
   myLng,
 }: {
-  profile: Profile;
-  onLike: () => void;
-  onSkip: () => void;
+  player: Profile;
+  requested: boolean;
+  onConnect: () => void;
   onOpen: () => void;
   myLat: number | null;
   myLng: number | null;
 }) {
-  const [start, setStart] = useState(0);
-  const [dx, setDx] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const dist = distanceLabel(myLat, myLng, profile);
-
-  function end() {
-    setDragging(false);
-    if (dx > 100) onLike();
-    else if (dx < -100) onSkip();
-    setDx(0);
-  }
-
+  const dist = distanceLabel(myLat, myLng, player);
   return (
-    <div className="p-4">
-      <div
-        className="relative overflow-hidden rounded-2xl bg-zinc-900"
-        style={{
-          transform: `translateX(${dx}px) rotate(${dx * 0.04}deg)`,
-          transition: dragging ? "none" : "transform 0.25s ease",
-        }}
-        onTouchStart={(e) => {
-          setStart(e.touches[0].clientX);
-          setDragging(true);
-        }}
-        onTouchMove={(e) => setDx(e.touches[0].clientX - start)}
-        onTouchEnd={end}
+    <div className="overflow-hidden rounded-2xl bg-zinc-900">
+      <button
+        type="button"
         onClick={onOpen}
-        role="button"
-        tabIndex={0}
+        className="relative block aspect-[4/5] w-full bg-zinc-800 text-left"
       >
-        <div className="aspect-[3/4] w-full bg-zinc-800">
-          {profile.profile_image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.profile_image}
-              alt={profile.first_name}
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
-        {dx > 40 && (
-          <div className="absolute left-4 top-4 rounded-lg border-2 border-green-400 px-3 py-1 text-lg font-bold text-green-400">
-            LIKE
-          </div>
+        {player.profile_image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={player.profile_image}
+            alt={player.first_name}
+            className="h-full w-full object-cover"
+          />
         )}
-        {dx < -40 && (
-          <div className="absolute right-4 top-4 rounded-lg border-2 border-red-400 px-3 py-1 text-lg font-bold text-red-400">
-            SKIP
-          </div>
+        {player.is_verified && (
+          <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-matchup backdrop-blur-sm">
+            <CheckIcon size={11} /> Verifiziert
+          </span>
         )}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-5 pt-16">
-          <h2 className="text-xl font-bold">
-            {profile.first_name}, {profile.age}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-3 pt-10">
+          <h2 className="text-sm font-bold leading-tight text-white">
+            {player.first_name}, {player.age}
           </h2>
-          <p className="mt-1 text-sm text-zinc-200">
-            <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" />{" "}
-            {profile.sports.map((s) => s).join(", ")} ·{" "}
-            {skillLabel(profile.skill_level)}
+          <p className="mt-0.5 text-[11px] text-zinc-200">
+            <SportIcon
+              sport={player.sports[0]}
+              size={12}
+              className="mr-0.5 inline-block align-[-2px]"
+            />{" "}
+            {skillLabel(player.skill_level)}
           </p>
-          <p className="mt-0.5 flex items-center gap-1 text-sm text-zinc-400">
-            {dist && <MapPinIcon size={13} />}
-            <span>
-              {dist}
-              {profile.club_name_manual ? ` · ${profile.club_name_manual}` : ""}
-            </span>
-          </p>
-          {profile.is_verified && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-matchup">
-              <CheckIcon size={13} /> Verifiziert
+          {(dist || player.club_name_manual) && (
+            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-400">
+              {dist && <MapPinIcon size={11} />}
+              <span className="truncate">
+                {dist}
+                {player.club_name_manual ? ` · ${player.club_name_manual}` : ""}
+              </span>
             </p>
           )}
         </div>
-      </div>
-
-      <div className="mt-5 flex items-center justify-center gap-12">
-        <button
-          type="button"
-          onClick={onSkip}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800 text-white transition-transform active:scale-90"
-          aria-label="Skip"
-        >
-          <XIcon size={26} />
-        </button>
-        <button
-          type="button"
-          onClick={onLike}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-matchup text-white transition-transform active:scale-90"
-          aria-label="Like"
-        >
-          <HeartIcon size={26} filled />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function GridCard({
-  profile,
-  onLike,
-  onOpen,
-}: {
-  profile: Profile;
-  onLike: () => void;
-  onOpen: () => void;
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl bg-zinc-900">
-      <button type="button" onClick={onOpen} className="block w-full">
-        <div className="aspect-square w-full bg-zinc-800">
-          {profile.profile_image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.profile_image}
-              alt={profile.first_name}
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
       </button>
-      <div className="p-3">
-        <p className="text-sm font-semibold">
-          {profile.first_name}, {profile.age}
-        </p>
-        <p className="text-xs text-zinc-400">
-          <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {skillLabel(profile.skill_level)}
-        </p>
+
+      <div className="p-2.5">
         <button
           type="button"
-          onClick={onLike}
-          className="mt-2 flex w-full items-center justify-center gap-1 rounded-full bg-matchup py-1.5 text-xs font-bold text-white"
+          onClick={onConnect}
+          disabled={requested}
+          className={`flex w-full items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold transition-colors ${
+            requested
+              ? "bg-zinc-800 text-zinc-400"
+              : "bg-matchup text-white hover:bg-matchup-hover"
+          }`}
         >
-          <HeartIcon size={13} filled /> Like
+          {requested ? (
+            <>
+              <CheckIcon size={14} /> Angefragt
+            </>
+          ) : (
+            <>
+              <ConnectIcon size={14} /> Verbinden
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -16,12 +16,31 @@ import {
   TrophyIcon,
   FlameIcon,
   StarIcon,
-  HeartIcon,
-  XIcon,
 } from "../shared/icons";
 import type { Profile, PlayerStats } from "@/lib/types";
+import { ensureMatch } from "@/lib/matchmaking";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
+
+function ConnectIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" />
+    </svg>
+  );
+}
 
 export default function FullProfile({
   userId,
@@ -30,10 +49,11 @@ export default function FullProfile({
   userId: string;
   viewOnly?: boolean;
 }) {
-  const { profile: me, closeSubView, refreshBadges } = useAppNav();
+  const { profile: me, closeSubView, refreshBadges, openSubView } = useAppNav();
   const [p, setP] = useState<Profile | null>(null);
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [imgIndex, setImgIndex] = useState(0);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     supabase
@@ -76,22 +96,34 @@ export default function FullProfile({
     closeSubView();
   }
 
-  async function like() {
+  async function connect() {
+    setSent(true);
     await supabase
       .from("likes")
       .upsert(
         { from_user_id: me.id, to_user_id: userId },
         { onConflict: "from_user_id,to_user_id" },
       );
+    const { data: reverse } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("from_user_id", userId)
+      .eq("to_user_id", me.id)
+      .maybeSingle();
+    if (reverse) {
+      await ensureMatch(me.id, userId);
+      const [u1, u2] = [me.id, userId].sort();
+      const { data: m } = await supabase
+        .from("matches")
+        .select("id")
+        .eq("user1_id", u1)
+        .eq("user2_id", u2)
+        .maybeSingle();
+      refreshBadges();
+      if (m) openSubView({ type: "chat", matchId: m.id });
+      return;
+    }
     refreshBadges();
-    closeSubView();
-  }
-
-  async function skip() {
-    await supabase
-      .from("skips")
-      .insert({ user_id: me.id, skipped_user_id: userId });
-    closeSubView();
   }
 
   return (
@@ -204,22 +236,26 @@ export default function FullProfile({
       </div>
 
       {!viewOnly && (
-        <div className="flex shrink-0 items-center justify-center gap-12 border-t border-zinc-800 py-4">
+        <div className="shrink-0 border-t border-zinc-800 p-4">
           <button
             type="button"
-            onClick={skip}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800 text-white"
-            aria-label="Skip"
+            onClick={connect}
+            disabled={sent}
+            className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold transition-colors ${
+              sent
+                ? "bg-zinc-800 text-zinc-400"
+                : "bg-matchup text-white hover:bg-matchup-hover"
+            }`}
           >
-            <XIcon size={22} />
-          </button>
-          <button
-            type="button"
-            onClick={like}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white"
-            aria-label="Like"
-          >
-            <HeartIcon size={22} filled />
+            {sent ? (
+              <>
+                <CheckIcon size={18} /> Anfrage gesendet
+              </>
+            ) : (
+              <>
+                <ConnectIcon size={18} /> Verbinden
+              </>
+            )}
           </button>
         </div>
       )}

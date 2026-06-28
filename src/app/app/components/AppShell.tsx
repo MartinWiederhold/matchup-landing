@@ -15,7 +15,7 @@ import TabBar, { type TabDef } from "./TabBar";
 
 const TABS: TabDef[] = [
   { key: "discover", label: "Entdecken", icon: "M12 2 4 7v10l8 5 8-5V7z" },
-  { key: "likes", label: "Likes", icon: "M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z" },
+  { key: "likes", label: "Anfragen", icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8v6 M22 11h-6" },
   { key: "matches", label: "Matches", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
   { key: "games", label: "Spiele", icon: "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
   { key: "profile", label: "Profil", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
