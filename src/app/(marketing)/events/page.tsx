@@ -3,7 +3,7 @@ import Image from "next/image";
 import PageCta from "@/components/PageCta";
 
 export const metadata: Metadata = {
-  title: "Events & Turniere — Matchup",
+  title: "Events worldwide — Matchup",
   description:
     "Entdecke lokale Turniere, Social-Play-Events und Community-Treffen.",
 };
@@ -59,10 +59,10 @@ export default function EventsPage() {
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 max-w-3xl px-6 text-center text-white">
           <h1 className="text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
-            Events &amp; Turniere
+            Events worldwide
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Entdecke lokale Turniere, Social-Play-Events und Community-Treffen.
+            Entdecke Turniere, Social-Play-Events und Community-Treffen rund um den Globus.
           </p>
         </div>
       </section>
