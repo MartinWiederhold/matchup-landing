@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { adminAction } from "@/lib/adminAction";
 import {
   type Profile,
   type ReportRow,
@@ -77,14 +78,7 @@ export default function UserDetailPage() {
     if (!next && !confirm("Pausierung aufheben?")) return;
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ is_paused: next, pause_reason: null })
-        .eq("id", id)
-        .select("id, is_paused");
-      if (error) throw error;
-      if (!data || data.length === 0)
-        throw new Error("Update blockiert (0 Zeilen geändert).");
+      await adminAction("pauseUser", { id, paused: next });
       showToast(next ? "Profil pausiert" : "Pausierung aufgehoben");
       await load();
     } catch (e) {
@@ -101,17 +95,7 @@ export default function UserDetailPage() {
     if (!next && !confirm("Sperre aufheben?")) return;
     setBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({
-          is_banned: next,
-          banned_at: next ? new Date().toISOString() : null,
-        })
-        .eq("id", id)
-        .select("id, is_banned");
-      if (error) throw error;
-      if (!data || data.length === 0)
-        throw new Error("Update blockiert (0 Zeilen geändert).");
+      await adminAction("banUser", { id, banned: next });
       showToast(next ? "Account gesperrt" : "Sperre aufgehoben");
       await load();
     } catch (e) {
@@ -125,27 +109,7 @@ export default function UserDetailPage() {
     if (!profile) return;
     if (!confirm("Bild wirklich löschen?")) return;
     try {
-      const urlParts = imageUrl.split("/storage/v1/object/public/");
-      if (urlParts.length === 2) {
-        const pathWithBucket = urlParts[1];
-        const slashIndex = pathWithBucket.indexOf("/");
-        const bucket = pathWithBucket.substring(0, slashIndex);
-        const path = pathWithBucket.substring(slashIndex + 1);
-        await supabase.storage.from(bucket).remove([path]);
-      }
-    } catch (e) {
-      console.error("Storage delete error:", e);
-    }
-
-    const urls = (profile.additional_images || []).filter(
-      (u) => u !== imageUrl,
-    );
-    const update: Partial<Profile> = { additional_images: urls };
-    if (profile.profile_image === imageUrl) {
-      update.profile_image = urls.length > 0 ? urls[0] : null;
-    }
-    try {
-      await supabase.from("profiles").update(update).eq("id", id);
+      await adminAction("deleteUserImage", { id, imageUrl });
       showToast("Bild gelöscht");
       await load();
     } catch (e) {

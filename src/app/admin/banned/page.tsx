@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { adminAction } from "@/lib/adminAction";
 import {
   type Profile,
   displayName,
@@ -48,16 +49,7 @@ export default function BannedPage() {
     if (!confirm("Sperre/Pausierung wirklich aufheben?")) return;
     setBusyId(u.id);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          is_banned: false,
-          is_paused: false,
-          banned_at: null,
-          pause_reason: null,
-        })
-        .eq("id", u.id);
-      if (error) throw error;
+      await adminAction("unbanUser", { id: u.id });
       showToast("Sperre aufgehoben");
       await load();
     } catch (err) {

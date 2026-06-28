@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { adminAction } from "@/lib/adminAction";
 import {
   type Profile,
   type ReportRow,
@@ -99,11 +100,7 @@ export default function ReportDetailPage() {
   async function updateReportStatus(status: string) {
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("reports")
-        .update({ status })
-        .eq("id", id);
-      if (error) throw error;
+      await adminAction("reportStatus", { id, status });
       showToast("Status aktualisiert");
       await load();
     } catch (e) {

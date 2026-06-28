@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { adminAction } from "@/lib/adminAction";
 import {
   type Profile,
   type TicketRow,
@@ -72,22 +73,7 @@ export default function SupportDetailPage() {
     if (!text || sending) return;
     setSending(true);
     try {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-      const { error } = await supabase.from("support_messages").insert({
-        ticket_id: id,
-        sender_type: "admin",
-        sender_id: authUser?.id,
-        message: text,
-      });
-      if (error) throw error;
-
-      await supabase
-        .from("support_tickets")
-        .update({ status: "in_progress" })
-        .eq("id", id);
-
+      await adminAction("ticketReply", { id, message: text });
       setReply("");
       await load();
     } catch (e) {
@@ -104,11 +90,7 @@ export default function SupportDetailPage() {
     if (!ticket || nextStatus === ticket.status) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("support_tickets")
-        .update({ status: nextStatus })
-        .eq("id", id);
-      if (error) throw error;
+      await adminAction("ticketStatus", { id, status: nextStatus });
       await load();
     } catch (e) {
       alert(
