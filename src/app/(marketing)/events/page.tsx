@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import PageHero from "@/components/PageHero";
 import PageCta from "@/components/PageCta";
 
 export const metadata: Metadata = {
@@ -47,10 +46,26 @@ const EVENTS = [
 export default function EventsPage() {
   return (
     <>
-      <PageHero
-        title="Events & Turniere"
-        subtitle="Entdecke lokale Turniere, Social-Play-Events und Community-Treffen."
-      />
+      <section className="relative flex h-[52vh] min-h-[360px] items-center justify-center overflow-hidden bg-black">
+        <video
+          className="absolute inset-0 h-full w-full object-cover opacity-80"
+          src="/events/hero.mp4"
+          poster="/events/hero-poster.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="relative z-10 max-w-3xl px-6 text-center text-white">
+          <h1 className="text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
+            Events &amp; Turniere
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+            Entdecke lokale Turniere, Social-Play-Events und Community-Treffen.
+          </p>
+        </div>
+      </section>
 
       <section className="bg-white px-4 py-24 sm:px-6 lg:px-12">
         <div className="mx-auto grid max-w-[1280px] gap-6 sm:grid-cols-2">

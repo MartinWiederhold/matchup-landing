@@ -2,7 +2,12 @@ import Image from "next/image";
 
 const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
-const FEATURES = [
+const FEATURES: {
+  title: string;
+  copy: string;
+  img: string;
+  overlay?: "community";
+}[] = [
   {
     title: "Entdecke Spieler",
     copy: "Swipe durch Profile verifizierter Spieler. Filtere nach Sportart, Skill-Level, Alter und Entfernung. Bei einem gegenseitigen Like entsteht ein Match.",
@@ -16,7 +21,8 @@ const FEATURES = [
   {
     title: "Deine Community",
     copy: "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten — von Club-Gruppen bis zu lokalen Spieltreffs.",
-    img: `${IMG}/50iEhV1lmhfX4BOUjZnTK/0e7e3ac599a5607e1fb091b28cc2c127/Strain-1.png`,
+    img: "/shop/pullover-frau.png",
+    overlay: "community",
   },
   {
     title: "Verfolge Fortschritt",
@@ -24,6 +30,63 @@ const FEATURES = [
     img: `${IMG}/1iwCpHpMpjVHfBkQcNGv4P/fbd48749a53d0979359b9b7a86ff9de6/Stay_connected_to_your_heart_health__1_.webp`,
   },
 ];
+
+/** Animierte, premium Community-Grafik (Glas-Karte mit Live-Ring & Avataren). */
+function CommunityOverlay() {
+  const C = 2 * Math.PI * 20; // Umfang r=20
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 to-transparent" />
+      <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-2xl bg-black/45 px-3.5 py-3 ring-1 ring-white/15 backdrop-blur-md">
+        {/* Live-Ring */}
+        <div className="relative h-12 w-12 shrink-0">
+          <svg viewBox="0 0 48 48" className="h-12 w-12 -rotate-90">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="4" />
+            <circle
+              cx="24"
+              cy="24"
+              r="20"
+              fill="none"
+              stroke="var(--matchup-blue)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={C}
+              className="community-ring"
+              style={{ ["--ring-c" as string]: `${C}` }}
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-white">
+            2.4k
+          </span>
+        </div>
+
+        <div className="min-w-0">
+          {/* Avatar-Stack */}
+          <div className="flex -space-x-2">
+            {[
+              "from-orange-400 to-red-500",
+              "from-sky-400 to-blue-600",
+              "from-emerald-400 to-teal-600",
+              "from-violet-400 to-purple-600",
+            ].map((g, i) => (
+              <span
+                key={i}
+                className={`h-6 w-6 rounded-full bg-gradient-to-br ${g} ring-2 ring-black/40`}
+              />
+            ))}
+          </div>
+          <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-white/90">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
+            </span>
+            Aktive Spieler in deiner Nähe
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CompletePicture() {
   return (
@@ -53,6 +116,7 @@ export default function CompletePicture() {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
+                {f.overlay === "community" && <CommunityOverlay />}
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold tracking-tight">{f.title}</h3>

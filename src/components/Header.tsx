@@ -17,7 +17,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-black text-white">
       <div className="mx-auto flex h-[68px] max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
-        <a href="#top" className="shrink-0">
+        <a href="/" className="shrink-0">
           <MatchupLogo />
         </a>
 

@@ -57,6 +57,20 @@ body {
   cursor: pointer;
 }
 
+/* Community-Live-Ring: füllt sich sanft, pulsiert leicht */
+@keyframes communityRing {
+  0% {
+    stroke-dashoffset: var(--ring-c);
+  }
+  60%,
+  100% {
+    stroke-dashoffset: calc(var(--ring-c) * 0.32);
+  }
+}
+.community-ring {
+  animation: communityRing 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+
 /* The MATCHUP wordmark uses tight, all-caps tracking */
 .matchup-wordmark {
   font-weight: 700;
