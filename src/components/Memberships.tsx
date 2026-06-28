@@ -45,7 +45,7 @@ const TIERS: {
     img: `${IMG}/4jiLfkO6RPmVBkcMtN3jRX/87b712d7ce771cf1d579d619aed659f0/Life_card__3_.webp`,
     images: [
       "/pickleball/pickleball-1.jpg",
-      { src: "/pickleball/pickleball-2.jpg", position: "center 40%" },
+      { src: "/pickleball/pickleball-2.jpg", position: "center 20%" },
     ],
     features: [
       "Einsteiger und Profis verbinden",
