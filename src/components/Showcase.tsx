@@ -12,9 +12,10 @@ const ROWS = [
   },
   {
     eyebrow: "EVENTS",
-    title: "Events, Turniere & Spieltreffs",
+    title: "Events & Spieltreffs",
     copy: "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen — oder organisiere dein eigenes Event direkt in der App.",
     img: "/events/event-1.jpg",
+    position: "center 40%",
     reverse: true,
   },
 ];
@@ -37,6 +38,7 @@ export default function Showcase() {
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
+                style={row.position ? { objectPosition: row.position } : undefined}
               />
             </div>
             <div className="w-full lg:w-1/2">
