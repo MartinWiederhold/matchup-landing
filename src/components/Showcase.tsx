@@ -9,6 +9,7 @@ const ROWS = [
     copy: "Jedes Profil wird geprüft. Melde unangemessenes Verhalten, blockiere Nutzer und vertraue auf automatische Moderation. Deine Daten gehören dir.",
     img: `${IMG}/4Yh8vc5goDh5JgJHv9DVo1/c0366d221c77a0c972cebd4cc30a6b03/Image_desktop.webp`,
     reverse: false,
+    cta: { label: "App öffnen", href: "/app" },
   },
   {
     eyebrow: "EVENTS",
@@ -17,6 +18,7 @@ const ROWS = [
     img: "/events/event-1.jpg",
     position: "center 40%",
     reverse: true,
+    cta: { label: "Events entdecken", href: "/events" },
   },
 ];
 
@@ -52,10 +54,10 @@ export default function Showcase() {
                 {row.copy}
               </p>
               <a
-                href="/app"
+                href={row.cta.href}
                 className="mt-8 inline-block rounded-full border border-black px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
               >
-                App öffnen
+                {row.cta.label}
               </a>
             </div>
           </div>
