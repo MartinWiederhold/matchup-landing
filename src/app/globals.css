@@ -71,6 +71,21 @@ body {
   animation: communityRing 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
 }
 
+/* Match-Grafik: Spieler-Slots füllen sich live */
+@keyframes organizeFill {
+  0% {
+    width: 20%;
+  }
+  60%,
+  100% {
+    width: 75%;
+  }
+}
+.organize-fill {
+  width: 75%;
+  animation: organizeFill 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+
 /* The MATCHUP wordmark uses tight, all-caps tracking */
 .matchup-wordmark {
   font-weight: 700;
