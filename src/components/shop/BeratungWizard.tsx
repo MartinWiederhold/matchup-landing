@@ -47,12 +47,12 @@ const EMPTY: Form = {
 };
 
 const STEPS = [
-  "Persönliches",
   "Sport & Profil",
   "Spielstil",
   "Schläger & Saite",
+  "Körper",
   "Bedarf & Budget",
-  "Abschluss",
+  "Kontakt & Abschluss",
 ];
 
 export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
@@ -92,14 +92,6 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
   }
 
   function next() {
-    if (step === 0 && (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim())) {
-      setError("Bitte Vorname, Nachname und E-Mail ausfüllen.");
-      return;
-    }
-    if (step === 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
-      return;
-    }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
   function back() {
@@ -107,6 +99,14 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
     setStep((s) => Math.max(s - 1, 0));
   }
   function submit() {
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
+      setError("Bitte Vorname, Nachname und E-Mail ausfüllen.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
+      return;
+    }
     if (!form.consent) {
       setError("Bitte stimme der Verarbeitung deiner Angaben zu.");
       return;
@@ -200,25 +200,6 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
           <>
             {step === 0 && (
               <Section>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Vorname *" value={form.firstName} onChange={(v) => set("firstName", v)} />
-                  <Text label="Nachname *" value={form.lastName} onChange={(v) => set("lastName", v)} />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="E-Mail *" type="email" value={form.email} onChange={(v) => set("email", v)} />
-                  <Text label="Telefon / WhatsApp (optional)" value={form.phone} onChange={(v) => set("phone", v)} />
-                </div>
-                <Radio label="Alter" options={["Kind (unter 12)", "Jugendlich (12–17)", "Erwachsen (18+)"]} value={form.alter} onChange={(v) => set("alter", v)} />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Körpergröße (cm)" value={form.height} onChange={(v) => set("height", v)} />
-                  <Text label="Gewicht (kg, optional)" value={form.weight} onChange={(v) => set("weight", v)} />
-                </div>
-                <Radio label="Dominante Hand" options={["Rechts", "Links"]} value={form.hand} onChange={(v) => set("hand", v)} />
-              </Section>
-            )}
-
-            {step === 1 && (
-              <Section>
                 <Radio label="Für welche Sportart suchst du Beratung?" options={["Tennis", "Padel", "Pickleball"]} value={form.sport} onChange={(v) => set("sport", v)} />
                 <Radio label="Wie lange spielst du bereits?" options={["Anfänger (0–1 Jahr)", "Hobbyspieler", "Fortgeschritten", "Turnierspieler", "Coach / Trainer"]} value={form.experience} onChange={(v) => set("experience", v)} />
                 <Radio label="Wie oft spielst du?" options={["1× pro Monat", "1× pro Woche", "2–3× pro Woche", "4×+ pro Woche"]} value={form.frequency} onChange={(v) => set("frequency", v)} />
@@ -227,14 +208,14 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
               </Section>
             )}
 
-            {step === 2 && (
+            {step === 1 && (
               <Section>
                 <Chips label="Wie würdest du deinen Spielstil beschreiben?" hint="Mehrfachauswahl möglich" options={["Defensiv / kontrolliert", "Allround", "Aggressiv / offensiv", "Viel Spin", "Flaches Spiel", "Netzspieler / Volley"]} values={form.style} onToggle={(v) => toggle("style", v)} />
                 <Chips label="Was ist dir am wichtigsten?" hint="Mehrfachauswahl möglich" options={["Mehr Power", "Mehr Kontrolle", "Mehr Spin", "Mehr Komfort", "Weniger Belastung (Arm / Schulter)", "Mehr Präzision", "Größerer Sweetspot"]} values={form.priorities} onToggle={(v) => toggle("priorities", v)} />
               </Section>
             )}
 
-            {step === 3 && (
+            {step === 2 && (
               <Section>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Text label="Aktuelle Marke" value={form.curBrand} onChange={(v) => set("curBrand", v)} />
@@ -250,6 +231,17 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
               </Section>
             )}
 
+            {step === 3 && (
+              <Section>
+                <Radio label="Alter" options={["Kind (unter 12)", "Jugendlich (12–17)", "Erwachsen (18+)"]} value={form.alter} onChange={(v) => set("alter", v)} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Text label="Körpergröße (cm)" value={form.height} onChange={(v) => set("height", v)} />
+                  <Text label="Gewicht (kg, optional)" value={form.weight} onChange={(v) => set("weight", v)} />
+                </div>
+                <Radio label="Dominante Hand" options={["Rechts", "Links"]} value={form.hand} onChange={(v) => set("hand", v)} />
+              </Section>
+            )}
+
             {step === 4 && (
               <Section>
                 <Chips label="Hast du aktuell Beschwerden?" hint="Mehrfachauswahl möglich" options={["Keine", "Tennisarm", "Handgelenk", "Schulter", "Ellbogen", "Sonstiges"]} values={form.issues} onToggle={(v) => toggle("issues", v)} />
@@ -261,7 +253,19 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
 
             {step === 5 && (
               <Section>
-                <Area label="Gibt es noch etwas, das wir wissen sollten?" hint="z. B. Lieblingsmarken, No-Gos, Ziele, spezielle Wünsche" value={form.notes} onChange={(v) => set("notes", v)} rows={4} />
+                <p className="text-sm leading-relaxed text-neutral-600">
+                  Fast geschafft! Wohin dürfen wir deine persönliche Empfehlung
+                  schicken?
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Text label="Vorname *" value={form.firstName} onChange={(v) => set("firstName", v)} />
+                  <Text label="Nachname *" value={form.lastName} onChange={(v) => set("lastName", v)} />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Text label="E-Mail *" type="email" value={form.email} onChange={(v) => set("email", v)} />
+                  <Text label="Telefon / WhatsApp (optional)" value={form.phone} onChange={(v) => set("phone", v)} />
+                </div>
+                <Area label="Gibt es noch etwas, das wir wissen sollten?" hint="z. B. Lieblingsmarken, No-Gos, Ziele, spezielle Wünsche" value={form.notes} onChange={(v) => set("notes", v)} rows={3} />
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-neutral-200 p-4 text-sm">
                   <input
                     type="checkbox"

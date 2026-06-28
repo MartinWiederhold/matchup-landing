@@ -5,8 +5,9 @@ import Image from "next/image";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Bespannungs-Konfigurator
-   - Setup vom Lieblingsspieler wählen (Top-Spieler) → perfektes Setup → bestellen
+   - Spieler links in Kreisen wählen → Setup erscheint rechts → bestellen
    - oder eigenes Setup per Anfrageformular
+   - Black/Lila Premium-Design (Webapp-Look)
    ────────────────────────────────────────────────────────────────────────── */
 
 type Setup = {
@@ -43,6 +44,7 @@ const SETUPS: Setup[] = [
     pro: "Jannik Sinner",
     tag: "ATP Top 10",
     brand: "Head",
+    img: "/beratung/pros/sinner.jpg",
     accent: "from-amber-400 to-orange-600",
     strings: ["Head Lynx Tour 1.25 (Längs & Quer)"],
     tension: "ca. 25 kg / 55 lbs",
@@ -70,6 +72,7 @@ const SETUPS: Setup[] = [
     pro: "Novak Djokovic",
     tag: "24× Grand Slam",
     brand: "Head",
+    img: "/beratung/pros/djokovic.jpg",
     accent: "from-blue-500 to-indigo-600",
     strings: [
       "Längs: Babolat VS Touch Naturdarm 1.30",
@@ -152,10 +155,7 @@ const SETUPS: Setup[] = [
     tag: "ATP Top 15",
     brand: "Wilson",
     accent: "from-violet-400 to-purple-600",
-    strings: [
-      "Längs: Wilson Natural Gut 1.30",
-      "Quer: Luxilon 4G 1.25",
-    ],
+    strings: ["Längs: Wilson Natural Gut 1.30", "Quer: Luxilon 4G 1.25"],
     tension: "ca. 25 kg / 55 lbs",
     traits: ["Touch & Gefühl", "Allround", "Komfort"],
     instruction:
@@ -181,32 +181,36 @@ const SETUPS: Setup[] = [
   },
 ];
 
+function lastName(name: string) {
+  return name.split(" ").slice(-1)[0];
+}
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("");
+}
+
 export default function BespannungConfigurator() {
   const [selected, setSelected] = useState<Setup | null>(null);
   const [ordered, setOrdered] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
 
-  function initials(name: string) {
-    return name
-      .split(" ")
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join("");
-  }
-
   if (ordered && selected) {
     return (
       <Card className="text-center">
         <Check />
-        <h3 className="mt-6 text-2xl font-bold tracking-tight">
+        <h3 className="mt-6 text-2xl font-bold tracking-tight text-white">
           Besaitungs-Auftrag erstellt
         </h3>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-          Dein Schläger wird im <strong>{selected.pro}</strong>-Setup besaitet:
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
+          Dein Schläger wird im <strong className="text-white">{selected.pro}</strong>-Setup
+          besaitet:
           <br />
           {selected.strings.join(" · ")} — {selected.tension}.
         </p>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-500">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/50">
           Schick uns deinen Schläger ein — wir besaiten ihn exakt nach diesen
           Settings und schicken ihn spielfertig zurück.
         </p>
@@ -216,7 +220,7 @@ export default function BespannungConfigurator() {
             setOrdered(false);
             setSelected(null);
           }}
-          className="mt-8 h-12 rounded-full bg-black px-8 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
+          className="mt-8 h-12 rounded-full bg-white px-8 text-sm font-bold text-black transition-colors hover:bg-white/85"
         >
           Weiteres Setup wählen
         </button>
@@ -226,154 +230,197 @@ export default function BespannungConfigurator() {
 
   return (
     <Card>
-      <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-        Spiele wie die Profis
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        Wähle das Setup deines Lieblingsspielers — wir zeigen dir die exakte
-        Saite &amp; Spannung und besaiten deinen Schläger genau so.
-      </p>
+      <div className="relative">
+        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          Spiele wie die Profis
+        </h2>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/60">
+          Wähle das Setup deines Lieblingsspielers — wir zeigen dir die exakte
+          Saite &amp; Spannung und besaiten deinen Schläger genau so.
+        </p>
 
-      {/* Spieler-Auswahl */}
-      <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-        {SETUPS.map((s) => {
-          const active = selected?.id === s.id;
-          return (
+        <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr] lg:gap-10">
+          {/* LINKS: Spieler in Kreisen */}
+          <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-6 lg:grid-cols-3">
+            {SETUPS.map((s) => {
+              const active = selected?.id === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setSelected(s);
+                    setRequestOpen(false);
+                  }}
+                  className="group flex flex-col items-center"
+                >
+                  <span
+                    className={`relative h-[64px] w-[64px] rounded-full p-[2.5px] transition-all sm:h-[72px] sm:w-[72px] ${
+                      active
+                        ? "bg-gradient-to-br from-violet-500 to-matchup shadow-[0_0_22px_-2px_rgba(124,58,237,0.7)]"
+                        : "bg-white/10 group-hover:bg-white/25"
+                    }`}
+                  >
+                    <span className="block h-full w-full overflow-hidden rounded-full bg-neutral-900">
+                      {s.img ? (
+                        <Image
+                          src={s.img}
+                          alt={s.pro}
+                          width={80}
+                          height={80}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <span
+                          className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${s.accent} text-sm font-bold text-white/90`}
+                        >
+                          {initials(s.pro)}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                  <span
+                    className={`mt-2 text-center text-[11px] font-medium leading-tight ${
+                      active ? "text-white" : "text-white/55"
+                    }`}
+                  >
+                    {lastName(s.pro)}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* Eigenes Setup */}
             <button
-              key={s.id}
               type="button"
               onClick={() => {
-                setSelected(s);
-                setRequestOpen(false);
+                setRequestOpen(true);
+                setSelected(null);
               }}
-              className={`group relative overflow-hidden rounded-2xl ring-2 transition-all ${
-                active ? "ring-matchup" : "ring-transparent hover:ring-neutral-300"
-              }`}
+              className="group flex flex-col items-center"
             >
-              <div className="relative aspect-[3/4]">
-                {s.img ? (
-                  <Image
-                    src={s.img}
-                    alt={s.pro}
-                    fill
-                    sizes="(max-width: 768px) 33vw, 160px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div
-                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${s.accent}`}
-                  >
-                    <span className="text-2xl font-bold tracking-tight text-white/90">
-                      {initials(s.pro)}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-black">
-                  {s.tag}
-                </span>
-                <div className="absolute inset-x-0 bottom-0 p-2.5 text-left">
-                  <div className="text-[11px] font-bold leading-tight text-white sm:text-xs">
-                    {s.pro}
-                  </div>
-                  <div className="text-[10px] text-white/70">{s.brand}</div>
-                </div>
-              </div>
-            </button>
-          );
-        })}
-
-        {/* Eigenes Setup */}
-        <button
-          type="button"
-          onClick={() => {
-            setRequestOpen(true);
-            setSelected(null);
-          }}
-          className={`flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-2 text-center transition-colors ${
-            requestOpen
-              ? "border-matchup bg-matchup/5"
-              : "border-neutral-300 hover:border-black"
-          }`}
-        >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-lg text-white">
-            +
-          </span>
-          <span className="text-[11px] font-semibold leading-tight text-neutral-700">
-            Eigenes Setup anfragen
-          </span>
-        </button>
-      </div>
-
-      {/* Setup-Detail */}
-      {selected && (
-        <div className="mt-7 rounded-2xl bg-neutral-50 p-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-matchup">
-            Dein perfektes Setup
-          </div>
-          <h3 className="mt-1 text-xl font-bold tracking-tight">{selected.pro}</h3>
-
-          <div className="mt-5 space-y-3">
-            <Row label="Saite">
-              <div className="space-y-0.5">
-                {selected.strings.map((str) => (
-                  <div key={str}>{str}</div>
-                ))}
-              </div>
-            </Row>
-            <Row label="Spannung">{selected.tension}</Row>
-            <Row label="Schläger-Marke">{selected.brand}</Row>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {selected.traits.map((t) => (
               <span
-                key={t}
-                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200"
+                className={`flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 border-dashed text-xl transition-colors sm:h-[72px] sm:w-[72px] ${
+                  requestOpen
+                    ? "border-matchup text-matchup"
+                    : "border-white/25 text-white/50 group-hover:border-white/60 group-hover:text-white"
+                }`}
               >
-                {t}
+                +
               </span>
-            ))}
+              <span
+                className={`mt-2 text-center text-[11px] font-medium leading-tight ${
+                  requestOpen ? "text-white" : "text-white/55"
+                }`}
+              >
+                Eigenes
+              </span>
+            </button>
           </div>
 
-          <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-            {selected.instruction}
-          </p>
-
-          <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-5 sm:flex-row">
-            <div className="text-center sm:text-left">
-              <div className="text-2xl font-bold tracking-tight">
-                {selected.price} €
+          {/* RECHTS: Setup-Detail / Anfrage / Platzhalter */}
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            {selected ? (
+              <SetupDetail setup={selected} onOrder={() => setOrdered(true)} />
+            ) : requestOpen ? (
+              <RequestForm onClose={() => setRequestOpen(false)} />
+            ) : (
+              <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 p-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-xl text-white/40">
+                  ⌖
+                </span>
+                <p className="mt-4 max-w-xs text-sm text-white/50">
+                  Tippe links auf einen Spieler — Saite, Spannung und Details
+                  erscheinen sofort hier.
+                </p>
               </div>
-              <div className="text-xs text-neutral-500">
-                inkl. Premium-Saite &amp; Bespannung
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOrdered(true)}
-              className="w-full rounded-full bg-matchup px-8 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover sm:w-auto"
-            >
-              Mit diesem Setup bestellen →
-            </button>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Anfrageformular eigenes Setup */}
-      {requestOpen && <RequestForm onClose={() => setRequestOpen(false)} />}
-
-      {!selected && !requestOpen && (
-        <p className="mt-7 rounded-2xl border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-400">
-          Wähle oben einen Spieler, um Saite, Spannung und Details zu sehen — oder
-          frage dein eigenes Setup an.
-        </p>
-      )}
+      </div>
     </Card>
   );
 }
 
-/* ── Anfrageformular ───────────────────────────────────────────────────── */
+/* ── Setup-Detail (rechts) ─────────────────────────────────────────────── */
+
+function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) {
+  return (
+    <div className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
+      <div className="flex items-center gap-4">
+        <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full ring-2 ring-violet-500/60">
+          {setup.img ? (
+            <Image src={setup.img} alt={setup.pro} fill sizes="64px" className="object-cover" />
+          ) : (
+            <span
+              className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${setup.accent} text-base font-bold text-white`}
+            >
+              {initials(setup.pro)}
+            </span>
+          )}
+        </span>
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-300">
+            Dein perfektes Setup
+          </div>
+          <h3 className="mt-0.5 text-xl font-bold tracking-tight text-white">
+            {setup.pro}
+          </h3>
+          <div className="text-xs text-white/50">
+            {setup.tag} · {setup.brand}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        <Row label="Saite">
+          <div className="space-y-0.5">
+            {setup.strings.map((str) => (
+              <div key={str}>{str}</div>
+            ))}
+          </div>
+        </Row>
+        <Row label="Spannung">{setup.tension}</Row>
+        <Row label="Schläger-Marke">{setup.brand}</Row>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {setup.traits.map((t) => (
+          <span
+            key={t}
+            className="rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-200 ring-1 ring-violet-400/25"
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+
+      <p className="mt-4 text-sm leading-relaxed text-white/60">
+        {setup.instruction}
+      </p>
+
+      <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 sm:flex-row">
+        <div className="text-center sm:text-left">
+          <div className="text-2xl font-bold tracking-tight text-white">
+            {setup.price} €
+          </div>
+          <div className="text-xs text-white/45">
+            inkl. Premium-Saite &amp; Bespannung
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onOrder}
+          className="w-full rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto"
+        >
+          Mit diesem Setup bestellen →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Anfrageformular eigenes Setup ─────────────────────────────────────── */
 
 function RequestForm({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", wish: "", note: "" });
@@ -391,12 +438,12 @@ function RequestForm({ onClose }: { onClose: () => void }) {
 
   if (done) {
     return (
-      <div className="mt-7 rounded-2xl bg-neutral-50 p-8 text-center">
+      <div className="rounded-2xl bg-white/[0.04] p-8 text-center ring-1 ring-white/10">
         <Check />
-        <h3 className="mt-5 text-xl font-bold tracking-tight">
+        <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
           Anfrage gesendet, {form.name.split(" ")[0]}!
         </h3>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/60">
           Wir melden uns mit einer Empfehlung zu deinem Wunsch-Setup
           „{form.wish}" und einem passenden Angebot.
         </p>
@@ -405,9 +452,11 @@ function RequestForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-7 rounded-2xl bg-neutral-50 p-6">
-      <h3 className="text-xl font-bold tracking-tight">Eigenes Setup anfragen</h3>
-      <p className="mt-1 text-sm text-neutral-600">
+    <form onSubmit={submit} className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
+      <h3 className="text-xl font-bold tracking-tight text-white">
+        Eigenes Setup anfragen
+      </h3>
+      <p className="mt-1 text-sm text-white/55">
         Anderer Lieblingsspieler oder eigene Vorstellung? Sag uns, was du
         spielst — wir finden dein Setup.
       </p>
@@ -424,28 +473,28 @@ function RequestForm({ onClose }: { onClose: () => void }) {
         />
       </div>
       <div className="mt-4">
-        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-neutral-500">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-white/45">
           Anmerkung (optional)
         </label>
         <textarea
           rows={3}
           value={form.note}
           onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-          className="w-full resize-none rounded-lg border border-neutral-300 p-3.5 text-sm outline-none transition-colors focus:border-black"
+          className="w-full resize-none rounded-lg border border-white/15 bg-white/5 p-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-violet-400"
         />
       </div>
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
       <div className="mt-5 flex items-center justify-end gap-3">
         <button
           type="button"
           onClick={onClose}
-          className="h-11 rounded-full border border-neutral-300 px-6 text-sm font-medium transition-colors hover:bg-neutral-100"
+          className="h-11 rounded-full border border-white/20 px-6 text-sm font-medium text-white transition-colors hover:bg-white/10"
         >
           Abbrechen
         </button>
         <button
           type="submit"
-          className="h-11 rounded-full bg-matchup px-8 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
+          className="h-11 rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
           Anfrage senden
         </button>
@@ -465,16 +514,19 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-3xl border border-neutral-200 bg-white p-6 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.3)] sm:p-8 ${className}`}
+      className={`relative overflow-hidden rounded-3xl bg-neutral-950 p-6 ring-1 ring-white/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] sm:p-8 ${className}`}
     >
-      {children}
+      {/* dezenter Lila-Schein */}
+      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-matchup/20 blur-3xl" />
+      <div className="relative">{children}</div>
     </div>
   );
 }
 
 function Check() {
   return (
-    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl text-white">
+    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-matchup text-2xl text-white">
       ✓
     </div>
   );
@@ -483,8 +535,8 @@ function Check() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-4 text-sm">
-      <span className="w-28 shrink-0 text-neutral-500">{label}</span>
-      <span className="font-medium text-black">{children}</span>
+      <span className="w-28 shrink-0 text-white/45">{label}</span>
+      <span className="font-medium text-white">{children}</span>
     </div>
   );
 }
@@ -504,7 +556,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-neutral-500">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-white/45">
         {label}
       </span>
       <input
@@ -512,7 +564,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-lg border border-neutral-300 px-3.5 text-sm outline-none transition-colors focus:border-black"
+        className="h-11 w-full rounded-lg border border-white/15 bg-white/5 px-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-violet-400"
       />
     </label>
   );
