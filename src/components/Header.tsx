@@ -62,7 +62,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <LangSwitch className="hidden sm:inline-flex" />
+          <LangSwitch className="hidden lg:inline-flex" />
 
           <AppInstall className="hidden rounded-full bg-matchup px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:inline-block">
             {t("header.app")}
