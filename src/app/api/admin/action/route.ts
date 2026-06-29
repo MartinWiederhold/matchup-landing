@@ -125,6 +125,7 @@ export async function POST(request: Request) {
           "event_date",
           "max_participants",
           "status",
+          "image_url",
         ];
         const update: Record<string, unknown> = {};
         for (const k of allowed) if (k in patch) update[k] = patch[k];

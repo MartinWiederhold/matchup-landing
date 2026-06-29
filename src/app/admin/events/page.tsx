@@ -202,6 +202,30 @@ function EditModal({
   const [dateLocal, setDateLocal] = useState(toLocalInput(event.event_date));
   const [maxP, setMaxP] = useState(event.max_participants);
   const [status, setStatus] = useState(event.status);
+  const [imageUrl, setImageUrl] = useState(event.image_url ?? "");
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const blob = await resizeToJpeg(file, 1200);
+      const path = `events/admin-${event.id}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage
+        .from("web-avatars")
+        .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+      if (error) throw error;
+      const url = supabase.storage.from("web-avatars").getPublicUrl(path).data
+        .publicUrl;
+      setImageUrl(url);
+    } catch (err) {
+      alert("Upload-Fehler: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   function submit() {
     onSave({
@@ -213,6 +237,7 @@ function EditModal({
       event_date: dateLocal ? new Date(dateLocal).toISOString() : null,
       max_participants: Number(maxP),
       status,
+      image_url: imageUrl || null,
     });
   }
 
@@ -233,6 +258,37 @@ function EditModal({
         </div>
 
         <div className="space-y-4">
+          <L label="Titelbild">
+            <div className="flex items-center gap-4">
+              <span className="h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                {imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                )}
+              </span>
+              <div className="flex flex-col gap-2">
+                <label className="cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold hover:bg-neutral-50">
+                  {uploading ? "Lädt hoch…" : imageUrl ? "Bild ersetzen" : "Bild hochladen"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFile}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="text-xs font-semibold text-red-600 hover:underline"
+                  >
+                    Bild entfernen
+                  </button>
+                )}
+              </div>
+            </div>
+          </L>
           <L label="Titel">
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={inp} />
           </L>
@@ -304,6 +360,30 @@ function EditModal({
       </div>
     </div>
   );
+}
+
+function resizeToJpeg(file: File, maxW: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas nicht verfügbar"));
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Konvertierung fehlgeschlagen"))),
+        "image/jpeg",
+        0.85,
+      );
+    };
+    img.onerror = () => reject(new Error("Bild konnte nicht geladen werden"));
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 const inp =

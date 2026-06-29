@@ -20,9 +20,9 @@ export default async function BeratungPage() {
   return (
     <>
       {/* TITELBILD */}
-      <section className="relative flex h-[42vh] min-h-[300px] items-center justify-center overflow-hidden">
+      <section className="relative flex h-[68vh] min-h-[460px] items-center justify-center overflow-hidden">
         <Image
-          src="/beratung/hero.jpg"
+          src="/beratung/hero-v2.jpg"
           alt={t("beratung.heroAlt")}
           fill
           priority
