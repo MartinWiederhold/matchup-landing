@@ -54,20 +54,14 @@ function useInView<T extends HTMLElement>() {
   return { ref, inView };
 }
 
-/* Kleiner, dezenter Chip unten links auf dem Bild */
-function Chip({
-  show,
-  children,
-}: {
-  show: boolean;
-  children: React.ReactNode;
-}) {
+/* Kleiner, dezenter Chip unten links auf dem Bild — IMMER sichtbar.
+ * Animiert wird nicht der Chip selbst, sondern die Elemente innen
+ * (Punkte, Ring, Balken). So bleibt das Badge beim Scrollen stehen
+ * und ruht im fertigen Zustand, die Grafik darin spielt beim
+ * Reinscrollen jedes Mal neu ab. */
+function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={`absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md ${
-        show ? "anim-rise" : "opacity-0"
-      }`}
-    >
+    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
       {children}
     </div>
   );
@@ -89,36 +83,47 @@ function TennisBall({ className }: { className?: string }) {
   );
 }
 
-/* Entdecke Spieler — Tennisball + Match (Pink-Akzent) */
+/* Entdecke Spieler — Tennisball + Match (Pink-Akzent).
+ * Ball ist immer da, ploppt beim Reinscrollen kurz auf. */
 function DiscoverOverlay({ show }: { show: boolean }) {
   return (
-    <Chip show={show}>
-      <TennisBall className="h-4 w-4 text-pink-400" />
+    <Chip>
+      <TennisBall className={`h-4 w-4 text-pink-400 ${show ? "anim-pop" : ""}`} />
       <span>94 % Match</span>
     </Chip>
   );
 }
 
-/* Spiele organisieren — offene Slots (Punkte-Reihe) */
+/* Spiele organisieren — offene Slots (Punkte-Reihe).
+ * Punkte bleiben sichtbar, ploppen beim Reinscrollen nacheinander auf. */
 function OrganizeOverlay({ show }: { show: boolean }) {
   return (
-    <Chip show={show}>
+    <Chip>
       <span className="flex items-center gap-1">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="h-1.5 w-1.5 rounded-full bg-matchup" />
+          <span
+            key={i}
+            className={`h-1.5 w-1.5 rounded-full bg-matchup ${show ? "anim-pop" : ""}`}
+            style={{ animationDelay: `${i * 110}ms` }}
+          />
         ))}
-        <span className="h-1.5 w-1.5 rounded-full ring-1 ring-white/60" />
+        <span
+          className={`h-1.5 w-1.5 rounded-full ring-1 ring-white/60 ${show ? "anim-pop" : ""}`}
+          style={{ animationDelay: "330ms" }}
+        />
       </span>
       <span>3/4 Spieler</span>
     </Chip>
   );
 }
 
-/* Deine Community — kleiner Live-Ring */
+/* Deine Community — kleiner Live-Ring.
+ * Ring ruht gefüllt, füllt sich beim Reinscrollen erneut auf. */
 function CommunityOverlay({ show }: { show: boolean }) {
   const C = 2 * Math.PI * 7;
+  const filled = C * 0.3; // Endzustand (Ruhe)
   return (
-    <Chip show={show}>
+    <Chip>
       <svg viewBox="0 0 20 20" className="h-5 w-5 -rotate-90">
         <circle cx="10" cy="10" r="7" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
         <circle
@@ -130,7 +135,7 @@ function CommunityOverlay({ show }: { show: boolean }) {
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={C}
-          strokeDashoffset={C}
+          strokeDashoffset={filled}
           className={show ? "anim-ring" : ""}
           style={{ ["--ring-c" as string]: `${C}` }}
         />
@@ -140,17 +145,18 @@ function CommunityOverlay({ show }: { show: boolean }) {
   );
 }
 
-/* Verfolge Fortschritt — Mini-Wochenbalken + Level */
+/* Verfolge Fortschritt — Mini-Wochenbalken + Level.
+ * Balken bleiben in voller Höhe, wachsen beim Reinscrollen erneut hoch. */
 function ProgressOverlay({ show }: { show: boolean }) {
   const bars = [45, 70, 40, 95, 60];
   return (
-    <Chip show={show}>
+    <Chip>
       <span>Lvl 7</span>
       <span className="flex h-4 items-end gap-[3px]">
         {bars.map((h, i) => (
           <span
             key={i}
-            className={`w-1 rounded-sm bg-matchup ${show ? "anim-bar" : "scale-y-0"}`}
+            className={`w-1 rounded-sm bg-matchup ${show ? "anim-bar" : ""}`}
             style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }}
           />
         ))}
