@@ -2,34 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
 
 type Overlay = "discover" | "organize" | "community" | "progress";
 
-const FEATURES: { title: string; copy: string; img: string; overlay: Overlay }[] = [
-  {
-    title: "Entdecke Spieler",
-    copy: "Swipe durch Profile verifizierter Spieler. Filtere nach Sportart, Skill-Level, Alter und Entfernung. Bei einem gegenseitigen Like entsteht ein Match.",
-    img: "/landing/discover-hd.jpg",
-    overlay: "discover",
-  },
-  {
-    title: "Spiele organisieren",
-    copy: "Erstelle ein Match, wähle Ort und Zeit, lade Mitspieler ein oder tritt offenen Spielen bei. Singles oder Doubles, spontan oder geplant.",
-    img: "/landing/organize-hd.jpg",
-    overlay: "organize",
-  },
-  {
-    title: "Deine Community",
-    copy: "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten — von Club-Gruppen bis zu lokalen Spieltreffs.",
-    img: "/landing/community-hd.jpg",
-    overlay: "community",
-  },
-  {
-    title: "Verfolge Fortschritt",
-    copy: "Sammle XP, steige im Level auf, halte deinen Streak und schalte Achievements frei. Wochen-Statistiken zeigen dir, wie aktiv du bist.",
-    img: "/landing/progress-hd.jpg",
-    overlay: "progress",
-  },
+const FEATURES: { img: string; overlay: Overlay }[] = [
+  { img: "/landing/discover-hd.jpg", overlay: "discover" },
+  { img: "/landing/organize-hd.jpg", overlay: "organize" },
+  { img: "/landing/community-hd.jpg", overlay: "community" },
+  { img: "/landing/progress-hd.jpg", overlay: "progress" },
 ];
 
 /**
@@ -96,10 +77,11 @@ function TennisBall({ className }: { className?: string }) {
 /* Entdecke Spieler — Tennisball + Match (Pink-Akzent).
  * Ball ist immer da, ploppt beim Reinscrollen kurz auf. */
 function DiscoverOverlay({ show }: { show: boolean }) {
+  const t = useT();
   return (
     <Chip>
       <TennisBall className={`h-4 w-4 text-pink-400 ${show ? "anim-pop" : ""}`} />
-      <span>94 % Match</span>
+      <span>{t("landing.discoverChip")}</span>
     </Chip>
   );
 }
@@ -107,6 +89,7 @@ function DiscoverOverlay({ show }: { show: boolean }) {
 /* Spiele organisieren — offene Slots (Punkte-Reihe).
  * Punkte bleiben sichtbar, ploppen beim Reinscrollen nacheinander auf. */
 function OrganizeOverlay({ show }: { show: boolean }) {
+  const t = useT();
   return (
     <Chip>
       <span className="flex items-center gap-1">
@@ -122,7 +105,7 @@ function OrganizeOverlay({ show }: { show: boolean }) {
           style={{ animationDelay: "330ms" }}
         />
       </span>
-      <span>3/4 Spieler</span>
+      <span>{t("landing.organizeChip")}</span>
     </Chip>
   );
 }
@@ -130,6 +113,7 @@ function OrganizeOverlay({ show }: { show: boolean }) {
 /* Deine Community — kleiner Live-Ring.
  * Ring ruht gefüllt, füllt sich beim Reinscrollen erneut auf. */
 function CommunityOverlay({ show }: { show: boolean }) {
+  const t = useT();
   const C = 2 * Math.PI * 7;
   const filled = C * 0.3; // Endzustand (Ruhe)
   return (
@@ -150,7 +134,7 @@ function CommunityOverlay({ show }: { show: boolean }) {
           style={{ ["--ring-c" as string]: `${C}` }}
         />
       </svg>
-      <span>2.4k aktiv</span>
+      <span>{t("landing.communityChip")}</span>
     </Chip>
   );
 }
@@ -158,10 +142,11 @@ function CommunityOverlay({ show }: { show: boolean }) {
 /* Verfolge Fortschritt — Mini-Wochenbalken + Level.
  * Balken bleiben in voller Höhe, wachsen beim Reinscrollen erneut hoch. */
 function ProgressOverlay({ show }: { show: boolean }) {
+  const t = useT();
   const bars = [45, 70, 40, 95, 60];
   return (
     <Chip align="right">
-      <span>Lvl 7</span>
+      <span>{t("landing.progressChip")}</span>
       <span className="flex h-4 items-end gap-[3px]">
         {bars.map((h, i) => (
           <span
@@ -177,6 +162,7 @@ function ProgressOverlay({ show }: { show: boolean }) {
 
 function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   const { ref, inView } = useInView<HTMLElement>();
+  const t = useT();
   return (
     <article
       ref={ref}
@@ -185,7 +171,7 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
       <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
         <Image
           src={f.img}
-          alt={f.title}
+          alt={t(`landing.${f.overlay}Title`)}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -196,30 +182,34 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
         {f.overlay === "progress" && <ProgressOverlay show={inView} />}
       </div>
       <div className="p-6">
-        <h3 className="text-xl font-bold tracking-tight">{f.title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.copy}</p>
+        <h3 className="text-xl font-bold tracking-tight">
+          {t(`landing.${f.overlay}Title`)}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+          {t(`landing.${f.overlay}Copy`)}
+        </p>
       </div>
     </article>
   );
 }
 
 export default function CompletePicture() {
+  const t = useT();
   return (
     <section id="funktionsweise" className="bg-neutral-50 px-4 py-24 sm:px-6 lg:px-12">
       <div className="mx-auto max-w-[1280px]">
         <div className="max-w-3xl">
           <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Alles, was du zum Spielen brauchst
+            {t("landing.featuresTitle")}
           </h2>
           <p className="mt-6 text-base leading-relaxed text-neutral-600 sm:text-lg">
-            Von der ersten Begegnung bis zum fertig organisierten Match — Matchup
-            bringt Spieler zusammen und macht jeden Schritt einfach.
+            {t("landing.featuresSubtitle")}
           </p>
         </div>
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
-            <FeatureCard key={f.title} f={f} />
+            <FeatureCard key={f.overlay} f={f} />
           ))}
         </div>
       </div>

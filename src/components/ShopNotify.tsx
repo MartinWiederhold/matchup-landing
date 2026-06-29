@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 
 export default function ShopNotify() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [toast, setToast] = useState(false);
 
@@ -25,14 +27,14 @@ export default function ShopNotify() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Deine Email-Adresse"
+          placeholder={t("shop.notifyPlaceholder")}
           className="flex-1 rounded-full border border-neutral-300 px-5 py-3.5 text-sm outline-none focus:border-matchup"
         />
         <button
           type="submit"
           className="rounded-full bg-matchup px-7 py-3.5 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover"
         >
-          Benachrichtigen
+          {t("shop.notifyButton")}
         </button>
       </form>
 
@@ -41,7 +43,7 @@ export default function ShopNotify() {
           role="status"
           className="absolute left-1/2 mt-4 -translate-x-1/2 rounded-full bg-black px-5 py-2.5 text-sm font-medium text-white shadow-lg"
         >
-          Danke! Wir melden uns.
+          {t("shop.notifyToast")}
         </div>
       )}
     </div>

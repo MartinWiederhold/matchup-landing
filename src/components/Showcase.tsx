@@ -1,32 +1,33 @@
 import Image from "next/image";
+import { getT } from "@/lib/i18n/server";
 
-const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
+export default async function Showcase() {
+  const t = await getT();
 
-const ROWS = [
-  {
-    eyebrow: "SICHERHEIT",
-    title: "Sicher und verifiziert",
-    copy: "Jedes Profil wird geprüft. Melde unangemessenes Verhalten, blockiere Nutzer und vertraue auf automatische Moderation. Deine Daten gehören dir.",
-    img: "/landing/sicherheit.jpg",
-    reverse: false,
-    cta: { label: "App öffnen", href: "/app" },
-  },
-  {
-    eyebrow: "EVENTS",
-    title: "Events & Spieltreffs",
-    copy: "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen — oder organisiere dein eigenes Event direkt in der App.",
-    img: "/events/showcase-events.jpg",
-    position: "center 30%",
-    reverse: true,
-    cta: { label: "Events entdecken", href: "/events" },
-  },
-];
+  const rows = [
+    {
+      eyebrow: t("landing.securityEyebrow"),
+      title: t("landing.securityTitle"),
+      copy: t("landing.securityCopy"),
+      img: "/landing/sicherheit.jpg",
+      reverse: false,
+      cta: { label: t("landing.securityCta"), href: "/app" },
+    },
+    {
+      eyebrow: t("landing.eventsEyebrow"),
+      title: t("landing.eventsTitle"),
+      copy: t("landing.eventsCopy"),
+      img: "/events/showcase-events.jpg",
+      position: "center 30%",
+      reverse: true,
+      cta: { label: t("landing.eventsCta"), href: "/events" },
+    },
+  ];
 
-export default function Showcase() {
   return (
     <section id="shop" className="bg-white px-4 py-24 sm:px-6 lg:px-12">
       <div className="mx-auto flex max-w-[1280px] flex-col gap-24">
-        {ROWS.map((row) => (
+        {rows.map((row) => (
           <div
             key={row.title}
             className={`flex flex-col items-center gap-10 lg:gap-16 ${

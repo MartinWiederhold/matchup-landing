@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -22,6 +23,7 @@ export default function AppInstall({
   children: React.ReactNode;
   onNavigate?: () => void;
 }) {
+  const t = useT();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -101,10 +103,10 @@ export default function AppInstall({
               />
               <div>
                 <h3 className="text-lg font-bold tracking-tight">
-                  Matchup als App installieren
+                  {t("header.installTitle")}
                 </h3>
                 <p className="text-sm text-neutral-500">
-                  Direkt vom Home-Bildschirm öffnen — wie eine native App.
+                  {t("header.installSubtitle")}
                 </p>
               </div>
             </div>
@@ -116,14 +118,15 @@ export default function AppInstall({
                   onClick={install}
                   className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
                 >
-                  Jetzt installieren
+                  {t("header.installNow")}
                 </button>
               ) : isIOS ? (
                 <div className="rounded-2xl bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-700">
-                  <p className="font-semibold text-black">So geht&apos;s auf dem iPhone:</p>
+                  <p className="font-semibold text-black">{t("header.iosHowTo")}</p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4">
                     <li>
-                      Unten auf das <span className="font-semibold">Teilen-Symbol</span>{" "}
+                      {t("header.iosStep1Pre")}
+                      <span className="font-semibold">{t("header.iosStep1Bold")}</span>{" "}
                       <svg
                         viewBox="0 0 24 24"
                         className="inline h-4 w-4 -translate-y-0.5"
@@ -136,22 +139,21 @@ export default function AppInstall({
                       >
                         <path d="M12 15V3M8.5 6.5 12 3l3.5 3.5" />
                         <path d="M6 12v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7" />
-                      </svg>{" "}
-                      tippen
+                      </svg>
+                      {t("header.iosStep1Post")}
                     </li>
                     <li>
-                      <span className="font-semibold">„Zum Home-Bildschirm"</span> wählen
+                      {t("header.iosStep2Pre")}
+                      <span className="font-semibold">{t("header.iosStep2Bold")}</span>
+                      {t("header.iosStep2Post")}
                     </li>
-                    <li>Mit „Hinzufügen" bestätigen</li>
+                    <li>{t("header.iosStep3")}</li>
                   </ol>
                 </div>
               ) : (
                 <div className="rounded-2xl bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-700">
-                  Öffne das Browser-Menü und wähle{" "}
-                  <span className="font-semibold">
-                    „App installieren" bzw. „Zum Startbildschirm hinzufügen"
-                  </span>
-                  .
+                  {t("header.otherHowToPre")}
+                  <span className="font-semibold">{t("header.otherHowToBold")}</span>.
                 </div>
               )}
 
@@ -160,7 +162,7 @@ export default function AppInstall({
                 onClick={close}
                 className="block w-full rounded-full border border-neutral-300 py-3.5 text-center text-sm font-semibold text-black transition-colors hover:bg-neutral-100"
               >
-                Im Browser öffnen
+                {t("header.openInBrowser")}
               </a>
             </div>
           </div>

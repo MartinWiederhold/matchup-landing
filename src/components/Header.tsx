@@ -3,16 +3,44 @@
 import { useState } from "react";
 import MatchupLogo from "./MatchupLogo";
 import AppInstall from "./AppInstall";
+import { useLocale, useT, type Locale } from "@/lib/i18n";
 
-const NAV_LINKS = [
-  { label: "Find a Partner", href: "/find-a-partner" },
-  { label: "Shop", href: "/shop" },
-  { label: "Beratung", href: "/beratung" },
-  { label: "Events", href: "/events" },
-];
+function LangSwitch({ className = "" }: { className?: string }) {
+  const { locale, setLocale } = useLocale();
+  const options: Locale[] = ["de", "en"];
+  return (
+    <div
+      className={`inline-flex items-center rounded-full bg-white/10 p-0.5 text-[11px] font-bold ${className}`}
+    >
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => setLocale(opt)}
+          aria-pressed={locale === opt}
+          className={`rounded-full px-2.5 py-1 uppercase tracking-wide transition-colors ${
+            locale === opt
+              ? "bg-white text-black"
+              : "text-white/70 hover:text-white"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const t = useT();
+
+  const navLinks = [
+    { label: t("header.findPartner"), href: "/find-a-partner" },
+    { label: t("header.shop"), href: "/shop" },
+    { label: t("header.beratung"), href: "/beratung" },
+    { label: t("header.events"), href: "/events" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full bg-black text-white">
@@ -22,9 +50,9 @@ export default function Header() {
         </a>
 
         <nav className="hidden items-center gap-7 lg:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <a
-              key={link.label}
+              key={link.href}
               href={link.href}
               className="text-[13px] font-semibold tracking-wide text-white/90 transition-colors hover:text-white"
             >
@@ -34,13 +62,15 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <LangSwitch className="hidden sm:inline-flex" />
+
           <AppInstall className="hidden rounded-full bg-matchup px-6 py-3 text-[13px] font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:inline-block">
-            App
+            {t("header.app")}
           </AppInstall>
 
           <button
             type="button"
-            aria-label="Menü öffnen"
+            aria-label={t("header.openMenu")}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 lg:hidden"
@@ -58,9 +88,9 @@ export default function Header() {
 
       {open && (
         <nav className="flex flex-col gap-1 border-t border-white/10 px-4 pb-6 pt-2 lg:hidden">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <a
-              key={link.label}
+              key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
               className="py-3 text-sm font-semibold tracking-wide text-white/90"
@@ -68,11 +98,17 @@ export default function Header() {
               {link.label}
             </a>
           ))}
+          <div className="flex items-center justify-between py-3">
+            <span className="text-sm font-semibold tracking-wide text-white/60">
+              {t("header.language")}
+            </span>
+            <LangSwitch />
+          </div>
           <AppInstall
             onNavigate={() => setOpen(false)}
-            className="mt-3 block rounded-full bg-matchup px-6 py-3 text-center text-sm font-bold tracking-wide text-white"
+            className="mt-1 block rounded-full bg-matchup px-6 py-3 text-center text-sm font-bold tracking-wide text-white"
           >
-            App
+            {t("header.app")}
           </AppInstall>
         </nav>
       )}

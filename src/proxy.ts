@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
 
 /**
  * Globaler Zugangsschutz: Die ganze Seite ist hinter einem Code (Standard 5080)
@@ -10,6 +11,21 @@ import type { NextRequest } from "next/server";
  */
 const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
 
+/**
+ * Setzt — falls noch nicht vorhanden — das Sprach-Cookie anhand des Landes
+ * (Vercel-Geo-Header). DE/AT/CH → Deutsch, sonst Englisch. Eine manuelle
+ * Auswahl (bereits gesetztes Cookie) wird nie überschrieben.
+ */
+function ensureLocaleCookie(request: NextRequest, response: NextResponse) {
+  if (request.cookies.get(LOCALE_COOKIE)) return;
+  const country = request.headers.get("x-vercel-ip-country");
+  response.cookies.set(LOCALE_COOKIE, localeForCountry(country), {
+    path: "/",
+    maxAge: 31536000,
+    sameSite: "lax",
+  });
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -19,15 +35,23 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/api/unlock") ||
     pathname.startsWith("/api/version")
   ) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    ensureLocaleCookie(request, res);
+    return res;
   }
 
   const unlocked = request.cookies.get("mu_gate")?.value === GATE_TOKEN;
-  if (unlocked) return NextResponse.next();
+  if (unlocked) {
+    const res = NextResponse.next();
+    ensureLocaleCookie(request, res);
+    return res;
+  }
 
   const url = request.nextUrl.clone();
   url.pathname = "/locked";
-  return NextResponse.rewrite(url);
+  const res = NextResponse.rewrite(url);
+  ensureLocaleCookie(request, res);
+  return res;
 }
 
 export const config = {

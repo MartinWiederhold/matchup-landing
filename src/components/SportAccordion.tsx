@@ -17,7 +17,15 @@ export type SportPanel = {
  * Infos, die anderen stehen als schmale Balken daneben. Antippen klappt das
  * jeweilige Panel gross auf — animiert.
  */
-export default function SportAccordion({ panels }: { panels: SportPanel[] }) {
+export default function SportAccordion({
+  panels,
+  trendLabel,
+  ctaLabel,
+}: {
+  panels: SportPanel[];
+  trendLabel: string;
+  ctaLabel: string;
+}) {
   const [active, setActive] = useState(0);
 
   return (
@@ -52,7 +60,7 @@ export default function SportAccordion({ panels }: { panels: SportPanel[] }) {
               <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
                 {p.featured && (
                   <span className="mb-3 inline-flex w-fit rounded-full bg-matchup px-3 py-1 text-[11px] font-bold tracking-wide">
-                    IM TREND
+                    {trendLabel}
                   </span>
                 )}
                 <h3 className="text-2xl font-bold tracking-wide">{p.name}</h3>
@@ -84,7 +92,7 @@ export default function SportAccordion({ panels }: { panels: SportPanel[] }) {
                   href="/app"
                   className="mt-5 inline-block w-fit rounded-full bg-white px-6 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-white/85"
                 >
-                  Partner finden
+                  {ctaLabel}
                 </a>
               </div>
             ) : (

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { LocaleProvider } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -33,17 +35,20 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="de" className={`${dmSans.variable} h-full bg-black antialiased`}>
+    <html lang={locale} className={`${dmSans.variable} h-full bg-black antialiased`}>
       <body className="min-h-full flex flex-col bg-black text-black">
-        {children}
-        <ServiceWorkerRegister />
-        <Analytics />
+        <LocaleProvider initialLocale={locale}>
+          {children}
+          <ServiceWorkerRegister />
+          <Analytics />
+        </LocaleProvider>
       </body>
     </html>
   );

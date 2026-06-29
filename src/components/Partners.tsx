@@ -1,6 +1,8 @@
 import Image from "next/image";
+import { getT } from "@/lib/i18n/server";
 
-export default function Partners() {
+export default async function Partners() {
+  const t = await getT();
   return (
     <section id="warum-matchup" className="relative isolate overflow-hidden bg-black text-white">
       <Image
@@ -14,18 +16,17 @@ export default function Partners() {
 
       <div className="relative mx-auto flex min-h-[80vh] max-w-[1280px] flex-col justify-end px-4 py-20 sm:px-6 lg:px-12">
         <h2 className="max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-6xl">
-          Für Spieler, von Spielern
+          {t("landing.partnersTitle")}
         </h2>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
-          Ob du die Nummer 1 deines Clubs bist oder gerade erst anfängst —
-          Matchup hilft dir, die richtigen Leute zum Spielen zu finden.
+          {t("landing.partnersCopy")}
         </p>
         <div className="mt-10">
           <a
             href="/app"
             className="inline-block rounded-full bg-white px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-white/85"
           >
-            Jetzt Partner finden
+            {t("landing.partnersCta")}
           </a>
         </div>
       </div>
