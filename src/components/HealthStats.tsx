@@ -1,7 +1,7 @@
 const STATS = [
   { value: "3", unit: "", label: "Sportarten — Tennis, Padel & Pickleball" },
-  { value: "50", unit: "+", label: "Clubs in der Schweiz vernetzt" },
-  { value: "1000", unit: "+", label: "Aktive Spieler in der Community" },
+  { value: "10.000", unit: "+", label: "Clubs weltweit auf der Karte" },
+  { value: "50", unit: "+", label: "Länder weltweit vernetzt" },
 ];
 
 export default function HealthStats() {
