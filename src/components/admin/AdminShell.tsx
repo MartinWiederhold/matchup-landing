@@ -37,6 +37,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", Icon: DashboardIcon },
   { href: "/admin/events", label: "Events", Icon: CalendarIcon },
+  { href: "/admin/waitlist", label: "Waitlist", Icon: UsersIcon },
   { href: "/admin/reports", label: "Reports", Icon: FlagIcon },
   { href: "/admin/support", label: "Support", Icon: MessageIcon },
   { href: "/admin/users", label: "Alle User", Icon: UsersIcon },
