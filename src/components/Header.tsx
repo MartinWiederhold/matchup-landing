@@ -71,9 +71,6 @@ export default function Header() {
               {item.label}
             </button>
           ))}
-          <span className="text-[11px] font-semibold tracking-wide text-white/40">
-            {t("waitlist.comingSoon")}
-          </span>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -102,12 +99,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <nav className="flex flex-col gap-1 border-t border-white/10 px-4 pb-6 pt-2 lg:hidden">
-          <div className="flex items-center gap-2 py-2">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-white/40">
-              {t("waitlist.comingSoon")}
-            </span>
-          </div>
+        <nav className="flex flex-col gap-1 border-t border-white/10 px-4 pb-6 pt-3 lg:hidden">
           {navItems.map((item) => (
             <button
               key={item.href}

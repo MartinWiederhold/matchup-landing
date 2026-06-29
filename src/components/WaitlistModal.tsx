@@ -133,8 +133,7 @@ export default function WaitlistModal({
         <div className="relative p-6 sm:p-8">
           {!done ? (
             <>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-pink-400/60 bg-pink-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-pink-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
+              <span className="inline-flex items-center rounded-full border border-pink-400/60 bg-pink-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-pink-300">
                 {feature}
               </span>
               <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight">
