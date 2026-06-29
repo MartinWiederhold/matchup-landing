@@ -5,9 +5,11 @@ import type { FilterState, Sport, SkillLevel, Club } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { searchClubs as searchClubsApi } from "@/lib/clubs";
 import { skillLabel } from "@/lib/utils/formatters";
+import WheelPicker from "../shared/WheelPicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 const SKILLS: SkillLevel[] = ["beginner", "intermediate", "advanced", "competitive"];
+const AGES = Array.from({ length: 99 - 18 + 1 }, (_, i) => 18 + i);
 
 export default function FilterSheet({
   filters,
@@ -79,24 +81,35 @@ export default function FilterSheet({
         </Section>
 
         <Section label={`Alter: ${draft.ageMin}–${draft.ageMax}`}>
-          <div className="flex items-center gap-3 text-sm">
-            <input
-              type="number"
-              min={18}
-              max={99}
-              value={draft.ageMin}
-              onChange={(e) => setDraft({ ...draft, ageMin: Number(e.target.value) })}
-              className="w-16 rounded-lg bg-zinc-800 px-2 py-1.5 text-center"
-            />
-            <span className="text-zinc-500">–</span>
-            <input
-              type="number"
-              min={18}
-              max={99}
-              value={draft.ageMax}
-              onChange={(e) => setDraft({ ...draft, ageMax: Number(e.target.value) })}
-              className="w-16 rounded-lg bg-zinc-800 px-2 py-1.5 text-center"
-            />
+          <div className="flex items-stretch gap-3">
+            <div className="flex-1">
+              <p className="mb-1 text-center text-xs text-zinc-500">Von</p>
+              <WheelPicker
+                values={AGES}
+                value={draft.ageMin}
+                onChange={(v) =>
+                  setDraft((d) => ({
+                    ...d,
+                    ageMin: v,
+                    ageMax: Math.max(d.ageMax, v),
+                  }))
+                }
+              />
+            </div>
+            <div className="flex-1">
+              <p className="mb-1 text-center text-xs text-zinc-500">Bis</p>
+              <WheelPicker
+                values={AGES}
+                value={draft.ageMax}
+                onChange={(v) =>
+                  setDraft((d) => ({
+                    ...d,
+                    ageMax: v,
+                    ageMin: Math.min(d.ageMin, v),
+                  }))
+                }
+              />
+            </div>
           </div>
         </Section>
 

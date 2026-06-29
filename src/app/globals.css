@@ -89,6 +89,15 @@ body {
 }
 .anim-rise { animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 
+/* Wheel-Picker: nativer Scroll ohne sichtbaren Scrollbalken */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* The MATCHUP wordmark uses tight, all-caps tracking */
 .matchup-wordmark {
   font-weight: 700;
