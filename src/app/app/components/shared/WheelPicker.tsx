@@ -13,10 +13,12 @@ export default function WheelPicker({
   values,
   value,
   onChange,
+  fade = "rgb(24 24 27)", // Hintergrundfarbe für den Verlauf (zinc-900)
 }: {
   values: number[];
   value: number;
   onChange: (v: number) => void;
+  fade?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const settle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -65,16 +67,14 @@ export default function WheelPicker({
         className="pointer-events-none absolute inset-x-0 top-0 z-10"
         style={{
           height: pad,
-          background:
-            "linear-gradient(to bottom, rgb(24 24 27) 10%, rgba(24,24,27,0))",
+          background: `linear-gradient(to bottom, ${fade} 10%, transparent)`,
         }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-10"
         style={{
           height: pad,
-          background:
-            "linear-gradient(to top, rgb(24 24 27) 10%, rgba(24,24,27,0))",
+          background: `linear-gradient(to top, ${fade} 10%, transparent)`,
         }}
       />
       <div

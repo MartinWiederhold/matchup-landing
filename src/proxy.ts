@@ -13,8 +13,12 @@ const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Lock-Screen selbst und der Entsperr-Endpoint sind immer erreichbar.
-  if (pathname === "/locked" || pathname.startsWith("/api/unlock")) {
+  // Lock-Screen, Entsperr- und Versions-Endpoint sind immer erreichbar.
+  if (
+    pathname === "/locked" ||
+    pathname.startsWith("/api/unlock") ||
+    pathname.startsWith("/api/version")
+  ) {
     return NextResponse.next();
   }
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { haversineKm } from "@/lib/utils/haversine";
-import { skillLabel, formatDistance } from "@/lib/utils/formatters";
+import { skillLabel, sportLabel, formatDistance } from "@/lib/utils/formatters";
 import {
   SportIcon,
   FilterIcon,
@@ -177,6 +177,54 @@ export default function DiscoverTab() {
     refreshBadges();
   }
 
+  // Aktive Filter als entfernbare Chips (Standardwerte werden nicht angezeigt).
+  const d = defaultFilters;
+  const activeChips: { key: string; label: string; clear: () => void }[] = [];
+  filters.sports.forEach((s) =>
+    activeChips.push({
+      key: `sport-${s}`,
+      label: sportLabel(s),
+      clear: () =>
+        setFilters((f) => ({ ...f, sports: f.sports.filter((x) => x !== s) })),
+    }),
+  );
+  if (filters.gender)
+    activeChips.push({
+      key: "gender",
+      label: filters.gender === "male" ? "Männlich" : "Weiblich",
+      clear: () => setFilters((f) => ({ ...f, gender: null })),
+    });
+  if (filters.ageMin !== d.ageMin || filters.ageMax !== d.ageMax)
+    activeChips.push({
+      key: "age",
+      label: `${filters.ageMin}–${filters.ageMax} J.`,
+      clear: () =>
+        setFilters((f) => ({ ...f, ageMin: d.ageMin, ageMax: d.ageMax })),
+    });
+  if (filters.radius !== d.radius)
+    activeChips.push({
+      key: "radius",
+      label: filters.radius > 200 ? "Weltweit" : `${filters.radius} km`,
+      clear: () => setFilters((f) => ({ ...f, radius: d.radius })),
+    });
+  filters.skillLevels.forEach((s) =>
+    activeChips.push({
+      key: `skill-${s}`,
+      label: skillLabel(s),
+      clear: () =>
+        setFilters((f) => ({
+          ...f,
+          skillLevels: f.skillLevels.filter((x) => x !== s),
+        })),
+    }),
+  );
+  if (filters.clubId && filters.clubId !== profile.club_id)
+    activeChips.push({
+      key: "club",
+      label: "Club",
+      clear: () => setFilters((f) => ({ ...f, clubId: null })),
+    });
+
   if (isLoading) return <FullLoading />;
 
   return (
@@ -195,24 +243,37 @@ export default function DiscoverTab() {
         </span>
       </header>
 
-      {profile.club_id && (
-        <div className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-4 py-2">
-          <button
-            type="button"
-            onClick={() =>
-              setFilters((f) => ({
-                ...f,
-                clubId: f.clubId === profile.club_id ? null : profile.club_id,
-              }))
-            }
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
-              filters.clubId === profile.club_id
-                ? "bg-matchup text-white"
-                : "bg-zinc-800 text-zinc-300"
-            }`}
-          >
-            Nur aus meinem Club
-          </button>
+      {(profile.club_id || activeChips.length > 0) && (
+        <div className="no-scrollbar flex shrink-0 items-center gap-2 overflow-x-auto border-b border-zinc-800 px-4 py-2">
+          {profile.club_id && (
+            <button
+              type="button"
+              onClick={() =>
+                setFilters((f) => ({
+                  ...f,
+                  clubId: f.clubId === profile.club_id ? null : profile.club_id,
+                }))
+              }
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
+                filters.clubId === profile.club_id
+                  ? "bg-matchup text-white"
+                  : "bg-zinc-800 text-zinc-300"
+              }`}
+            >
+              Nur aus meinem Club
+            </button>
+          )}
+          {activeChips.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              onClick={c.clear}
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-matchup/20 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-matchup/60"
+            >
+              {c.label}
+              <span className="text-white/60">✕</span>
+            </button>
+          ))}
         </div>
       )}
 

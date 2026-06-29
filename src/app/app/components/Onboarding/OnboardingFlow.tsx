@@ -13,7 +13,9 @@ import {
   type ClubCandidate,
 } from "@/lib/clubs";
 import type { Sport, SkillLevel } from "@/lib/types";
-import AgeRangeSlider from "../shared/AgeRangeSlider";
+import WheelPicker from "../shared/WheelPicker";
+
+const AGES = Array.from({ length: 99 - 18 + 1 }, (_, i) => 18 + i);
 import {
   SportIcon,
   TennisIcon,
@@ -839,20 +841,50 @@ export default function OnboardingFlow() {
                 </Chip>
               ))}
             </div>
-            <AgeRangeSlider
-              valueMin={state.visibility_age_min}
-              valueMax={state.visibility_age_max}
-              onChange={(ageMin, ageMax) =>
-                dispatch({
-                  type: "SET_VISIBILITY",
-                  payload: {
-                    gender: state.visibility_gender,
-                    ageMin,
-                    ageMax,
-                  },
-                })
-              }
-            />
+            <div>
+              <p className="pt-4 text-sm font-semibold">
+                Altersspanne: {state.visibility_age_min}–
+                {state.visibility_age_max}
+              </p>
+              <div className="mt-2 flex items-stretch gap-3">
+                <div className="flex-1">
+                  <p className="mb-1 text-center text-xs text-zinc-500">Von</p>
+                  <WheelPicker
+                    fade="rgb(0 0 0)"
+                    values={AGES}
+                    value={state.visibility_age_min}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_VISIBILITY",
+                        payload: {
+                          gender: state.visibility_gender,
+                          ageMin: v,
+                          ageMax: Math.max(state.visibility_age_max, v),
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="mb-1 text-center text-xs text-zinc-500">Bis</p>
+                  <WheelPicker
+                    fade="rgb(0 0 0)"
+                    values={AGES}
+                    value={state.visibility_age_max}
+                    onChange={(v) =>
+                      dispatch({
+                        type: "SET_VISIBILITY",
+                        payload: {
+                          gender: state.visibility_gender,
+                          ageMin: Math.min(state.visibility_age_min, v),
+                          ageMax: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
 
             {submitError && (
               <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-300">
