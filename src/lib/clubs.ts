@@ -39,10 +39,8 @@ export async function searchClubs(
   if (q.length < 2) return [];
   const c = country?.toUpperCase();
   let qb = supabase.from("clubs").select("*");
-  qb =
-    c && (SUPPORTED_COUNTRIES as readonly string[]).includes(c)
-      ? qb.eq("country", c)
-      : qb.in("country", SUPPORTED_COUNTRIES as unknown as string[]);
+  // Land angegeben → darauf einschränken; sonst weltweit suchen.
+  if (c) qb = qb.eq("country", c);
   // Klammern/Kommas würden den PostgREST-OR-Filter zerlegen → entfernen.
   const safe = q.replace(/[(),]/g, " ").trim();
   const { data } = await qb
@@ -50,6 +48,111 @@ export async function searchClubs(
     .order("name")
     .limit(limit);
   return (data as Club[]) ?? [];
+}
+
+/** Ergebnis aus der Live-Suche (OSM) — noch ohne DB-Id (`_osm` markiert). */
+export type ClubCandidate = Club & { _osm?: boolean };
+
+// Heuristik: sieht der OSM-Treffer nach einem (Sport-)Club aus?
+const CLUB_RE =
+  /club|tennis|padel|pickle|squash|sport|halle|center|centre|academy|arena|\btc\b|\btv\b|\btg\b/i;
+
+/**
+ * Weltweite Live-Clubsuche über OpenStreetMap (Nominatim, kostenlos, kein Key).
+ * Region wird über die Nutzer-Koordinaten bevorzugt (viewbox), aber nicht
+ * erzwungen. Ergebnisse sind Kandidaten ohne DB-Id — beim Auswählen via
+ * saveClubCandidate() dauerhaft in die DB übernehmen.
+ */
+export async function searchClubsLive(
+  query: string,
+  opts: { lat?: number | null; lng?: number | null } = {},
+): Promise<ClubCandidate[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const params = new URLSearchParams({
+    q,
+    format: "json",
+    addressdetails: "1",
+    namedetails: "1",
+    limit: "12",
+  });
+  if (opts.lat != null && opts.lng != null) {
+    const d = 1.2; // ~130 km Box — Region bevorzugen
+    params.set(
+      "viewbox",
+      `${opts.lng - d},${opts.lat + d},${opts.lng + d},${opts.lat - d}`,
+    );
+  }
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+      { headers: { "Accept-Language": "de" } },
+    );
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data
+      .filter(
+        (r) => r.class === "leisure" || CLUB_RE.test(r.display_name || ""),
+      )
+      .map((r): ClubCandidate => {
+        const a = r.address ?? {};
+        const city =
+          a.city || a.town || a.village || a.municipality || a.county || null;
+        const street = [a.road, a.house_number].filter(Boolean).join(" ");
+        const address =
+          [street, [a.postcode, city].filter(Boolean).join(" ")]
+            .filter(Boolean)
+            .join(", ") ||
+          (r.display_name?.split(",").slice(0, 2).join(",").trim() ?? null);
+        return {
+          id: "",
+          name: r.namedetails?.name || r.display_name?.split(",")[0] || "Club",
+          city,
+          canton: null,
+          state: null,
+          country: (a.country_code ?? "").toUpperCase(),
+          latitude: parseFloat(r.lat),
+          longitude: parseFloat(r.lon),
+          address,
+          _osm: true,
+        };
+      })
+      .filter((c) => c.country && !Number.isNaN(c.latitude)); // ohne Land/Koord. nicht speicherbar
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Übernimmt einen OSM-Kandidaten dauerhaft in web.clubs (falls noch nicht da)
+ * und gibt den Club mit DB-Id zurück. So wächst die Clubs-DB durch Nutzung.
+ */
+export async function saveClubCandidate(
+  c: ClubCandidate,
+): Promise<Club | null> {
+  const existing = await searchClubs(c.name, c.country, 5);
+  const dup = existing.find(
+    (x) => x.name.toLowerCase() === c.name.toLowerCase(),
+  );
+  if (dup) return dup;
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : undefined;
+  const { data } = await supabase
+    .from("clubs")
+    .insert({
+      ...(id ? { id } : {}),
+      name: c.name,
+      city: c.city,
+      address: c.address,
+      country: c.country,
+      latitude: c.latitude,
+      longitude: c.longitude,
+    })
+    .select()
+    .single();
+  return (data as Club) ?? null;
 }
 
 type GeoResult = {
@@ -122,12 +225,9 @@ export async function addClub(
   );
   if (dup) return { status: "added", club: dup };
 
-  // 2) Verifizieren via Geocoding
+  // 2) Verifizieren via Geocoding (weltweit erlaubt)
   const geo = await geocodeClub(trimmedName, city);
   if (!geo) return { status: "not_found" };
-  if (!isSupportedCountry(geo.country)) {
-    return { status: "unsupported_country", country: geo.country };
-  }
 
   // 3) Aufnehmen
   const id =

@@ -1,16 +1,18 @@
 "use client";
 
-import { useReducer, useState, type ComponentType } from "react";
+import { useReducer, useRef, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
 import {
   searchClubs as searchClubsApi,
+  searchClubsLive,
+  saveClubCandidate,
   addClub,
-  SUPPORTED_COUNTRY_NAMES,
   countryName,
+  type ClubCandidate,
 } from "@/lib/clubs";
-import type { Sport, SkillLevel, Club } from "@/lib/types";
+import type { Sport, SkillLevel } from "@/lib/types";
 import AgeRangeSlider from "../shared/AgeRangeSlider";
 import {
   SportIcon,
@@ -86,7 +88,11 @@ export default function OnboardingFlow() {
 
   // Clubs
   const [clubQuery, setClubQuery] = useState("");
-  const [clubResults, setClubResults] = useState<Club[]>([]);
+  const [clubResults, setClubResults] = useState<ClubCandidate[]>([]);
+  const [clubSearching, setClubSearching] = useState(false);
+  const [savingClub, setSavingClub] = useState(false);
+  const clubReq = useRef(0); // verwirft veraltete Suchantworten
+  const clubTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [showAddClub, setShowAddClub] = useState(false);
   const [addName, setAddName] = useState("");
   const [addCity, setAddCity] = useState("");
@@ -149,9 +155,50 @@ export default function OnboardingFlow() {
     });
   }
 
-  async function handleClubSearch(q: string) {
+  function handleClubSearch(q: string) {
     setClubQuery(q);
-    setClubResults(await searchClubsApi(q, state.country));
+    const token = ++clubReq.current;
+    if (q.trim().length < 2) {
+      setClubResults([]);
+      setClubSearching(false);
+      return;
+    }
+    // 1) Eigene DB sofort (schnell)
+    searchClubsApi(q, state.country).then((db) => {
+      if (token === clubReq.current) setClubResults(db);
+    });
+    // 2) OSM weltweit live, leicht verzögert + dazu mergen
+    setClubSearching(true);
+    clearTimeout(clubTimer.current);
+    clubTimer.current = setTimeout(async () => {
+      const live = await searchClubsLive(q, {
+        lat: state.latitude,
+        lng: state.longitude,
+      });
+      if (token !== clubReq.current) return; // veraltet
+      setClubSearching(false);
+      setClubResults((prev) => {
+        const key = (c: ClubCandidate) =>
+          `${c.name}|${c.city ?? ""}`.toLowerCase();
+        const seen = new Set(prev.map(key));
+        return [...prev, ...live.filter((c) => !seen.has(key(c)))].slice(0, 18);
+      });
+    }, 450);
+  }
+
+  async function selectClub(c: ClubCandidate) {
+    // OSM-Treffer (noch ohne DB-Id) zuerst dauerhaft übernehmen
+    if (c._osm || !c.id) {
+      setSavingClub(true);
+      const saved = await saveClubCandidate(c);
+      setSavingClub(false);
+      if (!saved) return;
+      dispatch({ type: "SET_CLUB", payload: { id: saved.id, name: saved.name } });
+      setClubQuery(saved.name);
+      setClubResults([]);
+      return;
+    }
+    dispatch({ type: "SET_CLUB", payload: { id: c.id, name: c.name } });
   }
 
   async function handleAddClub() {
@@ -167,12 +214,6 @@ export default function OnboardingFlow() {
       setShowAddClub(false);
       setClubQuery(res.club.name);
       setClubResults([res.club]);
-    } else if (res.status === "unsupported_country") {
-      setClubMsg(
-        `${countryName(res.country)} ist noch nicht verfügbar — coming soon. Aktuell: ${Object.values(
-          SUPPORTED_COUNTRY_NAMES,
-        ).join(" & ")}.`,
-      );
     } else if (res.status === "not_found") {
       setClubMsg(
         "Diesen Club konnten wir nicht verifizieren. Bitte prüfe Name und Stadt.",
@@ -415,9 +456,8 @@ export default function OnboardingFlow() {
             subtitle="Optional — so findest du zuerst Spieler aus deinem Club."
           >
             <p className="-mt-1 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-400">
-              Aktuell verfügbar:{" "}
-              {Object.values(SUPPORTED_COUNTRY_NAMES).join(" & ")}. Weitere
-              Länder folgen bald.
+              Clubs weltweit — such nach Name oder Stadt. Wir finden ihn über die
+              Karte, auch wenn er noch nicht in der Liste ist.
             </p>
 
             {!showAddClub ? (
@@ -428,18 +468,20 @@ export default function OnboardingFlow() {
                   placeholder="Club oder Stadt suchen…"
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
-                {clubResults.map((c) => (
+                {clubResults.map((c, i) => (
                   <SelectRow
-                    key={c.id}
-                    selected={state.club_id === c.id}
-                    onClick={() =>
-                      dispatch({
-                        type: "SET_CLUB",
-                        payload: { id: c.id, name: c.name },
-                      })
-                    }
+                    key={c.id || `osm-${c.latitude}-${c.longitude}-${i}`}
+                    selected={!!c.id && state.club_id === c.id}
+                    onClick={() => selectClub(c)}
                   >
-                    <span className="block font-medium">{c.name}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="block font-medium">{c.name}</span>
+                      {c._osm && (
+                        <span className="rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                          Karte
+                        </span>
+                      )}
+                    </span>
                     {(c.address || c.city) && (
                       <span className="mt-0.5 block text-xs text-zinc-400">
                         {c.address || c.city}
@@ -447,9 +489,17 @@ export default function OnboardingFlow() {
                     )}
                   </SelectRow>
                 ))}
-                {clubQuery.trim().length >= 2 && clubResults.length === 0 && (
-                  <p className="text-sm text-zinc-500">Kein Club gefunden.</p>
+                {clubSearching && (
+                  <p className="text-sm text-zinc-500">Suche weltweit…</p>
                 )}
+                {savingClub && (
+                  <p className="text-sm text-matchup">Club wird übernommen…</p>
+                )}
+                {!clubSearching &&
+                  clubQuery.trim().length >= 2 &&
+                  clubResults.length === 0 && (
+                    <p className="text-sm text-zinc-500">Kein Club gefunden.</p>
+                  )}
                 <button
                   type="button"
                   onClick={() => {
