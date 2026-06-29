@@ -32,22 +32,24 @@ function LangSwitch({ className = "" }: { className?: string }) {
   );
 }
 
+type NavFeature = { label: string; href: string };
+
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const [waitlistFeature, setWaitlistFeature] = useState<string | null>(null);
+  const [waitlist, setWaitlist] = useState<NavFeature | null>(null);
   const t = useT();
 
   // Reihenfolge: Find a Partner → Events → Shop → Advice (alle "Coming soon")
-  const navItems = [
-    t("header.findPartner"),
-    t("header.events"),
-    t("header.shop"),
-    t("header.beratung"),
+  const navItems: NavFeature[] = [
+    { label: t("header.findPartner"), href: "/find-a-partner" },
+    { label: t("header.events"), href: "/events" },
+    { label: t("header.shop"), href: "/shop" },
+    { label: t("header.beratung"), href: "/beratung" },
   ];
 
-  function openWaitlist(feature: string) {
+  function openWaitlist(item: NavFeature) {
     setOpen(false);
-    setWaitlistFeature(feature);
+    setWaitlist(item);
   }
 
   return (
@@ -57,21 +59,19 @@ export default function Header() {
           <MatchupLogo />
         </a>
 
-        {/* Desktop-Nav: pinkes Oval + (Coming soon) */}
-        <nav className="hidden items-center gap-3 lg:flex">
-          <div className="flex items-center gap-1 rounded-full border border-pink-400/70 px-1.5 py-1 shadow-[0_0_22px_-6px_rgba(236,72,153,0.85)]">
-            {navItems.map((label) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => openWaitlist(label)}
-                className="rounded-full px-3 py-1.5 text-[13px] font-semibold tracking-wide text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <span className="text-[11px] font-semibold tracking-wide text-pink-400">
+        {/* Desktop-Nav + (Coming soon) */}
+        <nav className="hidden items-center gap-5 lg:flex">
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => openWaitlist(item)}
+              className="text-[13px] font-semibold tracking-wide text-white/90 transition-colors hover:text-white"
+            >
+              {item.label}
+            </button>
+          ))}
+          <span className="text-[11px] font-semibold tracking-wide text-white/40">
             {t("waitlist.comingSoon")}
           </span>
         </nav>
@@ -102,24 +102,22 @@ export default function Header() {
       </div>
 
       {open && (
-        <nav className="flex flex-col gap-2 border-t border-white/10 px-4 pb-6 pt-3 lg:hidden">
-          <div className="rounded-3xl border border-pink-400/60 p-2 shadow-[0_0_22px_-8px_rgba(236,72,153,0.8)]">
-            <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
-              <span className="text-[11px] font-bold uppercase tracking-wide text-pink-400">
-                {t("waitlist.comingSoon")}
-              </span>
-            </div>
-            {navItems.map((label) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => openWaitlist(label)}
-                className="block w-full rounded-2xl px-3 py-3 text-left text-sm font-semibold tracking-wide text-white/90 transition-colors hover:bg-white/5"
-              >
-                {label}
-              </button>
-            ))}
+        <nav className="flex flex-col gap-1 border-t border-white/10 px-4 pb-6 pt-2 lg:hidden">
+          <div className="flex items-center gap-2 py-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-white/40">
+              {t("waitlist.comingSoon")}
+            </span>
           </div>
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => openWaitlist(item)}
+              className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+            >
+              {item.label}
+            </button>
+          ))}
 
           <div className="mt-1 flex items-center justify-between py-2">
             <span className="text-sm font-semibold tracking-wide text-white/60">
@@ -137,9 +135,10 @@ export default function Header() {
       )}
 
       <WaitlistModal
-        open={waitlistFeature !== null}
-        feature={waitlistFeature ?? ""}
-        onClose={() => setWaitlistFeature(null)}
+        open={waitlist !== null}
+        feature={waitlist?.label ?? ""}
+        secretHref={waitlist?.href ?? "/"}
+        onClose={() => setWaitlist(null)}
       />
     </header>
   );

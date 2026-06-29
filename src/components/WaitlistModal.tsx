@@ -5,16 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { useT, useLocale } from "@/lib/i18n";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Geheimer Zugang: statt E-Mail diesen Code eingeben → direkt zur echten View.
+const SECRET_CODE = "50805080";
 
 type Status = "idle" | "loading" | "success" | "already" | "error";
 
 export default function WaitlistModal({
   open,
   feature,
+  secretHref = "/",
   onClose,
 }: {
   open: boolean;
   feature: string;
+  secretHref?: string;
   onClose: () => void;
 }) {
   const t = useT();
@@ -55,7 +59,13 @@ export default function WaitlistModal({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = email.trim().toLowerCase();
+    const raw = email.trim();
+    // Geheimer Bypass: Code statt E-Mail → direkt zur echten Seite.
+    if (raw === SECRET_CODE) {
+      window.location.href = secretHref;
+      return;
+    }
+    const trimmed = raw.toLowerCase();
     if (!EMAIL_RE.test(trimmed)) {
       setErrorMsg(t("waitlist.emailInvalid"));
       setStatus("error");
@@ -147,7 +157,9 @@ export default function WaitlistModal({
 
               <form onSubmit={submit} className="mt-6">
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   required
                   autoFocus
                   value={email}
