@@ -183,6 +183,171 @@ const SETUPS: Setup[] = [
   },
 ];
 
+const WTA_SETUPS: Setup[] = [
+  {
+    id: "sabalenka",
+    pro: "Aryna Sabalenka",
+    tag: "WTA #1",
+    brand: "Wilson",
+    accent: "from-amber-400 to-red-500",
+    strings: ["Luxilon 4G 1.30 (Längs & Quer)"],
+    tension: "ca. 26 kg / 57 lbs",
+    traits: ["Maximale Power", "Aufschlag", "Haltbarkeit"],
+    instruction:
+      "Steifes Polyester bei hoher Spannung für kompromisslose Power und flache, harte Schläge. Für kräftiges, offensives Spiel.",
+    price: 45,
+  },
+  {
+    id: "swiatek",
+    pro: "Iga Świątek",
+    tag: "WTA Top 5",
+    brand: "Tecnifibre",
+    accent: "from-rose-400 to-red-600",
+    strings: ["Tecnifibre Razor Soft 1.20 (Längs & Quer)"],
+    tension: "ca. 26,5 kg / 58 lbs",
+    traits: ["Extremer Spin", "Kontrolle", "Topspin"],
+    instruction:
+      "Dünnes, kantiges Polyester für massiven Topspin und Kontrolle bei hoher Spannung. Für drehungsreiches, aktives Grundlinienspiel.",
+    price: 45,
+  },
+  {
+    id: "gauff",
+    pro: "Coco Gauff",
+    tag: "WTA Top 5",
+    brand: "Head",
+    accent: "from-sky-400 to-blue-600",
+    strings: ["Head Lynx Tour 1.25 (Längs & Quer)"],
+    tension: "ca. 24 kg / 53 lbs",
+    traits: ["Spin", "Tempo", "Allround"],
+    instruction:
+      "Glattes Polyester für eine Mischung aus Spin und Speed — vielseitig für schnelles, athletisches Allcourt-Spiel.",
+    price: 45,
+  },
+  {
+    id: "rybakina",
+    pro: "Elena Rybakina",
+    tag: "WTA Top 10",
+    brand: "Yonex",
+    accent: "from-cyan-400 to-teal-600",
+    strings: ["Yonex Poly Tour Pro 1.25 (Längs & Quer)"],
+    tension: "ca. 25 kg / 55 lbs",
+    traits: ["Aufschlag", "Power", "Flaches Spiel"],
+    instruction:
+      "Komfortables Polyester mit gutem Ballspeed — ideal für druckvolle Aufschläge und flache, harte Grundschläge.",
+    price: 45,
+  },
+  {
+    id: "pegula",
+    pro: "Jessica Pegula",
+    tag: "WTA Top 10",
+    brand: "Yonex",
+    accent: "from-indigo-400 to-blue-600",
+    strings: ["Yonex Poly Tour Strike 1.25 (Längs & Quer)"],
+    tension: "ca. 24 kg / 53 lbs",
+    traits: ["Kontrolle", "Präzision", "Frühes Spiel"],
+    instruction:
+      "Kontrolliertes Polyester für früh genommene, präzise Bälle. Für taktisch sauberes Grundlinienspiel.",
+    price: 45,
+  },
+  {
+    id: "zheng",
+    pro: "Qinwen Zheng",
+    tag: "WTA Top 10",
+    brand: "Wilson",
+    accent: "from-fuchsia-400 to-purple-600",
+    strings: ["Luxilon ALU Power 1.25 (Längs & Quer)"],
+    tension: "ca. 25 kg / 55 lbs",
+    traits: ["Power", "Aufschlag", "Spin"],
+    instruction:
+      "Tour-Klassiker aus Polyester für die Balance aus Power und Spin. Für kraftvolles, offensives Spiel.",
+    price: 45,
+  },
+  {
+    id: "paolini",
+    pro: "Jasmine Paolini",
+    tag: "WTA Top 10",
+    brand: "Head",
+    accent: "from-emerald-400 to-green-600",
+    strings: ["Head Hawk Touch 1.25 (Längs & Quer)"],
+    tension: "ca. 24 kg / 53 lbs",
+    traits: ["Spin", "Speed", "Komfort"],
+    instruction:
+      "Weiches Polyester für Spin und Tempo bei gutem Komfort — passend für schnelles, bewegliches Spiel.",
+    price: 45,
+  },
+  {
+    id: "keys",
+    pro: "Madison Keys",
+    tag: "WTA Top 10",
+    brand: "Wilson",
+    accent: "from-orange-400 to-amber-600",
+    strings: ["Luxilon 4G Soft 1.25 (Längs & Quer)"],
+    tension: "ca. 25,5 kg / 56 lbs",
+    traits: ["Maximale Power", "Aufschlag", "Flaches Spiel"],
+    instruction:
+      "Halbweiches Polyester für enorme Power bei stabiler Kontrolle. Für aggressives, hart schlagendes Spiel.",
+    price: 45,
+  },
+  {
+    id: "krejcikova",
+    pro: "Barbora Krejčíková",
+    tag: "Grand-Slam-Siegerin",
+    brand: "Wilson",
+    accent: "from-violet-400 to-purple-600",
+    strings: [
+      "Längs: Wilson Natural Gut 1.30",
+      "Quer: Luxilon ALU Power 1.25",
+    ],
+    tension: "ca. 24 kg / 53 lbs",
+    traits: ["Touch & Gefühl", "Allround", "Variation"],
+    instruction:
+      "Hybrid aus Naturdarm und Polyester für gefühlvolles, variantenreiches Spiel mit viel Touch.",
+    price: 59,
+  },
+  {
+    id: "ostapenko",
+    pro: "Jeļena Ostapenko",
+    tag: "Grand-Slam-Siegerin",
+    brand: "Wilson",
+    accent: "from-red-400 to-rose-600",
+    strings: ["Luxilon ALU Power 1.25 (Längs & Quer)"],
+    tension: "ca. 25 kg / 55 lbs",
+    traits: ["Maximale Power", "Flaches Spiel", "Tempo"],
+    instruction:
+      "Kontrolliertes Polyester für extrem flaches, frühes und kraftvolles Spiel. Für kompromisslose Offensive.",
+    price: 45,
+  },
+  {
+    id: "jabeur",
+    pro: "Ons Jabeur",
+    tag: "WTA Top 15",
+    brand: "Wilson",
+    accent: "from-teal-400 to-emerald-600",
+    strings: [
+      "Längs: Wilson Natural Gut 1.30",
+      "Quer: Luxilon 4G 1.25",
+    ],
+    tension: "ca. 24 kg / 53 lbs",
+    traits: ["Touch & Gefühl", "Variation", "Stop & Slice"],
+    instruction:
+      "Naturdarm-Hybrid für maximales Gefühl und Variation — perfekt für kreatives Spiel mit Stops, Slice und Winkeln.",
+    price: 59,
+  },
+  {
+    id: "collins",
+    pro: "Danielle Collins",
+    tag: "WTA Top 15",
+    brand: "Yonex",
+    accent: "from-pink-400 to-rose-600",
+    strings: ["Yonex Poly Tour Pro 1.25 (Längs & Quer)"],
+    tension: "ca. 25 kg / 55 lbs",
+    traits: ["Power", "Flaches Spiel", "Aggressiv"],
+    instruction:
+      "Polyester mit gutem Ballspeed für flaches, aggressives Spiel von der Grundlinie. Für offensive Spielerinnen.",
+    price: 45,
+  },
+];
+
 function lastName(name: string) {
   return name.split(" ").slice(-1)[0];
 }
@@ -198,6 +363,8 @@ export default function BespannungConfigurator() {
   const [selected, setSelected] = useState<Setup | null>(null);
   const [ordered, setOrdered] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [tour, setTour] = useState<"atp" | "wta">("atp");
+  const players = tour === "atp" ? SETUPS : WTA_SETUPS;
 
   if (ordered && selected) {
     return (
@@ -241,10 +408,33 @@ export default function BespannungConfigurator() {
           Saite &amp; Spannung und besaiten deinen Schläger genau so.
         </p>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[300px_1fr] lg:gap-10">
+        {/* Herren / Damen Umschalter */}
+        <div className="mt-5 inline-flex rounded-full bg-white/10 p-1">
+          {([
+            { v: "atp", label: "Herren · ATP" },
+            { v: "wta", label: "Damen · WTA" },
+          ] as const).map((o) => (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => {
+                setTour(o.v);
+                setSelected(null);
+                setRequestOpen(false);
+              }}
+              className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
+                tour === o.v ? "bg-white text-black" : "text-white/70"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-8 lg:grid-cols-[300px_1fr] lg:gap-10">
           {/* LINKS: Spieler in Kreisen */}
           <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-6 lg:grid-cols-3">
-            {SETUPS.map((s) => {
+            {players.map((s) => {
               const active = selected?.id === s.id;
               return (
                 <button
