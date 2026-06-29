@@ -1,5 +1,6 @@
 import Image from "next/image";
 import RotatingImage, { type RotatingImg } from "./RotatingImage";
+import SportAccordion, { type SportPanel } from "./SportAccordion";
 
 const IMG = "https://images.ctfassets.net/rbzqg6pelgqa";
 
@@ -56,6 +57,20 @@ const TIERS: {
   },
 ];
 
+function firstImg(images?: RotatingImg[]): { img: string; position?: string } {
+  const f = images?.[0];
+  if (!f) return { img: "" };
+  return typeof f === "string" ? { img: f } : { img: f.src, position: f.position };
+}
+
+const MOBILE_PANELS: SportPanel[] = TIERS.map((t) => ({
+  name: t.name,
+  tagline: t.tagline,
+  features: t.features,
+  featured: t.featured,
+  ...firstImg(t.images),
+}));
+
 export default function Memberships() {
   return (
     <section id="mitgliedschaft" className="bg-white px-4 py-24 sm:px-6 lg:px-12">
@@ -70,7 +85,13 @@ export default function Memberships() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+        {/* Mobile: horizontales Accordion */}
+        <div className="mt-12 lg:hidden">
+          <SportAccordion panels={MOBILE_PANELS} />
+        </div>
+
+        {/* Desktop: 3-Spalten-Raster */}
+        <div className="mt-14 hidden gap-6 lg:grid lg:grid-cols-3">
           {TIERS.map((tier) => (
             <article
               key={tier.name}

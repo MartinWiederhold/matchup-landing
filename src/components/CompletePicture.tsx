@@ -9,29 +9,35 @@ const FEATURES: { title: string; copy: string; img: string; overlay: Overlay }[]
   {
     title: "Entdecke Spieler",
     copy: "Swipe durch Profile verifizierter Spieler. Filtere nach Sportart, Skill-Level, Alter und Entfernung. Bei einem gegenseitigen Like entsteht ein Match.",
-    img: "/landing/entdecke-spieler.jpg",
+    img: "/landing/discover-hd.jpg",
     overlay: "discover",
   },
   {
     title: "Spiele organisieren",
     copy: "Erstelle ein Match, wähle Ort und Zeit, lade Mitspieler ein oder tritt offenen Spielen bei. Singles oder Doubles, spontan oder geplant.",
-    img: "/landing/spiele-organisieren.jpg",
+    img: "/landing/organize-hd.jpg",
     overlay: "organize",
   },
   {
     title: "Deine Community",
     copy: "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten — von Club-Gruppen bis zu lokalen Spieltreffs.",
-    img: "/shop/pullover-frau.png",
+    img: "/landing/community-hd.jpg",
     overlay: "community",
   },
   {
     title: "Verfolge Fortschritt",
     copy: "Sammle XP, steige im Level auf, halte deinen Streak und schalte Achievements frei. Wochen-Statistiken zeigen dir, wie aktiv du bist.",
-    img: "/landing/verfolge-fortschritt.jpg",
+    img: "/landing/progress-hd.jpg",
     overlay: "progress",
   },
 ];
 
+/**
+ * inView wird TRUE, sobald die Karte deutlich sichtbar ist, und wieder FALSE,
+ * sobald sie das Sichtfeld verlässt — so spielt die Animation bei JEDEM
+ * Reinscrollen erneut ab (nicht nur einmal). rootMargin schneidet oben/unten
+ * ab, damit sie nicht zu früh (am Rand) auslöst.
+ */
 function useInView<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [inView, setInView] = useState(false);
@@ -39,13 +45,8 @@ function useInView<T extends HTMLElement>() {
     const el = ref.current;
     if (!el) return;
     const ob = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          ob.disconnect();
-        }
-      },
-      { threshold: 0.35 },
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.55, rootMargin: "-12% 0px -12% 0px" },
     );
     ob.observe(el);
     return () => ob.disconnect();
