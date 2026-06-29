@@ -59,9 +59,19 @@ function useInView<T extends HTMLElement>() {
  * (Punkte, Ring, Balken). So bleibt das Badge beim Scrollen stehen
  * und ruht im fertigen Zustand, die Grafik darin spielt beim
  * Reinscrollen jedes Mal neu ab. */
-function Chip({ children }: { children: React.ReactNode }) {
+function Chip({
+  children,
+  align = "left",
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+}) {
   return (
-    <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
+    <div
+      className={`absolute bottom-3 flex items-center gap-2 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md ${
+        align === "right" ? "right-3" : "left-3"
+      }`}
+    >
       {children}
     </div>
   );
@@ -123,7 +133,7 @@ function CommunityOverlay({ show }: { show: boolean }) {
   const C = 2 * Math.PI * 7;
   const filled = C * 0.3; // Endzustand (Ruhe)
   return (
-    <Chip>
+    <Chip align="right">
       <svg viewBox="0 0 20 20" className="h-5 w-5 -rotate-90">
         <circle cx="10" cy="10" r="7" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
         <circle
@@ -131,7 +141,7 @@ function CommunityOverlay({ show }: { show: boolean }) {
           cy="10"
           r="7"
           fill="none"
-          stroke="var(--matchup-blue)"
+          stroke="#38bdf8"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={C}
@@ -150,13 +160,13 @@ function CommunityOverlay({ show }: { show: boolean }) {
 function ProgressOverlay({ show }: { show: boolean }) {
   const bars = [45, 70, 40, 95, 60];
   return (
-    <Chip>
+    <Chip align="right">
       <span>Lvl 7</span>
       <span className="flex h-4 items-end gap-[3px]">
         {bars.map((h, i) => (
           <span
             key={i}
-            className={`w-1 rounded-sm bg-matchup ${show ? "anim-bar" : ""}`}
+            className={`w-1 rounded-sm bg-emerald-400 ${show ? "anim-bar" : ""}`}
             style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }}
           />
         ))}
