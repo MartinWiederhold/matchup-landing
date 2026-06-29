@@ -1,6 +1,7 @@
 "use client";
 
 import type { Profile } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import Avatar from "./Avatar";
 
 export default function MatchAnimation({
@@ -14,6 +15,7 @@ export default function MatchAnimation({
   onMessage: () => void;
   onContinue: () => void;
 }) {
+  const t = useT();
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 px-8 text-center">
       <div className="mb-8 flex items-center gap-4">
@@ -24,10 +26,9 @@ export default function MatchAnimation({
           <Avatar src={other.profile_image} alt={other.first_name} size="xl" />
         </span>
       </div>
-      <h2 className="text-3xl font-bold text-matchup">IHR SEID VERBUNDEN!</h2>
+      <h2 className="text-3xl font-bold text-matchup">{t("app.youAreConnected")}</h2>
       <p className="mt-3 max-w-xs text-sm text-zinc-300">
-        Du und {other.first_name} möchtet beide spielen — schreib direkt los und
-        plant euer Match.
+        {t("app.connectedText", { name: other.first_name })}
       </p>
       <div className="mt-8 w-full max-w-xs space-y-3">
         <button
@@ -35,14 +36,14 @@ export default function MatchAnimation({
           onClick={onMessage}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
         >
-          Nachricht senden
+          {t("app.sendMessage")}
         </button>
         <button
           type="button"
           onClick={onContinue}
           className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold text-white"
         >
-          Weiter entdecken
+          {t("app.continueDiscovering")}
         </button>
       </div>
     </div>

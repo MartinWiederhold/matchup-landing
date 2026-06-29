@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth, translateError } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import {
   TennisIcon,
@@ -17,6 +18,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
+  const t = useT();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,15 +30,15 @@ export default function AuthScreen() {
 
   function validate(): string | null {
     if (mode === "login") {
-      if (!email.trim() || !password) return "Bitte Email und Passwort eingeben.";
+      if (!email.trim() || !password) return t("auth.errMissingCredentials");
       return null;
     }
-    if (!EMAIL_RE.test(email)) return "Bitte eine gültige Email eingeben.";
+    if (!EMAIL_RE.test(email)) return t("auth.errInvalidEmail");
     if (password.length < 8)
-      return "Passwort muss mindestens 8 Zeichen lang sein.";
-    if (password !== confirmPassword) return "Passwörter stimmen nicht überein.";
+      return t("auth.errPasswordTooShort");
+    if (password !== confirmPassword) return t("auth.errPasswordsMismatch");
     if (!agreedToTerms)
-      return "Bitte akzeptiere die AGB und Datenschutzrichtlinie.";
+      return t("auth.errTermsRequired");
     return null;
   }
 
@@ -95,7 +97,7 @@ export default function AuthScreen() {
                 mode === m ? "bg-matchup text-white" : "text-zinc-400"
               }`}
             >
-              {m === "login" ? "Einloggen" : "Registrieren"}
+              {m === "login" ? t("auth.login") : t("auth.register")}
             </button>
           ))}
         </div>
@@ -105,7 +107,7 @@ export default function AuthScreen() {
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder={t("auth.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none ring-1 ring-transparent focus:ring-matchup"
@@ -115,7 +117,7 @@ export default function AuthScreen() {
             <input
               type={showPassword ? "text" : "password"}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              placeholder="Passwort"
+              placeholder={t("auth.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 pr-12 text-sm outline-none ring-1 ring-transparent focus:ring-matchup"
@@ -124,7 +126,7 @@ export default function AuthScreen() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
-              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
             >
               {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
             </button>
@@ -134,7 +136,7 @@ export default function AuthScreen() {
             <input
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
-              placeholder="Passwort bestätigen"
+              placeholder={t("auth.confirmPasswordPlaceholder")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none ring-1 ring-transparent focus:ring-matchup"
@@ -150,13 +152,13 @@ export default function AuthScreen() {
                 className="mt-0.5 h-4 w-4 accent-matchup"
               />
               <span>
-                Ich akzeptiere die{" "}
+                {t("auth.termsPrefix")}{" "}
                 <a href="/agb" className="underline">
-                  AGB
+                  {t("auth.terms")}
                 </a>{" "}
-                und{" "}
+                {t("auth.termsAnd")}{" "}
                 <a href="/datenschutz" className="underline">
-                  Datenschutzrichtlinie
+                  {t("auth.privacy")}
                 </a>
                 .
               </span>
@@ -175,10 +177,10 @@ export default function AuthScreen() {
             className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover disabled:opacity-60"
           >
             {isLoading
-              ? "Bitte warten…"
+              ? t("auth.pleaseWait")
               : mode === "login"
-                ? "EINLOGGEN"
-                : "REGISTRIEREN"}
+                ? t("auth.loginUpper")
+                : t("auth.registerUpper")}
           </button>
         </form>
 
@@ -188,21 +190,21 @@ export default function AuthScreen() {
             className="mx-auto mt-4 block text-sm text-zinc-400 underline underline-offset-2"
             onClick={async () => {
               if (!EMAIL_RE.test(email)) {
-                setError("Bitte zuerst deine Email eingeben.");
+                setError(t("auth.errEmailFirst"));
                 return;
               }
               await supabase.auth.resetPasswordForEmail(email);
-              setError("Falls die Email existiert, wurde ein Link gesendet.");
+              setError(t("auth.resetSent"));
             }}
           >
-            Passwort vergessen?
+            {t("auth.forgotPassword")}
           </button>
         )}
 
         {/* Divider */}
         <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
           <div className="h-px flex-1 bg-zinc-800" />
-          oder
+          {t("auth.or")}
           <div className="h-px flex-1 bg-zinc-800" />
         </div>
 
@@ -213,14 +215,14 @@ export default function AuthScreen() {
             onClick={() => handleOAuth("apple")}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3.5 text-sm font-semibold text-black"
           >
-            <AppleIcon size={18} /> Mit Apple anmelden
+            <AppleIcon size={18} /> {t("auth.signInApple")}
           </button>
           <button
             type="button"
             onClick={() => handleOAuth("google")}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-800 py-3.5 text-sm font-semibold text-white"
           >
-            <GoogleIcon size={18} /> Mit Google anmelden
+            <GoogleIcon size={18} /> {t("auth.signInGoogle")}
           </button>
         </div>
       </div>

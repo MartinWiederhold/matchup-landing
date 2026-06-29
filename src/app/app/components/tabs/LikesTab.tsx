@@ -6,12 +6,14 @@ import { skillLabel } from "@/lib/utils/formatters";
 import { SportIcon, XIcon, CheckIcon, UsersIcon } from "../shared/icons";
 import type { Like, Profile } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
 
 export default function LikesTab() {
+  const t = useT();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [likes, setLikes] = useState<Like[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,16 +70,18 @@ export default function LikesTab() {
   return (
     <div className="flex h-full flex-col">
       <header className="flex h-14 shrink-0 items-center justify-center border-b border-zinc-800">
-        <span className="font-bold tracking-wide">ANFRAGEN ({visible.length})</span>
+        <span className="font-bold tracking-wide">
+          {t("discover.requestsTitle", { count: visible.length })}
+        </span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
-            title="Noch keine Anfragen"
-            message="Vervollständige dein Profil und werde sichtbar."
-            actionLabel="Entdecken"
+            title={t("discover.requestsEmptyTitle")}
+            message={t("discover.requestsEmptyMessage")}
+            actionLabel={t("discover.requestsEmptyAction")}
             onAction={() => setActiveTab("discover")}
           />
         ) : (
@@ -108,7 +112,7 @@ export default function LikesTab() {
                       type="button"
                       onClick={() => setDismissed((d) => new Set(d).add(like.id))}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
-                      aria-label="Ablehnen"
+                      aria-label={t("discover.decline")}
                     >
                       <XIcon size={18} />
                     </button>
@@ -116,9 +120,9 @@ export default function LikesTab() {
                       type="button"
                       onClick={() => likeBack(like)}
                       className="flex h-10 items-center justify-center gap-1.5 rounded-full bg-matchup px-4 text-xs font-bold text-white"
-                      aria-label="Verbinden"
+                      aria-label={t("discover.connect")}
                     >
-                      <CheckIcon size={16} /> Verbinden
+                      <CheckIcon size={16} /> {t("discover.connect")}
                     </button>
                   </div>
                 </li>

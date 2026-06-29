@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sportLabel } from "@/lib/utils/formatters";
 import type { Group, GroupMember, GroupMessage } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, SubViewHeader } from "../shared/ui";
 import { SportIcon, SendIcon } from "../shared/icons";
 
 export default function GroupDetail({ groupId }: { groupId: string }) {
+  const t = useT();
   const { profile, closeSubView } = useAppNav();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -72,7 +74,7 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
   }
 
   async function leave() {
-    if (!window.confirm("Gruppe verlassen?")) return;
+    if (!window.confirm(t("groups.leaveConfirm"))) return;
     await supabase
       .from("group_members")
       .delete()
@@ -89,26 +91,26 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
         title={group.name}
         rightActions={
           <button type="button" onClick={leave} className="text-xs text-red-400">
-            Verlassen
+            {t("groups.leave")}
           </button>
         }
       />
       <div className="shrink-0 border-b border-zinc-800 px-4 py-2 text-xs text-zinc-400">
-        <SportIcon sport={group.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(group.sport)} · {members.length}{" "}
-        Mitglieder
+        <SportIcon sport={group.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(group.sport)} ·{" "}
+        {t("groups.membersCount", { count: members.length })}
       </div>
 
       <div className="flex shrink-0 border-b border-zinc-800">
-        {(["chat", "members"] as const).map((t) => (
+        {(["chat", "members"] as const).map((tabKey) => (
           <button
-            key={t}
+            key={tabKey}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabKey)}
             className={`flex-1 border-b-2 py-2.5 text-sm font-semibold ${
-              tab === t ? "border-matchup text-white" : "border-transparent text-zinc-500"
+              tab === tabKey ? "border-matchup text-white" : "border-transparent text-zinc-500"
             }`}
           >
-            {t === "chat" ? "Chat" : "Mitglieder"}
+            {tabKey === "chat" ? t("groups.chat") : t("groups.members")}
           </button>
         ))}
       </div>
@@ -142,14 +144,14 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Nachricht…"
+              placeholder={t("groups.messagePlaceholder")}
               className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
             />
             <button
               type="button"
               onClick={send}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
-              aria-label="Senden"
+              aria-label={t("groups.send")}
             >
               <SendIcon size={18} className="text-white" />
             </button>

@@ -5,6 +5,7 @@ import type { FilterState, Sport, SkillLevel, Club } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { searchClubs as searchClubsApi } from "@/lib/clubs";
 import { skillLabel } from "@/lib/utils/formatters";
+import { useT } from "@/lib/i18n";
 import WheelPicker from "../shared/WheelPicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
@@ -20,6 +21,7 @@ export default function FilterSheet({
   onApply: (f: FilterState) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState<FilterState>(filters);
   const [clubQuery, setClubQuery] = useState(filters.clubName ?? "");
   const [clubResults, setClubResults] = useState<Club[]>([]);
@@ -42,13 +44,13 @@ export default function FilterSheet({
       />
       <div className="relative max-h-[85vh] overflow-y-auto rounded-t-3xl bg-zinc-900 p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Filter</h2>
-          <button type="button" onClick={onClose} aria-label="Schliessen">
+          <h2 className="text-lg font-bold">{t("discover.filterTitle")}</h2>
+          <button type="button" onClick={onClose} aria-label={t("common.close")}>
             ✕
           </button>
         </div>
 
-        <Section label="Sportart">
+        <Section label={t("discover.sport")}>
           <div className="flex flex-wrap gap-2">
             {SPORTS.map((s) => (
               <FilterChip
@@ -62,12 +64,12 @@ export default function FilterSheet({
           </div>
         </Section>
 
-        <Section label="Geschlecht">
+        <Section label={t("discover.gender")}>
           <div className="flex gap-2">
             {[
-              { v: null, label: "Alle" },
-              { v: "male" as const, label: "Männlich" },
-              { v: "female" as const, label: "Weiblich" },
+              { v: null, label: t("discover.genderAll") },
+              { v: "male" as const, label: t("discover.genderMale") },
+              { v: "female" as const, label: t("discover.genderFemale") },
             ].map((o) => (
               <FilterChip
                 key={o.label}
@@ -80,10 +82,12 @@ export default function FilterSheet({
           </div>
         </Section>
 
-        <Section label={`Alter: ${draft.ageMin}–${draft.ageMax}`}>
+        <Section label={t("discover.age", { min: draft.ageMin, max: draft.ageMax })}>
           <div className="flex items-stretch gap-3">
             <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-zinc-500">Von</p>
+              <p className="mb-1 text-center text-xs text-zinc-500">
+                {t("discover.ageFrom")}
+              </p>
               <WheelPicker
                 values={AGES}
                 value={draft.ageMin}
@@ -97,7 +101,9 @@ export default function FilterSheet({
               />
             </div>
             <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-zinc-500">Bis</p>
+              <p className="mb-1 text-center text-xs text-zinc-500">
+                {t("discover.ageTo")}
+              </p>
               <WheelPicker
                 values={AGES}
                 value={draft.ageMax}
@@ -114,7 +120,12 @@ export default function FilterSheet({
         </Section>
 
         <Section
-          label={`Umkreis: ${draft.radius > 200 ? "Weltweit" : `${draft.radius} km`}`}
+          label={t("discover.radiusLabel", {
+            value:
+              draft.radius > 200
+                ? t("discover.worldwide")
+                : t("discover.radiusChip", { km: draft.radius }),
+          })}
         >
           <input
             type="range"
@@ -126,7 +137,7 @@ export default function FilterSheet({
           />
         </Section>
 
-        <Section label="Skill-Level">
+        <Section label={t("discover.skillLevel")}>
           <div className="flex flex-wrap gap-2">
             {SKILLS.map((s) => (
               <FilterChip
@@ -142,11 +153,11 @@ export default function FilterSheet({
           </div>
         </Section>
 
-        <Section label="Club">
+        <Section label={t("discover.club")}>
           <input
             value={clubQuery}
             onChange={(e) => searchClubs(e.target.value)}
-            placeholder="Club suchen…"
+            placeholder={t("discover.clubSearchPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
           />
           {clubResults.map((c) => (
@@ -177,7 +188,7 @@ export default function FilterSheet({
               }}
               className="mt-2 text-xs text-zinc-400 underline"
             >
-              Club-Filter entfernen
+              {t("discover.removeClubFilter")}
             </button>
           )}
         </Section>
@@ -188,14 +199,14 @@ export default function FilterSheet({
             onClick={() => setDraft(defaultFilters)}
             className="flex-1 rounded-full border border-zinc-700 py-3 text-sm font-semibold"
           >
-            Zurücksetzen
+            {t("discover.reset")}
           </button>
           <button
             type="button"
             onClick={() => onApply(draft)}
             className="flex-1 rounded-full bg-matchup py-3 text-sm font-bold text-white"
           >
-            Filter anwenden
+            {t("discover.apply")}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { compressImage } from "@/lib/utils/imageCompress";
@@ -17,6 +18,7 @@ const SKILLS: SkillLevel[] = ["beginner", "intermediate", "advanced", "competiti
 const GOALS = ["fun", "competitive", "training", "social", "fitness", "regular"];
 
 export default function EditProfile() {
+  const t = useT();
   const { profile } = useAppNav();
   const { refreshProfile } = useAuth();
   const [photos, setPhotos] = useState<string[]>(
@@ -120,7 +122,7 @@ export default function EditProfile() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Profil bearbeiten" />
+      <SubViewHeader title={t("profile.editTitle")} />
       <input
         ref={fileInput}
         type="file"
@@ -129,7 +131,7 @@ export default function EditProfile() {
         className="hidden"
       />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
-        <Field label="Fotos">
+        <Field label={t("profile.photos")}>
           <div className="grid grid-cols-3 gap-3">
             {photos.map((url, i) => (
               <div
@@ -137,15 +139,15 @@ export default function EditProfile() {
                 className="relative aspect-square overflow-hidden rounded-xl bg-zinc-800"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                <img src={url} alt={t("profile.photoAlt", { index: i + 1 })} className="h-full w-full object-cover" />
                 {uploadingIdx === i && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs text-white">
-                    Lädt…
+                    {t("profile.photosUploading")}
                   </div>
                 )}
                 {i === 0 && (
                   <span className="absolute left-1.5 top-1.5 rounded-full bg-matchup px-2 py-0.5 text-[10px] font-bold text-white">
-                    Hauptbild
+                    {t("profile.mainPhoto")}
                   </span>
                 )}
                 <div className="absolute inset-x-0 bottom-0 flex divide-x divide-white/15 bg-black/55 text-[11px] font-semibold text-white backdrop-blur-sm">
@@ -154,11 +156,11 @@ export default function EditProfile() {
                     onClick={() => openPicker(i)}
                     className="flex-1 py-1.5"
                   >
-                    Ändern
+                    {t("profile.changePhoto")}
                   </button>
                   {i !== 0 && (
                     <button type="button" onClick={() => makeMain(i)} className="flex-1 py-1.5">
-                      Haupt
+                      {t("profile.makeMain")}
                     </button>
                   )}
                   <button
@@ -166,7 +168,7 @@ export default function EditProfile() {
                     onClick={() => removePhoto(i)}
                     className="flex-1 py-1.5 text-red-300"
                   >
-                    Löschen
+                    {t("profile.deletePhoto")}
                   </button>
                 </div>
               </div>
@@ -179,22 +181,22 @@ export default function EditProfile() {
                 className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-zinc-600 text-zinc-400 disabled:opacity-50"
               >
                 {uploadingIdx === photos.length ? (
-                  <span className="text-xs">Lädt…</span>
+                  <span className="text-xs">{t("profile.photosUploading")}</span>
                 ) : (
                   <>
                     <span className="text-2xl leading-none">+</span>
-                    <span className="text-[11px]">Bild</span>
+                    <span className="text-[11px]">{t("profile.addPhoto")}</span>
                   </>
                 )}
               </button>
             )}
           </div>
           <p className="mt-2 text-xs text-zinc-500">
-            Bis zu {MAX_PHOTOS} Fotos. Das Hauptbild erscheint zuerst.
+            {t("profile.photosHint", { max: MAX_PHOTOS })}
           </p>
         </Field>
 
-        <Field label="Über mich">
+        <Field label={t("profile.aboutMe")}>
           <textarea
             rows={3}
             maxLength={300}
@@ -204,7 +206,7 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Sportarten">
+        <Field label={t("profile.sports")}>
           <Chips
             options={SPORTS.map((s) => ({ value: s, label: sportLabel(s) }))}
             selected={sports}
@@ -212,7 +214,7 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Skill-Level">
+        <Field label={t("profile.skillLevel")}>
           <Chips
             options={SKILLS.map((s) => ({ value: s, label: skillLabel(s) }))}
             selected={[skill]}
@@ -220,7 +222,7 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Club">
+        <Field label={t("profile.club")}>
           <ClubPicker
             clubId={clubId}
             clubName={clubName}
@@ -234,16 +236,16 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Offizielles Rating">
+        <Field label={t("profile.officialRating")}>
           <input
             value={rating}
             onChange={(e) => setRating(e.target.value)}
-            placeholder="z.B. R5, LK 12, UTR 8"
+            placeholder={t("profile.ratingPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
 
-        <Field label={`Grösse: ${height ?? 178} cm`}>
+        <Field label={t("profile.heightLabel", { height: height ?? 178 })}>
           <input
             type="range"
             min={140}
@@ -254,7 +256,7 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Ziele">
+        <Field label={t("profile.goals")}>
           <Chips
             options={GOALS.map((g) => ({ value: g, label: g }))}
             selected={goals}
@@ -262,7 +264,7 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label={`Suchradius: ${radius} km`}>
+        <Field label={t("profile.searchRadiusLabel", { radius })}>
           <input
             type="range"
             min={5}
@@ -273,11 +275,11 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Sichtbar für">
+        <Field label={t("profile.visibleFor")}>
           <Chips
             options={[
-              { value: "male", label: "Männer" },
-              { value: "female", label: "Frauen" },
+              { value: "male", label: t("profile.genderMale") },
+              { value: "female", label: t("profile.genderFemale") },
             ]}
             selected={visGender}
             onToggle={(v) => setVisGender(toggle(visGender, v))}
@@ -292,7 +294,7 @@ export default function EditProfile() {
           disabled={saving || sports.length === 0 || uploadingIdx !== null}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? "Speichern…" : "Speichern"}
+          {saving ? t("profile.saving") : t("common.save")}
         </button>
       </div>
     </div>

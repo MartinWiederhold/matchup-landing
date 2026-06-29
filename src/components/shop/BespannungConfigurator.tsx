@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
+import type { TFunction } from "@/lib/i18n";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Bespannungs-Konfigurator
@@ -348,6 +350,44 @@ const WTA_SETUPS: Setup[] = [
   },
 ];
 
+// Übersetzungs-Maps für Eigenschaften (traits) & Spielanweisungen (instruction).
+// Spieler-, Saiten- und Produktnamen bleiben unübersetzt.
+const TRAIT_KEY: Record<string, string> = {
+  Aggressiv: "beratung.traitAggressive",
+  Allround: "beratung.traitAllround",
+  Armschonend: "beratung.traitArmFriendly",
+  Aufschlag: "beratung.traitServe",
+  "Einhand-Rückhand": "beratung.traitOneHandedBackhand",
+  "Extremer Spin": "beratung.traitExtremeSpin",
+  "Flaches Spiel": "beratung.traitFlatGame",
+  "Frühes Spiel": "beratung.traitEarlyGame",
+  Haltbarkeit: "beratung.traitDurability",
+  Komfort: "beratung.traitComfort",
+  Kontrolle: "beratung.traitControl",
+  "Maximale Power": "beratung.traitMaxPower",
+  "Maximaler Spin": "beratung.traitMaxSpin",
+  Power: "beratung.traitPower",
+  "Präzision": "beratung.traitPrecision",
+  Sandplatz: "beratung.traitClay",
+  Speed: "beratung.traitSpeed",
+  Spin: "beratung.traitSpin",
+  "Stop & Slice": "beratung.traitStopSlice",
+  Tempo: "beratung.traitPace",
+  Topspin: "beratung.traitTopspin",
+  "Touch & Gefühl": "beratung.traitTouchFeel",
+  Touch: "beratung.traitTouch",
+  Variation: "beratung.traitVariation",
+};
+
+function trait(t: TFunction, value: string): string {
+  const key = TRAIT_KEY[value];
+  return key ? t(key) : value;
+}
+
+function instruction(t: TFunction, id: string): string {
+  return t(`beratung.instr_${id}`);
+}
+
 function lastName(name: string) {
   return name.split(" ").slice(-1)[0];
 }
@@ -360,6 +400,7 @@ function initials(name: string) {
 }
 
 export default function BespannungConfigurator() {
+  const t = useT();
   const [selected, setSelected] = useState<Setup | null>(null);
   const [ordered, setOrdered] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
@@ -371,17 +412,17 @@ export default function BespannungConfigurator() {
       <Card className="text-center">
         <Check />
         <h3 className="mt-6 text-2xl font-bold tracking-tight text-white">
-          Besaitungs-Auftrag erstellt
+          {t("beratung.orderCreated")}
         </h3>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
-          Dein Schläger wird im <strong className="text-white">{selected.pro}</strong>-Setup
-          besaitet:
+          {t("beratung.orderConfirmPre")}
+          <strong className="text-white">{selected.pro}</strong>
+          {t("beratung.orderConfirmPost")}
           <br />
           {selected.strings.join(" · ")} — {selected.tension}.
         </p>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/50">
-          Schick uns deinen Schläger ein — wir besaiten ihn exakt nach diesen
-          Settings und schicken ihn spielfertig zurück.
+          {t("beratung.orderShip")}
         </p>
         <button
           type="button"
@@ -391,7 +432,7 @@ export default function BespannungConfigurator() {
           }}
           className="mt-8 h-12 rounded-full bg-white px-8 text-sm font-bold text-black transition-colors hover:bg-white/85"
         >
-          Weiteres Setup wählen
+          {t("beratung.chooseAnother")}
         </button>
       </Card>
     );
@@ -401,18 +442,17 @@ export default function BespannungConfigurator() {
     <Card>
       <div className="relative">
         <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Spiele wie die Profis
+          {t("beratung.stringingTitle")}
         </h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/60">
-          Wähle das Setup deines Lieblingsspielers — wir zeigen dir die exakte
-          Saite &amp; Spannung und besaiten deinen Schläger genau so.
+          {t("beratung.stringingSubtitle")}
         </p>
 
         {/* Herren / Damen Umschalter */}
         <div className="mt-5 inline-flex rounded-full bg-white/10 p-1">
           {([
-            { v: "atp", label: "Herren · ATP" },
-            { v: "wta", label: "Damen · WTA" },
+            { v: "atp", label: t("beratung.tourAtp") },
+            { v: "wta", label: t("beratung.tourWta") },
           ] as const).map((o) => (
             <button
               key={o.v}
@@ -505,7 +545,7 @@ export default function BespannungConfigurator() {
                   requestOpen ? "text-white" : "text-white/55"
                 }`}
               >
-                Eigenes
+                {t("beratung.own")}
               </span>
             </button>
           </div>
@@ -513,17 +553,16 @@ export default function BespannungConfigurator() {
           {/* RECHTS: Setup-Detail / Anfrage / Platzhalter */}
           <div className="lg:sticky lg:top-6 lg:self-start">
             {selected ? (
-              <SetupDetail setup={selected} onOrder={() => setOrdered(true)} />
+              <SetupDetail setup={selected} onOrder={() => setOrdered(true)} t={t} />
             ) : requestOpen ? (
-              <RequestForm onClose={() => setRequestOpen(false)} />
+              <RequestForm onClose={() => setRequestOpen(false)} t={t} />
             ) : (
               <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 p-8 text-center">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-xl text-white/40">
                   ⌖
                 </span>
                 <p className="mt-4 max-w-xs text-sm text-white/50">
-                  Tippe links auf einen Spieler — Saite, Spannung und Details
-                  erscheinen sofort hier.
+                  {t("beratung.placeholderHint")}
                 </p>
               </div>
             )}
@@ -536,7 +575,15 @@ export default function BespannungConfigurator() {
 
 /* ── Setup-Detail (rechts) ─────────────────────────────────────────────── */
 
-function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) {
+function SetupDetail({
+  setup,
+  onOrder,
+  t,
+}: {
+  setup: Setup;
+  onOrder: () => void;
+  t: TFunction;
+}) {
   return (
     <div className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
       <div className="flex items-center gap-4">
@@ -553,7 +600,7 @@ function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) 
         </span>
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-300">
-            Dein perfektes Setup
+            {t("beratung.yourSetup")}
           </div>
           <h3 className="mt-0.5 text-xl font-bold tracking-tight text-white">
             {setup.pro}
@@ -565,30 +612,30 @@ function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) 
       </div>
 
       <div className="mt-6 space-y-3">
-        <Row label="Saite">
+        <Row label={t("beratung.rowString")}>
           <div className="space-y-0.5">
             {setup.strings.map((str) => (
               <div key={str}>{str}</div>
             ))}
           </div>
         </Row>
-        <Row label="Spannung">{setup.tension}</Row>
-        <Row label="Schläger-Marke">{setup.brand}</Row>
+        <Row label={t("beratung.rowTension")}>{setup.tension}</Row>
+        <Row label={t("beratung.rowBrand")}>{setup.brand}</Row>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {setup.traits.map((t) => (
+        {setup.traits.map((tr) => (
           <span
-            key={t}
+            key={tr}
             className="rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-200 ring-1 ring-violet-400/25"
           >
-            {t}
+            {trait(t, tr)}
           </span>
         ))}
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-white/60">
-        {setup.instruction}
+        {instruction(t, setup.id)}
       </p>
 
       <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 sm:flex-row">
@@ -597,7 +644,7 @@ function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) 
             {setup.price} €
           </div>
           <div className="text-xs text-white/45">
-            inkl. Premium-Saite &amp; Bespannung
+            {t("beratung.priceIncludes")}
           </div>
         </div>
         <button
@@ -605,7 +652,7 @@ function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) 
           onClick={onOrder}
           className="w-full rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto"
         >
-          Mit diesem Setup bestellen →
+          {t("beratung.orderWithSetup")}
         </button>
       </div>
     </div>
@@ -614,7 +661,7 @@ function SetupDetail({ setup, onOrder }: { setup: Setup; onOrder: () => void }) 
 
 /* ── Anfrageformular eigenes Setup ─────────────────────────────────────── */
 
-function RequestForm({ onClose }: { onClose: () => void }) {
+function RequestForm({ onClose, t }: { onClose: () => void; t: TFunction }) {
   const [form, setForm] = useState({ name: "", email: "", wish: "", note: "" });
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -622,7 +669,7 @@ function RequestForm({ onClose }: { onClose: () => void }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.wish.trim()) {
-      setError("Bitte Name, E-Mail und dein Wunsch-Setup ausfüllen.");
+      setError(t("beratung.reqError"));
       return;
     }
     setDone(true);
@@ -633,11 +680,10 @@ function RequestForm({ onClose }: { onClose: () => void }) {
       <div className="rounded-2xl bg-white/[0.04] p-8 text-center ring-1 ring-white/10">
         <Check />
         <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
-          Anfrage gesendet, {form.name.split(" ")[0]}!
+          {t("beratung.reqSent", { name: form.name.split(" ")[0] })}
         </h3>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/60">
-          Wir melden uns mit einer Empfehlung zu deinem Wunsch-Setup
-          „{form.wish}" und einem passenden Angebot.
+          {t("beratung.reqSentText", { wish: form.wish })}
         </p>
       </div>
     );
@@ -646,27 +692,26 @@ function RequestForm({ onClose }: { onClose: () => void }) {
   return (
     <form onSubmit={submit} className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
       <h3 className="text-xl font-bold tracking-tight text-white">
-        Eigenes Setup anfragen
+        {t("beratung.reqTitle")}
       </h3>
       <p className="mt-1 text-sm text-white/55">
-        Anderer Lieblingsspieler oder eigene Vorstellung? Sag uns, was du
-        spielst — wir finden dein Setup.
+        {t("beratung.reqSubtitle")}
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <Field label="Name *" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
-        <Field label="E-Mail *" type="email" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} />
+        <Field label={t("beratung.reqName")} value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+        <Field label={t("beratung.reqEmail")} type="email" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} />
       </div>
       <div className="mt-4">
         <Field
-          label="Wunsch-Setup / Spieler *"
-          placeholder="z. B. wie Rafael Nadal, oder: viel Spin & armschonend"
+          label={t("beratung.reqWish")}
+          placeholder={t("beratung.reqWishPlaceholder")}
           value={form.wish}
           onChange={(v) => setForm((f) => ({ ...f, wish: v }))}
         />
       </div>
       <div className="mt-4">
         <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-white/45">
-          Anmerkung (optional)
+          {t("beratung.reqNote")}
         </label>
         <textarea
           rows={3}
@@ -682,13 +727,13 @@ function RequestForm({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="h-11 rounded-full border border-white/20 px-6 text-sm font-medium text-white transition-colors hover:bg-white/10"
         >
-          Abbrechen
+          {t("beratung.reqCancel")}
         </button>
         <button
           type="submit"
           className="h-11 rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
-          Anfrage senden
+          {t("beratung.reqSend")}
         </button>
       </div>
     </form>

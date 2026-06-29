@@ -11,17 +11,19 @@ import {
   PlusIcon,
 } from "../shared/icons";
 import type { GameEvent } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 
-const STATUS_LABEL: Record<string, string> = {
-  planned: "Geplant",
-  confirmed: "Bestätigt",
-  cancelled: "Abgesagt",
-  completed: "Abgeschlossen",
+const STATUS_KEY: Record<string, string> = {
+  planned: "games.statusPlanned",
+  confirmed: "games.statusConfirmed",
+  cancelled: "games.statusCancelled",
+  completed: "games.statusCompleted",
 };
 
 export default function GamesTab() {
+  const t = useT();
   const { profile, openSubView } = useAppNav();
   const [mode, setMode] = useState<"mine" | "open">("mine");
   const [games, setGames] = useState<GameEvent[]>([]);
@@ -98,7 +100,7 @@ export default function GamesTab() {
               mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
             }`}
           >
-            {m === "mine" ? "Meine Spiele" : "Offene Spiele"}
+            {m === "mine" ? t("games.mine") : t("games.open")}
           </button>
         ))}
       </div>
@@ -109,8 +111,8 @@ export default function GamesTab() {
         ) : games.length === 0 ? (
           <EmptyState
             icon={<CalendarIcon size={44} />}
-            title={mode === "mine" ? "Keine Spiele geplant" : "Keine offenen Spiele"}
-            message="Erstelle ein Spiel und finde Mitspieler."
+            title={mode === "mine" ? t("games.emptyMineTitle") : t("games.emptyOpenTitle")}
+            message={t("games.emptyMessage")}
           />
         ) : (
           <ul className="space-y-3">
@@ -130,7 +132,7 @@ export default function GamesTab() {
                   >
                     <p className="font-semibold">
                       <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
-                      {g.game_type === "singles" ? "Singles" : "Doubles"}
+                      {g.game_type === "singles" ? t("games.singles") : t("games.doubles")}
                     </p>
                     <p className="mt-1 text-sm text-zinc-300">
                       <CalendarIcon size={14} className="mr-1 inline-block align-[-2px]" />
@@ -143,10 +145,10 @@ export default function GamesTab() {
                     </p>
                     <p className="mt-1 text-sm text-zinc-400">
                       <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
-                      {accepted}/{cap} Teilnehmer
+                      {t("games.participants", { count: `${accepted}/${cap}` })}
                     </p>
                     <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-                      {STATUS_LABEL[g.status] ?? g.status}
+                      {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
                     </span>
                   </button>
                 </li>
@@ -160,7 +162,7 @@ export default function GamesTab() {
         type="button"
         onClick={() => openSubView({ type: "create-game" })}
         className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
-        aria-label="Spiel erstellen"
+        aria-label={t("games.createGameAria")}
       >
         <PlusIcon size={26} />
       </button>

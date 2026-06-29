@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
 import { haversineKm } from "@/lib/utils/haversine";
@@ -53,6 +54,7 @@ const FALLBACK: EventItem[] = [
 type Coords = { lat: number; lng: number };
 
 export default function EventsExperience() {
+  const t = useT();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -86,10 +88,12 @@ export default function EventsExperience() {
           .select("first_name, display_name")
           .eq("id", uid)
           .maybeSingle();
-        setCreatorName(p?.first_name || p?.display_name || "Matchup-Spieler");
+        setCreatorName(
+          p?.first_name || p?.display_name || t("events.defaultPlayerName"),
+        );
       }
     });
-  }, [load]);
+  }, [load, t]);
 
   function enableNear() {
     if (coords) {
@@ -142,7 +146,7 @@ export default function EventsExperience() {
                 scope === "near" ? "bg-black text-white" : "text-neutral-600"
               }`}
             >
-              In meiner Nähe
+              {t("events.scopeNear")}
             </button>
             <button
               type="button"
@@ -151,7 +155,7 @@ export default function EventsExperience() {
                 scope === "world" ? "bg-black text-white" : "text-neutral-600"
               }`}
             >
-              Weltweit
+              {t("events.scopeWorld")}
             </button>
           </div>
 
@@ -159,7 +163,7 @@ export default function EventsExperience() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Events worldwide suchen…"
+              placeholder={t("events.searchPlaceholder")}
               className="w-full rounded-full border border-neutral-200 bg-neutral-50 px-5 py-3 text-sm outline-none focus:border-black"
             />
             <button
@@ -167,23 +171,23 @@ export default function EventsExperience() {
               onClick={() => (userId ? setShowCreate(true) : (window.location.href = "/app"))}
               className="shrink-0 rounded-full bg-matchup px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
             >
-              + Event
+              {t("events.createButton")}
             </button>
           </div>
         </div>
 
         {scope === "near" && !coords && (
           <p className="mb-6 text-sm text-neutral-500">
-            Standort wird ermittelt… erlaube den Zugriff, um Events in deiner Nähe zu sehen.
+            {t("events.locating")}
           </p>
         )}
 
         {/* Grid */}
         {loading ? (
-          <div className="py-24 text-center text-neutral-400">Lädt…</div>
+          <div className="py-24 text-center text-neutral-400">{t("events.loading")}</div>
         ) : visible.length === 0 ? (
           <div className="py-24 text-center text-neutral-400">
-            Keine Events gefunden. Erstelle das erste!
+            {t("events.empty")}
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2">
@@ -209,7 +213,7 @@ export default function EventsExperience() {
       {showCreate && userId && (
         <CreateEventModal
           userId={userId}
-          creatorName={creatorName ?? "Matchup-Spieler"}
+          creatorName={creatorName ?? t("events.defaultPlayerName")}
           coords={coords}
           onClose={() => setShowCreate(false)}
           onCreated={() => {
@@ -224,6 +228,7 @@ export default function EventsExperience() {
 
 /* ---------- Karte ---------- */
 function EventCard({ event, onOpen }: { event: EventItem; onOpen: () => void }) {
+  const t = useT();
   const count = event.participants?.length ?? 0;
   const full = count >= event.max_participants;
   return (
@@ -262,14 +267,15 @@ function EventCard({ event, onOpen }: { event: EventItem; onOpen: () => void }) 
           )}
         </div>
         <p className="mt-2 text-sm font-medium text-neutral-500">
-          {count}/{event.max_participants} Teilnehmer{full ? " · ausgebucht" : ""}
+          {t("events.participants", { count, max: event.max_participants })}
+          {full ? t("events.fullSuffix") : ""}
         </p>
         <button
           type="button"
           onClick={onOpen}
           className="mt-6 inline-block w-fit rounded-full border border-black px-7 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
         >
-          Mehr erfahren
+          {t("events.learnMore")}
         </button>
       </div>
     </article>
@@ -288,6 +294,7 @@ function EventDetailModal({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const count = event.participants?.length ?? 0;
@@ -307,7 +314,7 @@ function EventDetailModal({
       .insert({ event_id: event.id, user_id: userId });
     setBusy(false);
     if (error) {
-      setError(full ? "Dieses Event ist bereits ausgebucht." : "Beitreten fehlgeschlagen.");
+      setError(full ? t("events.joinFull") : t("events.joinFailed"));
       return;
     }
     onChanged();
@@ -340,7 +347,7 @@ function EventDetailModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Schliessen"
+            aria-label={t("common.close")}
             className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur"
           >
             ✕
@@ -353,7 +360,7 @@ function EventDetailModal({
         <div className="p-6 sm:p-8">
           <h2 className="text-2xl font-bold tracking-tight">{event.title}</h2>
           {event.creator_name && (
-            <p className="mt-1 text-sm text-neutral-500">von {event.creator_name}</p>
+            <p className="mt-1 text-sm text-neutral-500">{t("events.by", { name: event.creator_name })}</p>
           )}
 
           <ul className="mt-5 space-y-2 text-sm text-neutral-700">
@@ -369,8 +376,8 @@ function EventDetailModal({
               )}
             </li>
             <li className="flex items-center gap-2">
-              <UsersIcon /> {count}/{event.max_participants} Teilnehmer
-              {full && <span className="font-semibold text-red-500">· ausgebucht</span>}
+              <UsersIcon /> {t("events.participants", { count, max: event.max_participants })}
+              {full && <span className="font-semibold text-red-500">· {t("events.full")}</span>}
             </li>
           </ul>
 
@@ -384,7 +391,7 @@ function EventDetailModal({
 
           {isSeed ? (
             <p className="mt-6 rounded-2xl bg-neutral-100 px-5 py-4 text-sm text-neutral-500">
-              Beispiel-Event. Sobald die Events-Tabelle eingerichtet ist, kannst du hier teilnehmen.
+              {t("events.seedNote")}
             </p>
           ) : joined ? (
             <button
@@ -393,7 +400,7 @@ function EventDetailModal({
               onClick={leave}
               className="mt-6 w-full rounded-full border border-black py-3.5 text-sm font-bold text-black disabled:opacity-50"
             >
-              {busy ? "…" : "Teilnahme zurückziehen"}
+              {busy ? "…" : t("events.leave")}
             </button>
           ) : (
             <button
@@ -402,7 +409,7 @@ function EventDetailModal({
               onClick={join}
               className="mt-6 w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
             >
-              {full ? "Ausgebucht" : busy ? "…" : userId ? "Teilnehmen" : "Zum Teilnehmen einloggen"}
+              {full ? t("events.fullButton") : busy ? "…" : userId ? t("events.join") : t("events.loginToJoin")}
             </button>
           )}
         </div>
@@ -425,6 +432,7 @@ function CreateEventModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useT();
   const [sport, setSport] = useState<Sport>("tennis");
   const [title, setTitle] = useState("");
   const [shortDesc, setShortDesc] = useState("");
@@ -482,7 +490,7 @@ function CreateEventModal({
       if (insErr) throw insErr;
       onCreated();
     } catch {
-      setError("Event konnte nicht erstellt werden. Bitte erneut versuchen.");
+      setError(t("events.createError"));
       setSaving(false);
     }
   }
@@ -497,26 +505,26 @@ function CreateEventModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight">Event erstellen</h2>
-          <button type="button" onClick={onClose} aria-label="Schliessen" className="text-neutral-400">
+          <h2 className="text-xl font-bold tracking-tight">{t("events.createTitle")}</h2>
+          <button type="button" onClick={onClose} aria-label={t("common.close")} className="text-neutral-400">
             ✕
           </button>
         </div>
 
         <div className="space-y-5">
-          <Field label="Titelbild">
+          <Field label={t("events.fieldCover")}>
             <label className="flex aspect-[16/9] cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 text-sm text-neutral-400">
               {preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="Vorschau" className="h-full w-full object-cover" />
+                <img src={preview} alt={t("events.coverPreviewAlt")} className="h-full w-full object-cover" />
               ) : (
-                "Bild hochladen"
+                t("events.coverUpload")
               )}
               <input type="file" accept="image/*" onChange={onPick} className="hidden" />
             </label>
           </Field>
 
-          <Field label="Sportart *">
+          <Field label={t("events.fieldSport")}>
             <div className="flex gap-2">
               {SPORTS.map((s) => (
                 <button
@@ -533,26 +541,26 @@ function CreateEventModal({
             </div>
           </Field>
 
-          <Field label="Titel *">
-            <Input value={title} onChange={setTitle} placeholder="z.B. Summer Smash — Zürich" />
+          <Field label={t("events.fieldTitle")}>
+            <Input value={title} onChange={setTitle} placeholder={t("events.titlePlaceholder")} />
           </Field>
-          <Field label="Kurzbeschreibung *">
-            <Input value={shortDesc} onChange={setShortDesc} placeholder="Ein Satz, der Lust macht" />
+          <Field label={t("events.fieldShortDesc")}>
+            <Input value={shortDesc} onChange={setShortDesc} placeholder={t("events.shortDescPlaceholder")} />
           </Field>
-          <Field label="Beschreibung">
+          <Field label={t("events.fieldDesc")}>
             <textarea
               rows={4}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
-              placeholder="Ablauf, Level, was mitzubringen ist…"
+              placeholder={t("events.descPlaceholder")}
               className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm outline-none focus:border-black"
             />
           </Field>
-          <Field label="Ort *">
-            <Input value={location} onChange={setLocation} placeholder="z.B. TC Zürich" />
+          <Field label={t("events.fieldLocation")}>
+            <Input value={location} onChange={setLocation} placeholder={t("events.locationPlaceholder")} />
           </Field>
           <div className="flex gap-3">
-            <Field label="Datum" className="flex-1">
+            <Field label={t("events.fieldDate")} className="flex-1">
               <input
                 type="date"
                 value={date}
@@ -560,7 +568,7 @@ function CreateEventModal({
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm outline-none focus:border-black"
               />
             </Field>
-            <Field label="Uhrzeit" className="flex-1">
+            <Field label={t("events.fieldTime")} className="flex-1">
               <input
                 type="time"
                 value={time}
@@ -569,7 +577,7 @@ function CreateEventModal({
               />
             </Field>
           </div>
-          <Field label="Max. Teilnehmer *">
+          <Field label={t("events.fieldMaxParticipants")}>
             <div className="flex items-center gap-4">
               <button type="button" onClick={() => setMaxP((n) => Math.max(2, n - 1))} className="h-10 w-10 rounded-full bg-neutral-100 text-lg">−</button>
               <span className="w-10 text-center text-lg font-bold">{maxP}</span>
@@ -585,7 +593,7 @@ function CreateEventModal({
             onClick={submit}
             className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
           >
-            {saving ? "Wird erstellt…" : "Event veröffentlichen"}
+            {saving ? t("events.creating") : t("events.publish")}
           </button>
         </div>
       </div>

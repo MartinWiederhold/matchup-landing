@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 
 export function LoadingSpinner({
@@ -58,15 +59,16 @@ export function EmptyState({
 }
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
+  const t = useT();
   return (
     <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-      <p className="text-sm text-red-400">Etwas ist schiefgelaufen.</p>
+      <p className="text-sm text-red-400">{t("app.somethingWentWrong")}</p>
       <button
         type="button"
         onClick={onRetry}
         className="mt-4 rounded-full border border-zinc-700 px-5 py-2.5 text-sm"
       >
-        Erneut versuchen
+        {t("common.retry")}
       </button>
     </div>
   );
@@ -80,6 +82,7 @@ export function SubViewHeader({
   rightActions?: React.ReactNode;
 }) {
   const { closeSubView } = useAppNav();
+  const t = useT();
   return (
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
       <div className="flex items-center gap-3">
@@ -87,7 +90,7 @@ export function SubViewHeader({
           type="button"
           onClick={closeSubView}
           className="text-xl text-zinc-300 hover:text-white"
-          aria-label="Zurück"
+          aria-label={t("app.back")}
         >
           ←
         </button>

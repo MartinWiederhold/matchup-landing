@@ -2,6 +2,7 @@
 
 import { useReducer, useRef, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
 import {
@@ -37,31 +38,35 @@ import {
   TOTAL_STEPS,
 } from "./onboardingReducer";
 
-const SPORTS: { value: Sport; label: string }[] = [
-  { value: "tennis", label: "Tennis" },
-  { value: "padel", label: "Padel" },
-  { value: "pickleball", label: "Pickleball" },
+const SPORTS: { value: Sport; labelKey: string }[] = [
+  { value: "tennis", labelKey: "onboarding.sportTennis" },
+  { value: "padel", labelKey: "onboarding.sportPadel" },
+  { value: "pickleball", labelKey: "onboarding.sportPickleball" },
 ];
 
-const SKILLS: { value: SkillLevel; label: string; desc: string; dot: string }[] =
-  [
-    { value: "beginner", label: "Anfänger", desc: "Ich lerne gerade die Basics", dot: "bg-green-500" },
-    { value: "intermediate", label: "Fortgeschritten", desc: "Ich spiele regelmässig", dot: "bg-yellow-500" },
-    { value: "advanced", label: "Advanced", desc: "Ich beherrsche die meisten Techniken", dot: "bg-orange-500" },
-    { value: "competitive", label: "Wettkampf", desc: "Ich spiele Turniere", dot: "bg-red-500" },
-  ];
+const SKILLS: {
+  value: SkillLevel;
+  labelKey: string;
+  descKey: string;
+  dot: string;
+}[] = [
+  { value: "beginner", labelKey: "onboarding.skillBeginner", descKey: "onboarding.skillBeginnerDesc", dot: "bg-green-500" },
+  { value: "intermediate", labelKey: "onboarding.skillIntermediate", descKey: "onboarding.skillIntermediateDesc", dot: "bg-yellow-500" },
+  { value: "advanced", labelKey: "onboarding.skillAdvanced", descKey: "onboarding.skillAdvancedDesc", dot: "bg-orange-500" },
+  { value: "competitive", labelKey: "onboarding.skillCompetitive", descKey: "onboarding.skillCompetitiveDesc", dot: "bg-red-500" },
+];
 
 const GOALS: {
   value: string;
-  label: string;
+  labelKey: string;
   Icon: ComponentType<{ size?: number; className?: string }>;
 }[] = [
-  { value: "fun", label: "Spass", Icon: TargetIcon },
-  { value: "competitive", label: "Wettkampf", Icon: TrophyIcon },
-  { value: "training", label: "Training", Icon: DumbbellIcon },
-  { value: "social", label: "Neue Leute", Icon: UsersIcon },
-  { value: "fitness", label: "Fitness", Icon: ActivityIcon },
-  { value: "regular", label: "Regelmässig", Icon: CalendarIcon },
+  { value: "fun", labelKey: "onboarding.goalFun", Icon: TargetIcon },
+  { value: "competitive", labelKey: "onboarding.goalCompetitive", Icon: TrophyIcon },
+  { value: "training", labelKey: "onboarding.goalTraining", Icon: DumbbellIcon },
+  { value: "social", labelKey: "onboarding.goalSocial", Icon: UsersIcon },
+  { value: "fitness", labelKey: "onboarding.goalFitness", Icon: ActivityIcon },
+  { value: "regular", labelKey: "onboarding.goalRegular", Icon: CalendarIcon },
 ];
 
 const RATINGS_CH = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "N1", "N2", "N3", "N4"];
@@ -76,6 +81,7 @@ type NominatimResult = {
 
 export default function OnboardingFlow() {
   const { user, refreshProfile } = useAuth();
+  const t = useT();
   const [state, dispatch] = useReducer(
     onboardingReducer,
     initialOnboardingState,
@@ -133,7 +139,7 @@ export default function OnboardingFlow() {
           data.address?.city ||
           data.address?.town ||
           data.address?.village ||
-          "Mein Standort";
+          t("onboarding.myLocation");
         dispatch({
           type: "SET_LOCATION",
           payload: {
@@ -147,7 +153,7 @@ export default function OnboardingFlow() {
         dispatch({
           type: "SET_LOCATION",
           payload: {
-            city: "Mein Standort",
+            city: t("onboarding.myLocation"),
             lat: latitude,
             lng: longitude,
             country: "CH",
@@ -217,11 +223,9 @@ export default function OnboardingFlow() {
       setClubQuery(res.club.name);
       setClubResults([res.club]);
     } else if (res.status === "not_found") {
-      setClubMsg(
-        "Diesen Club konnten wir nicht verifizieren. Bitte prüfe Name und Stadt.",
-      );
+      setClubMsg(t("onboarding.clubNotVerified"));
     } else {
-      setClubMsg("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
+      setClubMsg(t("onboarding.clubError"));
     }
   }
 
@@ -283,8 +287,8 @@ export default function OnboardingFlow() {
       const msg =
         err && typeof err === "object" && "message" in err
           ? String((err as { message: unknown }).message)
-          : "Unbekannter Fehler";
-      setSubmitError(`Profil konnte nicht erstellt werden: ${msg}`);
+          : t("onboarding.unknownError");
+      setSubmitError(t("onboarding.profileCreateError", { msg }));
       setSubmitting(false);
     }
   }
@@ -322,13 +326,13 @@ export default function OnboardingFlow() {
               onClick={() => dispatch({ type: "PREV_STEP" })}
               className="text-zinc-400 hover:text-white"
             >
-              ← Zurück
+              ← {t("onboarding.back")}
             </button>
           ) : (
             <span />
           )}
           <span className="text-zinc-500">
-            {state.step} / {TOTAL_STEPS}
+            {t("onboarding.stepOf", { current: state.step, total: TOTAL_STEPS })}
           </span>
         </div>
       </div>
@@ -347,20 +351,20 @@ export default function OnboardingFlow() {
               <PickleballIcon size={30} />
             </div>
             <h1 className="mt-8 text-3xl font-bold">
-              Finde deinen perfekten Spielpartner
+              {t("onboarding.welcomeTitle")}
             </h1>
             <p className="mt-4 max-w-xs text-zinc-400">
-              Matche mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe.
+              {t("onboarding.welcomeSubtitle")}
             </p>
           </div>
         )}
 
         {/* Step 2 — Language */}
         {state.step === 2 && (
-          <Step title="Wähle deine Sprache">
+          <Step title={t("onboarding.languageTitle")}>
             {[
-              { v: "de" as const, label: "🇩🇪  Deutsch" },
-              { v: "en" as const, label: "🇬🇧  English" },
+              { v: "de" as const, label: t("onboarding.languageDe") },
+              { v: "en" as const, label: t("onboarding.languageEn") },
             ].map((o) => (
               <SelectRow
                 key={o.v}
@@ -376,8 +380,8 @@ export default function OnboardingFlow() {
         {/* Step 3 — Sports */}
         {state.step === 3 && (
           <Step
-            title="Welchen Sport spielst du?"
-            subtitle="Wähle mindestens eine Sportart."
+            title={t("onboarding.sportsTitle")}
+            subtitle={t("onboarding.sportsSubtitle")}
           >
             <div className="flex flex-wrap gap-3">
               {SPORTS.map((s) => (
@@ -392,7 +396,7 @@ export default function OnboardingFlow() {
                   }
                 >
                   <SportIcon sport={s.value} size={16} className="mr-1 inline-block align-[-3px]" />
-                  {s.label}
+                  {t(s.labelKey)}
                 </Chip>
               ))}
             </div>
@@ -402,13 +406,13 @@ export default function OnboardingFlow() {
         {/* Step 4 — Location */}
         {state.step === 4 && (
           <Step
-            title="Wo spielst du?"
-            subtitle="Wir zeigen dir Spieler in deiner Nähe."
+            title={t("onboarding.locationTitle")}
+            subtitle={t("onboarding.locationSubtitle")}
           >
             <input
               value={locQuery}
               onChange={(e) => searchLocation(e.target.value)}
-              placeholder="Stadt oder PLZ eingeben"
+              placeholder={t("onboarding.locationPlaceholder")}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             <button
@@ -417,9 +421,9 @@ export default function OnboardingFlow() {
               className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-zinc-300"
             >
               <MapPinIcon size={16} className="mr-1.5 inline-block align-[-3px]" />
-              Aktuellen Standort verwenden
+              {t("onboarding.useCurrentLocation")}
             </button>
-            {locLoading && <p className="text-sm text-zinc-500">Suche…</p>}
+            {locLoading && <p className="text-sm text-zinc-500">{t("onboarding.searching")}</p>}
             {locResults.map((r, i) => (
               <button
                 key={i}
@@ -454,12 +458,11 @@ export default function OnboardingFlow() {
         {/* Step 5 — Club */}
         {state.step === 5 && (
           <Step
-            title="Spielst du in einem Club?"
-            subtitle="Optional — so findest du zuerst Spieler aus deinem Club."
+            title={t("onboarding.clubTitle")}
+            subtitle={t("onboarding.clubSubtitle")}
           >
             <p className="-mt-1 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-400">
-              Clubs weltweit — such nach Name oder Stadt. Wir finden ihn über die
-              Karte, auch wenn er noch nicht in der Liste ist.
+              {t("onboarding.clubHint")}
             </p>
 
             {!showAddClub ? (
@@ -467,7 +470,7 @@ export default function OnboardingFlow() {
                 <input
                   value={clubQuery}
                   onChange={(e) => handleClubSearch(e.target.value)}
-                  placeholder="Club oder Stadt suchen…"
+                  placeholder={t("onboarding.searchClubOrCity")}
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 {clubResults.map((c, i) => (
@@ -480,7 +483,7 @@ export default function OnboardingFlow() {
                       <span className="block font-medium">{c.name}</span>
                       {c._osm && (
                         <span className="rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
-                          Karte
+                          {t("onboarding.mapBadge")}
                         </span>
                       )}
                     </span>
@@ -492,15 +495,15 @@ export default function OnboardingFlow() {
                   </SelectRow>
                 ))}
                 {clubSearching && (
-                  <p className="text-sm text-zinc-500">Suche weltweit…</p>
+                  <p className="text-sm text-zinc-500">{t("onboarding.searchingWorldwide")}</p>
                 )}
                 {savingClub && (
-                  <p className="text-sm text-matchup">Club wird übernommen…</p>
+                  <p className="text-sm text-matchup">{t("onboarding.clubBeingAdded")}</p>
                 )}
                 {!clubSearching &&
                   clubQuery.trim().length >= 2 &&
                   clubResults.length === 0 && (
-                    <p className="text-sm text-zinc-500">Kein Club gefunden.</p>
+                    <p className="text-sm text-zinc-500">{t("onboarding.noClubFound")}</p>
                   )}
                 <button
                   type="button"
@@ -512,25 +515,24 @@ export default function OnboardingFlow() {
                   }}
                   className="text-sm text-matchup underline"
                 >
-                  Mein Club ist nicht dabei — hinzufügen
+                  {t("onboarding.clubNotListed")}
                 </button>
               </>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-zinc-400">
-                  Wir prüfen automatisch, ob es den Club gibt, und nehmen ihn
-                  auf.
+                  {t("onboarding.addClubHint")}
                 </p>
                 <input
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
-                  placeholder="Club-Name"
+                  placeholder={t("onboarding.clubNamePlaceholder")}
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 <input
                   value={addCity}
                   onChange={(e) => setAddCity(e.target.value)}
-                  placeholder="Stadt / Ort"
+                  placeholder={t("onboarding.cityPlaceholder")}
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 {clubMsg && <p className="text-sm text-red-400">{clubMsg}</p>}
@@ -543,7 +545,7 @@ export default function OnboardingFlow() {
                     }}
                     className="flex-1 rounded-full border border-zinc-700 py-3 text-sm"
                   >
-                    Zurück
+                    {t("onboarding.back")}
                   </button>
                   <button
                     type="button"
@@ -555,7 +557,7 @@ export default function OnboardingFlow() {
                     onClick={handleAddClub}
                     className="flex-1 rounded-full bg-matchup py-3 text-sm font-bold text-white disabled:opacity-50"
                   >
-                    {addingClub ? "Prüfe…" : "Hinzufügen"}
+                    {addingClub ? t("onboarding.checking") : t("onboarding.addClub")}
                   </button>
                 </div>
               </div>
@@ -563,7 +565,8 @@ export default function OnboardingFlow() {
 
             {state.club_id && (
               <div className="flex items-center gap-2 rounded-xl bg-matchup/15 px-4 py-3 text-sm text-matchup">
-                <CheckIcon size={16} /> {state.club_name} ausgewählt
+                <CheckIcon size={16} />{" "}
+                {t("onboarding.clubSelected", { name: state.club_name ?? "" })}
               </div>
             )}
 
@@ -575,7 +578,7 @@ export default function OnboardingFlow() {
               }}
               className="text-sm text-zinc-500 underline"
             >
-              Überspringen
+              {t("onboarding.skip")}
             </button>
           </Step>
         )}
@@ -583,8 +586,8 @@ export default function OnboardingFlow() {
         {/* Step 6 — Name */}
         {state.step === 6 && (
           <Step
-            title="Wie heisst du?"
-            subtitle="Dein Vorname wird anderen Spielern angezeigt."
+            title={t("onboarding.nameTitle")}
+            subtitle={t("onboarding.nameSubtitle")}
           >
             <input
               autoFocus
@@ -592,18 +595,18 @@ export default function OnboardingFlow() {
               onChange={(e) =>
                 dispatch({ type: "SET_NAME", payload: e.target.value })
               }
-              placeholder="Vorname"
+              placeholder={t("onboarding.namePlaceholder")}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.first_name.length > 0 && state.first_name.trim().length < 2 && (
-              <p className="text-sm text-red-400">Mindestens 2 Zeichen</p>
+              <p className="text-sm text-red-400">{t("onboarding.nameTooShort")}</p>
             )}
           </Step>
         )}
 
         {/* Step 7 — Age */}
         {state.step === 7 && (
-          <Step title="Wie alt bist du?">
+          <Step title={t("onboarding.ageTitle")}>
             <input
               type="number"
               min={18}
@@ -612,12 +615,12 @@ export default function OnboardingFlow() {
               onChange={(e) =>
                 dispatch({ type: "SET_AGE", payload: Number(e.target.value) })
               }
-              placeholder="25"
+              placeholder={t("onboarding.agePlaceholder")}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-center text-2xl font-bold outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.age !== null && (state.age < 18 || state.age > 100) && (
               <p className="text-sm text-red-400">
-                Du musst mindestens 18 Jahre alt sein.
+                {t("onboarding.ageMin")}
               </p>
             )}
           </Step>
@@ -625,10 +628,10 @@ export default function OnboardingFlow() {
 
         {/* Step 8 — Gender */}
         {state.step === 8 && (
-          <Step title="Dein Geschlecht">
+          <Step title={t("onboarding.genderTitle")}>
             {[
-              { v: "male" as const, label: "♂ Männlich" },
-              { v: "female" as const, label: "♀ Weiblich" },
+              { v: "male" as const, label: t("onboarding.genderMale") },
+              { v: "female" as const, label: t("onboarding.genderFemale") },
             ].map((o) => (
               <SelectRow
                 key={o.v}
@@ -643,7 +646,7 @@ export default function OnboardingFlow() {
 
         {/* Step 9 — Skill + Rating */}
         {state.step === 9 && (
-          <Step title="Dein Spielniveau">
+          <Step title={t("onboarding.skillTitle")}>
             {SKILLS.map((s) => (
               <SelectRow
                 key={s.value}
@@ -652,15 +655,15 @@ export default function OnboardingFlow() {
               >
                 <span className="block font-semibold">
                   <span className={`mr-2 inline-block h-2.5 w-2.5 rounded-full ${s.dot}`} />
-                  {s.label}
+                  {t(s.labelKey)}
                 </span>
-                <span className="block text-xs text-zinc-400">{s.desc}</span>
+                <span className="block text-xs text-zinc-400">{t(s.descKey)}</span>
               </SelectRow>
             ))}
             {state.skill_level && (
               <div className="pt-4">
                 <p className="mb-2 text-sm text-zinc-400">
-                  Hast du ein offizielles Rating? (optional)
+                  {t("onboarding.ratingQuestion")}
                 </p>
                 {ratingOptions ? (
                   <select
@@ -670,7 +673,7 @@ export default function OnboardingFlow() {
                     }
                     className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                   >
-                    <option value="">Kein Rating</option>
+                    <option value="">{t("onboarding.noRating")}</option>
                     {ratingOptions.map((r) => (
                       <option key={r} value={r}>
                         {r}
@@ -683,7 +686,7 @@ export default function OnboardingFlow() {
                     onChange={(e) =>
                       dispatch({ type: "SET_RATING", payload: e.target.value })
                     }
-                    placeholder="z.B. 4.0 NTRP, UTR 8.5"
+                    placeholder={t("onboarding.ratingPlaceholder")}
                     className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                   />
                 )}
@@ -695,8 +698,8 @@ export default function OnboardingFlow() {
         {/* Step 10 — Height */}
         {state.step === 10 && (
           <Step
-            title="Wie gross bist du?"
-            subtitle="Optional — wird auf deinem Profil angezeigt."
+            title={t("onboarding.heightTitle")}
+            subtitle={t("onboarding.heightSubtitle")}
           >
             <div className="text-center text-2xl font-bold text-matchup">
               {state.height_cm ?? 178} cm
@@ -716,7 +719,7 @@ export default function OnboardingFlow() {
               onClick={() => dispatch({ type: "NEXT_STEP" })}
               className="text-sm text-zinc-500 underline"
             >
-              Überspringen
+              {t("onboarding.skip")}
             </button>
           </Step>
         )}
@@ -724,8 +727,8 @@ export default function OnboardingFlow() {
         {/* Step 11 — Goals */}
         {state.step === 11 && (
           <Step
-            title="Was suchst du?"
-            subtitle="Wähle mindestens ein Ziel."
+            title={t("onboarding.goalsTitle")}
+            subtitle={t("onboarding.goalsSubtitle")}
           >
             <div className="grid grid-cols-2 gap-3">
               {GOALS.map((g) => (
@@ -740,7 +743,7 @@ export default function OnboardingFlow() {
                   }
                 >
                   <g.Icon size={16} className="mr-1 inline-block align-[-3px]" />
-                  {g.label}
+                  {t(g.labelKey)}
                 </Chip>
               ))}
             </div>
@@ -749,11 +752,11 @@ export default function OnboardingFlow() {
 
         {/* Step 12 — Photos + Bio + Visibility */}
         {state.step === 12 && (
-          <Step title="Dein Profil" subtitle="Fast geschafft!">
+          <Step title={t("onboarding.profileTitle")} subtitle={t("onboarding.profileSubtitle")}>
             {/* Photos */}
-            <p className="text-sm font-semibold">Deine Fotos</p>
+            <p className="text-sm font-semibold">{t("onboarding.yourPhotos")}</p>
             <p className="-mt-2 text-xs text-zinc-500">
-              Mindestens 1, bis zu 4 Fotos.
+              {t("onboarding.photosHint")}
             </p>
             <div className="grid grid-cols-4 gap-2">
               {[0, 1, 2, 3].map((i) => {
@@ -768,7 +771,7 @@ export default function OnboardingFlow() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={URL.createObjectURL(photo)}
-                          alt={`Foto ${i + 1}`}
+                          alt={t("onboarding.photoAlt", { n: i + 1 })}
                           className="h-full w-full object-cover"
                         />
                         <button
@@ -801,7 +804,7 @@ export default function OnboardingFlow() {
             </div>
 
             {/* Bio */}
-            <p className="pt-4 text-sm font-semibold">Über dich</p>
+            <p className="pt-4 text-sm font-semibold">{t("onboarding.aboutYou")}</p>
             <textarea
               maxLength={300}
               rows={4}
@@ -809,7 +812,7 @@ export default function OnboardingFlow() {
               onChange={(e) =>
                 dispatch({ type: "SET_BIO", payload: e.target.value })
               }
-              placeholder="Erzähle etwas über dich…"
+              placeholder={t("onboarding.bioPlaceholder")}
               className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             <p className="-mt-2 text-right text-xs text-zinc-500">
@@ -817,11 +820,11 @@ export default function OnboardingFlow() {
             </p>
 
             {/* Visibility */}
-            <p className="pt-4 text-sm font-semibold">Wer soll dich finden?</p>
+            <p className="pt-4 text-sm font-semibold">{t("onboarding.whoCanFindYou")}</p>
             <div className="flex gap-3">
               {[
-                { v: "male", label: "Männer" },
-                { v: "female", label: "Frauen" },
+                { v: "male", label: t("onboarding.visibilityMale") },
+                { v: "female", label: t("onboarding.visibilityFemale") },
               ].map((o) => (
                 <Chip
                   key={o.v}
@@ -843,12 +846,14 @@ export default function OnboardingFlow() {
             </div>
             <div>
               <p className="pt-4 text-sm font-semibold">
-                Altersspanne: {state.visibility_age_min}–
-                {state.visibility_age_max}
+                {t("onboarding.ageRange", {
+                  min: state.visibility_age_min,
+                  max: state.visibility_age_max,
+                })}
               </p>
               <div className="mt-2 flex items-stretch gap-3">
                 <div className="flex-1">
-                  <p className="mb-1 text-center text-xs text-zinc-500">Von</p>
+                  <p className="mb-1 text-center text-xs text-zinc-500">{t("onboarding.from")}</p>
                   <WheelPicker
                     fade="rgb(0 0 0)"
                     values={AGES}
@@ -866,7 +871,7 @@ export default function OnboardingFlow() {
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="mb-1 text-center text-xs text-zinc-500">Bis</p>
+                  <p className="mb-1 text-center text-xs text-zinc-500">{t("onboarding.to")}</p>
                   <WheelPicker
                     fade="rgb(0 0 0)"
                     values={AGES}
@@ -908,10 +913,10 @@ export default function OnboardingFlow() {
           }`}
         >
           {submitting
-            ? "Profil wird erstellt…"
+            ? t("onboarding.creatingProfile")
             : isLast
-              ? "Profil erstellen"
-              : "Weiter"}
+              ? t("onboarding.createProfile")
+              : t("onboarding.next")}
         </button>
       </div>
     </div>

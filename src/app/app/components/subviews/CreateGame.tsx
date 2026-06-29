@@ -4,12 +4,14 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sportLabel } from "@/lib/utils/formatters";
 import type { Sport, GameType } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
 export default function CreateGame() {
+  const t = useT();
   const { profile, closeSubView } = useAppNav();
   const [sport, setSport] = useState<Sport>("tennis");
   const [gameType, setGameType] = useState<GameType>("singles");
@@ -47,9 +49,9 @@ export default function CreateGame() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Spiel erstellen" />
+      <SubViewHeader title={t("games.createTitle")} />
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
-        <Field label="Sportart *">
+        <Field label={t("games.sportLabel")}>
           <div className="flex gap-2">
             {SPORTS.map((s) => (
               <Pick key={s} active={sport === s} onClick={() => setSport(s)}>
@@ -59,24 +61,24 @@ export default function CreateGame() {
           </div>
         </Field>
 
-        <Field label="Spieltyp *">
+        <Field label={t("games.gameTypeLabel")}>
           <div className="flex gap-2">
-            {(["singles", "doubles"] as GameType[]).map((t) => (
+            {(["singles", "doubles"] as GameType[]).map((gt) => (
               <Pick
-                key={t}
-                active={gameType === t}
+                key={gt}
+                active={gameType === gt}
                 onClick={() => {
-                  setGameType(t);
-                  setMaxP(t === "singles" ? 2 : 4);
+                  setGameType(gt);
+                  setMaxP(gt === "singles" ? 2 : 4);
                 }}
               >
-                {t === "singles" ? "Singles" : "Doubles"}
+                {gt === "singles" ? t("games.singles") : t("games.doubles")}
               </Pick>
             ))}
           </div>
         </Field>
 
-        <Field label="Datum *">
+        <Field label={t("games.dateLabel")}>
           <input
             type="date"
             value={date}
@@ -84,7 +86,7 @@ export default function CreateGame() {
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
-        <Field label="Uhrzeit *">
+        <Field label={t("games.timeLabel")}>
           <input
             type="time"
             value={time}
@@ -92,32 +94,32 @@ export default function CreateGame() {
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
-        <Field label="Ort *">
+        <Field label={t("games.locationLabel")}>
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="z.B. TC Zürich"
+            placeholder={t("games.locationPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
-        <Field label="Platznummer">
+        <Field label={t("games.courtLabel")}>
           <input
             value={court}
             onChange={(e) => setCourt(e.target.value)}
-            placeholder="z.B. Platz 3"
+            placeholder={t("games.courtPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
-        <Field label="Beschreibung">
+        <Field label={t("games.descriptionLabel")}>
           <textarea
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="z.B. Lockeres Spiel, alle Level willkommen"
+            placeholder={t("games.descriptionPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </Field>
-        <Field label="Max. Teilnehmer">
+        <Field label={t("games.maxParticipantsLabel")}>
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -137,8 +139,8 @@ export default function CreateGame() {
           </div>
         </Field>
 
-        <Toggle label="Offen für alle" value={isOpen} onChange={setIsOpen} />
-        <Toggle label="Platz gebucht" value={booked} onChange={setBooked} />
+        <Toggle label={t("games.openForAll")} value={isOpen} onChange={setIsOpen} />
+        <Toggle label={t("games.courtBooked")} value={booked} onChange={setBooked} />
       </div>
 
       <div className="shrink-0 border-t border-zinc-800 p-5">
@@ -148,7 +150,7 @@ export default function CreateGame() {
           onClick={submit}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? "Wird erstellt…" : "Spiel erstellen"}
+          {saving ? t("games.creating") : t("games.create")}
         </button>
       </div>
     </div>

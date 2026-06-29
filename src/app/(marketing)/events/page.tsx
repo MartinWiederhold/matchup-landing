@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PageCta from "@/components/PageCta";
 import EventsExperience from "@/components/events/EventsExperience";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Events worldwide — Matchup",
@@ -8,7 +9,8 @@ export const metadata: Metadata = {
     "Entdecke lokale Turniere, Social-Play-Events und Community-Treffen.",
 };
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const t = await getT();
   return (
     <>
       <section className="relative flex h-[52vh] min-h-[360px] items-center justify-center overflow-hidden bg-black">
@@ -24,10 +26,10 @@ export default function EventsPage() {
         <div className="absolute inset-0 bg-black/45" />
         <div className="relative z-10 max-w-3xl px-6 text-center text-white">
           <h1 className="text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">
-            Events worldwide
+            {t("events.heroTitle")}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Entdecke Turniere, Social-Play-Events und Community-Treffen rund um den Globus.
+            {t("events.heroSubtitle")}
           </p>
         </div>
       </section>
@@ -35,9 +37,9 @@ export default function EventsPage() {
       <EventsExperience />
 
       <PageCta
-        title="Eigenes Event planen?"
-        text="Erstelle dein eigenes Event direkt hier — Tennis, Padel oder Pickleball."
-        buttonLabel="App öffnen"
+        title={t("events.ctaTitle")}
+        text={t("events.ctaText")}
+        buttonLabel={t("events.ctaButton")}
         buttonHref="/app"
       />
     </>

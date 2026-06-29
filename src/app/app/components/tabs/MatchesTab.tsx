@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import MatchesList from "./MatchesList";
 import GroupsList from "./GroupsList";
 import CommunityFeed from "./CommunityFeed";
@@ -8,12 +9,13 @@ import CommunityFeed from "./CommunityFeed";
 type Sub = "matches" | "groups" | "feed";
 
 export default function MatchesTab() {
+  const t = useT();
   const [sub, setSub] = useState<Sub>("matches");
 
   const tabs: { key: Sub; label: string }[] = [
-    { key: "matches", label: "Matches" },
-    { key: "groups", label: "Gruppen" },
-    { key: "feed", label: "Feed" },
+    { key: "matches", label: t("matches.tabMatches") },
+    { key: "groups", label: t("matches.tabGroups") },
+    { key: "feed", label: t("matches.tabFeed") },
   ];
 
   return (

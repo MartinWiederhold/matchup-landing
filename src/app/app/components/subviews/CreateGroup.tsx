@@ -4,12 +4,14 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sportLabel } from "@/lib/utils/formatters";
 import type { Sport } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
 export default function CreateGroup() {
+  const t = useT();
   const { profile, closeSubView } = useAppNav();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -46,30 +48,30 @@ export default function CreateGroup() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Gruppe erstellen" />
+      <SubViewHeader title={t("groups.createTitle")} />
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">Name *</p>
+          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.nameLabel")}</p>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="z.B. Zürich Padel Crew"
+            placeholder={t("groups.namePlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">Beschreibung</p>
+          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.descriptionLabel")}</p>
           <textarea
             rows={3}
             maxLength={500}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Worum geht's in der Gruppe?"
+            placeholder={t("groups.descriptionPlaceholder")}
             className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
           />
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">Sportart *</p>
+          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.sportLabel")}</p>
           <div className="flex gap-2">
             {SPORTS.map((s) => (
               <button
@@ -89,7 +91,7 @@ export default function CreateGroup() {
         </div>
         <div>
           <p className="mb-2 text-sm font-semibold text-zinc-300">
-            Max. Mitglieder
+            {t("groups.maxMembersLabel")}
           </p>
           <input
             type="number"
@@ -105,7 +107,7 @@ export default function CreateGroup() {
           onClick={() => setIsOpen((v) => !v)}
           className="flex w-full items-center justify-between rounded-xl bg-zinc-800 px-4 py-3 text-sm"
         >
-          <span>{isOpen ? "Offene Gruppe" : "Geschlossene Gruppe"}</span>
+          <span>{isOpen ? t("groups.openGroup") : t("groups.closedGroup")}</span>
           <span
             className={`relative h-6 w-11 rounded-full ${isOpen ? "bg-matchup" : "bg-zinc-600"}`}
           >
@@ -122,7 +124,7 @@ export default function CreateGroup() {
           onClick={submit}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? "Wird erstellt…" : "Gruppe erstellen"}
+          {saving ? t("groups.creating") : t("groups.create")}
         </button>
       </div>
     </div>

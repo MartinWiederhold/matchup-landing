@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import type { SupportMessage } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -8,6 +9,7 @@ import { SubViewHeader } from "../shared/ui";
 import { SendIcon } from "../shared/icons";
 
 export default function TicketChat({ ticketId }: { ticketId: string }) {
+  const t = useT();
   const { profile } = useAppNav();
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [text, setText] = useState("");
@@ -60,7 +62,7 @@ export default function TicketChat({ ticketId }: { ticketId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Support-Ticket" />
+      <SubViewHeader title={t("support.chatTitle")} />
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => {
           const isUser = m.sender_type === "user";
@@ -68,7 +70,7 @@ export default function TicketChat({ ticketId }: { ticketId: string }) {
             <div key={m.id} className={isUser ? "text-right" : ""}>
               {!isUser && (
                 <span className="mb-1 inline-block rounded-full bg-matchup px-2 py-0.5 text-[10px] font-bold">
-                  Support
+                  {t("support.supportBadge")}
                 </span>
               )}
               <div
@@ -88,14 +90,14 @@ export default function TicketChat({ ticketId }: { ticketId: string }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Nachricht…"
+          placeholder={t("support.chatPlaceholder")}
           className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
         />
         <button
           type="button"
           onClick={send}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
-          aria-label="Senden"
+          aria-label={t("common.send")}
         >
           <SendIcon size={18} className="text-white" />
         </button>

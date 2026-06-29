@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Profile } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useOnline } from "@/lib/hooks/useOnline";
 import { AppNavContext, type TabKey, type SubViewState } from "./appNav";
@@ -13,15 +14,21 @@ import ProfileTab from "./tabs/ProfileTab";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
 
-const TABS: TabDef[] = [
-  { key: "discover", label: "Entdecken", icon: "M12 2 4 7v10l8 5 8-5V7z" },
-  { key: "likes", label: "Anfragen", icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8v6 M22 11h-6" },
-  { key: "matches", label: "Matches", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
-  { key: "games", label: "Spiele", icon: "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
-  { key: "profile", label: "Profil", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
+const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
+  { key: "discover", labelKey: "app.tabDiscover", icon: "M12 2 4 7v10l8 5 8-5V7z" },
+  { key: "likes", labelKey: "app.tabLikes", icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8v6 M22 11h-6" },
+  { key: "matches", labelKey: "app.tabMatches", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
+  { key: "games", labelKey: "app.tabGames", icon: "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
+  { key: "profile", labelKey: "app.tabProfile", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
 ];
 
 export default function AppShell({ profile }: { profile: Profile }) {
+  const t = useT();
+  const tabs: TabDef[] = TAB_DEFS.map((tab) => ({
+    key: tab.key,
+    label: t(tab.labelKey),
+    icon: tab.icon,
+  }));
   const [activeTab, setActiveTab] = useState<TabKey>("discover");
   const [stack, setStack] = useState<SubViewState[]>([]);
   const [likeCount, setLikeCount] = useState(0);
@@ -86,7 +93,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
         <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
           {!online && (
             <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
-              Keine Internetverbindung
+              {t("app.offline")}
             </div>
           )}
           {current ? (
@@ -105,7 +112,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
               </div>
 
               <TabBar
-                tabs={TABS}
+                tabs={tabs}
                 active={activeTab}
                 onSelect={selectTab}
                 badges={{ likes: likeCount, matches: unreadCount }}

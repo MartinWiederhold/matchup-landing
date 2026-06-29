@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import type { Block, Profile } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -11,6 +12,7 @@ import { BanIcon } from "../shared/icons";
 type BlockRow = Block & { blocked?: Profile };
 
 export default function BlockedUsers() {
+  const t = useT();
   const { profile } = useAppNav();
   const [rows, setRows] = useState<BlockRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,15 +38,15 @@ export default function BlockedUsers() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Blockierte Nutzer" />
+      <SubViewHeader title={t("profile.blockedTitle")} />
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <FullLoading />
         ) : rows.length === 0 ? (
           <EmptyState
             icon={<BanIcon size={44} />}
-            title="Niemand blockiert"
-            message="Du hast keine Nutzer blockiert."
+            title={t("profile.noBlockedTitle")}
+            message={t("profile.noBlockedMessage")}
           />
         ) : (
           <ul className="divide-y divide-zinc-800">
@@ -56,14 +58,14 @@ export default function BlockedUsers() {
                   size="md"
                 />
                 <span className="flex-1 font-semibold">
-                  {b.blocked?.first_name ?? "Nutzer"}
+                  {b.blocked?.first_name ?? t("profile.fallbackUser")}
                 </span>
                 <button
                   type="button"
                   onClick={() => unblock(b.id)}
                   className="rounded-full border border-zinc-700 px-4 py-2 text-sm"
                 >
-                  Entsperren
+                  {t("profile.unblock")}
                 </button>
               </li>
             ))}

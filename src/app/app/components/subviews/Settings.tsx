@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
@@ -13,6 +14,7 @@ type PushKey =
   | "push_community";
 
 export default function Settings() {
+  const t = useT();
   const { signOut } = useAuth();
   const { profile, openSubView, refreshBadges } = useAppNav();
   const [push, setPush] = useState({
@@ -29,7 +31,7 @@ export default function Settings() {
   }
 
   async function pauseAccount() {
-    if (!window.confirm("Konto pausieren? Dein Profil wird unsichtbar.")) return;
+    if (!window.confirm(t("profile.pauseConfirm"))) return;
     await supabase
       .from("profiles")
       .update({ is_paused: true })
@@ -39,8 +41,8 @@ export default function Settings() {
   }
 
   async function deleteAccount() {
-    if (!window.confirm("Konto unwiderruflich löschen?")) return;
-    const confirmText = window.prompt('Tippe DELETE zum Bestätigen:');
+    if (!window.confirm(t("profile.deleteConfirm"))) return;
+    const confirmText = window.prompt(t("profile.deletePrompt"));
     if (confirmText !== "DELETE") return;
     const { data: files } = await supabase.storage
       .from("web-avatars")
@@ -56,17 +58,17 @@ export default function Settings() {
   }
 
   const pushRows: { key: PushKey; label: string }[] = [
-    { key: "push_matches", label: "Matches" },
-    { key: "push_messages", label: "Nachrichten" },
-    { key: "push_reminders", label: "Erinnerungen" },
-    { key: "push_community", label: "Community" },
+    { key: "push_matches", label: t("profile.pushMatches") },
+    { key: "push_messages", label: t("profile.pushMessages") },
+    { key: "push_reminders", label: t("profile.pushReminders") },
+    { key: "push_community", label: t("profile.pushCommunity") },
   ];
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Einstellungen" />
+      <SubViewHeader title={t("profile.settingsTitle")} />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
-        <Group title="Benachrichtigungen">
+        <Group title={t("profile.notifications")}>
           {pushRows.map((r) => (
             <Row key={r.key} label={r.label}>
               <Switch value={push[r.key]} onChange={() => togglePush(r.key)} />
@@ -74,19 +76,19 @@ export default function Settings() {
           ))}
         </Group>
 
-        <Group title="Konto">
-          <Row label="Blockierte Nutzer" onClick={() => openSubView({ type: "blocked-users" })}>
+        <Group title={t("profile.account")}>
+          <Row label={t("profile.blockedUsers")} onClick={() => openSubView({ type: "blocked-users" })}>
             <span className="text-zinc-500">›</span>
           </Row>
         </Group>
 
-        <Group title="Rechtliches">
-          <LinkRow label="Datenschutzrichtlinie" href="/datenschutz" />
-          <LinkRow label="AGB" href="/agb" />
+        <Group title={t("profile.legal")}>
+          <LinkRow label={t("profile.privacyPolicy")} href="/datenschutz" />
+          <LinkRow label={t("profile.terms")} href="/agb" />
         </Group>
 
-        <Group title="Support">
-          <Row label="Hilfe & Support" onClick={() => openSubView({ type: "support" })}>
+        <Group title={t("profile.support")}>
+          <Row label={t("profile.helpSupport")} onClick={() => openSubView({ type: "support" })}>
             <span className="text-zinc-500">›</span>
           </Row>
         </Group>
@@ -97,24 +99,24 @@ export default function Settings() {
             onClick={pauseAccount}
             className="w-full rounded-full bg-orange-500/90 py-3 text-sm font-bold text-white"
           >
-            Konto pausieren
+            {t("profile.pauseAccount")}
           </button>
           <button
             type="button"
             onClick={() => signOut()}
             className="w-full rounded-full border border-zinc-700 py-3 text-sm font-semibold"
           >
-            Ausloggen
+            {t("profile.logout")}
           </button>
           <button
             type="button"
             onClick={deleteAccount}
             className="w-full rounded-full bg-red-500/90 py-3 text-sm font-bold text-white"
           >
-            Konto löschen
+            {t("profile.deleteAccount")}
           </button>
           <p className="text-center text-xs text-zinc-500">
-            Alle deine Daten werden unwiderruflich gelöscht.
+            {t("profile.deleteNote")}
           </p>
         </div>
       </div>

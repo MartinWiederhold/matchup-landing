@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { skillLabel, sportLabel } from "@/lib/utils/formatters";
 import {
@@ -18,6 +19,7 @@ import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 
 export default function ProfileTab() {
+  const t = useT();
   const { profile, openSubView } = useAppNav();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -57,18 +59,18 @@ export default function ProfileTab() {
           {skillLabel(profile.skill_level)}
         </p>
         {profile.is_verified && (
-          <p className="mt-1 text-xs text-matchup">✓ Verifiziert</p>
+          <p className="mt-1 text-xs text-matchup">{t("profile.verified")}</p>
         )}
       </div>
 
       <div className="space-y-6 px-5 pt-8">
         {profile.bio && (
-          <Section title="Über mich">
+          <Section title={t("profile.aboutMe")}>
             <p className="text-sm text-zinc-300">{profile.bio}</p>
           </Section>
         )}
 
-        <Section title="Sportarten">
+        <Section title={t("profile.sports")}>
           <div className="flex flex-wrap gap-2">
             {profile.sports.map((s) => (
               <span
@@ -81,18 +83,18 @@ export default function ProfileTab() {
           </div>
         </Section>
 
-        <Section title="Statistiken">
+        <Section title={t("profile.stats")}>
           <div className="grid grid-cols-2 gap-3">
-            <Stat icon={<TrophyIcon size={14} />} label="Matches" value={stats?.total_matches ?? 0} />
-            <Stat icon={<FlameIcon size={14} />} label="Streak" value={`${stats?.current_streak ?? 0} Tage`} />
-            <Stat icon={<StarIcon size={14} />} label="Level" value={stats?.level ?? 1} />
-            <Stat icon={<GemIcon size={14} />} label="XP" value={stats?.xp_points ?? 0} />
-            <Stat icon={<UsersIcon size={14} />} label="Partner" value={stats?.different_partners ?? 0} />
+            <Stat icon={<TrophyIcon size={14} />} label={t("profile.statMatches")} value={stats?.total_matches ?? 0} />
+            <Stat icon={<FlameIcon size={14} />} label={t("profile.statStreak")} value={t("profile.statStreakValue", { count: stats?.current_streak ?? 0 })} />
+            <Stat icon={<StarIcon size={14} />} label={t("profile.statLevel")} value={stats?.level ?? 1} />
+            <Stat icon={<GemIcon size={14} />} label={t("profile.statXp")} value={stats?.xp_points ?? 0} />
+            <Stat icon={<UsersIcon size={14} />} label={t("profile.statPartners")} value={stats?.different_partners ?? 0} />
           </div>
         </Section>
 
         {achievements.length > 0 && (
-          <Section title="Achievements">
+          <Section title={t("profile.achievements")}>
             <div className="flex flex-wrap gap-2">
               {achievements.map((a) => {
                 const def = ACHIEVEMENT_DEFS[a.achievement_key];
@@ -112,7 +114,7 @@ export default function ProfileTab() {
         )}
 
         {images.length > 0 && (
-          <Section title="Fotos">
+          <Section title={t("profile.photos")}>
             <div className="grid grid-cols-4 gap-2">
               {images.map((src, i) => (
                 <div
@@ -133,14 +135,14 @@ export default function ProfileTab() {
             onClick={() => openSubView({ type: "edit-profile" })}
             className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
           >
-            Profil bearbeiten
+            {t("profile.editProfile")}
           </button>
           <button
             type="button"
             onClick={() => openSubView({ type: "settings" })}
             className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold"
           >
-            Einstellungen ⚙️
+            {t("profile.settings")}
           </button>
         </div>
       </div>

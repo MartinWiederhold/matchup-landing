@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { skillLabel, sportLabel } from "@/lib/utils/formatters";
 import {
@@ -49,6 +50,7 @@ export default function FullProfile({
   userId: string;
   viewOnly?: boolean;
 }) {
+  const t = useT();
   const { profile: me, closeSubView, refreshBadges, openSubView } = useAppNav();
   const [p, setP] = useState<Profile | null>(null);
   const [stats, setStats] = useState<PlayerStats | null>(null);
@@ -77,7 +79,7 @@ export default function FullProfile({
   ) as string[];
 
   async function report() {
-    const reason = window.prompt("Grund der Meldung?");
+    const reason = window.prompt(t("profile.reportPrompt"));
     if (!reason) return;
     await supabase.from("reports").insert({
       reporter_id: me.id,
@@ -85,11 +87,11 @@ export default function FullProfile({
       reason,
       status: "pending",
     });
-    window.alert("Danke, die Meldung wurde übermittelt.");
+    window.alert(t("profile.reportThanks"));
   }
 
   async function block() {
-    if (!window.confirm("Diesen Nutzer blockieren?")) return;
+    if (!window.confirm(t("profile.blockConfirm"))) return;
     await supabase
       .from("blocks")
       .insert({ blocker_id: me.id, blocked_id: userId });
@@ -129,14 +131,14 @@ export default function FullProfile({
   return (
     <div className="flex h-full flex-col">
       <header className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
-        <button type="button" onClick={closeSubView} className="text-xl" aria-label="Zurück">
+        <button type="button" onClick={closeSubView} className="text-xl" aria-label={t("profile.back")}>
           ←
         </button>
         <div className="flex gap-4 text-zinc-300">
-          <button type="button" onClick={report} aria-label="Melden">
+          <button type="button" onClick={report} aria-label={t("profile.report")}>
             <FlagIcon size={20} />
           </button>
-          <button type="button" onClick={block} aria-label="Blockieren">
+          <button type="button" onClick={block} aria-label={t("profile.block")}>
             <BanIcon size={20} />
           </button>
         </div>
@@ -177,7 +179,7 @@ export default function FullProfile({
             )}
             {p.is_verified && (
               <p className="flex items-center gap-1 text-xs text-matchup">
-                <CheckIcon size={14} /> Verifiziert
+                <CheckIcon size={14} /> {t("profile.verifiedPlain")}
               </p>
             )}
           </div>
@@ -185,7 +187,7 @@ export default function FullProfile({
           {p.bio && (
             <div>
               <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
-                Über mich
+                {t("profile.aboutMe")}
               </h2>
               <p className="text-sm text-zinc-300">{p.bio}</p>
             </div>
@@ -193,7 +195,7 @@ export default function FullProfile({
 
           <div>
             <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
-              Details
+              {t("profile.details")}
             </h2>
             <ul className="space-y-1 text-sm text-zinc-300">
               <li>
@@ -223,12 +225,12 @@ export default function FullProfile({
           {stats && (
             <div>
               <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
-                Statistiken
+                {t("profile.stats")}
               </h2>
               <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-zinc-300">
-                <TrophyIcon size={14} /> {stats.total_matches} Matches ·{" "}
-                <FlameIcon size={14} /> {stats.current_streak}-Tage-Streak ·{" "}
-                <StarIcon size={14} /> Level {stats.level}
+                <TrophyIcon size={14} /> {t("profile.matchesCount", { count: stats.total_matches })} ·{" "}
+                <FlameIcon size={14} /> {t("profile.streakDays", { count: stats.current_streak })} ·{" "}
+                <StarIcon size={14} /> {t("profile.levelValue", { level: stats.level })}
               </p>
             </div>
           )}
@@ -249,11 +251,11 @@ export default function FullProfile({
           >
             {sent ? (
               <>
-                <CheckIcon size={18} /> Anfrage gesendet
+                <CheckIcon size={18} /> {t("profile.requestSent")}
               </>
             ) : (
               <>
-                <ConnectIcon size={18} /> Verbinden
+                <ConnectIcon size={18} /> {t("profile.connect")}
               </>
             )}
           </button>

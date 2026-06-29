@@ -2,38 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
 
 type Overlay = "profile" | "match" | "play";
 
-const STEPS: {
+type Step = {
   number: string;
   title: string;
   text: string;
   img: string;
   overlay: Overlay;
-}[] = [
-  {
-    number: "01",
-    title: "Erstelle dein Profil",
-    text: "Wähle deine Sportarten (Tennis, Padel, Pickleball), gib dein Skill-Level an, lade bis zu 4 Fotos hoch und sag uns, was du suchst — ob lockeres Spielen oder Wettkampf.",
-    img: "/find-a-partner/step-profile.jpg",
-    overlay: "profile",
-  },
-  {
-    number: "02",
-    title: "Entdecke & Matche",
-    text: "Swipe durch passende Spieler in deiner Nähe. Filtere nach Distanz, Sportart, Alter und Können. Findest du jemanden interessant? Like das Profil. Liked die Person zurück, entsteht ein Match.",
-    img: "/find-a-partner/step-match-v2.jpg",
-    overlay: "match",
-  },
-  {
-    number: "03",
-    title: "Chatte & Spiele",
-    text: "Schreibe deinem Match direkt in der App. Organisiert gemeinsam ein Spiel, bucht einen Platz und trefft euch auf dem Court. Oder tretet offenen Spielen anderer Spieler bei.",
-    img: "/find-a-partner/step-play.jpg",
-    overlay: "play",
-  },
-];
+};
 
 function useInView<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -70,6 +49,7 @@ function Chip({ show, children }: { show: boolean; children: React.ReactNode }) 
 
 /* 01 — Sportarten/Profil */
 function ProfileOverlay({ show }: { show: boolean }) {
+  const t = useT();
   return (
     <Chip show={show}>
       <span className="flex items-center gap-1">
@@ -82,25 +62,27 @@ function ProfileOverlay({ show }: { show: boolean }) {
           </span>
         ))}
       </span>
-      <span>Profil bereit</span>
+      <span>{t("findPartner.profileReady")}</span>
     </Chip>
   );
 }
 
 /* 02 — Match */
 function MatchOverlay({ show }: { show: boolean }) {
+  const t = useT();
   return (
     <Chip show={show}>
       <svg viewBox="0 0 24 24" className="h-4 w-4 text-pink-400" fill="currentColor" aria-hidden="true">
         <path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z" />
       </svg>
-      <span>Es ist ein Match!</span>
+      <span>{t("findPartner.itsAMatch")}</span>
     </Chip>
   );
 }
 
 /* 03 — Spiel organisiert */
 function PlayOverlay({ show }: { show: boolean }) {
+  const t = useT();
   return (
     <Chip show={show}>
       <span className="flex items-center gap-1">
@@ -109,12 +91,13 @@ function PlayOverlay({ show }: { show: boolean }) {
         ))}
         <span className="h-1.5 w-1.5 rounded-full ring-1 ring-white/60" />
       </span>
-      <span>Spiel organisiert</span>
+      <span>{t("findPartner.gameOrganized")}</span>
     </Chip>
   );
 }
 
-function StepRow({ step, index }: { step: (typeof STEPS)[number]; index: number }) {
+function StepRow({ step, index }: { step: Step; index: number }) {
+  const t = useT();
   const { ref, inView } = useInView<HTMLDivElement>();
   const reverse = index % 2 === 1;
   return (
@@ -143,7 +126,7 @@ function StepRow({ step, index }: { step: (typeof STEPS)[number]; index: number 
 
       <div className="w-full lg:w-1/2">
         <p className="text-sm font-bold tracking-[0.18em] text-matchup">
-          SCHRITT {step.number}
+          {t("findPartner.stepLabel")} {step.number}
         </p>
         <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
           {step.title}
@@ -157,10 +140,34 @@ function StepRow({ step, index }: { step: (typeof STEPS)[number]; index: number 
 }
 
 export default function PartnerSteps() {
+  const t = useT();
+  const steps: Step[] = [
+    {
+      number: "01",
+      title: t("findPartner.step1Title"),
+      text: t("findPartner.step1Text"),
+      img: "/find-a-partner/step-profile.jpg",
+      overlay: "profile",
+    },
+    {
+      number: "02",
+      title: t("findPartner.step2Title"),
+      text: t("findPartner.step2Text"),
+      img: "/find-a-partner/step-match-v2.jpg",
+      overlay: "match",
+    },
+    {
+      number: "03",
+      title: t("findPartner.step3Title"),
+      text: t("findPartner.step3Text"),
+      img: "/find-a-partner/step-play.jpg",
+      overlay: "play",
+    },
+  ];
   return (
     <section className="bg-white px-4 py-24 sm:px-6 lg:px-12">
       <div className="mx-auto flex max-w-[1280px] flex-col gap-20 lg:gap-28">
-        {STEPS.map((step, i) => (
+        {steps.map((step, i) => (
           <StepRow key={step.number} step={step} index={i} />
         ))}
       </div>

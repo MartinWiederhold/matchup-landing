@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { useT } from "@/lib/i18n";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Daten
@@ -46,20 +47,25 @@ const PRODUCTS: Product[] = [
   { id: 20, brand: "Wilson", name: "Pullover Damen", sub: "Half-Zip · Baumwolle", price: 89, cat: "apparel" },
 ];
 
-const FILTERS: { key: Cat | "all"; label: string }[] = [
-  { key: "all", label: "Alle" },
-  { key: "tennis", label: "Tennis" },
-  { key: "padel", label: "Padel" },
-  { key: "pickleball", label: "Pickleball" },
-  { key: "gear", label: "Zubehör" },
-  { key: "apparel", label: "Bekleidung" },
+const FILTERS: { key: Cat | "all"; labelKey: string }[] = [
+  { key: "all", labelKey: "shop.filterAll" },
+  { key: "tennis", labelKey: "shop.filterTennis" },
+  { key: "padel", labelKey: "shop.filterPadel" },
+  { key: "pickleball", labelKey: "shop.filterPickleball" },
+  { key: "gear", labelKey: "shop.filterGear" },
+  { key: "apparel", labelKey: "shop.filterApparel" },
 ];
 
-const COLLECTIONS: { title: string; meta: string; cat: Cat; img: string }[] = [
-  { title: "Tennis\nSchläger", meta: "Wilson · Babolat · Head", cat: "tennis", img: "/tennis/tennis-2.jpg" },
-  { title: "Padel\nSchläger", meta: "Bullpadel · Nox · Adidas", cat: "padel", img: "/padel/padel-1.jpg" },
-  { title: "Pickleball\nPaddles", meta: "Joola · Selkirk · CRBN", cat: "pickleball", img: "/pickleball/pickleball-1.jpg" },
-  { title: "Zubehör\n& Bälle", meta: "Taschen · Saiten · Griffe", cat: "gear", img: "/tennis/tennis-3.jpg" },
+const COLLECTIONS: {
+  titleKey: string;
+  metaKey: string;
+  cat: Cat;
+  img: string;
+}[] = [
+  { titleKey: "shop.collectionTennisTitle", metaKey: "shop.collectionTennisMeta", cat: "tennis", img: "/tennis/tennis-2.jpg" },
+  { titleKey: "shop.collectionPadelTitle", metaKey: "shop.collectionPadelMeta", cat: "padel", img: "/padel/padel-1.jpg" },
+  { titleKey: "shop.collectionPickleballTitle", metaKey: "shop.collectionPickleballMeta", cat: "pickleball", img: "/pickleball/pickleball-1.jpg" },
+  { titleKey: "shop.collectionGearTitle", metaKey: "shop.collectionGearMeta", cat: "gear", img: "/tennis/tennis-3.jpg" },
 ];
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -204,6 +210,7 @@ const BookmarkIcon = ({ className }: { className?: string }) => (
    ────────────────────────────────────────────────────────────────────────── */
 
 export default function ShopExperience() {
+  const t = useT();
   const [filter, setFilter] = useState<Cat | "all">("all");
   const [cart, setCart] = useState<{ id: number; qty: number }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -253,7 +260,7 @@ export default function ShopExperience() {
         onClick={() => setCartOpen(true)}
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
       >
-        Warenkorb
+        {t("shop.cart")}
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-black">
           {count}
         </span>
@@ -263,7 +270,7 @@ export default function ShopExperience() {
       <section className="relative flex h-[68vh] min-h-[460px] items-center justify-center overflow-hidden">
         <Image
           src="/shop/hero.jpg"
-          alt="Matchup Shop"
+          alt={t("shop.heroAlt")}
           fill
           priority
           sizes="100vw"
@@ -272,15 +279,11 @@ export default function ShopExperience() {
         />
         <div className="absolute inset-0 bg-black/30" />
         <h1 className="relative z-10 px-6 text-center text-5xl font-bold leading-[0.95] tracking-tight text-white sm:text-7xl lg:text-8xl">
-          Matchup Shop
+          {t("shop.heroTitle")}
         </h1>
         <div className="absolute bottom-0 left-0 right-0 z-10 flex items-end justify-between gap-4 p-5 sm:p-8">
           <div className="flex max-w-lg items-center gap-5 rounded-sm bg-neutral-900/80 px-6 py-5 text-sm font-light leading-relaxed text-white backdrop-blur">
-            <span>
-              Premium-Equipment für Tennis, Padel &amp; Pickleball. Schläger,
-              Besaitung, Verleih &amp; persönliche Beratung — alles online an
-              einem Ort.
-            </span>
+            <span>{t("shop.heroText")}</span>
             <a
               href="#shop"
               className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/40 text-lg transition-colors hover:bg-white hover:text-black"
@@ -294,8 +297,8 @@ export default function ShopExperience() {
       {/* WEEKLY FAVORITES */}
       <section className="px-4 py-20 sm:px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
-          <SectionHeader title="Beliebt diese Woche">
-            <PillButton onClick={() => selectFilter("all")}>Alle Schläger ansehen</PillButton>
+          <SectionHeader title={t("shop.favoritesTitle")}>
+            <PillButton onClick={() => selectFilter("all")}>{t("shop.viewAllRackets")}</PillButton>
           </SectionHeader>
           <div className="mb-8 h-px w-full bg-neutral-200" />
           <div
@@ -318,32 +321,35 @@ export default function ShopExperience() {
       {/* COLLECTIONS */}
       <section className="px-4 py-20 sm:px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
-          <SectionHeader title="Unsere Kategorien" />
+          <SectionHeader title={t("shop.categoriesTitle")} />
           <div className="mb-8 h-px w-full bg-neutral-200" />
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {COLLECTIONS.map((c) => (
-              <button
-                key={c.cat}
-                type="button"
-                onClick={() => selectFilter(c.cat)}
-                className="group relative aspect-[3/4] overflow-hidden rounded-md bg-neutral-100 text-left"
-              >
-                <Image
-                  src={c.img}
-                  alt={c.title.replace("\n", " ")}
-                  fill
-                  sizes="(max-width:1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
-                <span className="absolute left-5 top-5 whitespace-pre-line text-2xl font-bold leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
-                  {c.title}
-                </span>
-                <span className="absolute bottom-4 left-5 text-[11px] font-medium text-white/90 drop-shadow">
-                  {c.meta}
-                </span>
-              </button>
-            ))}
+            {COLLECTIONS.map((c) => {
+              const title = t(c.titleKey);
+              return (
+                <button
+                  key={c.cat}
+                  type="button"
+                  onClick={() => selectFilter(c.cat)}
+                  className="group relative aspect-[3/4] overflow-hidden rounded-md bg-neutral-100 text-left"
+                >
+                  <Image
+                    src={c.img}
+                    alt={title.replace("\n", " ")}
+                    fill
+                    sizes="(max-width:1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+                  <span className="absolute left-5 top-5 whitespace-pre-line text-2xl font-bold leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
+                    {title}
+                  </span>
+                  <span className="absolute bottom-4 left-5 text-[11px] font-medium text-white/90 drop-shadow">
+                    {t(c.metaKey)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -352,7 +358,7 @@ export default function ShopExperience() {
       <section id="shop" className="px-4 pb-20 pt-6 sm:px-6 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">Alle Produkte</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">{t("shop.allProductsTitle")}</h2>
             <div className="flex flex-wrap gap-2">
               {FILTERS.map((f) => (
                 <button
@@ -365,13 +371,13 @@ export default function ShopExperience() {
                       : "border-neutral-300 bg-white text-black hover:border-black"
                   }`}
                 >
-                  {f.label}
+                  {t(f.labelKey)}
                 </button>
               ))}
             </div>
           </div>
           <p className="mb-5 text-xs font-medium uppercase tracking-[0.08em] text-neutral-500">
-            {shown.length} Ergebnisse
+            {t("shop.resultsCount", { count: shown.length })}
           </p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {shown.map((p) => (
@@ -395,7 +401,7 @@ export default function ShopExperience() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h3 className="text-lg font-bold tracking-tight">Warenkorb ({count})</h3>
+          <h3 className="text-lg font-bold tracking-tight">{t("shop.cartTitle", { count })}</h3>
           <button
             type="button"
             onClick={() => setCartOpen(false)}
@@ -407,7 +413,7 @@ export default function ShopExperience() {
         <div className="flex-1 overflow-y-auto px-6">
           {cartItems.length === 0 ? (
             <p className="py-16 text-center text-sm text-neutral-400">
-              Dein Warenkorb ist leer
+              {t("shop.cartEmpty")}
             </p>
           ) : (
             cartItems.map((c) => (
@@ -442,15 +448,15 @@ export default function ShopExperience() {
         {cartItems.length > 0 && (
           <div className="border-t border-neutral-200 px-6 py-5">
             <div className="mb-4 flex justify-between text-[15px]">
-              <span>Summe</span>
+              <span>{t("shop.cartSum")}</span>
               <span className="font-bold">{total} €</span>
             </div>
             <button
               type="button"
-              onClick={() => alert("Checkout-Demo — danke für deinen Einkauf! 🎾")}
+              onClick={() => alert(t("shop.checkoutAlert"))}
               className="h-12 w-full rounded-full bg-black text-sm font-medium text-white transition-colors hover:bg-neutral-800"
             >
-              Zur Kasse
+              {t("shop.checkout")}
             </button>
           </div>
         )}
@@ -474,18 +480,19 @@ function ProductCard({
   showBadge?: boolean;
   showBrand?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="group">
       <div className="relative aspect-[3/4] overflow-hidden rounded-md">
         <ProductVisual cat={p.cat} brand={p.brand} name={p.name} />
         {showBadge && p.badge && (
           <span className="absolute left-2.5 top-2.5 rounded bg-black px-2 py-1 text-[9px] font-bold uppercase tracking-[0.06em] text-white">
-            {p.badge === "neu" ? "Neu" : "Bestseller"}
+            {p.badge === "neu" ? t("shop.badgeNew") : t("shop.badgeBestseller")}
           </span>
         )}
         <button
           type="button"
-          aria-label="Merken"
+          aria-label={t("shop.bookmarkAria")}
           className="absolute right-2.5 top-2.5 text-neutral-500 opacity-0 transition-opacity hover:text-black group-hover:opacity-100"
         >
           <BookmarkIcon className="h-5 w-5" />
@@ -503,7 +510,7 @@ function ProductCard({
           <span className="text-[15px] font-semibold">{p.price} €</span>
           <button
             type="button"
-            aria-label={`${p.name} in den Warenkorb`}
+            aria-label={t("shop.addToCartAria", { name: p.name })}
             onClick={() => onAdd(p.id)}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-lg text-white transition-transform hover:scale-110"
           >

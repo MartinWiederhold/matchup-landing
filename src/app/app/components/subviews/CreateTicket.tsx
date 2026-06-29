@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
 export default function CreateTicket() {
+  const t = useT();
   const { profile, closeSubView, openSubView } = useAppNav();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -38,19 +40,19 @@ export default function CreateTicket() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Neues Ticket" />
+      <SubViewHeader title={t("support.createTitle")} />
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          placeholder="Betreff"
+          placeholder={t("support.subjectPlaceholder")}
           className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
         />
         <textarea
           rows={6}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Beschreibe dein Anliegen…"
+          placeholder={t("support.messagePlaceholder")}
           className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
         />
       </div>
@@ -61,7 +63,7 @@ export default function CreateTicket() {
           onClick={submit}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? "Wird gesendet…" : "Ticket erstellen"}
+          {saving ? t("support.sending") : t("support.createButton")}
         </button>
       </div>
     </div>

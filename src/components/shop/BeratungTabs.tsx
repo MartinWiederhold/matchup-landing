@@ -3,8 +3,10 @@
 import { useState } from "react";
 import BeratungWizard from "./BeratungWizard";
 import BespannungConfigurator from "./BespannungConfigurator";
+import { useT } from "@/lib/i18n";
 
 export default function BeratungTabs() {
+  const t = useT();
   const [tab, setTab] = useState<"allgemein" | "bespannung">("allgemein");
 
   return (
@@ -20,7 +22,7 @@ export default function BeratungTabs() {
               : "text-neutral-600 hover:text-black"
           }`}
         >
-          Beratung allgemein
+          {t("beratung.tabGeneral")}
         </button>
         <button
           type="button"
@@ -31,7 +33,7 @@ export default function BeratungTabs() {
               : "text-neutral-600 hover:text-black"
           }`}
         >
-          Bespannung
+          {t("beratung.tabStringing")}
         </button>
       </div>
 

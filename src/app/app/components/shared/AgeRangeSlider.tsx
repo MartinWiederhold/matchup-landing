@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
+
 /**
  * Premium Dual-Range-Slider für eine Altersspanne (min/max) — per Ziehen
  * statt Eingeben. Zwei überlagerte Range-Inputs mit hervorgehobenem Bereich.
@@ -17,6 +19,7 @@ export default function AgeRangeSlider({
   valueMax: number;
   onChange: (nextMin: number, nextMax: number) => void;
 }) {
+  const t = useT();
   const span = max - min || 1;
   const pctMin = ((valueMin - min) / span) * 100;
   const pctMax = ((valueMax - min) / span) * 100;
@@ -31,9 +34,13 @@ export default function AgeRangeSlider({
   return (
     <div className="pt-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-zinc-400">Alter</span>
+        <span className="text-zinc-400">{t("app.age")}</span>
         <span className="font-semibold text-white">
-          {valueMin} – {valueMax}{valueMax >= max ? "+" : ""} Jahre
+          {t("app.ageYears", {
+            min: valueMin,
+            max: valueMax,
+            plus: valueMax >= max ? "+" : "",
+          })}
         </span>
       </div>
 
@@ -48,7 +55,7 @@ export default function AgeRangeSlider({
         {/* untere Grenze */}
         <input
           type="range"
-          aria-label="Mindestalter"
+          aria-label={t("app.minAge")}
           min={min}
           max={max}
           value={valueMin}
@@ -58,7 +65,7 @@ export default function AgeRangeSlider({
         {/* obere Grenze */}
         <input
           type="range"
-          aria-label="Höchstalter"
+          aria-label={t("app.maxAge")}
           min={min}
           max={max}
           value={valueMax}

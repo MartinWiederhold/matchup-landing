@@ -14,6 +14,7 @@ import {
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
+import { useT, type TFunction } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
@@ -42,6 +43,7 @@ function ConnectIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function DiscoverTab() {
+  const t = useT();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -191,20 +193,23 @@ export default function DiscoverTab() {
   if (filters.gender)
     activeChips.push({
       key: "gender",
-      label: filters.gender === "male" ? "Männlich" : "Weiblich",
+      label: filters.gender === "male" ? t("discover.genderMale") : t("discover.genderFemale"),
       clear: () => setFilters((f) => ({ ...f, gender: null })),
     });
   if (filters.ageMin !== d.ageMin || filters.ageMax !== d.ageMax)
     activeChips.push({
       key: "age",
-      label: `${filters.ageMin}–${filters.ageMax} J.`,
+      label: t("discover.ageChip", { min: filters.ageMin, max: filters.ageMax }),
       clear: () =>
         setFilters((f) => ({ ...f, ageMin: d.ageMin, ageMax: d.ageMax })),
     });
   if (filters.radius !== d.radius)
     activeChips.push({
       key: "radius",
-      label: filters.radius > 200 ? "Weltweit" : `${filters.radius} km`,
+      label:
+        filters.radius > 200
+          ? t("discover.worldwide")
+          : t("discover.radiusChip", { km: filters.radius }),
       clear: () => setFilters((f) => ({ ...f, radius: d.radius })),
     });
   filters.skillLevels.forEach((s) =>
@@ -221,7 +226,9 @@ export default function DiscoverTab() {
   if (filters.clubId && filters.clubId !== profile.club_id)
     activeChips.push({
       key: "club",
-      label: filters.clubName ? `Club: ${filters.clubName}` : "Club",
+      label: filters.clubName
+        ? t("discover.clubChip", { name: filters.clubName })
+        : t("discover.clubChipFallback"),
       clear: () =>
         setFilters((f) => ({ ...f, clubId: null, clubName: null })),
     });
@@ -236,9 +243,9 @@ export default function DiscoverTab() {
           onClick={() => setShowFilter(true)}
           className="flex items-center gap-1.5 text-sm text-zinc-300"
         >
-          <FilterIcon size={18} /> Filter
+          <FilterIcon size={18} /> {t("discover.filter")}
         </button>
-        <span className="font-bold tracking-wide">ENTDECKEN</span>
+        <span className="font-bold tracking-wide">{t("discover.title")}</span>
         <span className="w-12 text-right text-xs text-zinc-500">
           {candidates.length}
         </span>
@@ -261,7 +268,7 @@ export default function DiscoverTab() {
                   : "bg-zinc-800 text-zinc-300"
               }`}
             >
-              Nur aus meinem Club
+              {t("discover.onlyMyClub")}
             </button>
           )}
           {activeChips.map((c) => (
@@ -282,9 +289,9 @@ export default function DiscoverTab() {
         {candidates.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
-            title="Keine weiteren Spieler"
-            message="Erweitere deinen Suchradius oder ändere die Filter."
-            actionLabel="Filter öffnen"
+            title={t("discover.emptyTitle")}
+            message={t("discover.emptyMessage")}
+            actionLabel={t("discover.emptyAction")}
             onAction={() => setShowFilter(true)}
           />
         ) : (
@@ -292,6 +299,7 @@ export default function DiscoverTab() {
             {candidates.map((c) => (
               <FeedCard
                 key={c.id}
+                t={t}
                 player={c}
                 requested={requested.has(c.id)}
                 onConnect={() => connect(c)}
@@ -350,6 +358,7 @@ function distanceLabel(
 }
 
 function FeedCard({
+  t,
   player,
   requested,
   onConnect,
@@ -357,6 +366,7 @@ function FeedCard({
   myLat,
   myLng,
 }: {
+  t: TFunction;
   player: Profile;
   requested: boolean;
   onConnect: () => void;
@@ -382,7 +392,7 @@ function FeedCard({
         )}
         {player.is_verified && (
           <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-matchup backdrop-blur-sm">
-            <CheckIcon size={11} /> Verifiziert
+            <CheckIcon size={11} /> {t("discover.verified")}
           </span>
         )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-3 pt-10">
@@ -422,11 +432,11 @@ function FeedCard({
         >
           {requested ? (
             <>
-              <CheckIcon size={14} /> Angefragt
+              <CheckIcon size={14} /> {t("discover.requested")}
             </>
           ) : (
             <>
-              <ConnectIcon size={14} /> Verbinden
+              <ConnectIcon size={14} /> {t("discover.connect")}
             </>
           )}
         </button>

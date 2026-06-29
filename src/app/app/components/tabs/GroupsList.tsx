@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabase";
 import { sportLabel } from "@/lib/utils/formatters";
 import { SportIcon, UsersIcon, PlusIcon, CheckIcon } from "../shared/icons";
 import type { Group, Sport } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 
 export default function GroupsList() {
+  const t = useT();
   const { profile, openSubView } = useAppNav();
   const [mode, setMode] = useState<"all" | "mine">("all");
   const [sport, setSport] = useState<Sport | null>(null);
@@ -71,7 +73,7 @@ export default function GroupsList() {
                 mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
               }`}
             >
-              {m === "all" ? "Alle Gruppen" : "Meine Gruppen"}
+              {m === "all" ? t("groups.all") : t("groups.mine")}
             </button>
           ))}
         </div>
@@ -80,7 +82,7 @@ export default function GroupsList() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Gruppe suchen…"
+              placeholder={t("groups.searchPlaceholder")}
               className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
             />
             <div className="flex gap-2">
@@ -95,7 +97,7 @@ export default function GroupsList() {
                       : "bg-zinc-800 text-zinc-400"
                   }`}
                 >
-                  {s ? sportLabel(s) : "Alle"}
+                  {s ? sportLabel(s) : t("groups.sportAll")}
                 </button>
               ))}
             </div>
@@ -109,8 +111,8 @@ export default function GroupsList() {
         ) : groups.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
-            title="Keine Gruppen"
-            message="Erstelle die erste Gruppe für deine Community."
+            title={t("groups.emptyTitle")}
+            message={t("groups.emptyMessage")}
           />
         ) : (
           <ul className="space-y-3">
@@ -128,8 +130,8 @@ export default function GroupsList() {
                 >
                   <p className="font-semibold">{g.name}</p>
                   <p className="text-xs text-zinc-400">
-                    <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} · max{" "}
-                    {g.max_members} Mitglieder
+                    <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
+                    {t("groups.maxMembers", { count: g.max_members })}
                   </p>
                   {g.description && (
                     <p className="mt-1 line-clamp-2 text-sm text-zinc-500">
@@ -140,7 +142,7 @@ export default function GroupsList() {
                 <div className="px-4 pb-4">
                   {myIds.has(g.id) ? (
                     <span className="flex items-center gap-1 text-sm text-matchup">
-                      <CheckIcon size={15} /> Mitglied
+                      <CheckIcon size={15} /> {t("groups.member")}
                     </span>
                   ) : (
                     <button
@@ -148,7 +150,7 @@ export default function GroupsList() {
                       onClick={() => join(g)}
                       className="rounded-full bg-matchup px-5 py-2 text-sm font-bold text-white"
                     >
-                      Beitreten
+                      {t("groups.join")}
                     </button>
                   )}
                 </div>
@@ -162,7 +164,7 @@ export default function GroupsList() {
         type="button"
         onClick={() => openSubView({ type: "create-group" })}
         className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
-        aria-label="Gruppe erstellen"
+        aria-label={t("groups.createGroupAria")}
       >
         <PlusIcon size={26} />
       </button>

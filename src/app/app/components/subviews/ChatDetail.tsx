@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { isOnline } from "@/lib/utils/formatters";
 import type { AppMatch, Message, Profile } from "@/lib/types";
@@ -9,6 +10,7 @@ import Avatar from "../shared/Avatar";
 import { SendIcon } from "../shared/icons";
 
 export default function ChatDetail({ matchId }: { matchId: string }) {
+  const t = useT();
   const { profile, openSubView, closeSubView } = useAppNav();
   const [partner, setPartner] = useState<Profile | null>(null);
   const [active, setActive] = useState(true);
@@ -146,7 +148,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
           type="button"
           onClick={closeSubView}
           className="text-xl"
-          aria-label="Zurück"
+          aria-label={t("common.back")}
         >
           ←
         </button>
@@ -175,7 +177,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
 
       {!active && (
         <div className="bg-zinc-800 px-4 py-2 text-center text-xs text-zinc-300">
-          Dieses Match wurde aufgelöst.
+          {t("matches.matchDissolved")}
         </div>
       )}
 
@@ -227,7 +229,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
             value={text}
             onChange={(e) => onType(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Nachricht schreiben…"
+            placeholder={t("matches.messagePlaceholder")}
             className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
           />
           {text.trim() && (
@@ -235,7 +237,7 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
               type="button"
               onClick={send}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
-              aria-label="Senden"
+              aria-label={t("common.send")}
             >
               <SendIcon size={18} className="text-white" />
             </button>

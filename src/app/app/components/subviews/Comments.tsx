@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { timeAgo } from "@/lib/utils/formatters";
 import type { CommunityComment, CommunityPost } from "@/lib/types";
@@ -10,6 +11,7 @@ import { SendIcon } from "../shared/icons";
 import { SubViewHeader } from "../shared/ui";
 
 export default function Comments({ postId }: { postId: string }) {
+  const t = useT();
   const { profile } = useAppNav();
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<CommunityComment[]>([]);
@@ -46,7 +48,7 @@ export default function Comments({ postId }: { postId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title={`Kommentare (${comments.length})`} />
+      <SubViewHeader title={t("matches.commentsTitle", { count: comments.length })} />
       <div className="flex-1 overflow-y-auto">
         {post && (
           <div className="border-b border-zinc-800 p-4">
@@ -89,14 +91,14 @@ export default function Comments({ postId }: { postId: string }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Kommentar schreiben…"
+          placeholder={t("matches.commentPlaceholder")}
           className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
         />
         <button
           type="button"
           onClick={send}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup"
-          aria-label="Senden"
+          aria-label={t("common.send")}
         >
           <SendIcon size={18} className="text-white" />
         </button>

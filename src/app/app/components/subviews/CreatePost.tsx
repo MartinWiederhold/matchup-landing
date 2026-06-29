@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
 export default function CreatePost() {
+  const t = useT();
   const { profile, closeSubView } = useAppNav();
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
@@ -24,7 +26,7 @@ export default function CreatePost() {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Neuer Post" />
+      <SubViewHeader title={t("community.newPostTitle")} />
       <div className="flex-1 p-5">
         <textarea
           autoFocus
@@ -32,7 +34,7 @@ export default function CreatePost() {
           maxLength={1000}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Was gibt's Neues?"
+          placeholder={t("community.postPlaceholder")}
           className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
         />
         <p className="mt-1 text-right text-xs text-zinc-500">
@@ -46,7 +48,7 @@ export default function CreatePost() {
           onClick={submit}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? "Wird gepostet…" : "Posten"}
+          {saving ? t("community.posting") : t("community.post")}
         </button>
       </div>
     </div>

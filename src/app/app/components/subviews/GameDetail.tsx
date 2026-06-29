@@ -5,11 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { formatEventDate, sportLabel } from "@/lib/utils/formatters";
 import { SportIcon, CalendarIcon, MapPinIcon } from "../shared/icons";
 import type { GameEvent } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { FullLoading, SubViewHeader } from "../shared/ui";
 
+const STATUS_KEY: Record<string, string> = {
+  planned: "games.statusPlanned",
+  confirmed: "games.statusConfirmed",
+  cancelled: "games.statusCancelled",
+  completed: "games.statusCompleted",
+};
+
 export default function GameDetail({ gameId }: { gameId: string }) {
+  const t = useT();
   const { profile, openSubView, closeSubView } = useAppNav();
   const [game, setGame] = useState<GameEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +67,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
     load();
   }
   async function cancelGame() {
-    if (!window.confirm("Spiel wirklich absagen?")) return;
+    if (!window.confirm(t("games.cancelGameConfirm"))) return;
     await supabase
       .from("game_events")
       .update({ status: "cancelled" })
@@ -68,15 +77,15 @@ export default function GameDetail({ gameId }: { gameId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Spiel-Details" />
+      <SubViewHeader title={t("games.detailTitle")} />
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <div>
           <h1 className="text-xl font-bold">
             <SportIcon sport={game.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(game.sport)} ·{" "}
-            {game.game_type === "singles" ? "Singles" : "Doubles"}
+            {game.game_type === "singles" ? t("games.singles") : t("games.doubles")}
           </h1>
           <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs">
-            {game.status}
+            {STATUS_KEY[game.status] ? t(STATUS_KEY[game.status]) : game.status}
           </span>
         </div>
 
@@ -93,15 +102,18 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             </span>
           </li>
           <li>
-            {game.court_booked ? "Platz gebucht" : "Platz nicht gebucht"}
+            {game.court_booked ? t("games.courtBookedYes") : t("games.courtBookedNo")}
           </li>
           {game.description && <li>{game.description}</li>}
         </ul>
 
         <div>
           <h2 className="mb-2 text-xs font-bold uppercase text-zinc-500">
-            Teilnehmer ({accepted.length}/
-            {game.max_participants ?? (game.game_type === "singles" ? 2 : 4)})
+            {t("games.participantsHeading", {
+              current: accepted.length,
+              max:
+                game.max_participants ?? (game.game_type === "singles" ? 2 : 4),
+            })}
           </h2>
           <div className="flex flex-wrap gap-3">
             {accepted.map((p) => (
@@ -123,7 +135,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             onClick={() => openSubView({ type: "game-requests", gameId })}
             className="w-full rounded-full border border-zinc-700 py-3 text-sm font-semibold"
           >
-            Anfragen verwalten ({requests.length})
+            {t("games.manageRequests", { count: requests.length })}
           </button>
         )}
       </div>
@@ -135,7 +147,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             onClick={cancelGame}
             className="w-full rounded-full bg-red-500/90 py-3.5 text-sm font-bold text-white"
           >
-            Spiel absagen
+            {t("games.cancelGame")}
           </button>
         ) : myPart ? (
           <button
@@ -143,7 +155,9 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             onClick={leave}
             className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold"
           >
-            {myPart.status === "requested" ? "Anfrage zurückziehen" : "Verlassen"}
+            {myPart.status === "requested"
+              ? t("games.withdrawRequest")
+              : t("games.leave")}
           </button>
         ) : (
           <button
@@ -151,7 +165,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             onClick={join}
             className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white"
           >
-            Beitreten
+            {t("games.join")}
           </button>
         )}
       </div>

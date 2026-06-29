@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import {
   searchClubs,
@@ -28,6 +29,7 @@ export default function ClubPicker({
   lng?: number | null;
   onChange: (clubId: string | null, clubName: string | null) => void;
 }) {
+  const t = useT();
   const [selName, setSelName] = useState<string | null>(clubName);
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
@@ -105,10 +107,10 @@ export default function ClubPicker({
         <span className="truncate text-sm">{selName}</span>
         <div className="flex shrink-0 gap-3 text-xs font-semibold">
           <button type="button" onClick={() => setEditing(true)} className="text-matchup">
-            Ändern
+            {t("app.change")}
           </button>
           <button type="button" onClick={remove} className="text-zinc-400">
-            Entfernen
+            {t("app.remove")}
           </button>
         </div>
       </div>
@@ -120,7 +122,7 @@ export default function ClubPicker({
       <input
         value={query}
         onChange={(e) => search(e.target.value)}
-        placeholder="Club oder Stadt suchen…"
+        placeholder={t("app.searchClubOrCity")}
         className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
       />
       <div className="mt-1 space-y-1">
@@ -135,7 +137,7 @@ export default function ClubPicker({
               {c.name}
               {c._osm && (
                 <span className="rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
-                  Karte
+                  {t("app.mapBadge")}
                 </span>
               )}
             </span>
@@ -147,15 +149,15 @@ export default function ClubPicker({
           </button>
         ))}
       </div>
-      {searching && <p className="mt-1 text-xs text-zinc-500">Suche weltweit…</p>}
-      {saving && <p className="mt-1 text-xs text-matchup">Club wird übernommen…</p>}
+      {searching && <p className="mt-1 text-xs text-zinc-500">{t("app.searchingWorldwide")}</p>}
+      {saving && <p className="mt-1 text-xs text-matchup">{t("app.clubBeingAdded")}</p>}
       {selName && (
         <button
           type="button"
           onClick={() => setEditing(false)}
           className="mt-2 text-xs text-zinc-400 underline"
         >
-          Abbrechen
+          {t("app.cancel")}
         </button>
       )}
     </div>

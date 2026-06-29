@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { timeAgo } from "@/lib/utils/formatters";
 import type { CommunityPost } from "@/lib/types";
@@ -10,6 +11,7 @@ import { MegaphoneIcon, PlusIcon, HeartIcon, MessageIcon } from "../shared/icons
 import { FullLoading, EmptyState } from "../shared/ui";
 
 export default function CommunityFeed() {
+  const t = useT();
   const { profile, openSubView } = useAppNav();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,8 +73,8 @@ export default function CommunityFeed() {
         {posts.length === 0 ? (
           <EmptyState
             icon={<MegaphoneIcon size={44} />}
-            title="Noch keine Posts"
-            message="Sei der erste, der etwas mit der Community teilt."
+            title={t("community.emptyTitle")}
+            message={t("community.emptyMessage")}
           />
         ) : (
           <ul className="divide-y divide-zinc-800">
@@ -85,7 +87,7 @@ export default function CommunityFeed() {
                     size="sm"
                   />
                   <span className="text-sm font-semibold">
-                    {post.author?.first_name ?? "Spieler"}
+                    {post.author?.first_name ?? t("community.unknownPlayer")}
                   </span>
                   <span className="text-xs text-zinc-500">
                     · {timeAgo(post.created_at)}
@@ -121,7 +123,7 @@ export default function CommunityFeed() {
         type="button"
         onClick={() => openSubView({ type: "create-post" })}
         className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
-        aria-label="Post erstellen"
+        aria-label={t("community.createPostAria")}
       >
         <PlusIcon size={26} />
       </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Mehrstufiger Wizard — Persönliche Schlägerberatung
@@ -46,16 +47,18 @@ const EMPTY: Form = {
   issues: [], issuesText: "", reason: "", budget: "", notes: "", consent: false,
 };
 
-const STEPS = [
-  "Sport & Profil",
-  "Spielstil",
-  "Schläger & Saite",
-  "Körper",
-  "Bedarf & Budget",
-  "Kontakt & Abschluss",
+const STEP_KEYS = [
+  "beratung.stepProfile",
+  "beratung.stepStyle",
+  "beratung.stepRacket",
+  "beratung.stepBody",
+  "beratung.stepBudget",
+  "beratung.stepContact",
 ];
 
 export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
+  const t = useT();
+  const STEPS = STEP_KEYS.map((k) => t(k));
   const modal = typeof onClose === "function";
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Form>(EMPTY);
@@ -100,15 +103,15 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
   }
   function submit() {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      setError("Bitte Vorname, Nachname und E-Mail ausfüllen.");
+      setError(t("beratung.errRequired"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
+      setError(t("beratung.errEmail"));
       return;
     }
     if (!form.consent) {
-      setError("Bitte stimme der Verarbeitung deiner Angaben zu.");
+      setError(t("beratung.errConsent"));
       return;
     }
     // Demo: noch nicht an Backend/E-Mail angebunden.
@@ -134,12 +137,16 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
       <div className="flex items-start justify-between gap-4 border-b border-neutral-200 px-6 py-5 sm:px-8">
         <div>
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Persönliche Schlägerberatung
+            {t("beratung.wizardTitle")}
           </h2>
           <p className="mt-1 text-sm text-neutral-500">
             {done
-              ? "Anfrage gesendet"
-              : `Schritt ${step + 1} von ${STEPS.length} · ${STEPS[step]}`}
+              ? t("beratung.requestSent")
+              : t("beratung.stepOf", {
+                  current: step + 1,
+                  total: STEPS.length,
+                  label: STEPS[step],
+                })}
           </p>
         </div>
         {modal && (
@@ -147,7 +154,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
             type="button"
             onClick={onClose}
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-neutral-200 text-sm transition-colors hover:bg-neutral-100"
-            aria-label="Schließen"
+            aria-label={t("beratung.closeAria")}
           >
             ✕
           </button>
@@ -172,10 +179,9 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl text-white">
               ✓
             </div>
-            <h3 className="mt-6 text-2xl font-bold tracking-tight">Danke, {form.firstName}!</h3>
+            <h3 className="mt-6 text-2xl font-bold tracking-tight">{t("beratung.thanks", { name: form.firstName })}</h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-              Wir haben deine Anfrage erhalten und melden uns innerhalb von 24
-              Stunden mit einer persönlichen Schläger-Empfehlung bei dir.
+              {t("beratung.doneText")}
             </p>
             <div className="mt-8 flex justify-center gap-3">
               <button
@@ -183,7 +189,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
                 onClick={reset}
                 className="h-12 rounded-full border border-neutral-300 px-6 text-sm font-medium transition-colors hover:bg-neutral-100"
               >
-                Neue Anfrage
+                {t("beratung.newRequest")}
               </button>
               {modal && (
                 <button
@@ -191,7 +197,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
                   onClick={onClose}
                   className="h-12 rounded-full bg-black px-8 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
                 >
-                  Schließen
+                  {t("common.close")}
                 </button>
               )}
             </div>
@@ -200,72 +206,71 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
           <>
             {step === 0 && (
               <Section>
-                <Radio label="Für welche Sportart suchst du Beratung?" options={["Tennis", "Padel", "Pickleball"]} value={form.sport} onChange={(v) => set("sport", v)} />
-                <Radio label="Wie lange spielst du bereits?" options={["Anfänger (0–1 Jahr)", "Hobbyspieler", "Fortgeschritten", "Turnierspieler", "Coach / Trainer"]} value={form.experience} onChange={(v) => set("experience", v)} />
-                <Radio label="Wie oft spielst du?" options={["1× pro Monat", "1× pro Woche", "2–3× pro Woche", "4×+ pro Woche"]} value={form.frequency} onChange={(v) => set("frequency", v)} />
-                <Radio label="Wo spielst du hauptsächlich?" options={["Indoor", "Outdoor", "Beides"]} value={form.location} onChange={(v) => set("location", v)} />
-                <Radio label="Spielst du Matches / Turniere?" options={["Ja", "Nein", "Gelegentlich"]} value={form.matches} onChange={(v) => set("matches", v)} />
+                <Radio label={t("beratung.qSport")} options={[t("beratung.optTennis"), t("beratung.optPadel"), t("beratung.optPickleball")]} value={form.sport} onChange={(v) => set("sport", v)} />
+                <Radio label={t("beratung.qExperience")} options={[t("beratung.optExpBeginner"), t("beratung.optExpHobby"), t("beratung.optExpAdvanced"), t("beratung.optExpTournament"), t("beratung.optExpCoach")]} value={form.experience} onChange={(v) => set("experience", v)} />
+                <Radio label={t("beratung.qFrequency")} options={[t("beratung.optFreqMonth"), t("beratung.optFreqWeek"), t("beratung.optFreqWeek23"), t("beratung.optFreqWeek4")]} value={form.frequency} onChange={(v) => set("frequency", v)} />
+                <Radio label={t("beratung.qSurface")} options={[t("beratung.optIndoor"), t("beratung.optOutdoor"), t("beratung.optBoth")]} value={form.location} onChange={(v) => set("location", v)} />
+                <Radio label={t("beratung.qMatches")} options={[t("beratung.optYes"), t("beratung.optNo"), t("beratung.optOccasionally")]} value={form.matches} onChange={(v) => set("matches", v)} />
               </Section>
             )}
 
             {step === 1 && (
               <Section>
-                <Chips label="Wie würdest du deinen Spielstil beschreiben?" hint="Mehrfachauswahl möglich" options={["Defensiv / kontrolliert", "Allround", "Aggressiv / offensiv", "Viel Spin", "Flaches Spiel", "Netzspieler / Volley"]} values={form.style} onToggle={(v) => toggle("style", v)} />
-                <Chips label="Was ist dir am wichtigsten?" hint="Mehrfachauswahl möglich" options={["Mehr Power", "Mehr Kontrolle", "Mehr Spin", "Mehr Komfort", "Weniger Belastung (Arm / Schulter)", "Mehr Präzision", "Größerer Sweetspot"]} values={form.priorities} onToggle={(v) => toggle("priorities", v)} />
+                <Chips label={t("beratung.qStyle")} hint={t("beratung.hintMulti")} options={[t("beratung.optStyleDefensive"), t("beratung.optStyleAllround"), t("beratung.optStyleAggressive"), t("beratung.optStyleSpin"), t("beratung.optStyleFlat"), t("beratung.optStyleNet")]} values={form.style} onToggle={(v) => toggle("style", v)} />
+                <Chips label={t("beratung.qPriorities")} hint={t("beratung.hintMulti")} options={[t("beratung.optPrioPower"), t("beratung.optPrioControl"), t("beratung.optPrioSpin"), t("beratung.optPrioComfort"), t("beratung.optPrioStrain"), t("beratung.optPrioPrecision"), t("beratung.optPrioSweetspot")]} values={form.priorities} onToggle={(v) => toggle("priorities", v)} />
               </Section>
             )}
 
             {step === 2 && (
               <Section>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Aktuelle Marke" value={form.curBrand} onChange={(v) => set("curBrand", v)} />
-                  <Text label="Aktuelles Modell (optional)" value={form.curModel} onChange={(v) => set("curModel", v)} />
+                  <Text label={t("beratung.qCurBrand")} value={form.curBrand} onChange={(v) => set("curBrand", v)} />
+                  <Text label={t("beratung.qCurModel")} value={form.curModel} onChange={(v) => set("curModel", v)} />
                 </div>
-                <Text label="Schlägergewicht (wenn bekannt)" value={form.curWeight} onChange={(v) => set("curWeight", v)} />
-                <Radio label="Griffstärke (wenn bekannt)" options={["L0", "L1", "L2", "L3", "L4", "Weiß nicht"]} value={form.grip} onChange={(v) => set("grip", v)} />
+                <Text label={t("beratung.qCurWeight")} value={form.curWeight} onChange={(v) => set("curWeight", v)} />
+                <Radio label={t("beratung.qGrip")} options={["L0", "L1", "L2", "L3", "L4", t("beratung.optGripUnknown")]} value={form.grip} onChange={(v) => set("grip", v)} />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Aktuelle Saite" value={form.string} onChange={(v) => set("string", v)} />
-                  <Text label="Härte / Spannung (kg)" value={form.tension} onChange={(v) => set("tension", v)} />
+                  <Text label={t("beratung.qString")} value={form.string} onChange={(v) => set("string", v)} />
+                  <Text label={t("beratung.qTension")} value={form.tension} onChange={(v) => set("tension", v)} />
                 </div>
-                <Radio label="Wie oft bespannst du neu?" options={["Sehr selten", "Alle paar Monate", "Regelmäßig", "Weiß nicht"]} value={form.restringFreq} onChange={(v) => set("restringFreq", v)} />
+                <Radio label={t("beratung.qRestring")} options={[t("beratung.optRestringRare"), t("beratung.optRestringMonths"), t("beratung.optRestringRegular"), t("beratung.optRestringUnknown")]} value={form.restringFreq} onChange={(v) => set("restringFreq", v)} />
               </Section>
             )}
 
             {step === 3 && (
               <Section>
-                <Radio label="Alter" options={["Kind (unter 12)", "Jugendlich (12–17)", "Erwachsen (18+)"]} value={form.alter} onChange={(v) => set("alter", v)} />
+                <Radio label={t("beratung.qAge")} options={[t("beratung.optAgeChild"), t("beratung.optAgeTeen"), t("beratung.optAgeAdult")]} value={form.alter} onChange={(v) => set("alter", v)} />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Körpergröße (cm)" value={form.height} onChange={(v) => set("height", v)} />
-                  <Text label="Gewicht (kg, optional)" value={form.weight} onChange={(v) => set("weight", v)} />
+                  <Text label={t("beratung.qHeight")} value={form.height} onChange={(v) => set("height", v)} />
+                  <Text label={t("beratung.qWeight")} value={form.weight} onChange={(v) => set("weight", v)} />
                 </div>
-                <Radio label="Dominante Hand" options={["Rechts", "Links"]} value={form.hand} onChange={(v) => set("hand", v)} />
+                <Radio label={t("beratung.qHand")} options={[t("beratung.optHandRight"), t("beratung.optHandLeft")]} value={form.hand} onChange={(v) => set("hand", v)} />
               </Section>
             )}
 
             {step === 4 && (
               <Section>
-                <Chips label="Hast du aktuell Beschwerden?" hint="Mehrfachauswahl möglich" options={["Keine", "Tennisarm", "Handgelenk", "Schulter", "Ellbogen", "Sonstiges"]} values={form.issues} onToggle={(v) => toggle("issues", v)} />
-                <Area label="Falls ja, bitte kurz beschreiben" value={form.issuesText} onChange={(v) => set("issuesText", v)} rows={2} />
-                <Radio label="Warum möchtest du wechseln?" options={["Mein Schläger passt nicht mehr", "Ich brauche ein Upgrade", "Ich habe Schmerzen", "Ich möchte mein Spiel verbessern", "Mein Schläger ist alt", "Ich suche meinen ersten Schläger"]} value={form.reason} onChange={(v) => set("reason", v)} />
-                <Radio label="Welches Budget hast du?" options={["Unter 100 CHF", "100–180 CHF", "180–250 CHF", "250+ CHF", "Offen für Empfehlung"]} value={form.budget} onChange={(v) => set("budget", v)} />
+                <Chips label={t("beratung.qIssues")} hint={t("beratung.hintMulti")} options={[t("beratung.optIssueNone"), t("beratung.optIssueTennisElbow"), t("beratung.optIssueWrist"), t("beratung.optIssueShoulder"), t("beratung.optIssueElbow"), t("beratung.optIssueOther")]} values={form.issues} onToggle={(v) => toggle("issues", v)} />
+                <Area label={t("beratung.qIssuesText")} value={form.issuesText} onChange={(v) => set("issuesText", v)} rows={2} />
+                <Radio label={t("beratung.qReason")} options={[t("beratung.optReasonFit"), t("beratung.optReasonUpgrade"), t("beratung.optReasonPain"), t("beratung.optReasonImprove"), t("beratung.optReasonOld"), t("beratung.optReasonFirst")]} value={form.reason} onChange={(v) => set("reason", v)} />
+                <Radio label={t("beratung.qBudget")} options={[t("beratung.optBudgetUnder100"), t("beratung.optBudget100"), t("beratung.optBudget180"), t("beratung.optBudget250"), t("beratung.optBudgetOpen")]} value={form.budget} onChange={(v) => set("budget", v)} />
               </Section>
             )}
 
             {step === 5 && (
               <Section>
                 <p className="text-sm leading-relaxed text-neutral-600">
-                  Fast geschafft! Wohin dürfen wir deine persönliche Empfehlung
-                  schicken?
+                  {t("beratung.contactIntro")}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="Vorname *" value={form.firstName} onChange={(v) => set("firstName", v)} />
-                  <Text label="Nachname *" value={form.lastName} onChange={(v) => set("lastName", v)} />
+                  <Text label={t("beratung.qFirstName")} value={form.firstName} onChange={(v) => set("firstName", v)} />
+                  <Text label={t("beratung.qLastName")} value={form.lastName} onChange={(v) => set("lastName", v)} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Text label="E-Mail *" type="email" value={form.email} onChange={(v) => set("email", v)} />
-                  <Text label="Telefon / WhatsApp (optional)" value={form.phone} onChange={(v) => set("phone", v)} />
+                  <Text label={t("beratung.qEmail")} type="email" value={form.email} onChange={(v) => set("email", v)} />
+                  <Text label={t("beratung.qPhone")} value={form.phone} onChange={(v) => set("phone", v)} />
                 </div>
-                <Area label="Gibt es noch etwas, das wir wissen sollten?" hint="z. B. Lieblingsmarken, No-Gos, Ziele, spezielle Wünsche" value={form.notes} onChange={(v) => set("notes", v)} rows={3} />
+                <Area label={t("beratung.qNotes")} hint={t("beratung.hintNotes")} value={form.notes} onChange={(v) => set("notes", v)} rows={3} />
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-neutral-200 p-4 text-sm">
                   <input
                     type="checkbox"
@@ -274,8 +279,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
                     className="mt-0.5 h-5 w-5 flex-shrink-0 accent-black"
                   />
                   <span className="text-neutral-700">
-                    Ich bin damit einverstanden, dass meine Angaben zur
-                    persönlichen Beratung gespeichert und verarbeitet werden. *
+                    {t("beratung.consent")}
                   </span>
                 </label>
               </Section>
@@ -295,7 +299,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
               disabled={step === 0}
               className="h-11 rounded-full border border-neutral-300 px-6 text-sm font-medium transition-colors enabled:hover:bg-neutral-100 disabled:opacity-40"
             >
-              Zurück
+              {t("beratung.btnBack")}
             </button>
             <span className="hidden text-xs text-neutral-400 sm:block">
               {step + 1} / {STEPS.length}
@@ -306,7 +310,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
                 onClick={next}
                 className="h-11 rounded-full bg-black px-8 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
               >
-                Weiter
+                {t("beratung.btnNext")}
               </button>
             ) : (
               <button
@@ -314,7 +318,7 @@ export default function BeratungWizard({ onClose }: { onClose?: () => void }) {
                 onClick={submit}
                 className="h-11 rounded-full bg-black px-8 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
               >
-                Anfrage senden
+                {t("beratung.btnSend")}
               </button>
             )}
           </div>

@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { skillLabel } from "@/lib/utils/formatters";
 import type { GameParticipant } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 import Avatar from "../shared/Avatar";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
 import { InboxIcon, CheckIcon, XIcon } from "../shared/icons";
 
 export default function GameRequests({ gameId }: { gameId: string }) {
+  const t = useT();
   const [requests, setRequests] = useState<GameParticipant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,12 +42,12 @@ export default function GameRequests({ gameId }: { gameId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title="Anfragen" />
+      <SubViewHeader title={t("games.requestsTitle")} />
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <FullLoading />
         ) : requests.length === 0 ? (
-          <EmptyState icon={<InboxIcon size={44} />} title="Keine Anfragen" message="Aktuell warten keine Anfragen." />
+          <EmptyState icon={<InboxIcon size={44} />} title={t("games.requestsEmptyTitle")} message={t("games.requestsEmptyMessage")} />
         ) : (
           <ul className="divide-y divide-zinc-800">
             {requests.map((r) => (
@@ -65,7 +67,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                   type="button"
                   onClick={() => respond(r.id, "accepted")}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
-                  aria-label="Annehmen"
+                  aria-label={t("games.accept")}
                 >
                   <CheckIcon size={18} />
                 </button>
@@ -73,7 +75,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                   type="button"
                   onClick={() => respond(r.id, "declined")}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
-                  aria-label="Ablehnen"
+                  aria-label={t("games.decline")}
                 >
                   <XIcon size={18} />
                 </button>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import AuthScreen from "./AuthScreen";
 import OnboardingFlow from "./Onboarding/OnboardingFlow";
@@ -37,6 +38,7 @@ function CenteredMessage({
 
 export default function AppGuard() {
   const { user, profile, loading, refreshProfile } = useAuth();
+  const t = useT();
   const [warning, setWarning] = useState<Warning | null>(null);
 
   // Presence-Heartbeat (alle 60s) + Warnungen prüfen
@@ -66,14 +68,14 @@ export default function AppGuard() {
   if (!isSupabaseConfigured) {
     return (
       <CenteredMessage
-        title="Supabase nicht konfiguriert"
-        subtitle="Trage NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local ein, um die App zu nutzen."
+        title={t("app.supabaseNotConfigured")}
+        subtitle={t("app.supabaseNotConfiguredHint")}
       >
         <Link
           href="/"
           className="mt-8 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:bg-white hover:text-black"
         >
-          Zurück zur Startseite
+          {t("app.backToHome")}
         </Link>
       </CenteredMessage>
     );
@@ -86,8 +88,8 @@ export default function AppGuard() {
   if (profile.is_banned) {
     return (
       <CenteredMessage
-        title="Dein Konto wurde gesperrt."
-        subtitle="Bei Fragen wende dich an den Support: hello@matchup.ch"
+        title={t("app.accountBanned")}
+        subtitle={t("app.accountBannedHint")}
       />
     );
   }
@@ -95,7 +97,7 @@ export default function AppGuard() {
   if (profile.is_paused) {
     return (
       <CenteredMessage
-        title="Dein Konto ist pausiert."
+        title={t("app.accountPaused")}
         subtitle={profile.pause_reason ?? undefined}
       >
         <button
@@ -109,7 +111,7 @@ export default function AppGuard() {
           }}
           className="mt-8 rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover"
         >
-          Konto reaktivieren
+          {t("app.reactivateAccount")}
         </button>
       </CenteredMessage>
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { timeAgo, isOnline } from "@/lib/utils/formatters";
 import type { AppMatch, Message, Profile } from "@/lib/types";
@@ -10,6 +11,7 @@ import { MessageIcon } from "../shared/icons";
 import { FullLoading, EmptyState } from "../shared/ui";
 
 export default function MatchesList() {
+  const t = useT();
   const { profile, setActiveTab, openSubView } = useAppNav();
   const [matches, setMatches] = useState<AppMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,9 +72,9 @@ export default function MatchesList() {
     return (
       <EmptyState
         icon={<MessageIcon size={44} />}
-        title="Noch keine Matches"
-        message="Like Spieler im Discover-Tab!"
-        actionLabel="Entdecken"
+        title={t("matches.emptyTitle")}
+        message={t("matches.emptyMessage")}
+        actionLabel={t("matches.emptyAction")}
         onAction={() => setActiveTab("discover")}
       />
     );
@@ -102,7 +104,7 @@ export default function MatchesList() {
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{u.first_name}</p>
                 <p className="truncate text-sm text-zinc-400">
-                  {m.last_message?.content ?? "Sag Hallo"}
+                  {m.last_message?.content ?? t("matches.sayHello")}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">
