@@ -136,6 +136,39 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      case "deleteUser": {
+        const id = String(body.id);
+        if (id === admin.id) {
+          return NextResponse.json(
+            { error: "Eigenes Admin-Konto kann nicht gelöscht werden." },
+            { status: 400 },
+          );
+        }
+        // 1) Bilder aus dem Bucket entfernen (best effort)
+        const { data: prof } = await svc
+          .from("profiles")
+          .select("profile_image, additional_images")
+          .eq("id", id)
+          .maybeSingle();
+        const urls = [
+          prof?.profile_image as string | undefined,
+          ...(((prof?.additional_images as string[]) || []) ?? []),
+        ].filter(Boolean) as string[];
+        const paths = urls
+          .filter((u) => u.includes("/storage/v1/object/public/web-avatars/"))
+          .map((u) => u.split("/storage/v1/object/public/web-avatars/")[1]);
+        if (paths.length) await svc.storage.from("web-avatars").remove(paths);
+
+        // 2) Alle DB-Daten in korrekter Reihenfolge löschen (privilegierte RPC)
+        const { error: rpcErr } = await svc.rpc("admin_delete_user", { target: id });
+        if (rpcErr) throw rpcErr;
+
+        // 3) Auth-Konto löschen, damit kein Login mehr möglich ist (best effort)
+        await svc.auth.admin.deleteUser(id).catch(() => {});
+
+        return NextResponse.json({ ok: true });
+      }
+
       case "reportStatus": {
         const id = String(body.id);
         const status = String(body.status);

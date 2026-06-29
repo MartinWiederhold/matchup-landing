@@ -7,7 +7,7 @@ const ROWS = [
     eyebrow: "SICHERHEIT",
     title: "Sicher und verifiziert",
     copy: "Jedes Profil wird geprüft. Melde unangemessenes Verhalten, blockiere Nutzer und vertraue auf automatische Moderation. Deine Daten gehören dir.",
-    img: `${IMG}/4Yh8vc5goDh5JgJHv9DVo1/c0366d221c77a0c972cebd4cc30a6b03/Image_desktop.webp`,
+    img: "/landing/sicherheit.jpg",
     reverse: false,
     cta: { label: "App öffnen", href: "/app" },
   },

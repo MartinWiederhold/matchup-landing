@@ -117,6 +117,25 @@ export default function UserDetailPage() {
     }
   }
 
+  async function deleteProfile() {
+    if (!profile) return;
+    const name = profile.first_name || "dieses Profil";
+    if (
+      !confirm(
+        `${name} UNWIDERRUFLICH löschen?\n\nAlle Daten (Profil, Bilder, Matches, Chats, Likes, Gruppen, Events, Stats) und das Login-Konto werden entfernt. Das kann nicht rückgängig gemacht werden.`,
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await adminAction("deleteUser", { id });
+      router.push("/admin/users");
+    } catch (e) {
+      alert("Fehler: " + (e instanceof Error ? e.message : String(e)));
+      setBusy(false);
+    }
+  }
+
   if (loading) return <div className="p-8 text-neutral-400">Laden...</div>;
   if (!profile)
     return <div className="p-8 text-neutral-400">User nicht gefunden</div>;
@@ -224,6 +243,18 @@ export default function UserDetailPage() {
             >
               {profile.is_banned ? "Sperre aufheben" : "Account sperren"}
             </button>
+
+            <button
+              onClick={deleteProfile}
+              disabled={busy}
+              className="w-full py-3 rounded-2xl text-sm font-semibold border border-red-600 bg-red-600 text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+            >
+              Profil komplett löschen
+            </button>
+            <p className="text-xs text-neutral-400">
+              Entfernt Profil, Bilder, Chats, Matches, Gruppen, Events &amp;
+              Login-Konto — unwiderruflich.
+            </p>
           </div>
         </div>
       </div>
