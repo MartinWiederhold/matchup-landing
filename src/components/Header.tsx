@@ -10,7 +10,7 @@ function LangSwitch({ className = "" }: { className?: string }) {
   const options: Locale[] = ["de", "en"];
   return (
     <div
-      className={`inline-flex items-center rounded-full bg-white/10 p-0.5 text-[11px] font-bold ${className}`}
+      className={`items-center rounded-full bg-white/10 p-0.5 text-[11px] font-bold ${className}`}
     >
       {options.map((opt) => (
         <button
@@ -102,7 +102,7 @@ export default function Header() {
             <span className="text-sm font-semibold tracking-wide text-white/60">
               {t("header.language")}
             </span>
-            <LangSwitch />
+            <LangSwitch className="inline-flex" />
           </div>
           <AppInstall
             onNavigate={() => setOpen(false)}
