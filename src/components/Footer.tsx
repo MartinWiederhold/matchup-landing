@@ -24,6 +24,14 @@ export default async function Footer() {
       ],
     },
     {
+      title: t("footer.colFind"),
+      links: [
+        { label: "Tennis", href: "/tennispartner-finden" },
+        { label: "Padel", href: "/padelpartner-finden" },
+        { label: "Pickleball", href: "/pickleballpartner-finden" },
+      ],
+    },
+    {
       title: t("footer.colSupport"),
       links: [
         { label: t("footer.helpFaq"), href: "/faq" },
@@ -36,7 +44,7 @@ export default async function Footer() {
   return (
     <footer className="bg-black px-4 pb-12 pt-20 text-white sm:px-6 lg:px-12">
       <div className="mx-auto max-w-[1280px]">
-        <div className="grid gap-12 lg:grid-cols-[1.5fr_repeat(3,1fr)]">
+        <div className="grid gap-12 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div>
             <MatchupLogo className="text-3xl" />
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-white/60">
