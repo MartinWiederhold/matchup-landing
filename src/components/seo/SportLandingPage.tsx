@@ -15,7 +15,13 @@ export type SportLanding = {
 
 const BASE = "https://matchup-app.com";
 
-export default function SportLandingPage({ data }: { data: SportLanding }) {
+export default function SportLandingPage({
+  data,
+  cityLinks,
+}: {
+  data: SportLanding;
+  cityLinks?: { href: string; name: string }[];
+}) {
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -136,6 +142,28 @@ export default function SportLandingPage({ data }: { data: SportLanding }) {
           </div>
         </div>
       </section>
+
+      {/* Beliebte Städte (interne Verlinkung) */}
+      {cityLinks && cityLinks.length > 0 && (
+        <section className="bg-neutral-50 px-4 py-16 sm:px-6 lg:px-12">
+          <div className="mx-auto max-w-[1100px]">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {data.partnerWord} finden nach Stadt
+            </h2>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              {cityLinks.map((c) => (
+                <a
+                  key={c.href}
+                  href={c.href}
+                  className="rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-black hover:text-black"
+                >
+                  {data.sport} {c.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="bg-matchup px-4 py-20 text-center text-white sm:px-6 lg:px-12">

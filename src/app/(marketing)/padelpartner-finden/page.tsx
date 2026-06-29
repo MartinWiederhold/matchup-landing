@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import SportLandingPage from "@/components/seo/SportLandingPage";
-import { SPORT_LANDINGS } from "@/lib/sportLandings";
+import { SPORT_LANDINGS, CITIES } from "@/lib/sportLandings";
 
 const data = SPORT_LANDINGS["padelpartner-finden"];
+const cityLinks = CITIES.map((c) => ({
+  href: `/padelpartner-finden/${c.slug}`,
+  name: c.name,
+}));
 
 export const metadata: Metadata = {
   title: "Padelpartner finden in deiner Nähe – kostenlos Mitspieler",
@@ -19,5 +23,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <SportLandingPage data={data} />;
+  return <SportLandingPage data={data} cityLinks={cityLinks} />;
 }

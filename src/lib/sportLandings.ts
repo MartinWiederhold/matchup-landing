@@ -1,5 +1,60 @@
 import type { SportLanding } from "@/components/seo/SportLandingPage";
 
+/** Top-Städte DACH für lokale Landingpages (Sport × Stadt). */
+export const CITIES: { slug: string; name: string }[] = [
+  { slug: "zuerich", name: "Zürich" },
+  { slug: "bern", name: "Bern" },
+  { slug: "basel", name: "Basel" },
+  { slug: "genf", name: "Genf" },
+  { slug: "lausanne", name: "Lausanne" },
+  { slug: "winterthur", name: "Winterthur" },
+  { slug: "luzern", name: "Luzern" },
+  { slug: "st-gallen", name: "St. Gallen" },
+  { slug: "berlin", name: "Berlin" },
+  { slug: "muenchen", name: "München" },
+  { slug: "hamburg", name: "Hamburg" },
+  { slug: "koeln", name: "Köln" },
+  { slug: "frankfurt", name: "Frankfurt" },
+  { slug: "stuttgart", name: "Stuttgart" },
+  { slug: "wien", name: "Wien" },
+];
+
+/**
+ * Baut aus einer Sport-Basis + Stadt eine lokale Landingpage-Konfiguration.
+ * Gibt null zurück, wenn Sport oder Stadt unbekannt sind.
+ */
+export function cityLanding(
+  sportKey: string,
+  citySlug: string,
+): SportLanding | null {
+  const base = SPORT_LANDINGS[sportKey];
+  const city = CITIES.find((c) => c.slug === citySlug);
+  if (!base || !city) return null;
+  const { sport, partnerWord } = base;
+  return {
+    slug: `${base.slug}/${city.slug}`,
+    sport,
+    partnerWord,
+    h1: `${partnerWord} finden in ${city.name}`,
+    intro: `Du suchst einen ${partnerWord} in ${city.name}? Mit Matchup findest du ${sport}-Mitspieler auf deinem Level in ${city.name} und Umgebung — matchen, chatten und das nächste Spiel direkt vereinbaren. Kostenlos und in wenigen Minuten startklar.`,
+    heroImg: base.heroImg,
+    heroPos: base.heroPos,
+    benefits: base.benefits,
+    steps: base.steps,
+    faq: [
+      {
+        q: `Wie finde ich einen ${partnerWord} in ${city.name}?`,
+        a: `Erstelle ein kostenloses Matchup-Profil, wähle ${sport} und deinen Umkreis um ${city.name} — du siehst sofort passende Spieler in deiner Nähe und kannst dich verbinden.`,
+      },
+      {
+        q: `Gibt es genug ${sport}-Spieler in ${city.name}?`,
+        a: `Matchup wächst stetig. Stelle den Umkreis etwas grösser, um in und um ${city.name} mehr Mitspieler zu finden.`,
+      },
+      ...base.faq.slice(1, 3),
+    ],
+  };
+}
+
 export const SPORT_LANDINGS: Record<string, SportLanding> = {
   "tennispartner-finden": {
     slug: "tennispartner-finden",
