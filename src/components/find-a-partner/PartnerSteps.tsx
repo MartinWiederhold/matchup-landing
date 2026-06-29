@@ -23,7 +23,7 @@ const STEPS: {
     number: "02",
     title: "Entdecke & Matche",
     text: "Swipe durch passende Spieler in deiner Nähe. Filtere nach Distanz, Sportart, Alter und Können. Findest du jemanden interessant? Like das Profil. Liked die Person zurück, entsteht ein Match.",
-    img: "/find-a-partner/step-match.jpg",
+    img: "/find-a-partner/step-match-v2.jpg",
     overlay: "match",
   },
   {
