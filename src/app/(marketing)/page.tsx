@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/",
       title: t("seo.homeTitle"),
       description: t("seo.homeDescription"),
+      images: ["/og.jpg"],
     },
   };
 }
