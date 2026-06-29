@@ -100,15 +100,21 @@ export default function DiscoverTab() {
       .order("last_active", { ascending: false })
       .limit(200);
 
+    // Die Discover-Filter sind die EINZIGE Quelle der Wahrheit. Die Profil-/
+    // Sichtbarkeitseinstellungen der anderen Person blockieren NICHT mehr (kein
+    // Doppel mit den Filtern). Sportarten: aktiver Sport-Filter überschreibt;
+    // ohne gesetzten Filter werden standardmässig deine eigenen Sportarten genutzt.
+    const effectiveSports = filters.sports.length
+      ? filters.sports
+      : profile.sports;
+
     const filtered = ((raw as Profile[]) ?? []).filter((c) => {
       if (exclude.has(c.id)) return false;
-      if (!c.visibility_gender?.includes(profile.gender)) return false;
-      if (profile.age < (c.visibility_age_min ?? 18)) return false;
-      if (profile.age > (c.visibility_age_max ?? 99)) return false;
-      const common = c.sports?.filter((s) => profile.sports?.includes(s));
-      if (!common?.length) return false;
 
-      if (filters.sports.length && !filters.sports.some((s) => c.sports?.includes(s)))
+      if (
+        effectiveSports?.length &&
+        !effectiveSports.some((s) => c.sports?.includes(s))
+      )
         return false;
       if (filters.gender && c.gender !== filters.gender) return false;
       if (filters.skillLevels.length && !filters.skillLevels.includes(c.skill_level))

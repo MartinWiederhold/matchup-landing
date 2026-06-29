@@ -35,12 +35,10 @@ export default function EditProfile() {
   const [rating, setRating] = useState(profile.official_rating ?? "");
   const [height, setHeight] = useState<number | null>(profile.height_cm);
   const [goals, setGoals] = useState<string[]>(profile.goals ?? []);
-  const [radius, setRadius] = useState(profile.search_radius_km);
   const [clubId, setClubId] = useState<string | null>(profile.club_id);
   const [clubName, setClubName] = useState<string | null>(
     profile.club_name_manual,
   );
-  const [visGender, setVisGender] = useState<string[]>(profile.visibility_gender);
   const [saving, setSaving] = useState(false);
   const { closeSubView } = useAppNav();
 
@@ -109,10 +107,8 @@ export default function EditProfile() {
         official_rating: rating || null,
         height_cm: height,
         goals,
-        search_radius_km: radius,
         club_id: clubId,
         club_name_manual: clubId ? null : clubName,
-        visibility_gender: visGender,
       })
       .eq("id", profile.id);
     await refreshProfile();
@@ -264,27 +260,6 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label={t("profile.searchRadiusLabel", { radius })}>
-          <input
-            type="range"
-            min={5}
-            max={200}
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full accent-matchup"
-          />
-        </Field>
-
-        <Field label={t("profile.visibleFor")}>
-          <Chips
-            options={[
-              { value: "male", label: t("profile.genderMale") },
-              { value: "female", label: t("profile.genderFemale") },
-            ]}
-            selected={visGender}
-            onToggle={(v) => setVisGender(toggle(visGender, v))}
-          />
-        </Field>
       </div>
 
       <div className="shrink-0 border-t border-zinc-800 p-5">
