@@ -71,6 +71,7 @@ export interface Club {
   country: string; // default 'CH'
   latitude: number | null;
   longitude: number | null;
+  address: string | null; // z.B. "Schaanerstrasse 42, 9490 Vaduz"
 }
 
 // ============================================================

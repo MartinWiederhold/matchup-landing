@@ -25,15 +25,28 @@ export function isSupportedCountry(code: string | null | undefined): boolean {
   return !!code && SUPPORTED_COUNTRIES.includes(code.toUpperCase() as never);
 }
 
-/** Live-Clubsuche (Name ODER Stadt) — nur unterstützte Länder (DE/CH). */
-export async function searchClubs(query: string, limit = 12): Promise<Club[]> {
+/**
+ * Live-Clubsuche (Name, Stadt ODER Adresse) in der echten Clubs-DB (web.clubs).
+ * Ist ein unterstütztes Land (DE/CH) angegeben, wird auf dieses Land
+ * eingeschränkt — sonst auf alle unterstützten Länder.
+ */
+export async function searchClubs(
+  query: string,
+  country?: string | null,
+  limit = 12,
+): Promise<Club[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  const { data } = await supabase
-    .from("clubs")
-    .select("*")
-    .in("country", SUPPORTED_COUNTRIES as unknown as string[])
-    .or(`name.ilike.%${q}%,city.ilike.%${q}%`)
+  const c = country?.toUpperCase();
+  let qb = supabase.from("clubs").select("*");
+  qb =
+    c && (SUPPORTED_COUNTRIES as readonly string[]).includes(c)
+      ? qb.eq("country", c)
+      : qb.in("country", SUPPORTED_COUNTRIES as unknown as string[]);
+  // Klammern/Kommas würden den PostgREST-OR-Filter zerlegen → entfernen.
+  const safe = q.replace(/[(),]/g, " ").trim();
+  const { data } = await qb
+    .or(`name.ilike.%${safe}%,city.ilike.%${safe}%,address.ilike.%${safe}%`)
     .order("name")
     .limit(limit);
   return (data as Club[]) ?? [];
@@ -103,7 +116,7 @@ export async function addClub(
   }
 
   // 1) Schon vorhanden? (Doppelte vermeiden)
-  const existing = await searchClubs(trimmedName, 5);
+  const existing = await searchClubs(trimmedName, null, 5);
   const dup = existing.find(
     (c) => c.name.toLowerCase() === trimmedName.toLowerCase(),
   );

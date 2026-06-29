@@ -28,7 +28,7 @@ export default function FilterSheet({
 
   async function searchClubs(q: string) {
     setClubQuery(q);
-    setClubResults(await searchClubsApi(q, 8));
+    setClubResults(await searchClubsApi(q, null, 8));
   }
 
   return (
@@ -147,7 +147,12 @@ export default function FilterSheet({
               }}
               className="mt-1 block w-full rounded-lg bg-zinc-800 px-3 py-2 text-left text-sm"
             >
-              {c.name}
+              <span className="block">{c.name}</span>
+              {(c.address || c.city) && (
+                <span className="mt-0.5 block text-xs text-zinc-400">
+                  {c.address || c.city}
+                </span>
+              )}
             </button>
           ))}
           {draft.clubId && (

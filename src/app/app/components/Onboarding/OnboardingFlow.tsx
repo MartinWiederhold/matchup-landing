@@ -63,7 +63,12 @@ const GOALS: {
 const RATINGS_CH = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "N1", "N2", "N3", "N4"];
 const RATINGS_DE = Array.from({ length: 23 }, (_, i) => `LK ${i + 1}`);
 
-type NominatimResult = { display_name: string; lat: string; lon: string };
+type NominatimResult = {
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: { country_code?: string };
+};
 
 export default function OnboardingFlow() {
   const { user, refreshProfile } = useAuth();
@@ -97,7 +102,7 @@ export default function OnboardingFlow() {
     setLocLoading(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5`,
       );
       setLocResults(await res.json());
     } catch {
@@ -123,7 +128,12 @@ export default function OnboardingFlow() {
           "Mein Standort";
         dispatch({
           type: "SET_LOCATION",
-          payload: { city, lat: latitude, lng: longitude, country: "CH" },
+          payload: {
+            city,
+            lat: latitude,
+            lng: longitude,
+            country: (data.address?.country_code || "ch").toUpperCase(),
+          },
         });
       } catch {
         dispatch({
@@ -141,7 +151,7 @@ export default function OnboardingFlow() {
 
   async function handleClubSearch(q: string) {
     setClubQuery(q);
-    setClubResults(await searchClubsApi(q));
+    setClubResults(await searchClubsApi(q, state.country));
   }
 
   async function handleAddClub() {
@@ -209,7 +219,7 @@ export default function OnboardingFlow() {
         height_cm: state.height_cm,
         city: state.city,
         country: state.country,
-        country_name: state.country === "CH" ? "Schweiz" : state.country,
+        country_name: countryName(state.country),
         latitude: state.latitude,
         longitude: state.longitude,
         club_id: state.club_id,
@@ -378,7 +388,7 @@ export default function OnboardingFlow() {
                       city: r.display_name.split(",")[0],
                       lat: parseFloat(r.lat),
                       lng: parseFloat(r.lon),
-                      country: "CH",
+                      country: (r.address?.country_code || "ch").toUpperCase(),
                     },
                   });
                   setLocResults([]);
@@ -429,10 +439,12 @@ export default function OnboardingFlow() {
                       })
                     }
                   >
-                    <span className="font-medium">{c.name}</span>
-                    {c.city ? (
-                      <span className="text-zinc-400"> · {c.city}</span>
-                    ) : null}
+                    <span className="block font-medium">{c.name}</span>
+                    {(c.address || c.city) && (
+                      <span className="mt-0.5 block text-xs text-zinc-400">
+                        {c.address || c.city}
+                      </span>
+                    )}
                   </SelectRow>
                 ))}
                 {clubQuery.trim().length >= 2 && clubResults.length === 0 && (
