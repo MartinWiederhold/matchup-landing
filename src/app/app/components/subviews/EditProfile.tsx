@@ -8,6 +8,7 @@ import { skillLabel, sportLabel } from "@/lib/utils/formatters";
 import type { Sport, SkillLevel } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
+import ClubPicker from "../shared/ClubPicker";
 
 const MAX_PHOTOS = 4;
 
@@ -33,6 +34,10 @@ export default function EditProfile() {
   const [height, setHeight] = useState<number | null>(profile.height_cm);
   const [goals, setGoals] = useState<string[]>(profile.goals ?? []);
   const [radius, setRadius] = useState(profile.search_radius_km);
+  const [clubId, setClubId] = useState<string | null>(profile.club_id);
+  const [clubName, setClubName] = useState<string | null>(
+    profile.club_name_manual,
+  );
   const [visGender, setVisGender] = useState<string[]>(profile.visibility_gender);
   const [saving, setSaving] = useState(false);
   const { closeSubView } = useAppNav();
@@ -103,6 +108,8 @@ export default function EditProfile() {
         height_cm: height,
         goals,
         search_radius_km: radius,
+        club_id: clubId,
+        club_name_manual: clubId ? null : clubName,
         visibility_gender: visGender,
       })
       .eq("id", profile.id);
@@ -210,6 +217,20 @@ export default function EditProfile() {
             options={SKILLS.map((s) => ({ value: s, label: skillLabel(s) }))}
             selected={[skill]}
             onToggle={(v) => setSkill(v as SkillLevel)}
+          />
+        </Field>
+
+        <Field label="Club">
+          <ClubPicker
+            clubId={clubId}
+            clubName={clubName}
+            country={profile.country}
+            lat={profile.latitude}
+            lng={profile.longitude}
+            onChange={(id, name) => {
+              setClubId(id);
+              setClubName(name);
+            }}
           />
         </Field>
 

@@ -21,7 +21,7 @@ export default function FilterSheet({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState<FilterState>(filters);
-  const [clubQuery, setClubQuery] = useState("");
+  const [clubQuery, setClubQuery] = useState(filters.clubName ?? "");
   const [clubResults, setClubResults] = useState<Club[]>([]);
 
   function toggle<T>(arr: T[], v: T): T[] {
@@ -154,7 +154,7 @@ export default function FilterSheet({
               key={c.id}
               type="button"
               onClick={() => {
-                setDraft({ ...draft, clubId: c.id });
+                setDraft({ ...draft, clubId: c.id, clubName: c.name });
                 setClubQuery(c.name);
                 setClubResults([]);
               }}
@@ -172,7 +172,7 @@ export default function FilterSheet({
             <button
               type="button"
               onClick={() => {
-                setDraft({ ...draft, clubId: null });
+                setDraft({ ...draft, clubId: null, clubName: null });
                 setClubQuery("");
               }}
               className="mt-2 text-xs text-zinc-400 underline"

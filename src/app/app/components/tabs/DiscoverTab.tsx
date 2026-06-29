@@ -221,8 +221,9 @@ export default function DiscoverTab() {
   if (filters.clubId && filters.clubId !== profile.club_id)
     activeChips.push({
       key: "club",
-      label: "Club",
-      clear: () => setFilters((f) => ({ ...f, clubId: null })),
+      label: filters.clubName ? `Club: ${filters.clubName}` : "Club",
+      clear: () =>
+        setFilters((f) => ({ ...f, clubId: null, clubName: null })),
     });
 
   if (isLoading) return <FullLoading />;

@@ -443,6 +443,7 @@ export interface FilterState {
   radius: number;
   skillLevels: SkillLevel[];
   clubId: string | null;
+  clubName: string | null;
 }
 
 export const defaultFilters: FilterState = {
@@ -453,4 +454,5 @@ export const defaultFilters: FilterState = {
   radius: 25,
   skillLevels: [],
   clubId: null,
+  clubName: null,
 };
