@@ -19,6 +19,7 @@ import { community } from "./community";
 import { profile } from "./profile";
 import { support } from "./support";
 import { waitlist } from "./waitlist";
+import { seo } from "./seo";
 
 type Namespace = { de: Record<string, unknown>; en: Record<string, unknown> };
 
@@ -42,6 +43,7 @@ const namespaces: Record<string, Namespace> = {
   profile,
   support,
   waitlist,
+  seo,
 };
 
 function build(locale: Locale): Record<string, unknown> {

@@ -3,11 +3,19 @@ import PageCta from "@/components/PageCta";
 import EventsExperience from "@/components/events/EventsExperience";
 import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Events worldwide — Matchup",
-  description:
-    "Entdecke lokale Turniere, Social-Play-Events und Community-Treffen.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t("seo.eventsTitle"),
+    description: t("seo.eventsDescription"),
+    alternates: { canonical: "/events" },
+    openGraph: {
+      url: "/events",
+      title: t("seo.eventsTitle"),
+      description: t("seo.eventsDescription"),
+    },
+  };
+}
 
 export default async function EventsPage() {
   const t = await getT();

@@ -4,11 +4,19 @@ import PageCta from "@/components/PageCta";
 import PartnerSteps from "@/components/find-a-partner/PartnerSteps";
 import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "So findest du deinen Spielpartner — Matchup",
-  description:
-    "In drei einfachen Schritten zum perfekten Match: Profil erstellen, entdecken & matchen, chatten & spielen.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t("seo.partnerTitle"),
+    description: t("seo.partnerDescription"),
+    alternates: { canonical: "/find-a-partner" },
+    openGraph: {
+      url: "/find-a-partner",
+      title: t("seo.partnerTitle"),
+      description: t("seo.partnerDescription"),
+    },
+  };
+}
 
 export default async function FindAPartnerPage() {
   const t = await getT();

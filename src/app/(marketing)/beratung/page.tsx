@@ -3,11 +3,19 @@ import Image from "next/image";
 import BeratungTabs from "@/components/shop/BeratungTabs";
 import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Beratung — Matchup",
-  description:
-    "Persönliche Schlägerberatung und Profi-Bespannung: individuelle Empfehlung oder spiele mit dem Setup deiner Stars.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t("seo.beratungTitle"),
+    description: t("seo.beratungDescription"),
+    alternates: { canonical: "/beratung" },
+    openGraph: {
+      url: "/beratung",
+      title: t("seo.beratungTitle"),
+      description: t("seo.beratungDescription"),
+    },
+  };
+}
 
 const BLOCK_KEYS = [
   { title: "beratung.block1Title", text: "beratung.block1Text" },

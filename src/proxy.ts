@@ -3,13 +3,19 @@ import type { NextRequest } from "next/server";
 import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
 
 /**
- * Globaler Zugangsschutz: Die ganze Seite ist hinter einem Code (Standard 5080)
- * versteckt. Ohne gültiges Cookie wird jede Seite serverseitig auf den
- * Lock-Screen umgeschrieben — es wird also kein Inhalt ausgeliefert.
+ * Zugangsschutz NUR noch für die nicht-öffentlichen Bereiche: die eingeloggte
+ * Webapp (/app) und das Admin (/admin). Die Marketing-Seiten (Startseite,
+ * /find-a-partner, /events, /shop, /beratung) sind öffentlich & crawlbar —
+ * sonst kann Google nichts indexieren.
  *
  * Code/Token sind über Env-Variablen überschreibbar (SITE_GATE_CODE / _TOKEN).
  */
 const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
+
+/** Diese Pfade bleiben hinter dem Code-Gate. */
+function isProtected(pathname: string): boolean {
+  return pathname.startsWith("/app") || pathname.startsWith("/admin");
+}
 
 /**
  * Setzt — falls noch nicht vorhanden — das Sprach-Cookie anhand des Landes
@@ -29,17 +35,14 @@ function ensureLocaleCookie(request: NextRequest, response: NextResponse) {
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Lock-Screen, Entsperr- und Versions-Endpoint sind immer erreichbar.
-  if (
-    pathname === "/locked" ||
-    pathname.startsWith("/api/unlock") ||
-    pathname.startsWith("/api/version")
-  ) {
+  // Öffentliche Marketing-Seiten + Lock-/Unlock-/Version-Endpoints: frei.
+  if (!isProtected(pathname)) {
     const res = NextResponse.next();
     ensureLocaleCookie(request, res);
     return res;
   }
 
+  // Geschützt (/app, /admin): gültiges Gate-Cookie nötig.
   const unlocked = request.cookies.get("mu_gate")?.value === GATE_TOKEN;
   if (unlocked) {
     const res = NextResponse.next();
