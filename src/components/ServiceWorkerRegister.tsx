@@ -49,6 +49,13 @@ export default function ServiceWorkerRegister() {
         if (res.ok) {
           const { id } = (await res.json()) as { id?: string };
           if (id && id !== "dev" && id !== BUILD_ID) {
+            // Loop-Schutz: pro Server-Version nur EINMAL hart neu laden.
+            const KEY = "mu_reload_for";
+            if (sessionStorage.getItem(KEY) === id) {
+              busy = false;
+              return;
+            }
+            sessionStorage.setItem(KEY, id);
             await forceFreshReload();
             return; // reload läuft
           }
