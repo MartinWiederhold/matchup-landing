@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { sportLabel } from "@/lib/utils/formatters";
 import type { Sport, GameType } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
-import { SubViewHeader } from "../shared/ui";
+import { SubViewHeader, FullLoading } from "../shared/ui";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
-export default function CreateGame() {
+export default function CreateGame({ gameId }: { gameId?: string }) {
   const t = useT();
   const { profile, closeSubView } = useAppNav();
+  const isEdit = !!gameId;
+  const [loading, setLoading] = useState(isEdit);
   const [sport, setSport] = useState<Sport>("tennis");
   const [gameType, setGameType] = useState<GameType>("singles");
   const [date, setDate] = useState("");
@@ -27,11 +29,54 @@ export default function CreateGame() {
 
   const valid = date && time && location.trim();
 
+  useEffect(() => {
+    if (!gameId) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("game_events")
+        .select("*")
+        .eq("id", gameId)
+        .maybeSingle();
+      if (data && active) {
+        const g = data as {
+          sport: Sport;
+          game_type: GameType;
+          date_time: string | null;
+          location: string | null;
+          court_number: string | null;
+          court_booked: boolean | null;
+          description: string | null;
+          max_participants: number | null;
+          is_open: boolean | null;
+        };
+        setSport(g.sport);
+        setGameType(g.game_type);
+        if (g.date_time) {
+          const d = new Date(g.date_time);
+          const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+            .toISOString();
+          setDate(local.slice(0, 10));
+          setTime(local.slice(11, 16));
+        }
+        setLocation(g.location ?? "");
+        setCourt(g.court_number ?? "");
+        setDescription(g.description ?? "");
+        setMaxP(g.max_participants ?? 2);
+        setIsOpen(g.is_open ?? true);
+        setBooked(g.court_booked ?? false);
+      }
+      if (active) setLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [gameId]);
+
   async function submit() {
     if (!valid) return;
     setSaving(true);
-    const { error } = await supabase.from("game_events").insert({
-      created_by: profile.id,
+    const payload = {
       sport,
       game_type: gameType,
       date_time: new Date(`${date}T${time}`).toISOString(),
@@ -41,15 +86,23 @@ export default function CreateGame() {
       description: description || null,
       max_participants: maxP,
       is_open: isOpen,
-      status: "planned",
-    });
+    };
+    const { error } = gameId
+      ? await supabase.from("game_events").update(payload).eq("id", gameId)
+      : await supabase
+          .from("game_events")
+          .insert({ ...payload, created_by: profile.id, status: "planned" });
     setSaving(false);
     if (!error) closeSubView();
   }
 
   return (
     <div className="flex h-full flex-col">
-      <SubViewHeader title={t("games.createTitle")} />
+      <SubViewHeader title={t(isEdit ? "games.editTitle" : "games.createTitle")} />
+      {loading ? (
+        <FullLoading />
+      ) : (
+        <>
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <Field label={t("games.sportLabel")}>
           <div className="flex gap-2">
@@ -150,9 +203,13 @@ export default function CreateGame() {
           onClick={submit}
           className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {saving ? t("games.creating") : t("games.create")}
+          {saving
+            ? t(isEdit ? "games.saving" : "games.creating")
+            : t(isEdit ? "games.save" : "games.create")}
         </button>
       </div>
+        </>
+      )}
     </div>
   );
 }

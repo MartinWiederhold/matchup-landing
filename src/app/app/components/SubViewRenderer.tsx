@@ -42,6 +42,8 @@ export default function SubViewRenderer({
       return <GameDetail gameId={subView.gameId} />;
     case "create-game":
       return <CreateGame />;
+    case "edit-game":
+      return <CreateGame gameId={subView.gameId} />;
     case "game-requests":
       return <GameRequests gameId={subView.gameId} />;
     case "comments":

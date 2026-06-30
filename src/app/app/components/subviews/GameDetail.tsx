@@ -142,13 +142,22 @@ export default function GameDetail({ gameId }: { gameId: string }) {
 
       <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">
         {isCreator ? (
-          <button
-            type="button"
-            onClick={cancelGame}
-            className="w-full rounded-full bg-zinc-700 py-3.5 text-sm font-bold text-white"
-          >
-            {t("games.cancelGame")}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => openSubView({ type: "edit-game", gameId })}
+              className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
+            >
+              {t("games.editGame")}
+            </button>
+            <button
+              type="button"
+              onClick={cancelGame}
+              className="w-full rounded-full bg-zinc-800 py-3.5 text-sm font-semibold text-zinc-300"
+            >
+              {t("games.cancelGame")}
+            </button>
+          </>
         ) : myPart ? (
           <button
             type="button"

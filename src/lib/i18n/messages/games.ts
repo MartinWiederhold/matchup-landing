@@ -17,6 +17,10 @@ export const games = {
     createGameAria: "Spiel erstellen",
     // CreateGame
     createTitle: "Spiel erstellen",
+    editTitle: "Spiel bearbeiten",
+    save: "Speichern",
+    saving: "Wird gespeichert…",
+    editGame: "Bearbeiten",
     sportLabel: "Sportart *",
     gameTypeLabel: "Spieltyp *",
     dateLabel: "Datum *",
@@ -68,6 +72,10 @@ export const games = {
     createGameAria: "Create game",
     // CreateGame
     createTitle: "Create game",
+    editTitle: "Edit game",
+    save: "Save",
+    saving: "Saving…",
+    editGame: "Edit",
     sportLabel: "Sport *",
     gameTypeLabel: "Game type *",
     dateLabel: "Date *",
