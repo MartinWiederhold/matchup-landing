@@ -2,7 +2,9 @@
 
 import { useT } from "@/lib/i18n";
 
-const APP_URL = "https://matchup-app.com";
+// Versions-Parameter erzwingt bei WhatsApp & Co. ein frisches Vorschaubild
+// (Cache wird pro URL gehalten). Bei neuem OG-Bild einfach hochzählen.
+const APP_URL = "https://matchup-app.com/?v=4";
 
 export default function InviteFriends() {
   const t = useT();

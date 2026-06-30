@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Padelpartner finden in deiner Nähe",
     description:
       "Finde Padel-Mitspieler auf deinem Level — kostenlos matchen, beitreten und spielen.",
-    images: ["/og-v3.jpg"],
+    images: ["/og-v4.jpg"],
   },
 };
 
