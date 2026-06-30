@@ -47,8 +47,7 @@ export default async function AboutPage() {
           fill
           priority
           sizes="100vw"
-          className="object-cover"
-          style={{ objectPosition: "center 45%" }}
+          className="object-cover [object-position:left_45%] sm:[object-position:center_45%]"
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 px-6 text-center text-white">
