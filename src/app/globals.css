@@ -18,8 +18,10 @@
 
 html {
   scroll-behavior: smooth;
-  /* Verhindert den weissen iOS-Overscroll-Balken (Rubber-Band) in der PWA. */
+  /* Verhindert den weissen iOS-Overscroll-/Home-Indikator-Balken in der PWA:
+     schwarzer Hintergrund + dunkles color-scheme (Systemfläche folgt dem). */
   background-color: #000;
+  color-scheme: dark;
 }
 
 body {

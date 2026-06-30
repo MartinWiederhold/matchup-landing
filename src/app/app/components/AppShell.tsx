@@ -40,17 +40,20 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [refreshing, setRefreshing] = useState(false);
   const pullStart = useRef(-1);
 
+  const PULL_DEADZONE = 18; // erst nach echtem Ziehen (kein Tap/Tab-Wechsel)
+
   function onTouchStart(e: React.TouchEvent<HTMLDivElement>) {
     pullStart.current =
       e.currentTarget.scrollTop <= 0 ? e.touches[0].clientY : -1;
+    if (!refreshing) setPull(0);
   }
   function onTouchMove(e: React.TouchEvent<HTMLDivElement>) {
     if (pullStart.current < 0 || refreshing) return;
     const dy = e.touches[0].clientY - pullStart.current;
-    if (dy > 0 && e.currentTarget.scrollTop <= 0) {
-      setPull(Math.min(dy * 0.5, 72));
+    if (dy > PULL_DEADZONE && e.currentTarget.scrollTop <= 0) {
+      setPull(Math.min((dy - PULL_DEADZONE) * 0.5, 72));
     } else {
-      setPull(0);
+      setPull((p) => (p !== 0 ? 0 : p));
     }
   }
   function onTouchEnd() {
@@ -70,6 +73,8 @@ export default function AppShell({ profile }: { profile: Profile }) {
     setActiveTab(t);
     setNavHidden(false);
     lastScroll.current = 0;
+    setPull(0);
+    pullStart.current = -1;
   }, []);
 
   function handleScroll(e: React.UIEvent<HTMLDivElement>) {
