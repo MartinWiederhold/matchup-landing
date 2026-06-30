@@ -1,5 +1,12 @@
 export const support = {
   de: {
+    // Kontakt (E-Mail-Button)
+    contactTitle: "Wie können wir helfen?",
+    contactText:
+      "Schreib uns einfach eine E-Mail — wir melden uns so schnell wie möglich zurück.",
+    contactButton: "E-Mail an Support",
+    mailSubject: "Matchup Support",
+
     // Support list
     title: "Support",
     statusOpen: "Offen",
@@ -24,6 +31,13 @@ export const support = {
     chatPlaceholder: "Nachricht…",
   },
   en: {
+    // Contact (email button)
+    contactTitle: "How can we help?",
+    contactText:
+      "Just send us an email — we'll get back to you as soon as possible.",
+    contactButton: "Email support",
+    mailSubject: "Matchup Support",
+
     // Support list
     title: "Support",
     statusOpen: "Open",
