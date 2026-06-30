@@ -36,6 +36,19 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [navHidden, setNavHidden] = useState(false);
   const lastScroll = useRef(0);
   const online = useOnline();
+  // iOS: dvh-Höhe „setzt" sich erst nach einem Repaint → exakte Pixelhöhe per JS,
+  // damit die schwarze Fläche sofort (ohne Scrollen) bis zum Home-Indikator reicht.
+  const [vh, setVh] = useState<number | null>(null);
+  useEffect(() => {
+    const set = () => setVh(window.innerHeight);
+    set();
+    window.addEventListener("resize", set);
+    window.addEventListener("orientationchange", set);
+    return () => {
+      window.removeEventListener("resize", set);
+      window.removeEventListener("orientationchange", set);
+    };
+  }, []);
 
   const selectTab = useCallback((t: TabKey) => {
     setStack([]);
@@ -102,8 +115,14 @@ export default function AppShell({ profile }: { profile: Profile }) {
         refreshBadges,
       }}
     >
-      <div className="flex min-h-dvh justify-center overflow-hidden bg-black">
-        <div className="relative flex h-dvh w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+      <div
+        className="flex min-h-dvh justify-center overflow-hidden bg-black"
+        style={vh ? { height: vh, minHeight: vh } : undefined}
+      >
+        <div
+          className="relative flex h-dvh w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white"
+          style={vh ? { height: vh } : undefined}
+        >
           {!online && (
             <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
               {t("app.offline")}
