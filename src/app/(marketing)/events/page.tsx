@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/events",
       title: t("seo.eventsTitle"),
       description: t("seo.eventsDescription"),
-      images: ["/og-v5.jpg"],
+      images: ["/og-v6.jpg"],
     },
   };
 }

@@ -15,13 +15,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "https://matchup-app.com/join",
       title: t("seo.homeTitle"),
       description: t("seo.homeDescription"),
-      images: [{ url: "/og-v5.jpg", width: 1200, height: 630, alt: "Matchup" }],
+      images: [{ url: "/og-v6.jpg", width: 1200, height: 630, alt: "Matchup" }],
     },
     twitter: {
       card: "summary_large_image",
       title: t("seo.homeTitle"),
       description: t("seo.homeDescription"),
-      images: ["/og-v5.jpg"],
+      images: ["/og-v6.jpg"],
     },
   };
 }

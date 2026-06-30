@@ -24,7 +24,7 @@ export async function generateMetadata({
     title: `${data.h1} – kostenlos Mitspieler`,
     description: data.intro.slice(0, 155),
     alternates: { canonical: path },
-    openGraph: { url: path, title: data.h1, description: data.intro, images: ["/og-v5.jpg"] },
+    openGraph: { url: path, title: data.h1, description: data.intro, images: ["/og-v6.jpg"] },
   };
 }
 
