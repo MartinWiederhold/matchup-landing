@@ -7,6 +7,7 @@ import type { Sport, GameType } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader, FullLoading } from "../shared/ui";
+import GameContactPicker from "../GameContactPicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
@@ -25,6 +26,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
   const [maxP, setMaxP] = useState(2);
   const [isOpen, setIsOpen] = useState(true);
   const [booked, setBooked] = useState(false);
+  const [contacts, setContacts] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const valid = date && time && location.trim();
@@ -87,13 +89,52 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
       max_participants: maxP,
       is_open: isOpen,
     };
-    const { error } = gameId
-      ? await supabase.from("game_events").update(payload).eq("id", gameId)
-      : await supabase
-          .from("game_events")
-          .insert({ ...payload, created_by: profile.id, status: "planned" });
+    let targetId = gameId ?? null;
+    if (gameId) {
+      const { error } = await supabase
+        .from("game_events")
+        .update(payload)
+        .eq("id", gameId);
+      if (error) {
+        setSaving(false);
+        return;
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("game_events")
+        .insert({ ...payload, created_by: profile.id, status: "planned" })
+        .select("id")
+        .single();
+      if (error || !data) {
+        setSaving(false);
+        return;
+      }
+      targetId = (data as { id: string }).id;
+    }
+
+    // Eingeladene Mitspieler als bestätigte Teilnehmer hinzufügen (nur neue).
+    if (targetId && contacts.length) {
+      const { data: existing } = await supabase
+        .from("game_participants")
+        .select("user_id")
+        .eq("game_event_id", targetId);
+      const have = new Set(
+        (existing ?? []).map((r: { user_id: string }) => r.user_id),
+      );
+      const toAdd = contacts.filter((id) => !have.has(id));
+      if (toAdd.length) {
+        await supabase.from("game_participants").insert(
+          toAdd.map((uid) => ({
+            game_event_id: targetId,
+            user_id: uid,
+            status: "confirmed",
+            confirmed_at: new Date().toISOString(),
+          })),
+        );
+      }
+    }
     setSaving(false);
-    if (!error) closeSubView();
+    closeSubView();
   }
 
   return (
@@ -194,6 +235,15 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
 
         <Toggle label={t("games.openForAll")} value={isOpen} onChange={setIsOpen} />
         <Toggle label={t("games.courtBooked")} value={booked} onChange={setBooked} />
+
+        <Field label={t("games.inviteLabel")}>
+          <p className="-mt-1 mb-2 text-xs text-zinc-500">{t("games.inviteHint")}</p>
+          <GameContactPicker
+            meId={profile.id}
+            selected={contacts}
+            onChange={setContacts}
+          />
+        </Field>
       </div>
 
       <div className="shrink-0 border-t border-zinc-800 p-5">

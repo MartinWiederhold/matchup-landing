@@ -28,11 +28,19 @@ function GearIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+type GameReviewRow = {
+  id: string;
+  what_good: string | null;
+  work_on: string | null;
+  created_at: string;
+};
+
 export default function ProfileTab() {
   const t = useT();
   const { profile, openSubView } = useAppNav();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [reviews, setReviews] = useState<GameReviewRow[]>([]);
 
   useEffect(() => {
     supabase
@@ -46,6 +54,13 @@ export default function ProfileTab() {
       .select("*")
       .eq("user_id", profile.id)
       .then(({ data }) => setAchievements((data as Achievement[]) ?? []));
+    supabase
+      .from("game_reviews")
+      .select("id, what_good, work_on, created_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => setReviews((data as GameReviewRow[]) ?? []));
   }, [profile.id]);
 
   const images = [profile.profile_image, ...(profile.additional_images ?? [])].filter(
@@ -114,6 +129,29 @@ export default function ProfileTab() {
         <Section title={t("profile.stats")}>
           <ProfileStats profile={profile} stats={stats} />
         </Section>
+
+        {reviews.length > 0 && (
+          <Section title={t("profile.progressNotes")}>
+            <div className="space-y-2">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-xl bg-zinc-900 p-3">
+                  {r.work_on && (
+                    <p className="text-sm text-white">
+                      <span className="font-semibold text-sky-400">→ </span>
+                      {r.work_on}
+                    </p>
+                  )}
+                  {r.what_good && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      <span className="text-emerald-400">+ </span>
+                      {r.what_good}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {achievements.length > 0 && (
           <Section title={t("profile.achievements")}>

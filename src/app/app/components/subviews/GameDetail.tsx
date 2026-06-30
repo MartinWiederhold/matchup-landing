@@ -141,6 +141,15 @@ export default function GameDetail({ gameId }: { gameId: string }) {
       </div>
 
       <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">
+        {(isCreator || myPart) && (
+          <button
+            type="button"
+            onClick={() => openSubView({ type: "game-review", gameId })}
+            className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold text-white hover:bg-zinc-800"
+          >
+            {t("games.reviewButton")}
+          </button>
+        )}
         {isCreator ? (
           <>
             <button
