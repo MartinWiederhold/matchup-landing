@@ -35,8 +35,14 @@ export default async function Footer() {
       title: t("footer.colSupport"),
       links: [
         { label: t("footer.helpFaq"), href: "/faq" },
-        { label: t("footer.contact"), href: "mailto:hello@matchup.ch" },
-        { label: t("footer.feedback"), href: "#" },
+        {
+          label: t("footer.contact"),
+          href: "mailto:swissflow@bluewin.ch?subject=Matchup%20Support",
+        },
+        {
+          label: t("footer.feedback"),
+          href: "mailto:swissflow@bluewin.ch?subject=Matchup%20Feedback",
+        },
       ],
     },
   ];
