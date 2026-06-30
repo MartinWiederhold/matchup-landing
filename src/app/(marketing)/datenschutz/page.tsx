@@ -18,7 +18,7 @@ export default function DatenschutzPage() {
         {
           heading: "1. Verantwortliche Stelle",
           body: [
-            "Verantwortlich für die Datenverarbeitung ist:\n[Firmenname / Inhaber], [Adresse]\nE-Mail: swissflow@bluewin.ch",
+            "Verantwortlich für die Datenverarbeitung ist:\nMatchup, Martin Wiederhold, Niederdorfstrasse 74, 8001 Zürich\nE-Mail: swissflow@bluewin.ch",
           ],
         },
         {

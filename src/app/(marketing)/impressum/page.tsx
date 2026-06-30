@@ -18,7 +18,7 @@ export default function ImpressumPage() {
         {
           heading: "Anbieter",
           body: [
-            "[Firmenname / Inhaber]\n[Strasse und Hausnummer]\n[PLZ Ort]\n[Land]",
+            "Matchup\nMartin Wiederhold\nNiederdorfstrasse 74\n8001 Zürich\nSchweiz",
           ],
         },
         {
@@ -26,10 +26,8 @@ export default function ImpressumPage() {
           body: ["E-Mail: swissflow@bluewin.ch"],
         },
         {
-          heading: "Handelsregister / UID",
-          body: [
-            "[Handelsregister-Nr. / UID-Nr., falls vorhanden]\n[Vertretungsberechtigte Person]",
-          ],
+          heading: "Verantwortlich",
+          body: ["Martin Wiederhold"],
         },
         {
           heading: "Haftungsausschluss",
