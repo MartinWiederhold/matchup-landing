@@ -44,13 +44,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       url: "/",
       locale: locale === "de" ? "de_CH" : "en_US",
-      images: [{ url: "/og-v4.jpg", width: 1200, height: 630, alt: "Matchup" }],
+      images: [{ url: "/og-v5.jpg", width: 1200, height: 630, alt: "Matchup" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/og-v4.jpg"],
+      images: ["/og-v5.jpg"],
     },
   };
 }

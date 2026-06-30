@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/beratung",
       title: t("seo.beratungTitle"),
       description: t("seo.beratungDescription"),
-      images: ["/og-v4.jpg"],
+      images: ["/og-v5.jpg"],
     },
   };
 }

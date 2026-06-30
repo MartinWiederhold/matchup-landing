@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Tennispartner finden in deiner Nähe",
     description:
       "Finde Tennis-Mitspieler auf deinem Level — kostenlos matchen, chatten und spielen.",
-    images: ["/og-v4.jpg"],
+    images: ["/og-v5.jpg"],
   },
 };
 
