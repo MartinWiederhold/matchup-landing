@@ -121,6 +121,12 @@ export default function GamesTab() {
                 g.participants?.filter((p) => p.status === "accepted").length ??
                 0;
               const cap = g.max_participants ?? (g.game_type === "singles" ? 2 : 4);
+              const people: { first_name?: string; profile_image?: string | null }[] = [
+                ...(g.creator ? [g.creator] : []),
+                ...(g.participants ?? [])
+                  .filter((p) => p.status === "accepted" && p.profile)
+                  .map((p) => p.profile!),
+              ];
               return (
                 <li key={g.id}>
                   <button
@@ -128,28 +134,60 @@ export default function GamesTab() {
                     onClick={() =>
                       openSubView({ type: "game-detail", gameId: g.id })
                     }
-                    className="block w-full rounded-2xl bg-zinc-900 p-4 text-left"
+                    className="flex w-full items-start gap-3 rounded-2xl bg-zinc-900 p-4 text-left"
                   >
-                    <p className="font-semibold">
-                      <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
-                      {g.game_type === "singles" ? t("games.singles") : t("games.doubles")}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-300">
-                      <CalendarIcon size={14} className="mr-1 inline-block align-[-2px]" />
-                      {formatEventDate(g.date_time)}
-                    </p>
-                    <p className="text-sm text-zinc-400">
-                      <MapPinIcon size={14} className="mr-1 inline-block align-[-2px]" />
-                      {g.location}
-                      {g.court_number ? `, ${g.court_number}` : ""}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
-                      {t("games.participants", { count: `${accepted}/${cap}` })}
-                    </p>
-                    <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-                      {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">
+                        <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
+                        {g.game_type === "singles" ? t("games.singles") : t("games.doubles")}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-300">
+                        <CalendarIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                        {formatEventDate(g.date_time)}
+                      </p>
+                      <p className="text-sm text-zinc-400">
+                        <MapPinIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                        {g.location}
+                        {g.court_number ? `, ${g.court_number}` : ""}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-400">
+                        <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
+                        {t("games.participants", { count: `${accepted}/${cap}` })}
+                      </p>
+                      <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                        {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
+                      </span>
+                    </div>
+
+                    <div className="grid shrink-0 grid-cols-2 gap-1.5">
+                      {Array.from({ length: cap }).map((_, i) => {
+                        const person = people[i];
+                        return person ? (
+                          <span
+                            key={i}
+                            className="h-9 w-9 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10"
+                          >
+                            {person.profile_image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={person.profile_image}
+                                alt={person.first_name ?? ""}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-xs font-bold text-zinc-400">
+                                {person.first_name?.[0] ?? "?"}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span
+                            key={i}
+                            className="h-9 w-9 rounded-full border-2 border-dashed border-zinc-700"
+                          />
+                        );
+                      })}
+                    </div>
                   </button>
                 </li>
               );

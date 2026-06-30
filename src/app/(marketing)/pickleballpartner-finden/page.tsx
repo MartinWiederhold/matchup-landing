@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Pickleballpartner finden in deiner Nähe",
     description:
       "Finde Pickleball-Mitspieler auf deinem Level — kostenlos matchen und spielen.",
-    images: ["/og.jpg"],
+    images: ["/og-v2.jpg"],
   },
 };
 

@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/find-a-partner",
       title: t("seo.partnerTitle"),
       description: t("seo.partnerDescription"),
-      images: ["/og.jpg"],
+      images: ["/og-v2.jpg"],
     },
   };
 }
