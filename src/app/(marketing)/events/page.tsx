@@ -24,7 +24,7 @@ export default async function EventsPage() {
     <>
       <section className="relative flex h-[52vh] min-h-[360px] items-center justify-center overflow-hidden bg-black">
         <video
-          className="absolute inset-0 h-full w-full object-cover opacity-80"
+          className="absolute inset-0 h-full w-full object-cover opacity-80 lg:[object-position:center_40%]"
           src="/events/hero.mp4"
           poster="/events/hero-poster.jpg"
           autoPlay

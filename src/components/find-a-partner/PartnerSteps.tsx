@@ -115,7 +115,7 @@ function StepRow({ step, index }: { step: Step; index: number }) {
           sizes="(max-width: 1024px) 100vw, 50vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             step.overlay === "play"
-              ? "[object-position:center_10%]"
+              ? "[object-position:center_30%]"
               : step.overlay === "match"
                 ? "[object-position:center_20%]"
                 : step.overlay === "profile"
