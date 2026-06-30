@@ -58,11 +58,24 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const closeSubView = useCallback(() => setStack((s) => s.slice(0, -1)), []);
 
   const refreshBadges = useCallback(async () => {
-    const { count: likes } = await supabase
-      .from("likes")
-      .select("id", { count: "exact", head: true })
-      .eq("to_user_id", profile.id);
-    setLikeCount(likes ?? 0);
+    // Offene Anfragen = eingehende Likes von Personen, mit denen noch KEIN Match
+    // besteht. Gematchte werden ausgeschlossen (sonst zeigt der Badge nach einem
+    // Match fälschlich eine 1 — wie im LikesTab gefiltert).
+    const [{ data: likeRows }, { data: matchRows }] = await Promise.all([
+      supabase.from("likes").select("from_user_id").eq("to_user_id", profile.id),
+      supabase
+        .from("matches")
+        .select("user1_id, user2_id")
+        .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`),
+    ]);
+    const matched = new Set<string>();
+    (matchRows ?? []).forEach((m) =>
+      matched.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
+    );
+    const pending = ((likeRows as { from_user_id: string }[]) ?? []).filter(
+      (l) => !matched.has(l.from_user_id),
+    ).length;
+    setLikeCount(pending);
 
     const { count: unread } = await supabase
       .from("messages")
