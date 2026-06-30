@@ -9,10 +9,15 @@ export const events = {
       "Erstelle dein eigenes Event direkt hier — Tennis, Padel oder Pickleball.",
     ctaButton: "App öffnen",
     // Steuerleiste
-    scopeNear: "In meiner Nähe",
+    scopeNear: "In der Nähe",
     scopeWorld: "Weltweit",
     searchPlaceholder: "Events worldwide suchen…",
     createButton: "+ Event",
+    filterLabel: "Filter",
+    radiusLabel: "Umkreis",
+    radiusValue: "{km} km",
+    radiusWorldwide: "Weltweit",
+    sportAll: "Alle Sportarten",
     locating:
       "Standort wird ermittelt… erlaube den Zugriff, um Events in deiner Nähe zu sehen.",
     // Grid-Status
@@ -70,6 +75,11 @@ export const events = {
     scopeWorld: "Worldwide",
     searchPlaceholder: "Search events worldwide…",
     createButton: "+ Event",
+    filterLabel: "Filter",
+    radiusLabel: "Radius",
+    radiusValue: "{km} km",
+    radiusWorldwide: "Worldwide",
+    sportAll: "All sports",
     locating:
       "Detecting your location… allow access to see events near you.",
     // Grid status

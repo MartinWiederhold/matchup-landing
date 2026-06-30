@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         hostname: "images.ctfassets.net",
         pathname: "/rbzqg6pelgqa/**",
       },
+      {
+        protocol: "https",
+        hostname: "dqeroewcdclgxujhubht.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
   async headers() {

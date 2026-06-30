@@ -64,6 +64,9 @@ export default function EventsExperience() {
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<EventItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [radius, setRadius] = useState(201); // 201 = weltweit
+  const [sportFilter, setSportFilter] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -127,53 +130,130 @@ export default function EventsExperience() {
           sportLabel(e.sport).toLowerCase().includes(q),
       );
     }
+    if (sportFilter) {
+      list = list.filter((e) => e.sport === sportFilter);
+    }
+    // Umkreis (nur sinnvoll mit Standort): unter 201 km filtern, sonst weltweit.
+    if (scope === "near" && coords && radius < 201) {
+      list = list.filter((e) => (e._distance ?? 1e9) <= radius);
+    }
     if (scope === "near" && coords) {
       list = [...list].sort((a, b) => (a._distance ?? 1e9) - (b._distance ?? 1e9));
     }
     return list;
-  }, [events, coords, query, scope]);
+  }, [events, coords, query, scope, sportFilter, radius]);
 
   return (
     <section className="bg-white px-4 py-16 sm:px-6 lg:px-12">
       <div className="mx-auto max-w-[1280px]">
         {/* Steuerleiste */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex rounded-full bg-neutral-100 p-1">
-            <button
-              type="button"
-              onClick={enableNear}
-              className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
-                scope === "near" ? "bg-black text-white" : "text-neutral-600"
-              }`}
-            >
-              {t("events.scopeNear")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setScope("world")}
-              className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
-                scope === "world" ? "bg-black text-white" : "text-neutral-600"
-              }`}
-            >
-              {t("events.scopeWorld")}
-            </button>
+        <div className="mb-8 space-y-3">
+          {/* Toggle — kompakt & zentriert */}
+          <div className="flex justify-center">
+            <div className="inline-flex rounded-full bg-neutral-100 p-1">
+              <button
+                type="button"
+                onClick={enableNear}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
+                  scope === "near" ? "bg-black text-white" : "text-neutral-600"
+                }`}
+              >
+                {t("events.scopeNear")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope("world")}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors ${
+                  scope === "world" ? "bg-black text-white" : "text-neutral-600"
+                }`}
+              >
+                {t("events.scopeWorld")}
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-1 gap-3 sm:max-w-md">
+          {/* Suche + Filter + Erstellen */}
+          <div className="mx-auto flex max-w-2xl items-center gap-2">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("events.searchPlaceholder")}
-              className="w-full rounded-full border border-neutral-200 bg-neutral-50 px-5 py-3 text-sm outline-none focus:border-black"
+              className="h-11 min-w-0 flex-1 rounded-full border border-neutral-200 bg-neutral-50 px-5 text-base outline-none focus:border-black"
             />
             <button
               type="button"
+              onClick={() => setShowFilter((v) => !v)}
+              aria-label={t("events.filterLabel")}
+              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                showFilter ? "border-black bg-black text-white" : "border-neutral-200 text-neutral-700"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 5h16M7 12h10M10 19h4" />
+              </svg>
+              {(sportFilter || (scope === "near" && radius < 201)) && (
+                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-matchup ring-2 ring-white" />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => (userId ? setShowCreate(true) : (window.location.href = "/app"))}
-              className="shrink-0 rounded-full bg-matchup px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
+              className="flex h-11 shrink-0 items-center rounded-full bg-matchup px-4 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
             >
               {t("events.createButton")}
             </button>
           </div>
+
+          {/* Filter-Panel */}
+          {showFilter && (
+            <div className="mx-auto max-w-2xl space-y-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                  {t("events.filterLabel")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[null, "tennis", "padel", "pickleball"].map((s) => {
+                    const active = sportFilter === s;
+                    return (
+                      <button
+                        key={s ?? "all"}
+                        type="button"
+                        onClick={() => setSportFilter(s)}
+                        className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
+                          active
+                            ? "bg-black text-white"
+                            : "bg-white text-neutral-700 ring-1 ring-neutral-200"
+                        }`}
+                      >
+                        {s ? sportLabel(s as EventItem["sport"]) : t("events.sportAll")}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {scope === "near" && (
+                <div>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                    {t("events.radiusLabel")}:{" "}
+                    <span className="text-neutral-800">
+                      {radius > 200
+                        ? t("events.radiusWorldwide")
+                        : t("events.radiusValue", { km: radius })}
+                    </span>
+                  </p>
+                  <input
+                    type="range"
+                    min={5}
+                    max={201}
+                    value={radius}
+                    onChange={(e) => setRadius(Number(e.target.value))}
+                    className="w-full accent-matchup"
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {scope === "near" && !coords && (
