@@ -61,7 +61,7 @@ export const landing = {
     statsTitle: "Eine wachsende Community von Spielern",
     statsSubtitle:
       "Ob Anfänger oder Wettkampfspieler — auf Matchup findest du Partner auf deinem Level, in deiner Sportart und in deiner Nähe.",
-    statSports: "Sportarten — Tennis, Padel & Pickleball",
+    statSports: "Tennis, Padel & Pickleball",
     statClubs: "Clubs weltweit auf der Karte",
     statCountries: "Länder weltweit vernetzt",
 
@@ -146,7 +146,7 @@ export const landing = {
     statsTitle: "A growing community of players",
     statsSubtitle:
       "Whether you're a beginner or a competitor — on Matchup you'll find partners at your level, in your sport and near you.",
-    statSports: "Sports — tennis, padel & pickleball",
+    statSports: "Tennis, padel & pickleball",
     statClubs: "Clubs worldwide on the map",
     statCountries: "Countries connected worldwide",
 
