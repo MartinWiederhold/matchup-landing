@@ -463,7 +463,7 @@ function CreateEventModal({
     try {
       if (file) {
         const blob = await compressImage(file);
-        const path = `events/${userId}-${Date.now()}.jpg`;
+        const path = `${userId}/events/${Date.now()}.jpg`;
         const { error: upErr } = await supabase.storage
           .from("web-avatars")
           .upload(path, blob, { contentType: "image/jpeg" });

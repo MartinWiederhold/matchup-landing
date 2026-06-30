@@ -15,9 +15,9 @@ export const waitlist = {
     privacy: "Nur für den Launch. Kein Spam, jederzeit abbestellbar.",
     emailInvalid: "Bitte gib eine gültige E-Mail-Adresse ein.",
     errorGeneric: "Etwas ist schiefgelaufen. Bitte versuch es nochmal.",
-    successTitle: "Du bist dabei! 🎾",
+    successTitle: "Du bist dabei!",
     successPosition: "Du bist auf Platz #{pos} der Warteliste.",
-    alreadyTitle: "Schon dabei! 🎾",
+    alreadyTitle: "Schon dabei!",
     alreadyText: "Diese E-Mail steht bereits auf der Warteliste.",
     successText:
       "Wir melden uns, sobald es losgeht. Hol deine Freunde dazu — gemeinsam macht's mehr Spass.",
@@ -44,9 +44,9 @@ export const waitlist = {
     privacy: "Only for the launch. No spam, unsubscribe anytime.",
     emailInvalid: "Please enter a valid email address.",
     errorGeneric: "Something went wrong. Please try again.",
-    successTitle: "You're in! 🎾",
+    successTitle: "You're in!",
     successPosition: "You're #{pos} on the waitlist.",
-    alreadyTitle: "Already in! 🎾",
+    alreadyTitle: "Already in!",
     alreadyText: "This email is already on the waitlist.",
     successText:
       "We'll be in touch as soon as we launch. Bring your friends along — it's more fun together.",

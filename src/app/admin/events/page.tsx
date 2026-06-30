@@ -210,8 +210,13 @@ function EditModal({
     if (!file) return;
     setUploading(true);
     try {
+      // Storage-RLS verlangt: erster Ordner = eigene User-ID (auth.uid()).
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Nicht eingeloggt");
       const blob = await resizeToJpeg(file, 1200);
-      const path = `events/admin-${event.id}-${Date.now()}.jpg`;
+      const path = `${user.id}/events/${event.id}-${Date.now()}.jpg`;
       const { error } = await supabase.storage
         .from("web-avatars")
         .upload(path, blob, { contentType: "image/jpeg", upsert: true });

@@ -26,7 +26,6 @@ export default function WaitlistModal({
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
-  const [position, setPosition] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +35,6 @@ export default function WaitlistModal({
     setStatus("idle");
     setEmail("");
     setErrorMsg("");
-    setPosition(null);
     setCopied(false);
     supabase
       .rpc("waitlist_count")
@@ -89,10 +87,7 @@ export default function WaitlistModal({
     }
 
     const { data } = await supabase.rpc("waitlist_count");
-    if (typeof data === "number") {
-      setCount(data);
-      setPosition(data);
-    }
+    if (typeof data === "number") setCount(data);
     setStatus("success");
   }
 
@@ -112,11 +107,11 @@ export default function WaitlistModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md overflow-hidden rounded-t-3xl bg-neutral-950 text-white shadow-2xl ring-1 ring-white/10 sm:rounded-3xl"
+        className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-neutral-950 text-white shadow-2xl ring-1 ring-white/10 sm:max-h-[88vh] sm:rounded-3xl"
       >
         {/* Pink-Glow oben */}
         <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-pink-500/40 blur-3xl" />
@@ -130,7 +125,7 @@ export default function WaitlistModal({
           ✕
         </button>
 
-        <div className="relative p-6 sm:p-8">
+        <div className="relative overflow-y-auto p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-8">
           {!done ? (
             <>
               <span className="inline-flex items-center rounded-full border border-pink-400/60 bg-pink-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-pink-300">
@@ -195,12 +190,7 @@ export default function WaitlistModal({
               <h2 className="mt-4 text-2xl font-bold tracking-tight">
                 {status === "already" ? t("waitlist.alreadyTitle") : t("waitlist.successTitle")}
               </h2>
-              {status === "success" && position != null && (
-                <p className="mt-2 text-sm font-semibold text-pink-300">
-                  {t("waitlist.successPosition", { pos: position })}
-                </p>
-              )}
-              <p className="mt-2 text-sm leading-relaxed text-white/70">
+              <p className="mt-3 text-sm leading-relaxed text-white/70">
                 {status === "already" ? t("waitlist.alreadyText") : t("waitlist.successText")}
               </p>
 
