@@ -36,6 +36,34 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [navHidden, setNavHidden] = useState(false);
   const lastScroll = useRef(0);
   const online = useOnline();
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullStart = useRef(-1);
+
+  function onTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    pullStart.current =
+      e.currentTarget.scrollTop <= 0 ? e.touches[0].clientY : -1;
+  }
+  function onTouchMove(e: React.TouchEvent<HTMLDivElement>) {
+    if (pullStart.current < 0 || refreshing) return;
+    const dy = e.touches[0].clientY - pullStart.current;
+    if (dy > 0 && e.currentTarget.scrollTop <= 0) {
+      setPull(Math.min(dy * 0.5, 72));
+    } else {
+      setPull(0);
+    }
+  }
+  function onTouchEnd() {
+    if (refreshing) return;
+    if (pull > 52) {
+      setRefreshing(true);
+      setPull(52);
+      window.setTimeout(() => window.location.reload(), 350);
+    } else {
+      setPull(0);
+    }
+    pullStart.current = -1;
+  }
 
   const selectTab = useCallback((t: TabKey) => {
     setStack([]);
@@ -115,13 +143,42 @@ export default function AppShell({ profile }: { profile: Profile }) {
             <>
               <div
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto overscroll-contain pb-28"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+                className="relative flex-1 overflow-y-auto overscroll-contain pb-28"
               >
-                {activeTab === "discover" && <DiscoverTab />}
-                {activeTab === "likes" && <LikesTab />}
-                {activeTab === "matches" && <MatchesTab />}
-                {activeTab === "games" && <GamesTab />}
-                {activeTab === "profile" && <ProfileTab />}
+                {/* Pull-to-Refresh-Indikator */}
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-center"
+                  style={{ height: pull, opacity: Math.min(1, pull / 40) }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className={`h-6 w-6 text-matchup ${refreshing ? "animate-spin" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    style={refreshing ? undefined : { transform: `rotate(${pull * 5}deg)` }}
+                  >
+                    <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
+                    <path d="M21 3v5h-5" />
+                  </svg>
+                </div>
+
+                <div
+                  style={{
+                    transform: `translateY(${pull}px)`,
+                    transition: pullStart.current < 0 ? "transform 0.25s" : "none",
+                  }}
+                >
+                  {activeTab === "discover" && <DiscoverTab />}
+                  {activeTab === "likes" && <LikesTab />}
+                  {activeTab === "matches" && <MatchesTab />}
+                  {activeTab === "games" && <GamesTab />}
+                  {activeTab === "profile" && <ProfileTab />}
+                </div>
               </div>
 
               <TabBar

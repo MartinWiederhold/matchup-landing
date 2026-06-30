@@ -18,6 +18,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Verhindert den weissen iOS-Overscroll-Balken (Rubber-Band) in der PWA. */
+  background-color: #000;
 }
 
 body {

@@ -10,6 +10,7 @@ import type { PlayerStats, Achievement } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import ProfileStats from "../ProfileStats";
+import InviteFriends from "../InviteFriends";
 
 function PencilIcon({ size = 18 }: { size?: number }) {
   return (
@@ -107,6 +108,8 @@ export default function ProfileTab() {
       </div>
 
       <div className="space-y-6 px-5 pt-8">
+        <InviteFriends />
+
         {profile.bio && (
           <Section title={t("profile.aboutMe")}>
             <p className="text-sm text-zinc-300">{profile.bio}</p>
