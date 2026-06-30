@@ -42,11 +42,20 @@ export default function AppShell({ profile }: { profile: Profile }) {
   useEffect(() => {
     const set = () => setVh(window.innerHeight);
     set();
+    // iOS standalone löst die untere Safe-Area erst nach einem Repaint auf.
+    // Mehrfaches Nachmessen erzwingt das automatisch beim Start (ohne Scrollen).
+    const raf = requestAnimationFrame(set);
+    const timers = [120, 400, 1000].map((ms) => window.setTimeout(set, ms));
+    const vv = window.visualViewport;
     window.addEventListener("resize", set);
     window.addEventListener("orientationchange", set);
+    vv?.addEventListener("resize", set);
     return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
       window.removeEventListener("resize", set);
       window.removeEventListener("orientationchange", set);
+      vv?.removeEventListener("resize", set);
     };
   }, []);
 
