@@ -216,9 +216,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unbekannte Aktion" }, { status: 400 });
     }
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Serverfehler" },
-      { status: 500 },
-    );
+    // Supabase/Postgrest-Fehler sind keine Error-Instanzen, haben aber .message.
+    const msg =
+      e instanceof Error
+        ? e.message
+        : (e as { message?: string; details?: string })?.message ||
+          (e as { details?: string })?.details ||
+          "Serverfehler";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

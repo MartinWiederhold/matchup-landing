@@ -24,20 +24,18 @@ html {
   color-scheme: dark;
 }
 
-/* Installierte PWA (iOS): füllt die Home-Indikator-/Safe-Area unten zuverlässig
-   schwarz — behebt den weissen Balken, unabhängig vom (gecachten) Manifest. */
-@media (display-mode: standalone) {
-  body::after {
-    content: "";
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: env(safe-area-inset-bottom);
-    background: #000;
-    z-index: 50;
-    pointer-events: none;
-  }
+/* Füllt die untere Safe-Area (iOS Home-Indikator) zuverlässig schwarz und behebt
+   den weissen PWA-Balken. Im Browser ist inset-bottom 0 → unsichtbar. */
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background: #000;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 body {

@@ -8,6 +8,7 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader, FullLoading } from "../shared/ui";
 import GameContactPicker from "../GameContactPicker";
+import ClubPicker from "../shared/ClubPicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
@@ -20,7 +21,8 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
   const [gameType, setGameType] = useState<GameType>("singles");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(profile.club_name_manual ?? "");
+  const [clubId, setClubId] = useState<string | null>(profile.club_id ?? null);
   const [court, setCourt] = useState("");
   const [description, setDescription] = useState("");
   const [maxP, setMaxP] = useState(2);
@@ -51,6 +53,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
           description: string | null;
           max_participants: number | null;
           is_open: boolean | null;
+          club_id: string | null;
         };
         setSport(g.sport);
         setGameType(g.game_type);
@@ -62,6 +65,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
           setTime(local.slice(11, 16));
         }
         setLocation(g.location ?? "");
+        setClubId(g.club_id ?? null);
         setCourt(g.court_number ?? "");
         setDescription(g.description ?? "");
         setMaxP(g.max_participants ?? 2);
@@ -88,6 +92,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
       description: description || null,
       max_participants: maxP,
       is_open: isOpen,
+      club_id: clubId,
     };
     let targetId = gameId ?? null;
     if (gameId) {
@@ -189,11 +194,16 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
           />
         </Field>
         <Field label={t("games.locationLabel")}>
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder={t("games.locationPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+          <ClubPicker
+            clubId={clubId}
+            clubName={location || null}
+            country={profile.country}
+            lat={profile.latitude}
+            lng={profile.longitude}
+            onChange={(id, name) => {
+              setClubId(id);
+              setLocation(name ?? "");
+            }}
           />
         </Field>
         <Field label={t("games.courtLabel")}>
