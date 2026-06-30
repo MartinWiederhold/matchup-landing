@@ -107,6 +107,13 @@ body {
 }
 .anim-rise { animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 
+/* Sport-Accordion: hochwertiges, weiches Einblenden des offenen Panels */
+@keyframes accReveal {
+  from { opacity: 0; transform: translateY(16px); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.anim-acc { animation: accReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 /* Wheel-Picker: nativer Scroll ohne sichtbaren Scrollbalken */
 .no-scrollbar {
   scrollbar-width: none;

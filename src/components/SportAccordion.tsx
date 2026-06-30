@@ -29,18 +29,22 @@ export default function SportAccordion({
   const [active, setActive] = useState(0);
 
   return (
-    <div className="flex h-[500px] gap-2.5">
+    <div className="flex h-[520px] gap-2.5">
       {panels.map((p, i) => {
         const open = i === active;
         return (
           <div
             key={p.name}
             onClick={() => !open && setActive(i)}
-            className={`relative overflow-hidden rounded-3xl transition-[flex-grow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`group relative overflow-hidden rounded-[28px] transition-[flex-grow] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[flex-grow] ${
               open
                 ? "flex-[8]"
-                : "flex-[1] min-w-[3.25rem] cursor-pointer"
-            } ${open && p.featured ? "ring-2 ring-matchup" : ""}`}
+                : "flex-[1] min-w-[3.5rem] cursor-pointer active:scale-[0.985]"
+            } ${
+              open && p.featured
+                ? "ring-2 ring-matchup ring-offset-2 ring-offset-white"
+                : ""
+            }`}
             role={open ? undefined : "button"}
             aria-label={open ? undefined : p.name}
           >
@@ -49,56 +53,114 @@ export default function SportAccordion({
               alt={p.name}
               fill
               sizes="100vw"
-              className={`object-cover transition-transform duration-500 ${
-                open ? "scale-100" : "scale-110"
+              className={`object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                open ? "scale-100" : "scale-[1.18] group-active:scale-[1.22]"
               }`}
               style={p.position ? { objectPosition: p.position } : undefined}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10" />
+            {/* Verlauf: unten satt, oben fast klar — bessere Tiefe */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-700 ${
+                open
+                  ? "bg-gradient-to-t from-black/92 via-black/45 to-black/5"
+                  : "bg-gradient-to-t from-black/80 via-black/40 to-black/20"
+              }`}
+            />
 
             {open ? (
-              <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-                {p.featured && (
-                  <span className="mb-3 inline-flex w-fit rounded-full bg-matchup px-3 py-1 text-[11px] font-bold tracking-wide">
+              <div
+                key={active}
+                className="absolute inset-0 flex flex-col justify-end p-7 text-white"
+              >
+                {p.featured ? (
+                  <span
+                    className="anim-acc mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-matchup/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] backdrop-blur-sm"
+                    style={{ animationDelay: "60ms" }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
                     {trendLabel}
                   </span>
+                ) : (
+                  <span
+                    className="anim-acc mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55"
+                    style={{ animationDelay: "60ms" }}
+                  >
+                    Matchup
+                  </span>
                 )}
-                <h3 className="text-2xl font-bold tracking-wide">{p.name}</h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/85">
+                <h3
+                  className="anim-acc text-[2rem] font-bold leading-none tracking-tight"
+                  style={{ animationDelay: "120ms" }}
+                >
+                  {p.name}
+                </h3>
+                <p
+                  className="anim-acc mt-3 max-w-xs text-sm leading-relaxed text-white/80"
+                  style={{ animationDelay: "180ms" }}
+                >
                   {p.tagline}
                 </p>
-                <ul className="mt-4 space-y-2 text-sm">
-                  {p.features.map((feat) => (
-                    <li key={feat} className="flex gap-2">
-                      <svg
-                        className="mt-0.5 h-4 w-4 shrink-0 text-matchup"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M3 8.5l3 3 7-7"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                <ul className="mt-5 space-y-2.5 text-sm">
+                  {p.features.map((feat, fi) => (
+                    <li
+                      key={feat}
+                      className="anim-acc flex items-center gap-2.5"
+                      style={{ animationDelay: `${240 + fi * 70}ms` }}
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-matchup/20 ring-1 ring-matchup/40">
+                        <svg
+                          className="h-3 w-3 text-matchup"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M3 8.5l3 3 7-7"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
                       <span className="text-white/90">{feat}</span>
                     </li>
                   ))}
                 </ul>
                 <a
                   href="/app"
-                  className="mt-5 inline-block w-fit rounded-full bg-white px-6 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-white/85"
+                  className="anim-acc mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold tracking-wide text-black shadow-lg shadow-black/20 transition-colors hover:bg-white/90"
+                  style={{ animationDelay: `${240 + p.features.length * 70 + 80}ms` }}
                 >
                   {ctaLabel}
+                  <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path
+                      d="M6 3l5 5-5 5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </a>
               </div>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="rotate-180 text-sm font-bold uppercase tracking-[0.2em] text-white [writing-mode:vertical-rl]">
+              <div className="absolute inset-0 flex flex-col items-center justify-between py-6">
+                <span className="text-[11px] font-bold tabular-nums text-white/40">
+                  0{i + 1}
+                </span>
+                <span className="rotate-180 text-sm font-bold uppercase tracking-[0.22em] text-white/95 [writing-mode:vertical-rl]">
                   {p.name}
+                </span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white/80 backdrop-blur-sm transition-colors group-hover:bg-white/25">
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path
+                      d="M8 3v10M3 8h10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </span>
               </div>
             )}
