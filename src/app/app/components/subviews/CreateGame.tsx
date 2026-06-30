@@ -9,6 +9,7 @@ import { useAppNav } from "../appNav";
 import { SubViewHeader, FullLoading } from "../shared/ui";
 import GameContactPicker from "../GameContactPicker";
 import ClubPicker from "../shared/ClubPicker";
+import { DateField, TimeField } from "../shared/DateTimePicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
@@ -178,19 +179,17 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
         </Field>
 
         <Field label={t("games.dateLabel")}>
-          <input
-            type="date"
+          <DateField
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            onChange={setDate}
+            placeholder={t("games.datePlaceholder")}
           />
         </Field>
         <Field label={t("games.timeLabel")}>
-          <input
-            type="time"
+          <TimeField
             value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            onChange={setTime}
+            placeholder={t("games.timePlaceholder")}
           />
         </Field>
         <Field label={t("games.locationLabel")}>
