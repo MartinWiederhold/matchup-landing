@@ -67,6 +67,7 @@ export default function EventsExperience() {
   const [showFilter, setShowFilter] = useState(false);
   const [radius, setRadius] = useState(201); // 201 = weltweit
   const [sportFilter, setSportFilter] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,17 +100,16 @@ export default function EventsExperience() {
   }, [load, t]);
 
   function enableNear() {
-    if (coords) {
-      setScope("near");
-      return;
-    }
-    if (!navigator.geolocation) return;
+    // Sofort umschalten → der Umkreis-Regler erscheint direkt (sichtbares Feedback).
+    setScope("near");
+    if (coords || !navigator.geolocation) return;
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setScope("near");
+        setLocating(false);
       },
-      () => setScope("world"),
+      () => setLocating(false),
       { enableHighAccuracy: false, timeout: 8000 },
     );
   }
@@ -172,6 +172,36 @@ export default function EventsExperience() {
             </div>
           </div>
 
+          {/* Umkreis-Regler — erscheint inline, sobald „In der Nähe" aktiv ist */}
+          {scope === "near" && (
+            <div className="mx-auto max-w-2xl">
+              {locating ? (
+                <p className="text-center text-sm text-neutral-500">{t("events.locating")}</p>
+              ) : coords ? (
+                <div className="flex items-center gap-3 rounded-full bg-neutral-100 px-4 py-2.5">
+                  <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                    {t("events.radiusLabel")}
+                  </span>
+                  <input
+                    type="range"
+                    min={5}
+                    max={201}
+                    value={radius}
+                    onChange={(e) => setRadius(Number(e.target.value))}
+                    className="min-w-0 flex-1 accent-matchup"
+                  />
+                  <span className="w-24 shrink-0 text-right text-sm font-bold text-neutral-900">
+                    {radius > 200
+                      ? t("events.radiusWorldwide")
+                      : t("events.radiusValue", { km: radius })}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-center text-sm text-neutral-500">{t("events.locationDenied")}</p>
+              )}
+            </div>
+          )}
+
           {/* Suche + Filter + Erstellen */}
           <div className="mx-auto flex max-w-2xl items-center gap-2">
             <input
@@ -231,27 +261,6 @@ export default function EventsExperience() {
                   })}
                 </div>
               </div>
-
-              {scope === "near" && (
-                <div>
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wide text-neutral-500">
-                    {t("events.radiusLabel")}:{" "}
-                    <span className="text-neutral-800">
-                      {radius > 200
-                        ? t("events.radiusWorldwide")
-                        : t("events.radiusValue", { km: radius })}
-                    </span>
-                  </p>
-                  <input
-                    type="range"
-                    min={5}
-                    max={201}
-                    value={radius}
-                    onChange={(e) => setRadius(Number(e.target.value))}
-                    className="w-full accent-matchup"
-                  />
-                </div>
-              )}
             </div>
           )}
         </div>

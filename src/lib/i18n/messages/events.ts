@@ -20,6 +20,8 @@ export const events = {
     sportAll: "Alle Sportarten",
     locating:
       "Standort wird ermittelt… erlaube den Zugriff, um Events in deiner Nähe zu sehen.",
+    locationDenied:
+      "Standort nicht verfügbar. Aktiviere die Standortfreigabe, um den Umkreis zu nutzen.",
     // Grid-Status
     loading: "Lädt…",
     empty: "Keine Events gefunden. Erstelle das erste!",
@@ -82,6 +84,8 @@ export const events = {
     sportAll: "All sports",
     locating:
       "Detecting your location… allow access to see events near you.",
+    locationDenied:
+      "Location unavailable. Enable location sharing to use the radius.",
     // Grid status
     loading: "Loading…",
     empty: "No events found. Create the first one!",
