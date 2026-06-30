@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Matchup",
     description:
       "Finde deinen Spielpartner für Tennis, Padel und Pickleball. Matche, chatte und organisiere Spiele in deiner Nähe.",
-    start_url: "/app",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#000000",
