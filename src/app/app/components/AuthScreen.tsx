@@ -166,7 +166,7 @@ export default function AuthScreen() {
           )}
 
           {error && (
-            <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-300">
+            <div className="rounded-xl bg-zinc-800 px-4 py-3 text-sm text-amber-300">
               {error}
             </div>
           )}

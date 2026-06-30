@@ -145,7 +145,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
           <button
             type="button"
             onClick={cancelGame}
-            className="w-full rounded-full bg-red-500/90 py-3.5 text-sm font-bold text-white"
+            className="w-full rounded-full bg-zinc-700 py-3.5 text-sm font-bold text-white"
           >
             {t("games.cancelGame")}
           </button>

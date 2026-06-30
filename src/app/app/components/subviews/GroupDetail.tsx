@@ -90,7 +90,7 @@ export default function GroupDetail({ groupId }: { groupId: string }) {
       <SubViewHeader
         title={group.name}
         rightActions={
-          <button type="button" onClick={leave} className="text-xs text-red-400">
+          <button type="button" onClick={leave} className="text-xs text-zinc-400">
             {t("groups.leave")}
           </button>
         }

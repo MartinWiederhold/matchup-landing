@@ -1,22 +1,32 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { skillLabel, sportLabel } from "@/lib/utils/formatters";
-import {
-  SportIcon,
-  TrophyIcon,
-  FlameIcon,
-  StarIcon,
-  GemIcon,
-  UsersIcon,
-  MapPinIcon,
-} from "../shared/icons";
+import { SportIcon, MapPinIcon } from "../shared/icons";
 import { ACHIEVEMENT_DEFS } from "@/lib/types";
 import type { PlayerStats, Achievement } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
+import ProfileStats from "../ProfileStats";
+
+function PencilIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+function GearIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+    </svg>
+  );
+}
 
 export default function ProfileTab() {
   const t = useT();
@@ -44,7 +54,25 @@ export default function ProfileTab() {
 
   return (
     <div className="h-full overflow-y-auto pb-6">
-      <div className="flex flex-col items-center px-6 pt-8 text-center">
+      <div className="flex items-center justify-end gap-2 px-4 pt-4">
+        <button
+          type="button"
+          onClick={() => openSubView({ type: "edit-profile" })}
+          aria-label={t("profile.editAria")}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-800"
+        >
+          <PencilIcon size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={() => openSubView({ type: "settings" })}
+          aria-label={t("profile.settingsAria")}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-800"
+        >
+          <GearIcon size={18} />
+        </button>
+      </div>
+      <div className="flex flex-col items-center px-6 pt-2 text-center">
         <Avatar src={profile.profile_image} alt={profile.first_name} size="xl" />
         <h1 className="mt-4 text-2xl font-bold">
           {profile.first_name}, {profile.age}
@@ -84,13 +112,7 @@ export default function ProfileTab() {
         </Section>
 
         <Section title={t("profile.stats")}>
-          <div className="grid grid-cols-2 gap-3">
-            <Stat icon={<TrophyIcon size={14} />} label={t("profile.statMatches")} value={stats?.total_matches ?? 0} />
-            <Stat icon={<FlameIcon size={14} />} label={t("profile.statStreak")} value={t("profile.statStreakValue", { count: stats?.current_streak ?? 0 })} />
-            <Stat icon={<StarIcon size={14} />} label={t("profile.statLevel")} value={stats?.level ?? 1} />
-            <Stat icon={<GemIcon size={14} />} label={t("profile.statXp")} value={stats?.xp_points ?? 0} />
-            <Stat icon={<UsersIcon size={14} />} label={t("profile.statPartners")} value={stats?.different_partners ?? 0} />
-          </div>
+          <ProfileStats profile={profile} stats={stats} />
         </Section>
 
         {achievements.length > 0 && (
@@ -129,22 +151,6 @@ export default function ProfileTab() {
           </Section>
         )}
 
-        <div className="space-y-3 pt-2">
-          <button
-            type="button"
-            onClick={() => openSubView({ type: "edit-profile" })}
-            className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
-          >
-            {t("profile.editProfile")}
-          </button>
-          <button
-            type="button"
-            onClick={() => openSubView({ type: "settings" })}
-            className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold"
-          >
-            {t("profile.settings")}
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -163,25 +169,6 @@ function Section({
         {title}
       </h2>
       {children}
-    </div>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-xl bg-zinc-900 px-4 py-3">
-      <p className="flex items-center gap-1.5 text-xs text-zinc-400">
-        {icon} {label}
-      </p>
-      <p className="text-lg font-bold">{value}</p>
     </div>
   );
 }

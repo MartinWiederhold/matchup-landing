@@ -62,7 +62,7 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
   const t = useT();
   return (
     <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-      <p className="text-sm text-red-400">{t("app.somethingWentWrong")}</p>
+      <p className="text-sm text-amber-400">{t("app.somethingWentWrong")}</p>
       <button
         type="button"
         onClick={onRetry}

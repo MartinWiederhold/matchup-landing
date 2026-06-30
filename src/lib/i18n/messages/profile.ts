@@ -14,6 +14,11 @@ export const profile = {
     statLevel: "Level",
     statXp: "XP",
     statPartners: "Partner",
+    gamesShort: "Spiele",
+    activityTitle: "Aktivität diese Woche",
+    activitySubtitle: "{count} von {goal} Spielen diese Woche",
+    editAria: "Profil bearbeiten",
+    settingsAria: "Einstellungen",
     editProfile: "Profil bearbeiten",
     settings: "Einstellungen ⚙️",
 
@@ -97,6 +102,11 @@ export const profile = {
     statLevel: "Level",
     statXp: "XP",
     statPartners: "Partners",
+    gamesShort: "Games",
+    activityTitle: "Activity this week",
+    activitySubtitle: "{count} of {goal} games this week",
+    editAria: "Edit profile",
+    settingsAria: "Settings",
     editProfile: "Edit profile",
     settings: "Settings ⚙️",
 

@@ -53,7 +53,7 @@ const SKILLS: {
   { value: "beginner", labelKey: "onboarding.skillBeginner", descKey: "onboarding.skillBeginnerDesc", dot: "bg-green-500" },
   { value: "intermediate", labelKey: "onboarding.skillIntermediate", descKey: "onboarding.skillIntermediateDesc", dot: "bg-yellow-500" },
   { value: "advanced", labelKey: "onboarding.skillAdvanced", descKey: "onboarding.skillAdvancedDesc", dot: "bg-orange-500" },
-  { value: "competitive", labelKey: "onboarding.skillCompetitive", descKey: "onboarding.skillCompetitiveDesc", dot: "bg-red-500" },
+  { value: "competitive", labelKey: "onboarding.skillCompetitive", descKey: "onboarding.skillCompetitiveDesc", dot: "bg-amber-500" },
 ];
 
 const GOALS: {
@@ -535,7 +535,7 @@ export default function OnboardingFlow() {
                   placeholder={t("onboarding.cityPlaceholder")}
                   className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
-                {clubMsg && <p className="text-sm text-red-400">{clubMsg}</p>}
+                {clubMsg && <p className="text-sm text-amber-400">{clubMsg}</p>}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -599,7 +599,7 @@ export default function OnboardingFlow() {
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.first_name.length > 0 && state.first_name.trim().length < 2 && (
-              <p className="text-sm text-red-400">{t("onboarding.nameTooShort")}</p>
+              <p className="text-sm text-amber-400">{t("onboarding.nameTooShort")}</p>
             )}
           </Step>
         )}
@@ -619,7 +619,7 @@ export default function OnboardingFlow() {
               className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-center text-2xl font-bold outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.age !== null && (state.age < 18 || state.age > 100) && (
-              <p className="text-sm text-red-400">
+              <p className="text-sm text-amber-400">
                 {t("onboarding.ageMin")}
               </p>
             )}
@@ -892,7 +892,7 @@ export default function OnboardingFlow() {
             </div>
 
             {submitError && (
-              <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-300">
+              <div className="rounded-xl bg-amber-500/15 px-4 py-3 text-sm text-amber-300">
                 {submitError}
               </div>
             )}

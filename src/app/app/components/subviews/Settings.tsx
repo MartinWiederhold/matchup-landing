@@ -111,7 +111,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={deleteAccount}
-            className="w-full rounded-full bg-red-500/90 py-3 text-sm font-bold text-white"
+            className="w-full rounded-full bg-zinc-700 py-3 text-sm font-bold text-white"
           >
             {t("profile.deleteAccount")}
           </button>

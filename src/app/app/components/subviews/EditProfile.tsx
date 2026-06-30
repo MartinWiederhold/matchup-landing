@@ -162,7 +162,7 @@ export default function EditProfile() {
                   <button
                     type="button"
                     onClick={() => removePhoto(i)}
-                    className="flex-1 py-1.5 text-red-300"
+                    className="flex-1 py-1.5 text-zinc-300"
                   >
                     {t("profile.deletePhoto")}
                   </button>
