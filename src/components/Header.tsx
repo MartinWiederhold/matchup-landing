@@ -47,8 +47,8 @@ export default function Header() {
   // Find a Partner & Events: normale Links. Shop & Advice: Warteliste (Coming soon).
   const navItems: NavFeature[] = [
     { label: t("header.findPartner"), href: "/find-a-partner" },
-    { label: t("header.events"), href: "/events", comingSoon: true },
-    { label: t("header.shop"), href: "/shop", waitlist: true, comingSoon: true },
+    { label: t("header.events"), href: "/events" },
+    { label: t("header.shop"), href: "/shop", waitlist: true },
     { label: t("header.beratung"), href: "/beratung", waitlist: true },
   ];
 
@@ -127,28 +127,18 @@ export default function Header() {
                 key={item.href}
                 type="button"
                 onClick={() => openWaitlist(item)}
-                className="flex w-full items-center gap-2 py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+                className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
               >
                 {item.label}
-                {item.comingSoon && (
-                  <span className="text-xs font-medium text-white/40">
-                    {t("header.comingSoon")}
-                  </span>
-                )}
               </button>
             ) : (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center gap-2 py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+                className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
               >
                 {item.label}
-                {item.comingSoon && (
-                  <span className="text-xs font-medium text-white/40">
-                    {t("header.comingSoon")}
-                  </span>
-                )}
               </a>
             ),
           )}
