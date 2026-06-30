@@ -411,17 +411,17 @@ export default function BespannungConfigurator() {
     return (
       <Card className="text-center">
         <Check />
-        <h3 className="mt-6 text-2xl font-bold tracking-tight text-white">
+        <h3 className="mt-6 text-2xl font-bold tracking-tight text-neutral-900">
           {t("beratung.orderCreated")}
         </h3>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
           {t("beratung.orderConfirmPre")}
-          <strong className="text-white">{selected.pro}</strong>
+          <strong className="text-neutral-900">{selected.pro}</strong>
           {t("beratung.orderConfirmPost")}
           <br />
           {selected.strings.join(" · ")} — {selected.tension}.
         </p>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/50">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-400">
           {t("beratung.orderShip")}
         </p>
         <button
@@ -430,7 +430,7 @@ export default function BespannungConfigurator() {
             setOrdered(false);
             setSelected(null);
           }}
-          className="mt-8 h-12 rounded-full bg-white px-8 text-sm font-bold text-black transition-colors hover:bg-white/85"
+          className="mt-8 h-12 rounded-full bg-black px-8 text-sm font-bold text-white transition-colors hover:bg-neutral-800"
         >
           {t("beratung.chooseAnother")}
         </button>
@@ -441,15 +441,15 @@ export default function BespannungConfigurator() {
   return (
     <Card>
       <div className="relative">
-        <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h2 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
           {t("beratung.stringingTitle")}
         </h2>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/60">
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-600">
           {t("beratung.stringingSubtitle")}
         </p>
 
         {/* Herren / Damen Umschalter */}
-        <div className="mt-5 inline-flex rounded-full bg-white/10 p-1">
+        <div className="mt-5 inline-flex rounded-full bg-neutral-100 p-1">
           {([
             { v: "atp", label: t("beratung.tourAtp") },
             { v: "wta", label: t("beratung.tourWta") },
@@ -462,8 +462,8 @@ export default function BespannungConfigurator() {
                 setSelected(null);
                 setRequestOpen(false);
               }}
-              className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
-                tour === o.v ? "bg-white text-black" : "text-white/70"
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                tour === o.v ? "bg-black text-white" : "text-neutral-600 hover:text-black"
               }`}
             >
               {o.label}
@@ -487,25 +487,23 @@ export default function BespannungConfigurator() {
                   className="group flex flex-col items-center"
                 >
                   <span
-                    className={`relative h-[64px] w-[64px] rounded-full p-[2.5px] transition-all sm:h-[72px] sm:w-[72px] ${
+                    className={`relative h-[64px] w-[64px] rounded-full p-[2px] transition-all sm:h-[72px] sm:w-[72px] ${
                       active
-                        ? "bg-gradient-to-br from-violet-500 to-matchup shadow-[0_0_22px_-2px_rgba(124,58,237,0.7)]"
-                        : "bg-white/10 group-hover:bg-white/25"
+                        ? "bg-black"
+                        : "bg-neutral-200 group-hover:bg-neutral-300"
                     }`}
                   >
-                    <span className="block h-full w-full overflow-hidden rounded-full bg-neutral-900">
+                    <span className="block h-full w-full overflow-hidden rounded-full bg-white">
                       {s.img ? (
                         <Image
                           src={s.img}
                           alt={s.pro}
                           width={80}
                           height={80}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
-                        <span
-                          className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${s.accent} text-sm font-bold text-white/90`}
-                        >
+                        <span className="flex h-full w-full items-center justify-center bg-neutral-100 text-sm font-bold text-neutral-500">
                           {initials(s.pro)}
                         </span>
                       )}
@@ -513,7 +511,7 @@ export default function BespannungConfigurator() {
                   </span>
                   <span
                     className={`mt-2 text-center text-[11px] font-medium leading-tight ${
-                      active ? "text-white" : "text-white/55"
+                      active ? "text-neutral-900" : "text-neutral-500"
                     }`}
                   >
                     {lastName(s.pro)}
@@ -534,15 +532,15 @@ export default function BespannungConfigurator() {
               <span
                 className={`flex h-[64px] w-[64px] items-center justify-center rounded-full border-2 border-dashed text-xl transition-colors sm:h-[72px] sm:w-[72px] ${
                   requestOpen
-                    ? "border-matchup text-matchup"
-                    : "border-white/25 text-white/50 group-hover:border-white/60 group-hover:text-white"
+                    ? "border-black text-black"
+                    : "border-neutral-300 text-neutral-400 group-hover:border-neutral-500 group-hover:text-neutral-700"
                 }`}
               >
                 +
               </span>
               <span
                 className={`mt-2 text-center text-[11px] font-medium leading-tight ${
-                  requestOpen ? "text-white" : "text-white/55"
+                  requestOpen ? "text-neutral-900" : "text-neutral-500"
                 }`}
               >
                 {t("beratung.own")}
@@ -557,11 +555,11 @@ export default function BespannungConfigurator() {
             ) : requestOpen ? (
               <RequestForm onClose={() => setRequestOpen(false)} t={t} />
             ) : (
-              <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 p-8 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-xl text-white/40">
+              <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 p-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-xl text-neutral-400">
                   ⌖
                 </span>
-                <p className="mt-4 max-w-xs text-sm text-white/50">
+                <p className="mt-4 max-w-xs text-sm text-neutral-500">
                   {t("beratung.placeholderHint")}
                 </p>
               </div>
@@ -585,27 +583,25 @@ function SetupDetail({
   t: TFunction;
 }) {
   return (
-    <div className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
+    <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7">
       <div className="flex items-center gap-4">
-        <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full ring-2 ring-violet-500/60">
+        <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full ring-1 ring-neutral-300">
           {setup.img ? (
             <Image src={setup.img} alt={setup.pro} fill sizes="64px" className="object-cover" />
           ) : (
-            <span
-              className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${setup.accent} text-base font-bold text-white`}
-            >
+            <span className="flex h-full w-full items-center justify-center bg-neutral-100 text-base font-bold text-neutral-500">
               {initials(setup.pro)}
             </span>
           )}
         </span>
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-300">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
             {t("beratung.yourSetup")}
           </div>
-          <h3 className="mt-0.5 text-xl font-bold tracking-tight text-white">
+          <h3 className="mt-0.5 text-xl font-bold tracking-tight text-neutral-900">
             {setup.pro}
           </h3>
-          <div className="text-xs text-white/50">
+          <div className="text-xs text-neutral-500">
             {setup.tag} · {setup.brand}
           </div>
         </div>
@@ -627,30 +623,30 @@ function SetupDetail({
         {setup.traits.map((tr) => (
           <span
             key={tr}
-            className="rounded-full bg-violet-500/15 px-3 py-1 text-xs font-medium text-violet-200 ring-1 ring-violet-400/25"
+            className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200"
           >
             {trait(t, tr)}
           </span>
         ))}
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-white/60">
+      <p className="mt-4 text-sm leading-relaxed text-neutral-600">
         {instruction(t, setup.id)}
       </p>
 
-      <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 sm:flex-row">
+      <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-5 sm:flex-row">
         <div className="text-center sm:text-left">
-          <div className="text-2xl font-bold tracking-tight text-white">
+          <div className="text-2xl font-bold tracking-tight text-neutral-900">
             {setup.price} €
           </div>
-          <div className="text-xs text-white/45">
+          <div className="text-xs text-neutral-500">
             {t("beratung.priceIncludes")}
           </div>
         </div>
         <button
           type="button"
           onClick={onOrder}
-          className="w-full rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto"
+          className="w-full rounded-full bg-black px-8 py-3.5 text-sm font-bold text-white transition-colors hover:bg-neutral-800 sm:w-auto"
         >
           {t("beratung.orderWithSetup")}
         </button>
@@ -677,12 +673,12 @@ function RequestForm({ onClose, t }: { onClose: () => void; t: TFunction }) {
 
   if (done) {
     return (
-      <div className="rounded-2xl bg-white/[0.04] p-8 text-center ring-1 ring-white/10">
+      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-8 text-center">
         <Check />
-        <h3 className="mt-5 text-xl font-bold tracking-tight text-white">
+        <h3 className="mt-5 text-xl font-bold tracking-tight text-neutral-900">
           {t("beratung.reqSent", { name: form.name.split(" ")[0] })}
         </h3>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/60">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
           {t("beratung.reqSentText", { wish: form.wish })}
         </p>
       </div>
@@ -690,11 +686,11 @@ function RequestForm({ onClose, t }: { onClose: () => void; t: TFunction }) {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-7">
-      <h3 className="text-xl font-bold tracking-tight text-white">
+    <form onSubmit={submit} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7">
+      <h3 className="text-xl font-bold tracking-tight text-neutral-900">
         {t("beratung.reqTitle")}
       </h3>
-      <p className="mt-1 text-sm text-white/55">
+      <p className="mt-1 text-sm text-neutral-500">
         {t("beratung.reqSubtitle")}
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -710,28 +706,28 @@ function RequestForm({ onClose, t }: { onClose: () => void; t: TFunction }) {
         />
       </div>
       <div className="mt-4">
-        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-white/45">
+        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-neutral-500">
           {t("beratung.reqNote")}
         </label>
         <textarea
           rows={3}
           value={form.note}
           onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-          className="w-full resize-none rounded-lg border border-white/15 bg-white/5 p-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-violet-400"
+          className="w-full resize-none rounded-lg border border-neutral-300 bg-white p-3.5 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-black"
         />
       </div>
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-3 text-sm text-neutral-700">{error}</p>}
       <div className="mt-5 flex items-center justify-end gap-3">
         <button
           type="button"
           onClick={onClose}
-          className="h-11 rounded-full border border-white/20 px-6 text-sm font-medium text-white transition-colors hover:bg-white/10"
+          className="h-11 rounded-full border border-neutral-300 px-6 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
         >
           {t("beratung.reqCancel")}
         </button>
         <button
           type="submit"
-          className="h-11 rounded-full bg-gradient-to-r from-violet-500 to-matchup px-8 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="h-11 rounded-full bg-black px-8 text-sm font-bold text-white transition-colors hover:bg-neutral-800"
         >
           {t("beratung.reqSend")}
         </button>
@@ -751,19 +747,16 @@ function Card({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-3xl bg-neutral-950 p-6 ring-1 ring-white/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] sm:p-8 ${className}`}
+      className={`rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 ${className}`}
     >
-      {/* dezenter Lila-Schein */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-matchup/20 blur-3xl" />
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
 
 function Check() {
   return (
-    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-matchup text-2xl text-white">
+    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-black text-2xl text-white">
       ✓
     </div>
   );
@@ -772,8 +765,8 @@ function Check() {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-4 text-sm">
-      <span className="w-28 shrink-0 text-white/45">{label}</span>
-      <span className="font-medium text-white">{children}</span>
+      <span className="w-28 shrink-0 text-neutral-500">{label}</span>
+      <span className="font-medium text-neutral-900">{children}</span>
     </div>
   );
 }
@@ -793,7 +786,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-white/45">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.06em] text-neutral-500">
         {label}
       </span>
       <input
@@ -801,7 +794,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-lg border border-white/15 bg-white/5 px-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-violet-400"
+        className="h-11 w-full rounded-lg border border-neutral-300 bg-white px-3.5 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-black"
       />
     </label>
   );
