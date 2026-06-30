@@ -18,7 +18,7 @@ export default function AgbPage() {
         {
           heading: "1. Geltungsbereich",
           body: [
-            "Diese AGB gelten für die Nutzung der App und Website von Matchup („Dienst") durch registrierte Nutzerinnen und Nutzer.",
+            "Diese AGB gelten für die Nutzung der App und Website von Matchup («Dienst») durch registrierte Nutzerinnen und Nutzer.",
           ],
         },
         {

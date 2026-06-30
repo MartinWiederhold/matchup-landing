@@ -19,11 +19,11 @@ const FAQ = [
   },
   {
     q: "Wie finde ich einen Spielpartner?",
-    a: "Erstelle ein Profil, wähle deine Sportart, dein Level und deinen Umkreis. Im Tab „Entdecken" siehst du passende Spieler und kannst dich verbinden. Bei einem gegenseitigen Interesse entsteht ein Match.",
+    a: "Erstelle ein Profil, wähle deine Sportart, dein Level und deinen Umkreis. Im Tab «Entdecken» siehst du passende Spieler und kannst dich verbinden. Bei einem gegenseitigen Interesse entsteht ein Match.",
   },
   {
     q: "Wie funktioniert das Matching?",
-    a: "Du filterst in „Entdecken" nach Sportart, Level, Alter, Geschlecht und Entfernung. Likest du ein Profil und die Person liked zurück, entsteht ein Match und ihr könnt chatten.",
+    a: "Du filterst in «Entdecken» nach Sportart, Level, Alter, Geschlecht und Entfernung. Likest du ein Profil und die Person liked zurück, entsteht ein Match und ihr könnt chatten.",
   },
   {
     q: "Kann ich Spiele organisieren?",
