@@ -155,11 +155,10 @@ export default function WaitlistModal({
                   inputMode="email"
                   autoComplete="email"
                   required
-                  autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t("waitlist.emailPlaceholder")}
-                  className="w-full rounded-full border border-white/15 bg-white/5 px-5 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-pink-400"
+                  className="w-full rounded-full border border-white/15 bg-white/5 px-5 py-3.5 text-base text-white outline-none transition-colors placeholder:text-white/40 focus:border-pink-400"
                 />
                 {status === "error" && (
                   <p className="mt-2 px-1 text-xs text-red-400">{errorMsg}</p>
