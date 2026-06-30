@@ -116,7 +116,9 @@ function StepRow({ step, index }: { step: Step; index: number }) {
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             step.overlay === "play"
               ? "[object-position:center_20%] lg:object-center"
-              : ""
+              : step.overlay === "match"
+                ? "[object-position:center_20%]"
+                : ""
           }`}
         />
         {step.overlay === "profile" && <ProfileOverlay show={inView} />}
