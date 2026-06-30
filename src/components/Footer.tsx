@@ -12,6 +12,7 @@ export default async function Footer() {
         { label: t("footer.shop"), href: "/shop" },
         { label: t("footer.beratung"), href: "/beratung" },
         { label: t("footer.events"), href: "/events" },
+        { label: t("footer.about"), href: "/about" },
         { label: t("footer.app"), href: "/app" },
       ],
     },

@@ -29,7 +29,7 @@ export default async function BeratungPage() {
   return (
     <>
       {/* TITELBILD */}
-      <section className="relative flex h-[68vh] min-h-[460px] items-center justify-center overflow-hidden">
+      <section className="relative flex min-h-[calc(100svh-68px-44px)] items-center justify-center overflow-hidden">
         <Image
           src="/beratung/hero-v2.jpg"
           alt={t("beratung.heroAlt")}

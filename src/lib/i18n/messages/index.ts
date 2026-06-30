@@ -7,6 +7,7 @@ import { landing } from "./landing";
 import { findPartner } from "./findPartner";
 import { shop } from "./shop";
 import { beratung } from "./beratung";
+import { about } from "./about";
 import { events } from "./events";
 import { auth } from "./auth";
 import { onboarding } from "./onboarding";
@@ -31,6 +32,7 @@ const namespaces: Record<string, Namespace> = {
   findPartner,
   shop,
   beratung,
+  about,
   events,
   auth,
   onboarding,

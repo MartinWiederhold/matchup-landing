@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/events", priority: 0.8 },
     { path: "/shop", priority: 0.7 },
     { path: "/beratung", priority: 0.7 },
+    { path: "/about", priority: 0.5 },
     // Lokale Städte-Landingpages (Sport × Stadt)
     ...SPORT_SLUGS.flatMap((s) =>
       CITIES.map((c) => ({ path: `/${s}/${c.slug}`, priority: 0.6 })),
