@@ -17,6 +17,34 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [partnerTyping, setPartnerTyping] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [action, setAction] = useState<null | "unmatch" | "block">(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function performAction() {
+    if (!partner || !action || busy) return;
+    setBusy(true);
+    await supabase.from("match_dissolutions").insert({
+      user_id: profile.id,
+      other_user_id: partner.id,
+      match_id: matchId,
+      action,
+      reason: reason.trim() || null,
+    });
+    await supabase.from("matches").update({ is_active: false }).eq("id", matchId);
+    if (action === "block") {
+      await supabase
+        .from("blocks")
+        .upsert(
+          { blocker_id: profile.id, blocked_id: partner.id },
+          { onConflict: "blocker_id,blocked_id" },
+        );
+    }
+    setBusy(false);
+    setAction(null);
+    closeSubView();
+  }
   const bottomRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeout = useRef<number | undefined>(undefined);
@@ -173,7 +201,106 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
             <span className="font-semibold">{partner.first_name}</span>
           </button>
         )}
+
+        {partner && active && (
+          <div className="relative ml-auto">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={t("matches.menuLabel")}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-300 hover:bg-zinc-800"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+                <circle cx="12" cy="5" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="12" cy="19" r="1.6" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl bg-zinc-900 p-1 shadow-xl ring-1 ring-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setReason("");
+                      setAction("unmatch");
+                    }}
+                    className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-white hover:bg-zinc-800"
+                  >
+                    {t("matches.unmatch")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setReason("");
+                      setAction("block");
+                    }}
+                    className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-amber-300 hover:bg-zinc-800"
+                  >
+                    {t("matches.block")}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </header>
+
+      {action && partner && (
+        <div
+          onClick={() => !busy && setAction(null)}
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-3xl bg-zinc-950 p-6 text-white ring-1 ring-white/10 sm:rounded-3xl"
+          >
+            <h3 className="text-lg font-bold tracking-tight">
+              {action === "block"
+                ? t("matches.blockTitle", { name: partner.first_name })
+                : t("matches.dissolveTitle")}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              {action === "block"
+                ? t("matches.blockText", { name: partner.first_name })
+                : t("matches.dissolveText", { name: partner.first_name })}
+            </p>
+            <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              {t("matches.reasonLabel")}
+            </label>
+            <textarea
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={t("matches.reasonPlaceholder")}
+              className="mt-1.5 w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            />
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setAction(null)}
+                disabled={busy}
+                className="flex-1 rounded-full border border-zinc-700 py-3 text-sm font-semibold"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={performAction}
+                disabled={busy}
+                className="flex-1 rounded-full bg-zinc-700 py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {action === "block"
+                  ? t("matches.confirmBlock")
+                  : t("matches.confirmUnmatch")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!active && (
         <div className="bg-zinc-800 px-4 py-2 text-center text-xs text-zinc-300">
