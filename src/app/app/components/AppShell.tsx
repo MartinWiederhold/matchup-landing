@@ -102,8 +102,8 @@ export default function AppShell({ profile }: { profile: Profile }) {
         refreshBadges,
       }}
     >
-      <div className="fixed inset-0 flex justify-center overflow-hidden bg-black">
-        <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+      <div className="flex min-h-dvh justify-center overflow-hidden bg-black">
+        <div className="relative flex h-dvh w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
           {!online && (
             <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
               {t("app.offline")}
