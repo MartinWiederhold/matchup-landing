@@ -11,7 +11,7 @@ export default async function HealthStats() {
   return (
     <section id="warum" className="bg-black px-4 py-24 text-white sm:px-6 lg:px-12">
       <div className="mx-auto max-w-5xl text-center">
-        <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+        <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
           {t("landing.statsTitle")}
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">

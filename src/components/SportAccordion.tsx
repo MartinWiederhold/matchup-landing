@@ -107,9 +107,9 @@ export default function SportAccordion({
                       className="anim-acc flex items-center gap-2.5"
                       style={{ animationDelay: `${240 + fi * 70}ms` }}
                     >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-matchup/20 ring-1 ring-matchup/40">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-matchup shadow-sm shadow-matchup/40">
                         <svg
-                          className="h-3 w-3 text-matchup"
+                          className="h-3 w-3 text-white"
                           viewBox="0 0 16 16"
                           fill="none"
                           aria-hidden="true"
@@ -117,13 +117,13 @@ export default function SportAccordion({
                           <path
                             d="M3 8.5l3 3 7-7"
                             stroke="currentColor"
-                            strokeWidth="2.4"
+                            strokeWidth="2.6"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         </svg>
                       </span>
-                      <span className="text-white/90">{feat}</span>
+                      <span className="whitespace-nowrap text-[13px] text-white/90">{feat}</span>
                     </li>
                   ))}
                 </ul>

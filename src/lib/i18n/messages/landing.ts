@@ -8,7 +8,7 @@ export const landing = {
     // Hero
     heroTitle: "Finde deinen perfekten Spielpartner.",
     heroSubtitle:
-      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe. Matche, chatte und spiele — alles in einer App.",
+      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe. Matche, chatte und spiele, alles in einer App.",
     heroCtaPrimary: "Jetzt Partner finden",
     heroCtaSecondary: "So funktioniert's",
     heroPlay: "Video abspielen",
@@ -17,7 +17,7 @@ export const landing = {
     // CompletePicture
     featuresTitle: "Alles, was du zum Spielen brauchst",
     featuresSubtitle:
-      "Von der ersten Begegnung bis zum fertig organisierten Match — Matchup bringt Spieler zusammen und macht jeden Schritt einfach.",
+      "Von der ersten Begegnung bis zum fertig organisierten Match, Matchup bringt Spieler zusammen und macht jeden Schritt einfach.",
     discoverTitle: "Entdecke Spieler",
     discoverCopy:
       "Swipe durch Profile verifizierter Spieler. Filtere nach Sportart, Skill-Level, Alter und Entfernung. Bei einem gegenseitigen Like entsteht ein Match.",
@@ -28,7 +28,7 @@ export const landing = {
     organizeChip: "3/4 Spieler",
     communityTitle: "Deine Community",
     communityCopy:
-      "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten — von Club-Gruppen bis zu lokalen Spieltreffs.",
+      "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten, von Club-Gruppen bis zu lokalen Spieltreffs.",
     communityChip: "2.4k aktiv",
     progressTitle: "Verfolge Fortschritt",
     progressCopy:
@@ -38,29 +38,29 @@ export const landing = {
     // Memberships
     sportsTitle: "Wähle deine Sportart",
     sportsSubtitle:
-      "Tennis, Padel oder Pickleball — auf Matchup findest du für jede Sportart die passenden Spielpartner.",
+      "Tennis, Padel oder Pickleball, auf Matchup findest du für jede Sportart die passenden Spielpartner.",
     sportsTrend: "IM TREND",
     sportsCta: "Partner finden",
     tennisTagline:
-      "Der Klassiker — finde Partner für Singles oder Doubles auf deinem Level.",
-    tennisF1: "Spieler nach Skill-Level & Rating filtern",
+      "Der Klassiker, finde Partner für Singles oder Doubles auf deinem Level.",
+    tennisF1: "Nach Level & Rating filtern",
     tennisF2: "Singles & Doubles organisieren",
-    tennisF3: "Plätze und Clubs in deiner Nähe",
+    tennisF3: "Plätze & Clubs in der Nähe",
     padelTagline:
-      "Die am schnellsten wachsende Sportart — immer im Doppel, immer gesellig.",
-    padelF1: "Finde drei Mitspieler in Sekunden",
-    padelF2: "Offene Spiele beitreten oder erstellen",
-    padelF3: "Padel-Gruppen & Community-Treffs",
+      "Die am schnellsten wachsende Sportart, immer im Doppel, immer gesellig.",
+    padelF1: "Drei Mitspieler in Sekunden",
+    padelF2: "Offene Spiele beitreten",
+    padelF3: "Padel-Gruppen & Treffs",
     pickleTagline:
-      "Schnell zu lernen, schwer zu meistern — perfekt für jedes Level.",
-    pickleF1: "Einsteiger und Profis verbinden",
-    pickleF2: "Spontane Matches in deiner Umgebung",
-    pickleF3: "Lokale Events & Turniere entdecken",
+      "Schnell zu lernen, schwer zu meistern, perfekt für jedes Level.",
+    pickleF1: "Einsteiger & Profis verbinden",
+    pickleF2: "Spontane Matches in der Nähe",
+    pickleF3: "Lokale Events & Turniere",
 
     // HealthStats
-    statsTitle: "Eine wachsende Community von Spielern",
+    statsTitle: "Eine wachsende Community von Spielern",
     statsSubtitle:
-      "Ob Anfänger oder Wettkampfspieler — auf Matchup findest du Partner auf deinem Level, in deiner Sportart und in deiner Nähe.",
+      "Ob Anfänger oder Wettkampfspieler, auf Matchup findest du Partner auf deinem Level, in deiner Sportart und in deiner Nähe.",
     statSports: "Tennis, Padel & Pickleball",
     statClubs: "Clubs weltweit auf der Karte",
     statCountries: "Länder weltweit vernetzt",
@@ -74,13 +74,13 @@ export const landing = {
     eventsEyebrow: "EVENTS",
     eventsTitle: "Events & Spieltreffs",
     eventsCopy:
-      "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen — oder organisiere dein eigenes Event direkt in der App.",
+      "Entdecke lokale Turniere, Social-Play-Abende und Community-Treffen, oder organisiere dein eigenes Event direkt in der App.",
     eventsCta: "Events entdecken",
 
     // Partners
     partnersTitle: "Für Spieler, von Spielern",
     partnersCopy:
-      "Ob du die Nummer 1 deines Clubs bist oder gerade erst anfängst — Matchup hilft dir, die richtigen Leute zum Spielen zu finden.",
+      "Ob du die Nummer 1 deines Clubs bist oder gerade erst anfängst, Matchup hilft dir, die richtigen Leute zum Spielen zu finden.",
     partnersCta: "Jetzt Partner finden",
 
     // CtaBanner
@@ -96,7 +96,7 @@ export const landing = {
 
     heroTitle: "Find your perfect playing partner.",
     heroSubtitle:
-      "Matchup connects you with tennis, padel and pickleball players near you. Match, chat and play — all in one app.",
+      "Matchup connects you with tennis, padel and pickleball players near you. Match, chat and play, all in one app.",
     heroCtaPrimary: "Find a partner now",
     heroCtaSecondary: "How it works",
     heroPlay: "Play video",
@@ -104,7 +104,7 @@ export const landing = {
 
     featuresTitle: "Everything you need to play",
     featuresSubtitle:
-      "From the first connection to a fully organised match — Matchup brings players together and makes every step easy.",
+      "From the first connection to a fully organised match, Matchup brings players together and makes every step easy.",
     discoverTitle: "Discover players",
     discoverCopy:
       "Swipe through profiles of verified players. Filter by sport, skill level, age and distance. A mutual like creates a match.",
@@ -115,7 +115,7 @@ export const landing = {
     organizeChip: "3/4 players",
     communityTitle: "Your community",
     communityCopy:
-      "Start groups, share in the feed and connect with like-minded players — from club groups to local meetups.",
+      "Start groups, share in the feed and connect with like-minded players, from club groups to local meetups.",
     communityChip: "2.4k active",
     progressTitle: "Track progress",
     progressCopy:
@@ -124,28 +124,28 @@ export const landing = {
 
     sportsTitle: "Choose your sport",
     sportsSubtitle:
-      "Tennis, padel or pickleball — on Matchup you'll find the right playing partners for every sport.",
+      "Tennis, padel or pickleball, on Matchup you'll find the right playing partners for every sport.",
     sportsTrend: "TRENDING",
     sportsCta: "Find a partner",
     tennisTagline:
-      "The classic — find partners for singles or doubles at your level.",
-    tennisF1: "Filter players by skill level & rating",
+      "The classic, find partners for singles or doubles at your level.",
+    tennisF1: "Filter by skill & rating",
     tennisF2: "Organise singles & doubles",
-    tennisF3: "Courts and clubs near you",
+    tennisF3: "Courts & clubs near you",
     padelTagline:
-      "The fastest-growing sport — always in doubles, always social.",
-    padelF1: "Find three players in seconds",
+      "The fastest-growing sport, always in doubles, always social.",
+    padelF1: "Find three players fast",
     padelF2: "Join or create open games",
-    padelF3: "Padel groups & community meetups",
+    padelF3: "Padel groups & meetups",
     pickleTagline:
-      "Quick to learn, hard to master — perfect for every level.",
-    pickleF1: "Connect beginners and pros",
-    pickleF2: "Spontaneous matches in your area",
-    pickleF3: "Discover local events & tournaments",
+      "Quick to learn, hard to master, perfect for every level.",
+    pickleF1: "Connect beginners & pros",
+    pickleF2: "Spontaneous local matches",
+    pickleF3: "Local events & tournaments",
 
     statsTitle: "A growing community of players",
     statsSubtitle:
-      "Whether you're a beginner or a competitor — on Matchup you'll find partners at your level, in your sport and near you.",
+      "Whether you're a beginner or a competitor, on Matchup you'll find partners at your level, in your sport and near you.",
     statSports: "Tennis, padel & pickleball",
     statClubs: "Clubs worldwide on the map",
     statCountries: "Countries connected worldwide",
@@ -158,12 +158,12 @@ export const landing = {
     eventsEyebrow: "EVENTS",
     eventsTitle: "Events & meetups",
     eventsCopy:
-      "Discover local tournaments, social play nights and community meetups — or organise your own event right in the app.",
+      "Discover local tournaments, social play nights and community meetups, or organise your own event right in the app.",
     eventsCta: "Discover events",
 
     partnersTitle: "For players, by players",
     partnersCopy:
-      "Whether you're the number 1 of your club or just starting out — Matchup helps you find the right people to play with.",
+      "Whether you're the number 1 of your club or just starting out, Matchup helps you find the right people to play with.",
     partnersCta: "Find a partner now",
 
     ctaTitle: "Ready for your next match?",
