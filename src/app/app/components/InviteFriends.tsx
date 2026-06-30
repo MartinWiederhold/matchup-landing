@@ -2,9 +2,10 @@
 
 import { useT } from "@/lib/i18n";
 
-// Versions-Parameter erzwingt bei WhatsApp & Co. ein frisches Vorschaubild
-// (Cache wird pro URL gehalten). Bei neuem OG-Bild einfach hochzählen.
-const APP_URL = "https://matchup-app.com/?v=5";
+// Eigener Pfad /join (statt nackter URL): WhatsApp & Co. behandeln das als neue
+// URL und ziehen das aktuelle Vorschaubild frisch — unabhängig vom Cache der
+// Hauptdomain. /join leitet Menschen sofort auf die Startseite weiter.
+const APP_URL = "https://matchup-app.com/join";
 
 export default function InviteFriends() {
   const t = useT();
