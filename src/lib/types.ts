@@ -23,6 +23,8 @@ export interface Profile {
   sports: Sport[]; // PostgreSQL array, CHECK length >= 1
   skill_level: SkillLevel;
   official_rating: string | null;
+  match_score?: number; // MatchScore (Elo), default 1000 — Migration game_results
+  matches_rated?: number; // Anzahl gewerteter Matches (Kalibrierung)
   goals: string[]; // PostgreSQL array
   bio: string | null; // max 300 chars
   profile_image: string | null; // URL zu avatars-Bucket

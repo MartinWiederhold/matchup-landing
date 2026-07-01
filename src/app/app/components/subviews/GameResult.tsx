@@ -25,6 +25,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [myDelta, setMyDelta] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,8 +96,9 @@ export default function GameResult({ gameId }: { gameId: string }) {
       date: dateStr,
       lang: locale,
     });
+    if (myDelta != null) p.set("delta", myDelta > 0 ? `+${myDelta}` : `${myDelta}`);
     return `/api/score-card?${p.toString()}`;
-  }, [game, teamAName, teamBName, score, winner, dateStr, locale]);
+  }, [game, teamAName, teamBName, score, winner, dateStr, locale, myDelta]);
 
   function cycleSide(id: string) {
     setSides((s) => ({ ...s, [id]: s[id] === "a" ? "b" : s[id] === "b" ? null : "a" }));
@@ -114,19 +116,33 @@ export default function GameResult({ gameId }: { gameId: string }) {
     }
     setError("");
     setSaving(true);
-    const { error: err } = await supabase.from("game_results").insert({
-      game_event_id: gameId,
-      reporter_id: profile.id,
-      side_a: sideA.map((p) => p.id),
-      side_b: sideB.map((p) => p.id),
-      score: score.trim(),
-      winner,
-    });
-    setSaving(false);
+    const { data, error: err } = await supabase
+      .from("game_results")
+      .insert({
+        game_event_id: gameId,
+        reporter_id: profile.id,
+        side_a: sideA.map((p) => p.id),
+        side_b: sideB.map((p) => p.id),
+        score: score.trim(),
+        winner,
+      })
+      .select("id")
+      .single();
     if (err) {
-      setError(err.message);
+      setSaving(false);
+      // 23505 = Ergebnis für dieses Spiel existiert bereits (unique index)
+      setError(err.code === "23505" ? t("games.resultDuplicate") : err.message);
       return;
     }
+    // Echtes Rating-Delta des eigenen Profils holen (Trigger lief synchron).
+    const { data: rh } = await supabase
+      .from("rating_history")
+      .select("delta")
+      .eq("game_result_id", (data as { id: string }).id)
+      .eq("user_id", profile.id)
+      .maybeSingle();
+    setMyDelta(typeof rh?.delta === "number" ? rh.delta : null);
+    setSaving(false);
     setSaved(true);
   }
 

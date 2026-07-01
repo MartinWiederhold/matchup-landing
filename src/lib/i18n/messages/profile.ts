@@ -3,6 +3,8 @@ export const profile = {
     // ProfileTab
     verified: "✓ Verifiziert",
     verifiedPlain: "Verifiziert",
+    matchScore: "MatchScore",
+    matchScoreProvisional: "vorläufig",
     aboutMe: "Über mich",
     sports: "Sportarten",
     stats: "Statistiken",
@@ -99,6 +101,8 @@ export const profile = {
     // ProfileTab
     verified: "✓ Verified",
     verifiedPlain: "Verified",
+    matchScore: "MatchScore",
+    matchScoreProvisional: "provisional",
     aboutMe: "About me",
     sports: "Sports",
     stats: "Statistics",

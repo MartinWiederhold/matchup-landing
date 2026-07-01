@@ -102,6 +102,22 @@ export default function ProfileTab() {
           <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {profile.sports.map(sportLabel).join(", ")} ·{" "}
           {skillLabel(profile.skill_level)}
         </p>
+
+        {/* MatchScore — Elo-Rating */}
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/15 px-4 py-1.5 ring-1 ring-matchup/40">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-matchup/80">
+            {t("profile.matchScore")}
+          </span>
+          <span className="text-sm font-bold text-matchup">
+            {profile.match_score ?? 1000}
+          </span>
+          {(profile.matches_rated ?? 0) < 5 && (
+            <span className="text-[10px] font-medium text-matchup/60">
+              · {t("profile.matchScoreProvisional")}
+            </span>
+          )}
+        </div>
+
         {profile.is_verified && (
           <p className="mt-1 text-xs text-matchup">{t("profile.verified")}</p>
         )}
