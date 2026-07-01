@@ -167,9 +167,11 @@ export default function GamesTab() {
         ) : (
           <ul className="space-y-3">
             {games.map((g) => {
+              // Ersteller zählt mit (ist kein participants-Eintrag).
               const accepted =
-                g.participants?.filter((p) => p.status === "accepted").length ??
-                0;
+                1 +
+                (g.participants?.filter((p) => p.status === "accepted").length ??
+                  0);
               const cap = g.max_participants ?? (g.game_type === "singles" ? 2 : 4);
               const people: { first_name?: string; profile_image?: string | null }[] = [
                 ...(g.creator ? [g.creator] : []),

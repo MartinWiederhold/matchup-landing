@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useT, useLocale } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, SubViewHeader } from "../shared/ui";
+import SetScore from "../shared/SetScore";
 import type { GameEvent } from "@/lib/types";
 
 type Player = { id: string; name: string; image: string | null };
@@ -101,6 +102,12 @@ export default function GameResult({ gameId }: { gameId: string }) {
   function cycleSide(id: string) {
     setSides((s) => ({ ...s, [id]: s[id] === "a" ? "b" : s[id] === "b" ? null : "a" }));
   }
+
+  // Score + abgeleiteter Sieger aus der Satz-Eingabe (Sieger überschreibbar).
+  const handleScore = useCallback((s: string, w: "a" | "b" | null) => {
+    setScore(s);
+    if (w) setWinner(w);
+  }, []);
 
   async function save() {
     if (saving) return;
@@ -244,14 +251,14 @@ export default function GameResult({ gameId }: { gameId: string }) {
           </div>
         </div>
 
-        {/* Score */}
+        {/* Score — satzweise per Scrollrad */}
         <div>
           <p className="mb-2 text-sm font-semibold text-zinc-300">{t("games.resultScore")}</p>
-          <input
-            value={score}
-            onChange={(e) => setScore(e.target.value)}
-            placeholder={t("games.resultScorePlaceholder")}
-            className="h-12 w-full rounded-xl bg-zinc-800 px-4 text-base outline-none focus:ring-2 focus:ring-matchup"
+          <SetScore
+            sport={game.sport}
+            teamA={teamAName}
+            teamB={teamBName}
+            onChange={handleScore}
           />
         </div>
 

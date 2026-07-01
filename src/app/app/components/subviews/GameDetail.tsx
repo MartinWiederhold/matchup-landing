@@ -155,12 +155,23 @@ export default function GameDetail({ gameId }: { gameId: string }) {
         <div>
           <h2 className="mb-2 text-xs font-bold uppercase text-zinc-500">
             {t("games.participantsHeading", {
-              current: accepted.length,
+              current: accepted.length + 1,
               max:
                 game.max_participants ?? (game.game_type === "singles" ? 2 : 4),
             })}
           </h2>
           <div className="flex flex-wrap gap-3">
+            {/* Ersteller zuerst */}
+            {game.creator && (
+              <div className="flex flex-col items-center gap-1">
+                <Avatar
+                  src={game.creator.profile_image}
+                  alt={game.creator.first_name}
+                  size="md"
+                />
+                <span className="text-xs">{game.creator.first_name}</span>
+              </div>
+            )}
             {accepted.map((p) => (
               <div key={p.id} className="flex flex-col items-center gap-1">
                 <Avatar
