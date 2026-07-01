@@ -25,26 +25,31 @@ const STATUS_KEY: Record<string, string> = {
 export default function GamesTab() {
   const t = useT();
   const { profile, openSubView } = useAppNav();
-  const [mode, setMode] = useState<"mine" | "open">("mine");
+  const [mode, setMode] = useState<"mine" | "open" | "past">("mine");
   const [games, setGames] = useState<GameEvent[]>([]);
+  const [results, setResults] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setResults({});
     const nowIso = new Date().toISOString();
     const select = `*,
       creator:profiles!game_events_created_by_fkey(display_name, first_name, profile_image),
       participants:game_participants(*, profile:profiles(display_name, first_name, profile_image))`;
 
-    if (mode === "mine") {
-      // „Meine Spiele" = selbst erstellt ODER Teilnehmer. Embedded-Resource-
-      // Filter geht nicht in einem .or(), daher zwei Queries + Merge.
+    if (mode === "mine" || mode === "past") {
+      // „Meine" (kommend) bzw. „Gespielt" (vergangen) = selbst erstellt ODER
+      // Teilnehmer. Embedded-Filter geht nicht in .or(), daher Queries + Merge.
+      const upcoming = mode === "mine";
+      const applyTime = (
+        q: ReturnType<ReturnType<typeof supabase.from>["select"]>,
+      ) => (upcoming ? q.gte("date_time", nowIso) : q.lt("date_time", nowIso));
+
       const [created, parts] = await Promise.all([
-        supabase
-          .from("game_events")
-          .select(select)
-          .eq("created_by", profile.id)
-          .gte("date_time", nowIso),
+        applyTime(
+          supabase.from("game_events").select(select).eq("created_by", profile.id),
+        ),
         supabase
           .from("game_participants")
           .select("game_event_id")
@@ -55,21 +60,36 @@ export default function GamesTab() {
         .filter(Boolean);
       let joined: GameEvent[] = [];
       if (partIds.length) {
-        const { data } = await supabase
-          .from("game_events")
-          .select(select)
-          .in("id", partIds)
-          .gte("date_time", nowIso);
+        const { data } = await applyTime(
+          supabase.from("game_events").select(select).in("id", partIds),
+        );
         joined = (data as GameEvent[]) ?? [];
       }
       const merged = [...((created.data as GameEvent[]) ?? []), ...joined];
-      const uniq = Array.from(
-        new Map(merged.map((g) => [g.id, g])).values(),
-      ).sort(
-        (a, b) =>
-          new Date(a.date_time).getTime() - new Date(b.date_time).getTime(),
+      const uniq = Array.from(new Map(merged.map((g) => [g.id, g])).values()).sort(
+        (a, b) => {
+          const ta = new Date(a.date_time).getTime();
+          const tb = new Date(b.date_time).getTime();
+          return upcoming ? ta - tb : tb - ta; // kommend aufsteigend, gespielt neueste zuerst
+        },
       );
       setGames(uniq);
+
+      // Für vergangene Spiele bereits erfasste Ergebnisse laden (Score-Anzeige).
+      if (!upcoming && uniq.length) {
+        const { data: res } = await supabase
+          .from("game_results")
+          .select("game_event_id, score")
+          .in(
+            "game_event_id",
+            uniq.map((g) => g.id),
+          );
+        const map: Record<string, string> = {};
+        (res ?? []).forEach((r) => {
+          if (r.score && !map[r.game_event_id]) map[r.game_event_id] = r.score;
+        });
+        setResults(map);
+      }
     } else {
       const { data } = await supabase
         .from("game_events")
@@ -91,7 +111,7 @@ export default function GamesTab() {
   return (
     <div className="relative flex h-full flex-col">
       <div className="flex shrink-0 gap-2 p-3">
-        {(["mine", "open"] as const).map((m) => (
+        {(["mine", "open", "past"] as const).map((m) => (
           <button
             key={m}
             type="button"
@@ -100,7 +120,7 @@ export default function GamesTab() {
               mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
             }`}
           >
-            {m === "mine" ? t("games.mine") : t("games.open")}
+            {m === "mine" ? t("games.mine") : m === "open" ? t("games.open") : t("games.past")}
           </button>
         ))}
       </div>
@@ -111,8 +131,14 @@ export default function GamesTab() {
         ) : games.length === 0 ? (
           <EmptyState
             icon={<CalendarIcon size={44} />}
-            title={mode === "mine" ? t("games.emptyMineTitle") : t("games.emptyOpenTitle")}
-            message={t("games.emptyMessage")}
+            title={
+              mode === "mine"
+                ? t("games.emptyMineTitle")
+                : mode === "open"
+                  ? t("games.emptyOpenTitle")
+                  : t("games.emptyPastTitle")
+            }
+            message={mode === "past" ? t("games.emptyPastMessage") : t("games.emptyMessage")}
           />
         ) : (
           <ul className="space-y-3">
@@ -154,9 +180,21 @@ export default function GamesTab() {
                         <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
                         {t("games.participants", { count: `${accepted}/${cap}` })}
                       </p>
-                      <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
-                        {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
-                      </span>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                          {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
+                        </span>
+                        {mode === "past" &&
+                          (results[g.id] ? (
+                            <span className="inline-block rounded-full bg-matchup/20 px-3 py-1 text-xs font-semibold text-matchup ring-1 ring-matchup/40">
+                              {t("games.resultTag", { score: results[g.id] })}
+                            </span>
+                          ) : (
+                            <span className="inline-block text-xs font-semibold text-matchup">
+                              {t("games.logResultHint")}
+                            </span>
+                          ))}
+                      </div>
                     </div>
 
                     <div className="grid shrink-0 grid-cols-2 gap-1.5">
