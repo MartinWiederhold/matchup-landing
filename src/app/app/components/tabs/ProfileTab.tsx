@@ -103,8 +103,12 @@ export default function ProfileTab() {
           {skillLabel(profile.skill_level)}
         </p>
 
-        {/* MatchScore — Elo-Rating */}
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/15 px-4 py-1.5 ring-1 ring-matchup/40">
+        {/* MatchScore — Elo-Rating (tippen → Rangliste) */}
+        <button
+          type="button"
+          onClick={() => openSubView({ type: "leaderboard" })}
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/15 px-4 py-1.5 ring-1 ring-matchup/40 transition-colors hover:bg-matchup/25"
+        >
           <span className="text-[11px] font-bold uppercase tracking-wide text-matchup/80">
             {t("profile.matchScore")}
           </span>
@@ -116,7 +120,10 @@ export default function ProfileTab() {
               · {t("profile.matchScoreProvisional")}
             </span>
           )}
-        </div>
+          <svg className="h-3.5 w-3.5 text-matchup/70" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
         {profile.is_verified && (
           <p className="mt-1 text-xs text-matchup">{t("profile.verified")}</p>

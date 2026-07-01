@@ -11,6 +11,7 @@ import GameDetail from "./subviews/GameDetail";
 import CreateGame from "./subviews/CreateGame";
 import GameReview from "./subviews/GameReview";
 import GameResult from "./subviews/GameResult";
+import Leaderboard from "./subviews/Leaderboard";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -50,6 +51,8 @@ export default function SubViewRenderer({
       return <GameReview gameId={subView.gameId} />;
     case "game-result":
       return <GameResult gameId={subView.gameId} />;
+    case "leaderboard":
+      return <Leaderboard />;
     case "game-requests":
       return <GameRequests gameId={subView.gameId} />;
     case "comments":
