@@ -31,10 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+        { url: "/favicon.ico?v=2", sizes: "any" },
+        { url: "/icon-192.png?v=2", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png?v=2", sizes: "512x512", type: "image/png" },
       ],
-      apple: "/apple-touch-icon.png",
+      apple: "/apple-touch-icon.png?v=2",
     },
     robots: { index: true, follow: true },
     openGraph: {
