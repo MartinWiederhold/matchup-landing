@@ -30,7 +30,9 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
   const [isOpen, setIsOpen] = useState(true);
   const [booked, setBooked] = useState(false);
   const [contacts, setContacts] = useState<string[]>([]);
+  const [initialContacts, setInitialContacts] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const valid = date && time && location.trim();
 
@@ -73,12 +75,29 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
         setIsOpen(g.is_open ?? true);
         setBooked(g.court_booked ?? false);
       }
+      // Bereits eingeladene/teilnehmende Mitspieler in den Picker laden,
+      // damit sie beim Bearbeiten sichtbar bleiben (und nicht verloren gehen).
+      const { data: parts } = await supabase
+        .from("game_participants")
+        .select("user_id, status")
+        .eq("game_event_id", gameId);
+      if (active) {
+        const ids = (parts ?? [])
+          .filter(
+            (p: { user_id: string; status: string }) =>
+              p.user_id !== profile.id &&
+              (p.status === "accepted" || p.status === "invited"),
+          )
+          .map((p: { user_id: string }) => p.user_id);
+        setContacts(ids);
+        setInitialContacts(ids);
+      }
       if (active) setLoading(false);
     })();
     return () => {
       active = false;
     };
-  }, [gameId]);
+  }, [gameId, profile.id]);
 
   async function submit() {
     if (!valid) return;
@@ -118,8 +137,9 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
       targetId = (data as { id: string }).id;
     }
 
-    // Eingeladene Mitspieler als bestätigte Teilnehmer hinzufügen (nur neue).
-    if (targetId && contacts.length) {
+    // Eingeladene Mitspieler abgleichen: neue als Teilnehmer hinzufügen,
+    // abgewählte (die zuvor eingeladen waren) wieder entfernen.
+    if (targetId) {
       const { data: existing } = await supabase
         .from("game_participants")
         .select("user_id")
@@ -128,15 +148,29 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
         (existing ?? []).map((r: { user_id: string }) => r.user_id),
       );
       const toAdd = contacts.filter((id) => !have.has(id));
+      const toRemove = initialContacts.filter((id) => !contacts.includes(id));
+
       if (toAdd.length) {
-        await supabase.from("game_participants").insert(
+        const { error: addErr } = await supabase.from("game_participants").insert(
           toAdd.map((uid) => ({
             game_event_id: targetId,
             user_id: uid,
-            status: "confirmed",
+            status: "accepted",
             confirmed_at: new Date().toISOString(),
           })),
         );
+        if (addErr) {
+          setError(addErr.message);
+          setSaving(false);
+          return;
+        }
+      }
+      if (toRemove.length) {
+        await supabase
+          .from("game_participants")
+          .delete()
+          .eq("game_event_id", targetId)
+          .in("user_id", toRemove);
       }
     }
     setSaving(false);
@@ -256,6 +290,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
       </div>
 
       <div className="shrink-0 border-t border-zinc-800 p-5">
+        {error && <p className="mb-3 text-center text-sm text-amber-400">{error}</p>}
         <button
           type="button"
           disabled={!valid || saving}
