@@ -17,6 +17,7 @@ export type SubViewState =
   | { type: "create-game" }
   | { type: "edit-game"; gameId: string }
   | { type: "game-review"; gameId: string }
+  | { type: "game-result"; gameId: string }
   | { type: "game-requests"; gameId: string }
   | { type: "comments"; postId: string }
   | { type: "create-post" }
