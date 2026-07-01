@@ -182,7 +182,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
           </p>
           <p className="text-center text-sm text-zinc-400">{t("games.resultSavedText")}</p>
         </div>
-        <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">
+        <div className="shrink-0 space-y-3 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={share}
@@ -284,7 +284,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
         {error && <p className="text-sm text-amber-400">{error}</p>}
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 p-5">
+      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={save}

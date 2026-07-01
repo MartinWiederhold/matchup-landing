@@ -262,7 +262,7 @@ export default function EditProfile() {
 
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 p-5">
+      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={save}

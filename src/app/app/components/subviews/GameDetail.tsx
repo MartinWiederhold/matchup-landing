@@ -196,7 +196,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
         )}
       </div>
 
-      <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">
+      <div className="shrink-0 space-y-3 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         {/* Ergebnis-Status */}
         {result?.status === "confirmed" && (
           <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
