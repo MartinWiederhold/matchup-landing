@@ -10,6 +10,7 @@ import type { PlayerStats, Achievement } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import ProfileStats from "../ProfileStats";
+import RatingHistory from "../RatingHistory";
 import InviteFriends from "../InviteFriends";
 
 function PencilIcon({ size = 18 }: { size?: number }) {
@@ -150,6 +151,10 @@ export default function ProfileTab() {
               </span>
             ))}
           </div>
+        </Section>
+
+        <Section title={t("profile.ratingHistoryTitle")}>
+          <RatingHistory userId={profile.id} />
         </Section>
 
         <Section title={t("profile.stats")}>
