@@ -25,7 +25,6 @@ export default function GameResult({ gameId }: { gameId: string }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [myDelta, setMyDelta] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,9 +95,8 @@ export default function GameResult({ gameId }: { gameId: string }) {
       date: dateStr,
       lang: locale,
     });
-    if (myDelta != null) p.set("delta", myDelta > 0 ? `+${myDelta}` : `${myDelta}`);
     return `/api/score-card?${p.toString()}`;
-  }, [game, teamAName, teamBName, score, winner, dateStr, locale, myDelta]);
+  }, [game, teamAName, teamBName, score, winner, dateStr, locale]);
 
   function cycleSide(id: string) {
     setSides((s) => ({ ...s, [id]: s[id] === "a" ? "b" : s[id] === "b" ? null : "a" }));
@@ -134,14 +132,9 @@ export default function GameResult({ gameId }: { gameId: string }) {
       setError(err.code === "23505" ? t("games.resultDuplicate") : err.message);
       return;
     }
-    // Echtes Rating-Delta des eigenen Profils holen (Trigger lief synchron).
-    const { data: rh } = await supabase
-      .from("rating_history")
-      .select("delta")
-      .eq("game_result_id", (data as { id: string }).id)
-      .eq("user_id", profile.id)
-      .maybeSingle();
-    setMyDelta(typeof rh?.delta === "number" ? rh.delta : null);
+    // Ergebnis ist zunächst „pending" — Rating-Delta gibt es erst nach der
+    // Bestätigung durch den Gegner (Trigger auf status='confirmed').
+    void data;
     setSaving(false);
     setSaved(true);
   }
@@ -177,6 +170,9 @@ export default function GameResult({ gameId }: { gameId: string }) {
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl} alt="Score-Card" className="w-full rounded-2xl ring-1 ring-white/10" />
+          <p className="rounded-xl bg-zinc-900 p-3 text-center text-xs text-zinc-400">
+            {t("games.resultPendingNote")}
+          </p>
           <p className="text-center text-sm text-zinc-400">{t("games.resultSavedText")}</p>
         </div>
         <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">

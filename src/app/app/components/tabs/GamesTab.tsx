@@ -22,12 +22,19 @@ const STATUS_KEY: Record<string, string> = {
   completed: "games.statusCompleted",
 };
 
+type ResultInfo = {
+  score: string | null;
+  status: "pending" | "confirmed" | "disputed";
+  reporter_id: string;
+  sides: string[];
+};
+
 export default function GamesTab() {
   const t = useT();
   const { profile, openSubView } = useAppNav();
   const [mode, setMode] = useState<"mine" | "open" | "past">("mine");
   const [games, setGames] = useState<GameEvent[]>([]);
-  const [results, setResults] = useState<Record<string, string>>({});
+  const [results, setResults] = useState<Record<string, ResultInfo>>({});
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -79,14 +86,31 @@ export default function GamesTab() {
       if (!upcoming && uniq.length) {
         const { data: res } = await supabase
           .from("game_results")
-          .select("game_event_id, score")
+          .select("game_event_id, score, status, reporter_id, side_a, side_b")
           .in(
             "game_event_id",
             uniq.map((g) => g.id),
           );
-        const map: Record<string, string> = {};
-        (res ?? []).forEach((r) => {
-          if (r.score && !map[r.game_event_id]) map[r.game_event_id] = r.score;
+        const map: Record<string, ResultInfo> = {};
+        (
+          res as
+            | {
+                game_event_id: string;
+                score: string | null;
+                status: ResultInfo["status"];
+                reporter_id: string;
+                side_a: string[] | null;
+                side_b: string[] | null;
+              }[]
+            | null
+        )?.forEach((r) => {
+          if (!map[r.game_event_id])
+            map[r.game_event_id] = {
+              score: r.score,
+              status: r.status,
+              reporter_id: r.reporter_id,
+              sides: [...(r.side_a ?? []), ...(r.side_b ?? [])],
+            };
         });
         setResults(map);
       }
@@ -185,15 +209,42 @@ export default function GamesTab() {
                           {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
                         </span>
                         {mode === "past" &&
-                          (results[g.id] ? (
-                            <span className="inline-block rounded-full bg-matchup/20 px-3 py-1 text-xs font-semibold text-matchup ring-1 ring-matchup/40">
-                              {t("games.resultTag", { score: results[g.id] })}
-                            </span>
-                          ) : (
-                            <span className="inline-block text-xs font-semibold text-matchup">
-                              {t("games.logResultHint")}
-                            </span>
-                          ))}
+                          (() => {
+                            const r = results[g.id];
+                            if (!r) {
+                              return (
+                                <span className="inline-block text-xs font-semibold text-matchup">
+                                  {t("games.logResultHint")}
+                                </span>
+                              );
+                            }
+                            if (r.status === "confirmed") {
+                              return (
+                                <span className="inline-block rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
+                                  {t("games.resultTag", { score: r.score ?? "" })}
+                                </span>
+                              );
+                            }
+                            if (r.status === "disputed") {
+                              return (
+                                <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+                                  {t("games.resultDisputedTag")}
+                                </span>
+                              );
+                            }
+                            // pending
+                            const amOpp =
+                              r.sides.includes(profile.id) && r.reporter_id !== profile.id;
+                            return amOpp ? (
+                              <span className="inline-block rounded-full bg-matchup/20 px-3 py-1 text-xs font-semibold text-matchup ring-1 ring-matchup/40">
+                                {t("games.resultConfirmBtn")} →
+                              </span>
+                            ) : (
+                              <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+                                {t("games.resultAwaitingConfirm")}
+                              </span>
+                            );
+                          })()}
                       </div>
                     </div>
 

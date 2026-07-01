@@ -17,25 +17,53 @@ const STATUS_KEY: Record<string, string> = {
   completed: "games.statusCompleted",
 };
 
+type GameResultRow = {
+  id: string;
+  status: "pending" | "confirmed" | "disputed";
+  reporter_id: string;
+  side_a: string[];
+  side_b: string[];
+  score: string | null;
+  winner: "a" | "b";
+};
+
 export default function GameDetail({ gameId }: { gameId: string }) {
   const t = useT();
   const { profile, openSubView, closeSubView } = useAppNav();
   const [game, setGame] = useState<GameEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<GameResultRow | null>(null);
+  const [working, setWorking] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("game_events")
-      .select(
-        `*, creator:profiles!game_events_created_by_fkey(*),
-         participants:game_participants(*, profile:profiles(*))`,
-      )
-      .eq("id", gameId)
-      .maybeSingle();
+    const [{ data }, { data: r }] = await Promise.all([
+      supabase
+        .from("game_events")
+        .select(
+          `*, creator:profiles!game_events_created_by_fkey(*),
+           participants:game_participants(*, profile:profiles(*))`,
+        )
+        .eq("id", gameId)
+        .maybeSingle(),
+      supabase
+        .from("game_results")
+        .select("id, status, reporter_id, side_a, side_b, score, winner")
+        .eq("game_event_id", gameId)
+        .maybeSingle(),
+    ]);
     setGame(data as GameEvent | null);
+    setResult((r as GameResultRow | null) ?? null);
     setLoading(false);
   }, [gameId]);
+
+  async function confirmResult(action: "confirm" | "dispute") {
+    if (!result || working) return;
+    setWorking(true);
+    await supabase.rpc("confirm_result", { p_result: result.id, p_action: action });
+    setWorking(false);
+    load();
+  }
 
   useEffect(() => {
     load();
@@ -48,6 +76,23 @@ export default function GameDetail({ gameId }: { gameId: string }) {
   const accepted = game.participants?.filter((p) => p.status === "accepted") ?? [];
   const requests =
     game.participants?.filter((p) => p.status === "requested") ?? [];
+
+  // Ergebnis-Status
+  const nameById = new Map<string, string>();
+  if (game.creator?.id)
+    nameById.set(game.creator.id, game.creator.first_name || game.creator.display_name || "?");
+  (game.participants ?? []).forEach((p) => {
+    if (p.profile?.id)
+      nameById.set(p.profile.id, p.profile.first_name || p.profile.display_name || "?");
+  });
+  const inSides =
+    !!result && (result.side_a.includes(profile.id) || result.side_b.includes(profile.id));
+  const amOpponent =
+    !!result &&
+    result.status === "pending" &&
+    inSides &&
+    result.reporter_id !== profile.id;
+  const reporterName = result ? nameById.get(result.reporter_id) ?? "" : "";
 
   async function join() {
     await supabase.from("game_participants").insert({
@@ -141,15 +186,66 @@ export default function GameDetail({ gameId }: { gameId: string }) {
       </div>
 
       <div className="shrink-0 space-y-3 border-t border-zinc-800 p-5">
+        {/* Ergebnis-Status */}
+        {result?.status === "confirmed" && (
+          <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
+            {t("games.resultConfirmedTag")}
+            {result.score ? ` · ${result.score}` : ""}
+          </div>
+        )}
+        {result?.status === "disputed" && (
+          <div className="rounded-xl bg-zinc-800 px-4 py-3 text-center text-sm text-zinc-400">
+            {t("games.resultDisputedNote")}
+          </div>
+        )}
+        {result?.status === "pending" && amOpponent && (
+          <div className="space-y-3 rounded-2xl bg-zinc-900 p-4 ring-1 ring-matchup/30">
+            <p className="text-sm font-semibold text-white">{t("games.resultConfirmTitle")}</p>
+            {result.score && (
+              <p className="text-2xl font-bold tabular-nums text-white">{result.score}</p>
+            )}
+            {reporterName && (
+              <p className="text-xs text-zinc-500">
+                {t("games.resultReportedBy", { name: reporterName })}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => confirmResult("dispute")}
+                className="flex-1 rounded-full border border-zinc-700 py-3 text-sm font-semibold text-zinc-300 disabled:opacity-50"
+              >
+                {t("games.resultDisputeBtn")}
+              </button>
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => confirmResult("confirm")}
+                className="flex-1 rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover disabled:opacity-50"
+              >
+                {t("games.resultConfirmBtn")}
+              </button>
+            </div>
+          </div>
+        )}
+        {result?.status === "pending" && !amOpponent && (
+          <p className="text-center text-sm text-zinc-400">
+            {t("games.resultAwaitingConfirm")}
+          </p>
+        )}
+
         {(isCreator || myPart) && (
           <>
-            <button
-              type="button"
-              onClick={() => openSubView({ type: "game-result", gameId })}
-              className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
-            >
-              {t("games.resultButton")}
-            </button>
+            {!result && (
+              <button
+                type="button"
+                onClick={() => openSubView({ type: "game-result", gameId })}
+                className="w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white hover:bg-matchup-hover"
+              >
+                {t("games.resultButton")}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => openSubView({ type: "game-review", gameId })}
