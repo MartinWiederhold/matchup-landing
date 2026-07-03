@@ -39,6 +39,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
   // iOS: dvh-Höhe „setzt" sich erst nach einem Repaint → exakte Pixelhöhe per JS,
   // damit die schwarze Fläche sofort (ohne Scrollen) bis zum Home-Indikator reicht.
   const [vh, setVh] = useState<number | null>(null);
+  const [vtop, setVtop] = useState(0);
 
   // Dokument-Scroll sperren + Body schwarz, solange die App offen ist.
   // Verhindert, dass Safari beim Öffnen der Tastatur die Seite hochscrollt und
@@ -70,7 +71,13 @@ export default function AppShell({ profile }: { profile: Profile }) {
     // An die *visuelle* Viewport-Höhe koppeln: Öffnet sich die Tastatur (auch in
     // Safari), schrumpft visualViewport.height → die App füllt exakt den Bereich
     // über der Tastatur, statt darunter eine weisse Fläche zu zeigen.
-    const set = () => setVh(window.visualViewport?.height ?? window.innerHeight);
+    const set = () => {
+      const vv = window.visualViewport;
+      setVh(vv?.height ?? window.innerHeight);
+      // Safari verschiebt beim Tastatur-Öffnen den sichtbaren Viewport nach oben
+      // (offsetTop) → wir gleichen das per translateY wieder aus.
+      setVtop(vv?.offsetTop ?? 0);
+    };
     set();
     // iOS löst die untere Safe-Area erst nach einem Repaint auf → mehrfach messen.
     const raf = requestAnimationFrame(set);
@@ -156,8 +163,8 @@ export default function AppShell({ profile }: { profile: Profile }) {
       }}
     >
       <div
-        className="flex min-h-dvh justify-center overflow-hidden bg-black"
-        style={vh ? { height: vh, minHeight: vh } : undefined}
+        className="fixed inset-x-0 top-0 flex h-dvh justify-center overflow-hidden bg-black"
+        style={vh ? { height: vh, transform: `translateY(${vtop}px)` } : undefined}
       >
         <div
           className="relative flex h-dvh w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white"
