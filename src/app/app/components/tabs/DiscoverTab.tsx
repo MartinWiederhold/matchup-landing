@@ -81,13 +81,16 @@ export default function DiscoverTab() {
       exclude.add(b.blocked_id);
       exclude.add(b.blocker_id);
     });
-    // bereits gesendete Anfragen / Matches NICHT ausschliessen — wir zeigen sie
-    // im Feed als „Angefragt" markiert. Geblockte & ältere Skips bleiben raus.
-    const alreadyRequested = new Set<string>(
-      (likesRes.data ?? []).map((l) => l.to_user_id),
-    );
+    // Bereits gematchte Personen ganz ausschliessen (man ist ja verbunden und
+    // chattet bereits). Nur noch offene, gesendete Anfragen werden als
+    // „Angefragt" markiert angezeigt. Geblockte & ältere Skips bleiben raus.
     (matchesRes.data ?? []).forEach((m) =>
-      alreadyRequested.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
+      exclude.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
+    );
+    const alreadyRequested = new Set<string>(
+      (likesRes.data ?? [])
+        .map((l) => l.to_user_id)
+        .filter((id) => !exclude.has(id)),
     );
     (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
 
