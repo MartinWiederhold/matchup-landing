@@ -453,7 +453,7 @@ export const defaultFilters: FilterState = {
   gender: null,
   ageMin: 18,
   ageMax: 60,
-  radius: 25,
+  radius: 201, // 201 = weltweit (kein Distanz-Limit) — Nutzer sehen von Anfang an andere; Filtern jederzeit möglich
   skillLevels: [],
   clubId: null,
   clubName: null,
