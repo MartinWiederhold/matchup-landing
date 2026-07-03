@@ -198,7 +198,15 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
               size="sm"
               online={isOnline(partner.last_active)}
             />
-            <span className="font-semibold">{partner.first_name}</span>
+            <span className="flex flex-col items-start leading-tight">
+              <span className="font-semibold">{partner.first_name}</span>
+              {isOnline(partner.last_active) && (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  {t("matches.online")}
+                </span>
+              )}
+            </span>
           </button>
         )}
 

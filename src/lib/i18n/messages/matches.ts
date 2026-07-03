@@ -13,6 +13,7 @@ export const matches = {
     matchDissolved: "Dieses Match wurde aufgelöst.",
     messagePlaceholder: "Nachricht schreiben…",
     menuLabel: "Optionen",
+    online: "Online",
     unmatch: "Match auflösen",
     block: "Blockieren",
     dissolveTitle: "Match auflösen?",
@@ -53,6 +54,7 @@ export const matches = {
     confirmBlock: "Block",
     actionDone: "Done",
     messagePlaceholder: "Write a message…",
+    online: "Online",
     // Comments
     commentsTitle: "Comments ({count})",
     commentPlaceholder: "Write a comment…",

@@ -67,6 +67,8 @@ export const profile = {
 
     // FullProfile
     back: "Zurück",
+    prevImage: "Vorheriges Bild",
+    nextImage: "Nächstes Bild",
     report: "Melden",
     reportPrompt: "Grund der Meldung?",
     reportThanks: "Danke, die Meldung wurde übermittelt.",
@@ -176,6 +178,8 @@ export const profile = {
 
     // FullProfile
     back: "Back",
+    prevImage: "Previous image",
+    nextImage: "Next image",
     report: "Report",
     reportPrompt: "Reason for the report?",
     reportThanks: "Thanks, your report has been submitted.",

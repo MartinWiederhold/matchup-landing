@@ -40,22 +40,26 @@ export default function AppShell({ profile }: { profile: Profile }) {
   // damit die schwarze Fläche sofort (ohne Scrollen) bis zum Home-Indikator reicht.
   const [vh, setVh] = useState<number | null>(null);
   useEffect(() => {
-    const set = () => setVh(window.innerHeight);
+    // An die *visuelle* Viewport-Höhe koppeln: Öffnet sich die Tastatur (auch in
+    // Safari), schrumpft visualViewport.height → die App füllt exakt den Bereich
+    // über der Tastatur, statt darunter eine weisse Fläche zu zeigen.
+    const set = () => setVh(window.visualViewport?.height ?? window.innerHeight);
     set();
-    // iOS standalone löst die untere Safe-Area erst nach einem Repaint auf.
-    // Mehrfaches Nachmessen erzwingt das automatisch beim Start (ohne Scrollen).
+    // iOS löst die untere Safe-Area erst nach einem Repaint auf → mehrfach messen.
     const raf = requestAnimationFrame(set);
     const timers = [120, 400, 1000].map((ms) => window.setTimeout(set, ms));
     const vv = window.visualViewport;
     window.addEventListener("resize", set);
     window.addEventListener("orientationchange", set);
     vv?.addEventListener("resize", set);
+    vv?.addEventListener("scroll", set);
     return () => {
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
       window.removeEventListener("resize", set);
       window.removeEventListener("orientationchange", set);
       vv?.removeEventListener("resize", set);
+      vv?.removeEventListener("scroll", set);
     };
   }, []);
 

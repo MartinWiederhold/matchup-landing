@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { skillLabel, sportLabel } from "@/lib/utils/formatters";
@@ -56,6 +56,7 @@ export default function FullProfile({
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [sent, setSent] = useState(false);
+  const touchX = useRef<number | null>(null);
 
   useEffect(() => {
     supabase
@@ -77,6 +78,9 @@ export default function FullProfile({
   const images = [p.profile_image, ...(p.additional_images ?? [])].filter(
     Boolean,
   ) as string[];
+
+  const next = () => setImgIndex((i) => (i + 1) % images.length);
+  const prev = () => setImgIndex((i) => (i - 1 + images.length) % images.length);
 
   async function report() {
     const reason = window.prompt(t("profile.reportPrompt"));
@@ -145,25 +149,66 @@ export default function FullProfile({
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="relative aspect-[3/4] w-full bg-zinc-800">
+        <div
+          className="relative aspect-[3/4] w-full select-none overflow-hidden bg-zinc-800"
+          onTouchStart={(e) => {
+            touchX.current = e.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(e) => {
+            if (touchX.current == null || images.length < 2) return;
+            const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
+            touchX.current = null;
+            if (Math.abs(dx) < 40) return;
+            if (dx > 0) prev();
+            else next();
+          }}
+        >
           {images[imgIndex] && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={images[imgIndex]}
               alt={p.first_name}
               className="h-full w-full object-cover"
-              onClick={() => setImgIndex((i) => (i + 1) % images.length)}
+              draggable={false}
             />
           )}
+
           {images.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-              {images.map((_, i) => (
-                <span
-                  key={i}
-                  className={`h-1.5 w-1.5 rounded-full ${i === imgIndex ? "bg-white" : "bg-white/40"}`}
-                />
-              ))}
-            </div>
+            <>
+              {/* Pfeile zum Klicken */}
+              <button
+                type="button"
+                onClick={prev}
+                aria-label={t("profile.prevImage")}
+                className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                aria-label={t("profile.nextImage")}
+                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+
+              {/* Punkte */}
+              <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                {images.map((_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === imgIndex ? "w-4 bg-white" : "w-1.5 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
