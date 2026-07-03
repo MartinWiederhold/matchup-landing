@@ -48,9 +48,28 @@ export default function DiscoverTab() {
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [filters, setFilters] = useState<FilterState>(() => {
+    // Gesetzte Filter überdauern Tab-Wechsel & Reload (localStorage).
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("mu_discover_filters");
+        if (raw) return { ...defaultFilters, ...JSON.parse(raw) };
+      } catch {
+        /* ignore */
+      }
+    }
+    return defaultFilters;
+  });
   const [matchWith, setMatchWith] = useState<Profile | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("mu_discover_filters", JSON.stringify(filters));
+    } catch {
+      /* ignore */
+    }
+  }, [filters]);
 
   const loadCandidates = useCallback(async () => {
     setIsLoading(true);
@@ -245,17 +264,10 @@ export default function DiscoverTab() {
   if (isLoading) return <FullLoading />;
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800 px-4">
-        <button
-          type="button"
-          onClick={() => setShowFilter(true)}
-          className="flex items-center gap-1.5 text-sm text-zinc-300"
-        >
-          <FilterIcon size={18} /> {t("discover.filter")}
-        </button>
+    <div className="relative flex h-full flex-col">
+      <header className="relative flex h-14 shrink-0 items-center justify-center border-b border-zinc-800 px-4">
         <span className="font-bold tracking-wide">{t("discover.title")}</span>
-        <span className="w-12 text-right text-xs text-zinc-500">
+        <span className="absolute right-4 text-xs text-zinc-500">
           {candidates.length}
         </span>
       </header>
@@ -294,7 +306,7 @@ export default function DiscoverTab() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-24">
         {candidates.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
@@ -320,6 +332,21 @@ export default function DiscoverTab() {
           </div>
         )}
       </div>
+
+      {/* Schwebender Filter-Button (wie das Plus im Spiele-Tab) */}
+      <button
+        type="button"
+        onClick={() => setShowFilter(true)}
+        aria-label={t("discover.filter")}
+        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
+      >
+        <FilterIcon size={24} />
+        {activeChips.length > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-matchup ring-2 ring-black">
+            {activeChips.length}
+          </span>
+        )}
+      </button>
 
       {showFilter && (
         <FilterSheet
