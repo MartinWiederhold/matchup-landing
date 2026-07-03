@@ -81,12 +81,20 @@ export default function AppShell({ profile }: { profile: Profile }) {
     set();
     // iOS löst die untere Safe-Area erst nach einem Repaint auf → mehrfach messen.
     const raf = requestAnimationFrame(set);
-    const timers = [120, 400, 1000].map((ms) => window.setTimeout(set, ms));
+    const timers: number[] = [120, 400, 1000].map((ms) => window.setTimeout(set, ms));
+    // Beim Fokussieren/Verlassen eines Feldes animiert die Tastatur ~300ms — in
+    // dieser Zeit meldet iOS die finale Höhe verspätet. Deshalb mehrfach nachmessen.
+    const remeasure = () => {
+      set();
+      [50, 150, 300, 500, 800].forEach((ms) => timers.push(window.setTimeout(set, ms)));
+    };
     const vv = window.visualViewport;
     window.addEventListener("resize", set);
     window.addEventListener("orientationchange", set);
     vv?.addEventListener("resize", set);
     vv?.addEventListener("scroll", set);
+    document.addEventListener("focusin", remeasure);
+    document.addEventListener("focusout", remeasure);
     return () => {
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
@@ -94,6 +102,8 @@ export default function AppShell({ profile }: { profile: Profile }) {
       window.removeEventListener("orientationchange", set);
       vv?.removeEventListener("resize", set);
       vv?.removeEventListener("scroll", set);
+      document.removeEventListener("focusin", remeasure);
+      document.removeEventListener("focusout", remeasure);
     };
   }, []);
 
