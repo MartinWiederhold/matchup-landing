@@ -182,7 +182,13 @@ export default function AppShell({ profile }: { profile: Profile }) {
     >
       <div
         className="fixed inset-x-0 flex justify-center overflow-hidden bg-black"
-        style={{ top: vtop, bottom: kb }}
+        style={{
+          top: vtop,
+          bottom: kb,
+          // Kanten sanft nachziehen → der Ein-Frame-Sprung während der
+          // Tastatur-Animation wird zu einer gleitenden Bewegung geglättet.
+          transition: "top 0.16s ease-out, bottom 0.16s ease-out",
+        }}
       >
         <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
           {!online && (
