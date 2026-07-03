@@ -351,13 +351,13 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
       </div>
 
       {active && (
-        <div className="flex shrink-0 items-center gap-2 border-t border-zinc-800 p-3">
+        <div className="flex shrink-0 items-center gap-2 border-t border-zinc-800 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <input
             value={text}
             onChange={(e) => onType(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder={t("matches.messagePlaceholder")}
-            className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
+            className="min-w-0 flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-base outline-none"
           />
           {text.trim() && (
             <button

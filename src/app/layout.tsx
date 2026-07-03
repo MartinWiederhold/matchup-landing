@@ -59,6 +59,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: "#000000",
+  // iOS/Android: Tastatur verkleinert die Layout-Höhe (100dvh/innerHeight),
+  // statt nur die visuelle Ansicht — verhindert die weiße Fläche unter Eingaben.
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({
