@@ -39,6 +39,33 @@ export default function AppShell({ profile }: { profile: Profile }) {
   // iOS: dvh-Höhe „setzt" sich erst nach einem Repaint → exakte Pixelhöhe per JS,
   // damit die schwarze Fläche sofort (ohne Scrollen) bis zum Home-Indikator reicht.
   const [vh, setVh] = useState<number | null>(null);
+
+  // Dokument-Scroll sperren + Body schwarz, solange die App offen ist.
+  // Verhindert, dass Safari beim Öffnen der Tastatur die Seite hochscrollt und
+  // darunter der (weisse) Body sichtbar wird.
+  useEffect(() => {
+    const body = document.body;
+    const prev = {
+      background: body.style.background,
+      overflow: body.style.overflow,
+      position: body.style.position,
+      width: body.style.width,
+      height: body.style.height,
+    };
+    body.style.background = "#000";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.width = "100%";
+    body.style.height = "100%";
+    return () => {
+      body.style.background = prev.background;
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.width = prev.width;
+      body.style.height = prev.height;
+    };
+  }, []);
+
   useEffect(() => {
     // An die *visuelle* Viewport-Höhe koppeln: Öffnet sich die Tastatur (auch in
     // Safari), schrumpft visualViewport.height → die App füllt exakt den Bereich
