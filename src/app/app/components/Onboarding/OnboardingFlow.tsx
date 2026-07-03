@@ -26,7 +26,6 @@ import {
   CheckIcon,
   TargetIcon,
   TrophyIcon,
-  DumbbellIcon,
   UsersIcon,
   ActivityIcon,
   CalendarIcon,
@@ -63,7 +62,7 @@ const GOALS: {
 }[] = [
   { value: "fun", labelKey: "onboarding.goalFun", Icon: TargetIcon },
   { value: "competitive", labelKey: "onboarding.goalCompetitive", Icon: TrophyIcon },
-  { value: "training", labelKey: "onboarding.goalTraining", Icon: DumbbellIcon },
+  { value: "training", labelKey: "onboarding.goalTraining", Icon: TennisIcon },
   { value: "social", labelKey: "onboarding.goalSocial", Icon: UsersIcon },
   { value: "fitness", labelKey: "onboarding.goalFitness", Icon: ActivityIcon },
   { value: "regular", labelKey: "onboarding.goalRegular", Icon: CalendarIcon },
