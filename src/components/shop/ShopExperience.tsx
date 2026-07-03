@@ -42,9 +42,6 @@ const PRODUCTS: Product[] = [
   { id: 15, brand: "Onix", name: "Pickleball-Bälle 6er", sub: "Outdoor · 40 Löcher", price: 18, cat: "gear" },
   { id: 16, brand: "Wilson", name: "Pro Racketbag", sub: "12 Schläger · Thermo", price: 119, badge: "neu", cat: "gear" },
   { id: 18, brand: "Matchup", name: "Overgrip-Set 12er", sub: "Perforiert · Tour", price: 19, badge: "bestseller", cat: "gear" },
-  // Bekleidung
-  { id: 19, brand: "Wilson", name: "Pullover Herren", sub: "Half-Zip · Baumwolle", price: 89, cat: "apparel" },
-  { id: 20, brand: "Wilson", name: "Pullover Damen", sub: "Half-Zip · Baumwolle", price: 89, cat: "apparel" },
 ];
 
 const FILTERS: { key: Cat | "all"; labelKey: string }[] = [
@@ -53,7 +50,6 @@ const FILTERS: { key: Cat | "all"; labelKey: string }[] = [
   { key: "padel", labelKey: "shop.filterPadel" },
   { key: "pickleball", labelKey: "shop.filterPickleball" },
   { key: "gear", labelKey: "shop.filterGear" },
-  { key: "apparel", labelKey: "shop.filterApparel" },
 ];
 
 const COLLECTIONS: {
