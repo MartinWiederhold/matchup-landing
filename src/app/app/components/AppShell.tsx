@@ -38,7 +38,10 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const online = useOnline();
   // iOS: dvh-Höhe „setzt" sich erst nach einem Repaint → exakte Pixelhöhe per JS,
   // damit die schwarze Fläche sofort (ohne Scrollen) bis zum Home-Indikator reicht.
-  const [vh, setVh] = useState<number | null>(null);
+  // Der App-Container wird oben (an visualViewport.offsetTop) UND unten (an der
+  // Tastaturhöhe) fixiert → er deckt sich immer exakt mit dem sichtbaren Viewport,
+  // egal wie Safari beim Tastatur-Öffnen verschiebt. Kein Verrutschen, kein Weiss.
+  const [kb, setKb] = useState(0);
   const [vtop, setVtop] = useState(0);
 
   // Dokument-Scroll sperren + Body schwarz, solange die App offen ist.
@@ -68,15 +71,20 @@ export default function AppShell({ profile }: { profile: Profile }) {
   }, []);
 
   useEffect(() => {
-    // An die *visuelle* Viewport-Höhe koppeln: Öffnet sich die Tastatur (auch in
-    // Safari), schrumpft visualViewport.height → die App füllt exakt den Bereich
-    // über der Tastatur, statt darunter eine weisse Fläche zu zeigen.
+    // Tastaturhöhe aus dem visuellen Viewport ableiten. Da der Body per
+    // position:fixed gesperrt ist, bleibt window.innerHeight die volle Layouthöhe;
+    // die Differenz zur sichtbaren Höhe (inkl. evtl. offsetTop) ist die Tastatur.
     const set = () => {
       const vv = window.visualViewport;
-      setVh(vv?.height ?? window.innerHeight);
-      // Safari verschiebt beim Tastatur-Öffnen den sichtbaren Viewport nach oben
-      // (offsetTop) → wir gleichen das per translateY wieder aus.
-      setVtop(vv?.offsetTop ?? 0);
+      if (!vv) {
+        setKb(0);
+        setVtop(0);
+        return;
+      }
+      const top = vv.offsetTop;
+      const gap = window.innerHeight - vv.height - top; // Tastaturhöhe
+      setVtop(Math.round(top));
+      setKb(Math.max(0, Math.round(gap)));
     };
     set();
     // iOS löst die untere Safe-Area erst nach einem Repaint auf → mehrfach messen.
@@ -173,13 +181,10 @@ export default function AppShell({ profile }: { profile: Profile }) {
       }}
     >
       <div
-        className="fixed inset-x-0 top-0 flex h-dvh justify-center overflow-hidden bg-black"
-        style={vh ? { height: vh, transform: `translateY(${vtop}px)` } : undefined}
+        className="fixed inset-x-0 flex justify-center overflow-hidden bg-black"
+        style={{ top: vtop, bottom: kb }}
       >
-        <div
-          className="relative flex h-dvh w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white"
-          style={vh ? { height: vh } : undefined}
-        >
+        <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
           {!online && (
             <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
               {t("app.offline")}
