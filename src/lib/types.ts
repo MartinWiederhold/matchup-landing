@@ -180,12 +180,15 @@ export interface CommunityPost {
   club_id: string | null; // null = global, Migration 017
   author_id: string;
   content: string;
-  likes_count: number; // Migration 016, Trigger-maintained
+  image_url: string | null; // optionales Foto
+  likes_count: number; // Migration 016, Trigger-maintained (= Gesamt-Reaktionen)
   comments_count: number; // Migration 016
   created_at: string;
   // Joined:
   author?: Profile;
   is_liked_by_me?: boolean;
+  my_reaction?: string | null; // eigene Emoji-Reaktion
+  reactions?: Record<string, number>; // Emoji → Anzahl
 }
 
 export interface CommunityComment {
@@ -202,6 +205,7 @@ export interface CommunityLike {
   id: string;
   post_id: string;
   user_id: string;
+  reaction: string; // Emoji (Default 'like')
   created_at: string;
 }
 

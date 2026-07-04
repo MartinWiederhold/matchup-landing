@@ -46,6 +46,11 @@ export default function Comments({ postId }: { postId: string }) {
     load();
   }
 
+  async function deleteComment(id: string) {
+    setComments((cs) => cs.filter((c) => c.id !== id));
+    await supabase.from("community_comments").delete().eq("id", id);
+  }
+
   return (
     <div className="flex h-full flex-col">
       <SubViewHeader title={t("matches.commentsTitle", { count: comments.length })} />
@@ -62,18 +67,28 @@ export default function Comments({ postId }: { postId: string }) {
                 {post.author?.first_name}
               </span>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{post.content}</p>
+            {post.content && (
+              <p className="mt-2 whitespace-pre-wrap text-sm">{post.content}</p>
+            )}
+            {post.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.image_url}
+                alt=""
+                className="mt-3 max-h-80 w-full rounded-2xl object-cover"
+              />
+            )}
           </div>
         )}
         <ul className="divide-y divide-zinc-800">
           {comments.map((c) => (
-            <li key={c.id} className="flex gap-2.5 p-4">
+            <li key={c.id} className="flex items-start gap-2.5 p-4">
               <Avatar
                 src={c.author?.profile_image}
                 alt={c.author?.first_name}
                 size="sm"
               />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-sm">
                   <span className="font-semibold">{c.author?.first_name}</span>{" "}
                   <span className="text-xs text-zinc-500">
@@ -82,17 +97,27 @@ export default function Comments({ postId }: { postId: string }) {
                 </p>
                 <p className="text-sm text-zinc-300">{c.content}</p>
               </div>
+              {c.author_id === profile.id && (
+                <button
+                  type="button"
+                  onClick={() => deleteComment(c.id)}
+                  aria-label={t("community.deleteComment")}
+                  className="shrink-0 rounded-full px-2 py-1 text-xs text-zinc-500 hover:text-amber-300"
+                >
+                  ✕
+                </button>
+              )}
             </li>
           ))}
         </ul>
       </div>
-      <div className="flex shrink-0 items-center gap-2 border-t border-zinc-800 p-3">
+      <div className="flex shrink-0 items-center gap-2 border-t border-zinc-800 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder={t("matches.commentPlaceholder")}
-          className="flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-sm outline-none"
+          className="min-w-0 flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-base outline-none"
         />
         <button
           type="button"
