@@ -12,9 +12,10 @@ import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
  */
 const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
 
-/** Diese Pfade bleiben hinter dem Code-Gate. */
+/** Diese Pfade bleiben hinter dem Code-Gate. Nur noch /admin — die App (/app)
+ *  ist öffentlich zugänglich (Registrierung/Login ohne Zugangscode). */
 function isProtected(pathname: string): boolean {
-  return pathname.startsWith("/app") || pathname.startsWith("/admin");
+  return pathname.startsWith("/admin");
 }
 
 /**
