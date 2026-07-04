@@ -94,6 +94,8 @@ export const games = {
     courtBooked: "Platz gebucht",
     creating: "Wird erstellt…",
     create: "Spiel erstellen",
+    createInvalidDate: "Bitte gültiges Datum und Uhrzeit wählen.",
+    createFailed: "Spiel konnte nicht erstellt werden. Bitte erneut versuchen.",
     // GameDetail
     detailTitle: "Spiel-Details",
     courtBookedYes: "Platz gebucht",
@@ -207,6 +209,8 @@ export const games = {
     courtBooked: "Court booked",
     creating: "Creating…",
     create: "Create game",
+    createInvalidDate: "Please pick a valid date and time.",
+    createFailed: "Couldn't create the game. Please try again.",
     // GameDetail
     detailTitle: "Game details",
     courtBookedYes: "Court booked",

@@ -100,81 +100,95 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
   }, [gameId, profile.id]);
 
   async function submit() {
-    if (!valid) return;
-    setSaving(true);
-    const payload = {
-      sport,
-      game_type: gameType,
-      date_time: new Date(`${date}T${time}`).toISOString(),
-      location: location.trim(),
-      court_number: court || null,
-      court_booked: booked,
-      description: description || null,
-      max_participants: maxP,
-      is_open: isOpen,
-      club_id: clubId,
-    };
-    let targetId = gameId ?? null;
-    if (gameId) {
-      const { error } = await supabase
-        .from("game_events")
-        .update(payload)
-        .eq("id", gameId);
-      if (error) {
-        setSaving(false);
-        return;
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("game_events")
-        .insert({ ...payload, created_by: profile.id, status: "planned" })
-        .select("id")
-        .single();
-      if (error || !data) {
-        setSaving(false);
-        return;
-      }
-      targetId = (data as { id: string }).id;
+    if (!valid || saving) return;
+    setError("");
+
+    // Datum/Zeit sicher zusammensetzen — verhindert einen Absturz (und damit ein
+    // dauerhaft ausgegrautes „Erstellen") bei ungültiger Eingabe.
+    const dt = new Date(`${date}T${time}`);
+    if (isNaN(dt.getTime())) {
+      setError(t("games.createInvalidDate"));
+      return;
     }
 
-    // Eingeladene Mitspieler abgleichen: neue als Teilnehmer hinzufügen,
-    // abgewählte (die zuvor eingeladen waren) wieder entfernen.
-    if (targetId) {
-      const { data: existing } = await supabase
-        .from("game_participants")
-        .select("user_id")
-        .eq("game_event_id", targetId);
-      const have = new Set(
-        (existing ?? []).map((r: { user_id: string }) => r.user_id),
-      );
-      const toAdd = contacts.filter((id) => !have.has(id));
-      const toRemove = initialContacts.filter((id) => !contacts.includes(id));
-
-      if (toAdd.length) {
-        const { error: addErr } = await supabase.from("game_participants").insert(
-          toAdd.map((uid) => ({
-            game_event_id: targetId,
-            user_id: uid,
-            status: "accepted",
-            confirmed_at: new Date().toISOString(),
-          })),
-        );
-        if (addErr) {
-          setError(addErr.message);
-          setSaving(false);
+    setSaving(true);
+    try {
+      const payload = {
+        sport,
+        game_type: gameType,
+        date_time: dt.toISOString(),
+        location: location.trim(),
+        court_number: court || null,
+        court_booked: booked,
+        description: description || null,
+        max_participants: maxP,
+        is_open: isOpen,
+        club_id: clubId,
+      };
+      let targetId = gameId ?? null;
+      if (gameId) {
+        const { error } = await supabase
+          .from("game_events")
+          .update(payload)
+          .eq("id", gameId);
+        if (error) {
+          setError(error.message);
           return;
         }
+      } else {
+        const { data, error } = await supabase
+          .from("game_events")
+          .insert({ ...payload, created_by: profile.id, status: "planned" })
+          .select("id")
+          .single();
+        if (error || !data) {
+          setError(error?.message ?? t("games.createFailed"));
+          return;
+        }
+        targetId = (data as { id: string }).id;
       }
-      if (toRemove.length) {
-        await supabase
+
+      // Eingeladene Mitspieler abgleichen: neue als Teilnehmer hinzufügen,
+      // abgewählte (die zuvor eingeladen waren) wieder entfernen.
+      if (targetId) {
+        const { data: existing } = await supabase
           .from("game_participants")
-          .delete()
-          .eq("game_event_id", targetId)
-          .in("user_id", toRemove);
+          .select("user_id")
+          .eq("game_event_id", targetId);
+        const have = new Set(
+          (existing ?? []).map((r: { user_id: string }) => r.user_id),
+        );
+        const toAdd = contacts.filter((id) => !have.has(id));
+        const toRemove = initialContacts.filter((id) => !contacts.includes(id));
+
+        if (toAdd.length) {
+          const { error: addErr } = await supabase.from("game_participants").insert(
+            toAdd.map((uid) => ({
+              game_event_id: targetId,
+              user_id: uid,
+              status: "accepted",
+              confirmed_at: new Date().toISOString(),
+            })),
+          );
+          if (addErr) {
+            setError(addErr.message);
+            return;
+          }
+        }
+        if (toRemove.length) {
+          await supabase
+            .from("game_participants")
+            .delete()
+            .eq("game_event_id", targetId)
+            .in("user_id", toRemove);
+        }
       }
+      closeSubView();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("games.createFailed"));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    closeSubView();
   }
 
   return (
