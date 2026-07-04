@@ -12,9 +12,12 @@ import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
  */
 const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
 
-/** Diese Pfade bleiben hinter dem Code-Gate. */
+/** Die GESAMTE Seite ist hinter dem Code-Gate — nur der Lock-Screen selbst und
+ *  der Freischalt-Endpoint müssen erreichbar bleiben, damit man den Code eingeben
+ *  kann. Alles andere (inkl. Startseite) verlangt den Zugangscode. */
 function isProtected(pathname: string): boolean {
-  return pathname.startsWith("/app") || pathname.startsWith("/admin");
+  if (pathname === "/locked" || pathname.startsWith("/api/unlock")) return false;
+  return true;
 }
 
 /**
