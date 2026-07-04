@@ -39,7 +39,10 @@ export default function ClubPicker({
   const req = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Name aus der DB auflösen, falls nur eine club_id vorliegt.
+  // Name aus der DB auflösen, falls nur eine club_id vorliegt — und dem Formular
+  // melden, damit `location` gefüllt ist (sonst bleibt „Erstellen" ausgegraut).
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   useEffect(() => {
     if (clubId && !clubName) {
       supabase
@@ -48,7 +51,10 @@ export default function ClubPicker({
         .eq("id", clubId)
         .maybeSingle()
         .then(({ data }) => {
-          if (data?.name) setSelName(data.name as string);
+          if (data?.name) {
+            setSelName(data.name as string);
+            onChangeRef.current(clubId, data.name as string);
+          }
         });
     }
   }, [clubId, clubName]);
