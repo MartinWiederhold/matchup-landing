@@ -1,6 +1,6 @@
 export const seo = {
   de: {
-    homeTitle: "Matchup — Spielpartner finden für Tennis, Padel & Pickleball",
+    homeTitle: "Matchup - Spielpartner finden für Tennis, Padel & Pickleball",
     homeDescription:
       "Finde Tennis-, Padel- und Pickleball-Spielpartner in deiner Nähe. Matche nach Level und Standort, organisiere Spiele und entdecke Events & Clubs. Jetzt kostenlos starten.",
     partnerTitle: "Spielpartner finden für Tennis, Padel & Pickleball",
@@ -17,7 +17,7 @@ export const seo = {
       "Individuelle Schlägerberatung und Profi-Bespannung — oder spiele mit dem Setup deiner Stars. Persönlich, kostenlos und unverbindlich.",
   },
   en: {
-    homeTitle: "Matchup — Find playing partners for tennis, padel & pickleball",
+    homeTitle: "Matchup - Find playing partners for tennis, padel & pickleball",
     homeDescription:
       "Find tennis, padel and pickleball playing partners near you. Match by level and location, organise games and discover events & clubs. Start for free.",
     partnerTitle: "Find playing partners for tennis, padel & pickleball",
