@@ -16,7 +16,12 @@ const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
  *  der Freischalt-Endpoint müssen erreichbar bleiben, damit man den Code eingeben
  *  kann. Alles andere (inkl. Startseite) verlangt den Zugangscode. */
 function isProtected(pathname: string): boolean {
-  if (pathname === "/locked" || pathname.startsWith("/api/unlock")) return false;
+  if (
+    pathname === "/locked" ||
+    pathname.startsWith("/api/unlock") ||
+    pathname.startsWith("/reset-password") // Passwort-Reset-Link aus der Mail muss offen sein
+  )
+    return false;
   return true;
 }
 

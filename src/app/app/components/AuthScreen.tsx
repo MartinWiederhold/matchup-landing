@@ -193,7 +193,9 @@ export default function AuthScreen() {
                 setError(t("auth.errEmailFirst"));
                 return;
               }
-              await supabase.auth.resetPasswordForEmail(email);
+              await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+              });
               setError(t("auth.resetSent"));
             }}
           >
