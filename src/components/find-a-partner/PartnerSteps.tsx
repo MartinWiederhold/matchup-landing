@@ -196,7 +196,7 @@ export default function PartnerSteps() {
       number: "03",
       title: t("findPartner.step3Title"),
       text: t("findPartner.step3Text"),
-      img: "/find-a-partner/step-play-v3.jpg",
+      img: "/find-a-partner/step-play-v4.jpg",
       overlay: "play",
     },
   ];
