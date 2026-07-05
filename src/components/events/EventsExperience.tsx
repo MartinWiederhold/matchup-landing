@@ -172,33 +172,39 @@ export default function EventsExperience() {
             </div>
           </div>
 
-          {/* Umkreis-Regler — erscheint inline, sobald „In der Nähe" aktiv ist */}
+          {/* Umkreis-Regler — immer sichtbar bei „In der Nähe" (Desktop & Mobile).
+              Distanz-Filter greift, sobald ein Standort vorliegt. */}
           {scope === "near" && (
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-2xl space-y-1.5">
+              <div className="flex items-center gap-3 rounded-full bg-neutral-100 px-4 py-2.5">
+                <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-neutral-500">
+                  {t("events.radiusLabel")}
+                </span>
+                <input
+                  type="range"
+                  min={5}
+                  max={201}
+                  value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  className="min-w-0 flex-1 accent-matchup"
+                />
+                <span className="w-24 shrink-0 text-right text-sm font-bold text-neutral-900">
+                  {radius > 200
+                    ? t("events.radiusWorldwide")
+                    : t("events.radiusValue", { km: radius })}
+                </span>
+              </div>
               {locating ? (
-                <p className="text-center text-sm text-neutral-500">{t("events.locating")}</p>
-              ) : coords ? (
-                <div className="flex items-center gap-3 rounded-full bg-neutral-100 px-4 py-2.5">
-                  <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-neutral-500">
-                    {t("events.radiusLabel")}
-                  </span>
-                  <input
-                    type="range"
-                    min={5}
-                    max={201}
-                    value={radius}
-                    onChange={(e) => setRadius(Number(e.target.value))}
-                    className="min-w-0 flex-1 accent-matchup"
-                  />
-                  <span className="w-24 shrink-0 text-right text-sm font-bold text-neutral-900">
-                    {radius > 200
-                      ? t("events.radiusWorldwide")
-                      : t("events.radiusValue", { km: radius })}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-center text-sm text-neutral-500">{t("events.locationDenied")}</p>
-              )}
+                <p className="px-2 text-center text-xs text-neutral-500">{t("events.locating")}</p>
+              ) : !coords ? (
+                <button
+                  type="button"
+                  onClick={enableNear}
+                  className="mx-auto block px-2 text-center text-xs font-semibold text-matchup underline"
+                >
+                  {t("events.locationDenied")}
+                </button>
+              ) : null}
             </div>
           )}
 
