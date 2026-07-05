@@ -35,13 +35,11 @@ function useInView<T extends HTMLElement>() {
   return { ref, inView };
 }
 
-function Chip({ show, children }: { show: boolean; children: React.ReactNode }) {
+/* Chip immer sichtbar — animiert werden nur die Grafik-Elemente innen
+   (wie in der Landing-Sektion „Discover players / Organise games …"). */
+function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={`absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/55 px-3.5 py-2 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md ${
-        show ? "anim-rise" : "opacity-0"
-      }`}
-    >
+    <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/55 px-3.5 py-2 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
       {children}
     </div>
   );
@@ -51,12 +49,13 @@ function Chip({ show, children }: { show: boolean; children: React.ReactNode }) 
 function ProfileOverlay({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <Chip show={show}>
+    <Chip>
       <span className="flex items-center gap-1">
         {["T", "P", "P"].map((s, i) => (
           <span
             key={i}
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-matchup text-[9px] font-bold"
+            className={`flex h-5 w-5 items-center justify-center rounded-full bg-matchup text-[9px] font-bold ${show ? "anim-pop" : ""}`}
+            style={show ? { animationDelay: `${i * 0.12}s` } : undefined}
           >
             {s}
           </span>
@@ -71,8 +70,13 @@ function ProfileOverlay({ show }: { show: boolean }) {
 function MatchOverlay({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <Chip show={show}>
-      <svg viewBox="0 0 24 24" className="h-4 w-4 text-pink-400" fill="currentColor" aria-hidden="true">
+    <Chip>
+      <svg
+        viewBox="0 0 24 24"
+        className={`h-4 w-4 text-pink-400 ${show ? "anim-pop" : ""}`}
+        fill="currentColor"
+        aria-hidden="true"
+      >
         <path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z" />
       </svg>
       <span>{t("findPartner.itsAMatch")}</span>
@@ -84,12 +88,19 @@ function MatchOverlay({ show }: { show: boolean }) {
 function PlayOverlay({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <Chip show={show}>
+    <Chip>
       <span className="flex items-center gap-1">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="h-1.5 w-1.5 rounded-full bg-matchup" />
+          <span
+            key={i}
+            className={`h-1.5 w-1.5 rounded-full bg-matchup ${show ? "anim-pop" : ""}`}
+            style={show ? { animationDelay: `${i * 0.12}s` } : undefined}
+          />
         ))}
-        <span className="h-1.5 w-1.5 rounded-full ring-1 ring-white/60" />
+        <span
+          className={`h-1.5 w-1.5 rounded-full ring-1 ring-white/60 ${show ? "anim-pop" : ""}`}
+          style={show ? { animationDelay: "0.36s" } : undefined}
+        />
       </span>
       <span>{t("findPartner.gameOrganized")}</span>
     </Chip>
