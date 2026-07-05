@@ -281,6 +281,25 @@ export default function OnboardingFlow() {
       });
       if (insertError) throw insertError;
 
+      // Willkommens-Mail (fire-and-forget — blockiert das Onboarding nie).
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          void fetch("/api/welcome-email", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ firstName: state.first_name }),
+          }).catch(() => {});
+        }
+      } catch {
+        /* Mail ist optional */
+      }
+
       await refreshProfile();
     } catch (err) {
       const msg =
