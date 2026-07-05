@@ -84,26 +84,47 @@ function MatchOverlay({ show }: { show: boolean }) {
   );
 }
 
-/* 03 — Spiel organisiert */
+/* 03 — Chat-Szene: Nachricht + kreisrunde Spieler-Avatare, animiert eingeblendet */
+const PLAY_AVATARS = [
+  "/find-a-partner/av-man.jpg",
+  "/find-a-partner/av-woman1.jpg",
+  "/find-a-partner/av-woman2.jpg",
+];
 function PlayOverlay({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <Chip>
-      <span className="flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className={`h-1.5 w-1.5 rounded-full bg-matchup ${show ? "anim-pop" : ""}`}
-            style={show ? { animationDelay: `${i * 0.12}s` } : undefined}
-          />
-        ))}
-        <span
-          className={`h-1.5 w-1.5 rounded-full ring-1 ring-white/60 ${show ? "anim-pop" : ""}`}
-          style={show ? { animationDelay: "0.36s" } : undefined}
-        />
-      </span>
-      <span>{t("findPartner.gameOrganized")}</span>
-    </Chip>
+    <div className="absolute bottom-4 left-4 flex flex-col items-start gap-2.5">
+      {/* Chat-Nachricht */}
+      <div
+        className={`rounded-2xl rounded-bl-md bg-white px-3.5 py-2 text-xs font-semibold text-black shadow-lg ${
+          show ? "anim-pop" : "opacity-0"
+        }`}
+        style={show ? { animationDelay: "0.45s" } : undefined}
+      >
+        {t("findPartner.chatMessage")}
+      </div>
+
+      {/* Avatare + Label */}
+      <div className="flex items-center gap-2">
+        <div className="flex -space-x-3">
+          {PLAY_AVATARS.map((src, i) => (
+            <span
+              key={src}
+              className={`h-9 w-9 overflow-hidden rounded-full ring-2 ring-white ${
+                show ? "anim-pop" : "opacity-0"
+              }`}
+              style={show ? { animationDelay: `${i * 0.12}s` } : undefined}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </span>
+          ))}
+        </div>
+        <span className="rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15 backdrop-blur-md">
+          {t("findPartner.gameOrganized")}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -126,7 +147,7 @@ function StepRow({ step, index }: { step: Step; index: number }) {
           sizes="(max-width: 1024px) 100vw, 50vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             step.overlay === "play"
-              ? "[object-position:center_30%]"
+              ? "[object-position:center_20%]"
               : step.overlay === "match"
                 ? "[object-position:center_20%]"
                 : step.overlay === "profile"
@@ -175,7 +196,7 @@ export default function PartnerSteps() {
       number: "03",
       title: t("findPartner.step3Title"),
       text: t("findPartner.step3Text"),
-      img: "/find-a-partner/step-play.jpg",
+      img: "/find-a-partner/step-play-v2.jpg",
       overlay: "play",
     },
   ];

@@ -15,6 +15,7 @@ export const findPartner = {
     profileReady: "Profil bereit",
     itsAMatch: "Es ist ein Match!",
     gameOrganized: "Spiel organisiert",
+    chatMessage: "Morgen 18 Uhr? 🎾",
     // Page hero + cta
     heroImageAlt: "Spielpartner finden",
     heroTitle: "So findest du deinen Spielpartner",
@@ -39,6 +40,7 @@ export const findPartner = {
     profileReady: "Profile ready",
     itsAMatch: "It's a match!",
     gameOrganized: "Game organized",
+    chatMessage: "Tomorrow 6pm? 🎾",
     // Page hero + cta
     heroImageAlt: "Find a playing partner",
     heroTitle: "How to find your playing partner",
