@@ -212,6 +212,31 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      case "saveVenue": {
+        const id = body.id ? String(body.id) : null;
+        const patch = (body.patch ?? {}) as Record<string, unknown>;
+        patch.updated_at = new Date().toISOString();
+        if (id) {
+          const { error } = await svc.from("venues").update(patch).eq("id", id);
+          if (error) throw error;
+          return NextResponse.json({ ok: true, id });
+        }
+        const { data, error } = await svc
+          .from("venues")
+          .insert({ ...patch, source: "admin" })
+          .select("id")
+          .single();
+        if (error) throw error;
+        return NextResponse.json({ ok: true, id: (data as { id: string }).id });
+      }
+
+      case "deleteVenue": {
+        const id = String(body.id);
+        const { error } = await svc.from("venues").delete().eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
       default:
         return NextResponse.json({ error: "Unbekannte Aktion" }, { status: 400 });
     }
