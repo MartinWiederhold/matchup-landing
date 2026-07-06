@@ -25,6 +25,24 @@ const CAT_LABEL: Record<VenueCategory, string> = {
 
 const ZURICH: [number, number] = [8.5417, 47.3769];
 
+/* Tennisball für das Intro */
+function TennisBall({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+      <defs>
+        <radialGradient id="tb" cx="38%" cy="34%" r="70%">
+          <stop offset="0%" stopColor="#eaff6a" />
+          <stop offset="70%" stopColor="#c7e600" />
+          <stop offset="100%" stopColor="#a6c400" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#tb)" />
+      <path d="M14 22 C40 42 40 58 14 78" fill="none" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M86 22 C60 42 60 58 86 78" fill="none" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -32,6 +50,7 @@ export default function MapView() {
     new Map(),
   );
   const [ready, setReady] = useState(false);
+  const [intro, setIntro] = useState(true);
 
   const [query, setQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<Sport | null>(null);
@@ -55,14 +74,13 @@ export default function MapView() {
     mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 15, speed: 1 });
   }, []);
 
-  // Karte initialisieren
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: mapEl.current,
       style: "https://tiles.openfreemap.org/styles/positron",
-      center: [10, 30],
-      zoom: 1.6,
+      center: ZURICH,
+      zoom: 11,
       attributionControl: false,
     });
     mapRef.current = map;
@@ -75,11 +93,11 @@ export default function MapView() {
       } catch {
         /* ältere Version → flach */
       }
+      map.resize();
       setReady(true);
-      window.setTimeout(() => {
-        map.flyTo({ center: ZURICH, zoom: 11.5, speed: 0.8 });
-      }, 700);
     });
+    // Flex-Layout kann die Größe verzögert liefern → mehrfach nachmessen.
+    [200, 600, 1200].forEach((ms) => window.setTimeout(() => map.resize(), ms));
 
     return () => {
       map.remove();
@@ -88,12 +106,17 @@ export default function MapView() {
     };
   }, []);
 
-  // Marker (kreisrunde Monogramm-Badges) mit den sichtbaren Venies abgleichen
+  // Intro-Splash ausblenden
+  useEffect(() => {
+    const t = window.setTimeout(() => setIntro(false), 1700);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Marker abgleichen
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
     const keep = new Set(visible.map((x) => x.i));
-
     for (const [i, entry] of markers.current) {
       if (!keep.has(i)) {
         entry.marker.remove();
@@ -103,7 +126,7 @@ export default function MapView() {
     for (const { v, i } of visible) {
       if (markers.current.has(i)) continue;
       const el = document.createElement("div");
-      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.28);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
+      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.18);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
       el.textContent = initials(v.name);
       el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.15)"));
       el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"));
@@ -113,34 +136,34 @@ export default function MapView() {
     }
   }, [visible, ready, focus]);
 
-  // Ausgewählten Marker hervorheben
   useEffect(() => {
     for (const [i, { el }] of markers.current) {
       const active = i === selected;
       el.style.zIndex = active ? "10" : "1";
       el.style.transform = active ? "scale(1.25)" : "scale(1)";
       el.style.boxShadow = active
-        ? "0 0 0 4px rgba(75,59,243,.35), 0 6px 16px rgba(0,0,0,.35)"
-        : "0 4px 12px rgba(0,0,0,.28)";
+        ? "0 0 0 4px rgba(75,59,243,.30), 0 6px 16px rgba(0,0,0,.25)"
+        : "0 4px 12px rgba(0,0,0,.18)";
     }
   }, [selected, visible]);
 
   const sel = selected != null ? VENUES[selected] : null;
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-neutral-950 text-white">
+    <div className="relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900">
       {/* Sidebar */}
-      <aside className="flex w-full max-w-sm shrink-0 flex-col border-r border-white/10">
-        <div className="shrink-0 space-y-3 border-b border-white/10 p-4">
-          <div className="flex items-center justify-between">
+      <aside className="flex w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white">
+        <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
+          <div className="flex items-center gap-2">
+            <TennisBall className="h-6 w-6" />
             <span className="text-lg font-bold tracking-tight">Zürich</span>
-            <span className="text-xs text-white/40">{visible.length} Orte</span>
+            <span className="ml-auto text-xs text-neutral-400">{visible.length} Orte</span>
           </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Suchen…"
-            className="h-10 w-full rounded-full border border-white/10 bg-white/5 px-4 text-sm outline-none focus:border-matchup"
+            className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
           />
           <div className="flex flex-wrap gap-1.5">
             {([null, "tennis", "padel", "pickleball"] as const).map((s) => (
@@ -149,7 +172,9 @@ export default function MapView() {
                 type="button"
                 onClick={() => setSportFilter(s)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                  sportFilter === s ? "bg-matchup text-white" : "bg-white/10 text-white/70"
+                  sportFilter === s
+                    ? "bg-matchup text-white"
+                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
               >
                 {s ? SPORT_LABEL[s] : "Alle"}
@@ -163,7 +188,7 @@ export default function MapView() {
                 type="button"
                 onClick={() => setCatFilter(c)}
                 className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                  catFilter === c ? "bg-white text-black" : "bg-white/5 text-white/50"
+                  catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
                 }`}
               >
                 {c ? CAT_LABEL[c] : "Alle Typen"}
@@ -178,19 +203,19 @@ export default function MapView() {
               key={i}
               type="button"
               onClick={() => focus(i)}
-              className={`flex w-full items-center gap-3 border-b border-white/5 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
-                selected === i ? "bg-white/10" : ""
+              className={`flex w-full items-center gap-3 border-b border-neutral-100 px-4 py-3 text-left transition-colors hover:bg-neutral-50 ${
+                selected === i ? "bg-matchup/5" : ""
               }`}
             >
               <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-extrabold text-black"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-extrabold text-neutral-900 shadow-sm"
                 style={{ border: `2.5px solid ${SPORT_COLOR[v.sport]}` }}
               >
                 {initials(v.name)}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{v.name}</span>
-                <span className="block text-xs text-white/40">
+                <span className="block text-xs text-neutral-400">
                   {SPORT_LABEL[v.sport]} · {CAT_LABEL[v.category]}
                   {v.city ? ` · ${v.city}` : ""}
                 </span>
@@ -201,22 +226,22 @@ export default function MapView() {
       </aside>
 
       {/* Karte */}
-      <div className="relative flex-1">
+      <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0" />
 
         {sel && (
-          <div className="absolute bottom-4 left-4 right-4 z-10 mx-auto max-w-md rounded-2xl bg-neutral-900/95 p-5 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur">
+          <div className="absolute bottom-4 left-4 right-4 z-10 mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
             <button
               type="button"
               onClick={() => setSelected(null)}
-              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/60"
+              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
               aria-label="Schliessen"
             >
               ✕
             </button>
             <div className="flex items-center gap-3">
               <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-sm font-extrabold text-black"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-sm font-extrabold text-neutral-900 shadow-sm"
                 style={{ border: `3px solid ${SPORT_COLOR[sel.sport]}` }}
               >
                 {initials(sel.name)}
@@ -229,7 +254,7 @@ export default function MapView() {
                   {SPORT_LABEL[sel.sport]}
                 </span>
                 <h2 className="mt-1 truncate text-lg font-bold tracking-tight">{sel.name}</h2>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-neutral-500">
                   {CAT_LABEL[sel.category]}
                   {sel.city ? ` · ${sel.city}` : ""}
                 </p>
@@ -243,6 +268,18 @@ export default function MapView() {
             </a>
           </div>
         )}
+      </div>
+
+      {/* Intro: Tennisball, blendet in die Karte über */}
+      <div
+        className={`pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
+          intro ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <TennisBall className="h-28 w-28 animate-[spin_2.4s_linear_infinite] drop-shadow-xl" />
+        <p className="mt-5 text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
+          Matchup Map
+        </p>
       </div>
     </div>
   );
