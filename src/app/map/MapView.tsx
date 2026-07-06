@@ -374,25 +374,38 @@ function VenueDetail({ venue: v, onBack }: { venue: Venue; onBack: () => void })
         )}
 
         <div className="space-y-2">
-          {v.booking_url && (
-            <a
-              href={v.booking_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex w-full items-center justify-center rounded-full bg-matchup py-2.5 text-sm font-bold text-white hover:bg-matchup-hover"
-            >
-              Platz buchen →
-            </a>
-          )}
-          {v.website && (
-            <a
-              href={v.website}
-              target="_blank"
-              rel="noreferrer"
-              className="flex w-full items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-            >
-              Website öffnen
-            </a>
+          {v.booking_url ? (
+            <>
+              <a
+                href={v.booking_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
+              >
+                Platz buchen →
+              </a>
+              {v.website && (
+                <a
+                  href={v.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+                >
+                  Website öffnen
+                </a>
+              )}
+            </>
+          ) : (
+            v.website && (
+              <a
+                href={v.website}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
+              >
+                Website öffnen →
+              </a>
+            )
           )}
           <div className="flex gap-2">
             {v.phone && (
@@ -414,12 +427,6 @@ function VenueDetail({ venue: v, onBack }: { venue: Venue; onBack: () => void })
               </a>
             )}
           </div>
-          <a
-            href={`/map/${v.slug}`}
-            className="flex w-full items-center justify-center pt-1 text-xs font-semibold text-neutral-400 hover:text-neutral-700"
-          >
-            Vollständiges Profil öffnen →
-          </a>
         </div>
       </div>
     </div>
