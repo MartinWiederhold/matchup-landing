@@ -22,15 +22,23 @@ const CLUSTER_ZOOM = 9;
 // Vororte/Agglomeration werden ihrer Hauptstadt zugeordnet, damit es beim Rauszoomen
 // EINE saubere Städte-Bubble gibt (Zürich, Bern, Basel …) – nicht viele Vorort-Punkte.
 const CITY_HUB: Record<string, string> = {
+  // Agglomeration Zürich
   Zürich: "Zürich", Schlieren: "Zürich", Bassersdorf: "Zürich", Wallisellen: "Zürich",
   Greifensee: "Zürich", "Wangen bei Dübendorf": "Zürich", Dübendorf: "Zürich",
   Küsnacht: "Zürich", Zumikon: "Zürich", Dielsdorf: "Zürich", Opfikon: "Zürich", Rüti: "Zürich",
+  // Agglomeration Luzern
+  Luzern: "Luzern", Kriens: "Luzern", Emmen: "Luzern", Emmenbrücke: "Luzern", Ebikon: "Luzern",
+  Horw: "Luzern", Adligenswil: "Luzern", Meggen: "Luzern", Udligenswil: "Luzern", Root: "Luzern",
+  Ruswil: "Luzern", Rothenburg: "Luzern", Dierikon: "Luzern", Hochdorf: "Luzern", Meierskappel: "Luzern",
+  // Agglomeration Zug
+  Zug: "Zug", Baar: "Zug", Cham: "Zug", Steinhausen: "Zug", Hünenberg: "Zug",
+  "Risch-Rotkreuz": "Zug", Rotkreuz: "Zug", Unterägeri: "Zug", Oberägeri: "Zug", Menzingen: "Zug",
 };
 // Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
 const CITY_IMAGE: Record<string, string> = {
   Zürich: "/map-cities/zuerich.jpg", Bern: "/map-cities/bern.jpg", Basel: "/map-cities/basel.jpg",
   Genf: "/map-cities/genf.jpg", "Genève": "/map-cities/genf.jpg", Lausanne: "/map-cities/lausanne.jpg",
-  Luzern: "/map-cities/luzern.jpg", "St. Gallen": "/map-cities/st-gallen.jpg",
+  Luzern: "/map-cities/luzern.jpg", Zug: "/map-cities/zug.jpg", "St. Gallen": "/map-cities/st-gallen.jpg",
   Winterthur: "/map-cities/winterthur.jpg", Lugano: "/map-cities/lugano.jpg",
 };
 const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
