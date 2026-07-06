@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type * as ML from "maplibre-gl";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { VENUES, type Sport, type VenueCategory } from "@/lib/mapVenues";
 import { initials, venueSlug } from "@/lib/venueUtils";
 
@@ -22,62 +23,35 @@ const CAT_LABEL: Record<VenueCategory, string> = {
   hotel: "Hotel",
 };
 
-const ZURICH: [number, number] = [8.5417, 47.3769];
-const ML_VERSION = "4.7.1";
+const ZURICH: [number, number] = [47.3769, 8.5417];
 
-/** MapLibre vom CDN laden (Worker korrekt eingebaut → rendert auch dort, wo der
- *  gebündelte Worker unter Turbopack/Safari nicht lädt). */
-function loadMaplibre(): Promise<typeof ML> {
-  const w = window as unknown as { maplibregl?: typeof ML };
-  if (w.maplibregl) return Promise.resolve(w.maplibregl);
-  return new Promise((resolve, reject) => {
-    if (!document.getElementById("ml-css")) {
-      const link = document.createElement("link");
-      link.id = "ml-css";
-      link.rel = "stylesheet";
-      link.href = `https://unpkg.com/maplibre-gl@${ML_VERSION}/dist/maplibre-gl.css`;
-      document.head.appendChild(link);
-    }
-    const existing = document.getElementById("ml-js") as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener("load", () => resolve(w.maplibregl!));
-      existing.addEventListener("error", reject);
-      if (w.maplibregl) resolve(w.maplibregl);
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = "ml-js";
-    s.src = `https://unpkg.com/maplibre-gl@${ML_VERSION}/dist/maplibre-gl.js`;
-    s.onload = () => resolve(w.maplibregl!);
-    s.onerror = reject;
-    document.head.appendChild(s);
+function markerIcon(sport: Sport, name: string, active: boolean): L.DivIcon {
+  const shadow = active
+    ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28);"
+    : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
+  const scale = active ? "transform:scale(1.22);" : "";
+  return L.divIcon({
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;border:3px solid ${SPORT_COLOR[sport]};${shadow}${scale}transition:transform .15s;">${initials(name)}</div>`,
   });
 }
 
-function TennisBall({ className = "" }: { className?: string }) {
+function PinIcon({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-      <defs>
-        <radialGradient id="tb" cx="38%" cy="34%" r="70%">
-          <stop offset="0%" stopColor="#eaff6a" />
-          <stop offset="70%" stopColor="#c7e600" />
-          <stop offset="100%" stopColor="#a6c400" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="48" fill="url(#tb)" />
-      <path d="M14 22 C40 42 40 58 14 78" fill="none" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
-      <path d="M86 22 C60 42 60 58 86 78" fill="none" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
     </svg>
   );
 }
 
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<ML.Map | null>(null);
-  const mlRef = useRef<typeof ML | null>(null);
-  const markers = useRef<Map<number, ML.Marker>>(new Map());
+  const mapRef = useRef<L.Map | null>(null);
+  const markers = useRef<Map<number, L.Marker>>(new Map());
   const [ready, setReady] = useState(false);
-  const [intro, setIntro] = useState(true);
 
   const [query, setQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<Sport | null>(null);
@@ -98,75 +72,37 @@ export default function MapView() {
   const focus = useCallback((i: number) => {
     setSelected(i);
     const v = VENUES[i];
-    mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 14.5, speed: 0.9 });
+    mapRef.current?.flyTo([v.lat, v.lng], 15, { duration: 0.8 });
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    loadMaplibre()
-      .then((maplibregl) => {
-        if (cancelled || !mapEl.current || mapRef.current) return;
-        mlRef.current = maplibregl;
-        const map = new maplibregl.Map({
-          container: mapEl.current,
-          style: {
-            version: 8,
-            sources: {
-              carto: {
-                type: "raster",
-                tiles: [
-                  "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                  "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                  "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-                ],
-                tileSize: 256,
-                attribution: "© OpenStreetMap · © CARTO",
-              },
-            },
-            layers: [{ id: "carto", type: "raster", source: "carto" }],
-          },
-          center: [8.2, 46.8],
-          zoom: 2.2,
-          attributionControl: false,
-        });
-        mapRef.current = map;
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    if (!mapEl.current || mapRef.current) return;
+    const map = L.map(mapEl.current, { center: ZURICH, zoom: 12 });
+    mapRef.current = map;
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd",
+      maxZoom: 20,
+      attribution: "© OpenStreetMap · © CARTO",
+    }).addTo(map);
 
-        map.on("load", () => {
-          try {
-            map.setProjection({ type: "globe" });
-          } catch {
-            /* ältere Version → flach */
-          }
-          map.resize();
-          setReady(true);
-          window.setTimeout(() => {
-            map.flyTo({ center: ZURICH, zoom: 11, speed: 0.5, curve: 1.6 });
-          }, 1500);
-        });
-        [200, 700, 1500].forEach((ms) => window.setTimeout(() => map.resize(), ms));
-        window.addEventListener("resize", () => map.resize());
-      })
-      .catch(() => {
-        /* CDN nicht erreichbar */
-      });
+    setReady(true);
+    [50, 250, 600, 1200].forEach((ms) =>
+      window.setTimeout(() => map.invalidateSize(), ms),
+    );
+    const onResize = () => map.invalidateSize();
+    window.addEventListener("resize", onResize);
+
     return () => {
-      cancelled = true;
-      mapRef.current?.remove();
+      window.removeEventListener("resize", onResize);
+      map.remove();
       mapRef.current = null;
       markers.current.clear();
     };
   }, []);
 
   useEffect(() => {
-    const t = window.setTimeout(() => setIntro(false), 2400);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
     const map = mapRef.current;
-    const maplibregl = mlRef.current;
-    if (!map || !maplibregl || !ready) return;
+    if (!map || !ready) return;
     const keep = new Set(visible.map((x) => x.i));
     for (const [i, m] of markers.current) {
       if (!keep.has(i)) {
@@ -176,26 +112,18 @@ export default function MapView() {
     }
     for (const { v, i } of visible) {
       if (markers.current.has(i)) continue;
-      const el = document.createElement("div");
-      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.22);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
-      el.textContent = initials(v.name);
-      el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.15)"));
-      el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"));
-      el.addEventListener("click", () => focus(i));
-      const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lng, v.lat]).addTo(map);
-      markers.current.set(i, marker);
+      const m = L.marker([v.lat, v.lng], { icon: markerIcon(v.sport, v.name, false) })
+        .addTo(map)
+        .on("click", () => focus(i));
+      markers.current.set(i, m);
     }
   }, [visible, ready, focus]);
 
   useEffect(() => {
     for (const [i, m] of markers.current) {
-      const el = m.getElement();
-      const active = i === selected;
-      el.style.zIndex = active ? "10" : "1";
-      el.style.transform = active ? "scale(1.25)" : "scale(1)";
-      el.style.boxShadow = active
-        ? "0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28)"
-        : "0 4px 12px rgba(0,0,0,.22)";
+      const v = VENUES[i];
+      m.setIcon(markerIcon(v.sport, v.name, i === selected));
+      m.setZIndexOffset(i === selected ? 1000 : 0);
     }
   }, [selected, visible]);
 
@@ -207,7 +135,7 @@ export default function MapView() {
       <aside className="flex w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white">
         <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
           <div className="flex items-center gap-2">
-            <TennisBall className="h-6 w-6" />
+            <PinIcon className="h-5 w-5 text-matchup" />
             <span className="text-lg font-bold tracking-tight">Zürich</span>
             <span className="ml-auto text-xs text-neutral-400">{visible.length} Orte</span>
           </div>
@@ -279,7 +207,7 @@ export default function MapView() {
 
       {/* Karte */}
       <div className="relative flex-1 bg-neutral-100">
-        <div ref={mapEl} className="absolute inset-0" />
+        <div ref={mapEl} className="absolute inset-0 z-0" />
 
         {sel && (
           <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
@@ -320,18 +248,6 @@ export default function MapView() {
             </a>
           </div>
         )}
-      </div>
-
-      {/* Intro: Tennisball → Globus */}
-      <div
-        className={`pointer-events-none absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
-          intro ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <TennisBall className="h-28 w-28 animate-[spin_2.4s_linear_infinite] drop-shadow-xl" />
-        <p className="mt-5 text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
-          Matchup Map
-        </p>
       </div>
     </div>
   );
