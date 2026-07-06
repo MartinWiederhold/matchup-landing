@@ -16,6 +16,8 @@ import {
 } from "@/lib/venuesDb";
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
+// Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
+const CLUSTER_ZOOM = 11;
 
 const AMENITY_LABEL: Record<string, string> = {
   restaurant: "Restaurant / Bar",
@@ -45,6 +47,19 @@ function markerIcon(v: Venue, active: boolean): L.DivIcon {
   });
 }
 
+function clusterIcon(city: string, count: number): L.DivIcon {
+  const size = count >= 20 ? 52 : count >= 5 ? 46 : 40;
+  return L.divIcon({
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-8px);">
+      <div style="width:${size}px;height:${size}px;border-radius:9999px;background:#4b3bf3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${count >= 100 ? 13 : 15}px;border:3px solid #fff;box-shadow:0 6px 18px rgba(75,59,243,.35);">${count}</div>
+      <span style="margin-top:5px;background:rgba(17,17,17,.82);color:#fff;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:9999px;white-space:nowrap;text-transform:uppercase;">${city}</span>
+    </div>`,
+  });
+}
+
 function PinIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -57,8 +72,9 @@ function PinIcon({ className = "" }: { className?: string }) {
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const markers = useRef<Map<string, L.Marker>>(new Map());
+  const layerRef = useRef<L.LayerGroup | null>(null);
   const [ready, setReady] = useState(false);
+  const [zoom, setZoom] = useState(12);
 
   const [venues, setVenues] = useState<Venue[]>([]);
   const [query, setQuery] = useState("");
@@ -95,11 +111,14 @@ export default function MapView() {
     if (!mapEl.current || mapRef.current) return;
     const map = L.map(mapEl.current, { center: ZURICH, zoom: 12 });
     mapRef.current = map;
+    layerRef.current = L.layerGroup().addTo(map);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       subdomains: "abcd",
       maxZoom: 20,
       attribution: "© OpenStreetMap · © CARTO",
     }).addTo(map);
+    setZoom(map.getZoom());
+    map.on("zoomend", () => setZoom(map.getZoom()));
     setReady(true);
     [50, 250, 600, 1200].forEach((ms) =>
       window.setTimeout(() => map.invalidateSize(), ms),
@@ -110,37 +129,39 @@ export default function MapView() {
       window.removeEventListener("resize", onResize);
       map.remove();
       mapRef.current = null;
-      markers.current.clear();
+      layerRef.current = null;
     };
   }, []);
 
+  // Marker aufbauen: ab weit rausgezoomt nach Städten clustern, sonst einzeln
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !ready) return;
-    const keep = new Set(visible.map((v) => v.id));
-    for (const [id, m] of markers.current) {
-      if (!keep.has(id)) {
-        m.remove();
-        markers.current.delete(id);
+    const layer = layerRef.current;
+    if (!map || !layer || !ready) return;
+    layer.clearLayers();
+
+    if (zoom <= CLUSTER_ZOOM) {
+      const groups = new Map<string, Venue[]>();
+      for (const v of visible) {
+        const c = v.city || "Übrige";
+        (groups.get(c) ?? groups.set(c, []).get(c)!).push(v);
+      }
+      for (const [city, vs] of groups) {
+        const lat = vs.reduce((s, v) => s + v.lat!, 0) / vs.length;
+        const lng = vs.reduce((s, v) => s + v.lng!, 0) / vs.length;
+        L.marker([lat, lng], { icon: clusterIcon(city, vs.length) })
+          .addTo(layer)
+          .on("click", () => map.flyTo([lat, lng], 13, { duration: 0.8 }));
+      }
+    } else {
+      for (const v of visible) {
+        L.marker([v.lat!, v.lng!], { icon: markerIcon(v, v.id === selectedId) })
+          .addTo(layer)
+          .on("click", () => focus(v))
+          .setZIndexOffset(v.id === selectedId ? 1000 : 0);
       }
     }
-    for (const v of visible) {
-      if (markers.current.has(v.id)) continue;
-      const m = L.marker([v.lat!, v.lng!], { icon: markerIcon(v, false) })
-        .addTo(map)
-        .on("click", () => focus(v));
-      markers.current.set(v.id, m);
-    }
-  }, [visible, ready, focus]);
-
-  useEffect(() => {
-    for (const [id, m] of markers.current) {
-      const v = visible.find((x) => x.id === id);
-      if (!v) continue;
-      m.setIcon(markerIcon(v, id === selectedId));
-      m.setZIndexOffset(id === selectedId ? 1000 : 0);
-    }
-  }, [selectedId, visible]);
+  }, [visible, ready, zoom, selectedId, focus]);
 
   const sel = venues.find((v) => v.id === selectedId) ?? null;
 
