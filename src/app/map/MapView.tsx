@@ -78,9 +78,25 @@ export default function MapView() {
     if (!mapEl.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: mapEl.current,
-      style: "https://tiles.openfreemap.org/styles/positron",
+      // Robuste Raster-Kacheln (CARTO light) — helles Design, kein Vektor/Worker/Globus nötig.
+      style: {
+        version: 8,
+        sources: {
+          carto: {
+            type: "raster",
+            tiles: [
+              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+              "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+            attribution: "© OpenStreetMap · © CARTO",
+          },
+        },
+        layers: [{ id: "carto", type: "raster", source: "carto" }],
+      },
       center: ZURICH,
-      zoom: 11,
+      zoom: 12,
       attributionControl: false,
     });
     mapRef.current = map;
@@ -88,11 +104,6 @@ export default function MapView() {
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
     map.on("load", () => {
-      try {
-        map.setProjection({ type: "globe" });
-      } catch {
-        /* ältere Version → flach */
-      }
       map.resize();
       setReady(true);
     });
