@@ -83,6 +83,7 @@ export const profile = {
 
     // Settings
     settingsTitle: "Einstellungen",
+    language: "Sprache",
     notifications: "Benachrichtigungen",
     pushMatches: "Matches",
     pushMessages: "Nachrichten",
@@ -194,6 +195,7 @@ export const profile = {
 
     // Settings
     settingsTitle: "Settings",
+    language: "Language",
     notifications: "Notifications",
     pushMatches: "Matches",
     pushMessages: "Messages",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
@@ -15,6 +15,7 @@ type PushKey =
 
 export default function Settings() {
   const t = useT();
+  const { locale, setLocale } = useLocale();
   const { signOut } = useAuth();
   const { profile, openSubView, refreshBadges } = useAppNav();
   const [push, setPush] = useState({
@@ -68,6 +69,26 @@ export default function Settings() {
     <div className="flex h-full flex-col">
       <SubViewHeader title={t("profile.settingsTitle")} />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
+        <Group title={t("profile.language")}>
+          <div className="flex gap-2 p-3">
+            {([
+              { v: "de", label: "Deutsch" },
+              { v: "en", label: "English" },
+            ] as const).map((o) => (
+              <button
+                key={o.v}
+                type="button"
+                onClick={() => setLocale(o.v)}
+                className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
+                  locale === o.v ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </Group>
+
         <Group title={t("profile.notifications")}>
           {pushRows.map((r) => (
             <Row key={r.key} label={r.label}>
