@@ -33,6 +33,23 @@ const CITY_HUB: Record<string, string> = {
   // Agglomeration Zug
   Zug: "Zug", Baar: "Zug", Cham: "Zug", Steinhausen: "Zug", Hünenberg: "Zug",
   "Risch-Rotkreuz": "Zug", Rotkreuz: "Zug", Unterägeri: "Zug", Oberägeri: "Zug", Menzingen: "Zug",
+  // Agglomeration Bern
+  Bern: "Bern", Köniz: "Bern", Ostermundigen: "Bern", Muri: "Bern", "Muri bei Bern": "Bern",
+  Ittigen: "Bern", Zollikofen: "Bern", Bümpliz: "Bern", Wabern: "Bern", Bolligen: "Bern",
+  Worb: "Bern", Gümligen: "Bern", Liebefeld: "Bern", "Wohlen bei Bern": "Bern",
+  Münchenbuchsee: "Bern", Herrenschwanden: "Bern", Kehrsatz: "Bern", Worblaufen: "Bern",
+  // Agglomeration Basel
+  Basel: "Basel", Riehen: "Basel", Birsfelden: "Basel", Muttenz: "Basel", Allschwil: "Basel",
+  Binningen: "Basel", Bottmingen: "Basel", Münchenstein: "Basel", Reinach: "Basel", Pratteln: "Basel",
+  Oberwil: "Basel", Arlesheim: "Basel",
+  // Winterthur
+  Winterthur: "Winterthur", Wülflingen: "Winterthur", Seen: "Winterthur", Töss: "Winterthur",
+  Oberwinterthur: "Winterthur", Elgg: "Winterthur", Wiesendangen: "Winterthur", Pfungen: "Winterthur",
+  Elsau: "Winterthur",
+  // St. Gallen
+  "St. Gallen": "St. Gallen", Gossau: "St. Gallen", Herisau: "St. Gallen", Wittenbach: "St. Gallen",
+  Abtwil: "St. Gallen", Gaiserwald: "St. Gallen", Rorschach: "St. Gallen", "St.Gallen": "St. Gallen",
+  Tübach: "St. Gallen", Goldach: "St. Gallen", Rorschacherberg: "St. Gallen",
 };
 // Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
 const CITY_IMAGE: Record<string, string> = {
