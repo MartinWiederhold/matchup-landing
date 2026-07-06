@@ -17,7 +17,7 @@ import {
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
-const CLUSTER_ZOOM = 11;
+const CLUSTER_ZOOM = 9;
 
 // Vororte/Agglomeration werden ihrer Hauptstadt zugeordnet, damit es beim Rauszoomen
 // EINE saubere Städte-Bubble gibt (Zürich, Bern, Basel …) – nicht viele Vorort-Punkte.
@@ -59,7 +59,7 @@ function markerIcon(v: Venue, active: boolean): L.DivIcon {
     className: "",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
-    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;">${inner}</div>`,
+    html: `<div class="mu-pop" style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;">${inner}</div>`,
   });
 }
 
@@ -76,7 +76,7 @@ function clusterIcon(city: string, count: number): L.DivIcon {
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-10px);">
+    html: `<div class="mu-pop" style="display:flex;flex-direction:column;align-items:center;transform:translateY(-10px);">
       <div style="position:relative;width:${size}px;height:${size}px;">
         <div style="width:100%;height:100%;border-radius:9999px;overflow:hidden;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.32);">${inner}</div>
         ${badge}
@@ -129,8 +129,30 @@ export default function MapView() {
 
   const focus = useCallback((v: Venue) => {
     setSelectedId(v.id);
-    if (v.lat != null && v.lng != null)
-      mapRef.current?.flyTo([v.lat, v.lng], 15, { duration: 0.8 });
+    const map = mapRef.current;
+    if (!map || v.lat == null || v.lng == null) return;
+    const mobile = typeof window !== "undefined" && window.innerWidth < 768;
+    map.flyTo([v.lat, v.lng], 15, { duration: 0.7 });
+    // Mobil: Karte nach oben schieben, damit der Marker über dem Bottom-Sheet sichtbar bleibt
+    if (mobile) {
+      map.once("moveend", () => {
+        map.panBy([0, Math.round(map.getSize().y * 0.3)], { animate: true, duration: 0.35 });
+      });
+    }
+  }, []);
+
+  // Weiche Einblend-Animation für Marker & Cluster
+  useEffect(() => {
+    const el = document.createElement("style");
+    el.textContent =
+      "@keyframes muPop{0%{transform:scale(.4);opacity:0}62%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}" +
+      ".mu-pop{animation:muPop .4s cubic-bezier(.34,1.56,.64,1) both}" +
+      "@keyframes muSheet{0%{transform:translateY(100%)}100%{transform:translateY(0)}}" +
+      ".mu-sheet{animation:muSheet .34s cubic-bezier(.22,1,.36,1) both}";
+    document.head.appendChild(el);
+    return () => {
+      el.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -193,12 +215,49 @@ export default function MapView() {
 
   function backToList() {
     setSelectedId(null);
-    mapRef.current?.flyTo(ZURICH, 12, { duration: 0.6 });
+    if (typeof window !== "undefined" && window.innerWidth >= 768)
+      mapRef.current?.flyTo(ZURICH, 12, { duration: 0.6 });
   }
+
+  const sportChips = (
+    <>
+      {[null, "tennis", "padel", "pickleball"].map((s) => (
+        <button
+          key={s ?? "all"}
+          type="button"
+          onClick={() => setSportFilter(s)}
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            sportFilter === s
+              ? "bg-matchup text-white"
+              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+          }`}
+        >
+          {s ? SPORT_LABEL[s] : "Alle"}
+        </button>
+      ))}
+    </>
+  );
+  const catChips = (
+    <>
+      {[null, "club", "public", "private", "hotel"].map((c) => (
+        <button
+          key={c ?? "allc"}
+          type="button"
+          onClick={() => setCatFilter(c)}
+          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+            catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
+          }`}
+        >
+          {c ? CAT_LABEL[c] : "Alle Typen"}
+        </button>
+      ))}
+    </>
+  );
 
   return (
     <div className="relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900">
-      <aside className="flex w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white">
+      {/* Desktop: Sidebar (Liste bzw. Detail) */}
+      <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         {sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
         ) : (
@@ -215,36 +274,8 @@ export default function MapView() {
                 placeholder="Suchen…"
                 className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
               />
-              <div className="flex flex-wrap gap-1.5">
-                {[null, "tennis", "padel", "pickleball"].map((s) => (
-                  <button
-                    key={s ?? "all"}
-                    type="button"
-                    onClick={() => setSportFilter(s)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                      sportFilter === s
-                        ? "bg-matchup text-white"
-                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-                    }`}
-                  >
-                    {s ? SPORT_LABEL[s] : "Alle"}
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[null, "club", "public", "private", "hotel"].map((c) => (
-                  <button
-                    key={c ?? "allc"}
-                    type="button"
-                    onClick={() => setCatFilter(c)}
-                    className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                      catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
-                    }`}
-                  >
-                    {c ? CAT_LABEL[c] : "Alle Typen"}
-                  </button>
-                ))}
-              </div>
+              <div className="flex flex-wrap gap-1.5">{sportChips}</div>
+              <div className="flex flex-wrap gap-1.5">{catChips}</div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -283,14 +314,51 @@ export default function MapView() {
         )}
       </aside>
 
+      {/* Karte (mobil Vollbild, desktop rechts) */}
       <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0 z-0" />
+
+        {/* Mobile: Filterleiste oben über der Karte */}
+        {!sel && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] space-y-2 p-3 md:hidden">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+              <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Club oder Ort suchen…"
+                className="h-11 w-full bg-transparent text-sm outline-none"
+              />
+              <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
+            </div>
+            <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {sportChips}
+              <span className="shrink-0 self-center text-neutral-300">·</span>
+              {catChips}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Detail als Bottom-Sheet, Karte bleibt oben sichtbar */}
+        {sel && (
+          <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] h-[66%] overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
+            <VenueDetail venue={sel} onBack={backToList} sheet />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function VenueDetail({ venue: v, onBack }: { venue: Venue; onBack: () => void }) {
+function VenueDetail({
+  venue: v,
+  onBack,
+  sheet = false,
+}: {
+  venue: Venue;
+  onBack: () => void;
+  sheet?: boolean;
+}) {
   const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
 
   const facts: { label: string; value: string }[] = [];
@@ -318,13 +386,18 @@ function VenueDetail({ venue: v, onBack }: { venue: Venue; onBack: () => void })
 
   return (
     <div className="flex h-full flex-col">
-      <div className="shrink-0 border-b border-neutral-200 p-4">
+      {sheet && (
+        <div className="flex shrink-0 justify-center pt-2.5">
+          <span className="h-1.5 w-10 rounded-full bg-neutral-300" />
+        </div>
+      )}
+      <div className="shrink-0 border-b border-neutral-200 p-4 pt-3">
         <button
           type="button"
           onClick={onBack}
           className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline"
         >
-          ← Alle Clubs
+          {sheet ? "✕ Schliessen" : "← Alle Clubs"}
         </button>
         <div className="flex items-center gap-3">
           <span
