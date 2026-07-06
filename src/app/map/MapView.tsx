@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { VENUES, type Sport, type VenueCategory } from "@/lib/mapVenues";
 import { initials, venueSlug } from "@/lib/venueUtils";
 
@@ -23,9 +23,21 @@ const CAT_LABEL: Record<VenueCategory, string> = {
   hotel: "Hotel",
 };
 
-const ZURICH: [number, number] = [8.5417, 47.3769];
+const ZURICH: [number, number] = [47.3769, 8.5417];
 
-/* Tennisball für das Intro */
+function markerIcon(sport: Sport, name: string, active: boolean): L.DivIcon {
+  const shadow = active
+    ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28);"
+    : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
+  const scale = active ? "transform:scale(1.22);" : "";
+  return L.divIcon({
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;border:3px solid ${SPORT_COLOR[sport]};${shadow}${scale}transition:transform .15s;">${initials(name)}</div>`,
+  });
+}
+
 function TennisBall({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
@@ -45,10 +57,8 @@ function TennisBall({ className = "" }: { className?: string }) {
 
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markers = useRef<Map<number, { marker: maplibregl.Marker; el: HTMLDivElement }>>(
-    new Map(),
-  );
+  const mapRef = useRef<L.Map | null>(null);
+  const markers = useRef<Map<number, L.Marker>>(new Map());
   const [ready, setReady] = useState(false);
   const [intro, setIntro] = useState(true);
 
@@ -71,53 +81,44 @@ export default function MapView() {
   const focus = useCallback((i: number) => {
     setSelected(i);
     const v = VENUES[i];
-    mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 15, speed: 1 });
+    mapRef.current?.flyTo([v.lat, v.lng], 15, { duration: 0.8 });
   }, []);
 
+  // Karte initialisieren
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: mapEl.current,
-      // Robuste Raster-Kacheln (CARTO light) — helles Design, kein Vektor/Worker/Globus nötig.
-      style: {
-        version: 8,
-        sources: {
-          carto: {
-            type: "raster",
-            tiles: [
-              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-              "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-            ],
-            tileSize: 256,
-            attribution: "© OpenStreetMap · © CARTO",
-          },
-        },
-        layers: [{ id: "carto", type: "raster", source: "carto" }],
-      },
+    const map = L.map(mapEl.current, {
       center: ZURICH,
       zoom: 12,
-      attributionControl: false,
+      zoomControl: true,
+      attributionControl: true,
     });
     mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        subdomains: "abcd",
+        maxZoom: 20,
+        attribution: "© OpenStreetMap · © CARTO",
+      },
+    ).addTo(map);
 
-    map.on("load", () => {
-      map.resize();
-      setReady(true);
-    });
-    // Flex-Layout kann die Größe verzögert liefern → mehrfach nachmessen.
-    [200, 600, 1200].forEach((ms) => window.setTimeout(() => map.resize(), ms));
+    setReady(true);
+    // Container-Größe kann im Flex-Layout verzögert kommen → mehrfach nachmessen.
+    [50, 250, 600, 1200].forEach((ms) =>
+      window.setTimeout(() => map.invalidateSize(), ms),
+    );
+    const onResize = () => map.invalidateSize();
+    window.addEventListener("resize", onResize);
 
     return () => {
+      window.removeEventListener("resize", onResize);
       map.remove();
       mapRef.current = null;
       markers.current.clear();
     };
   }, []);
 
-  // Intro-Splash ausblenden
   useEffect(() => {
     const t = window.setTimeout(() => setIntro(false), 1700);
     return () => window.clearTimeout(t);
@@ -128,33 +129,30 @@ export default function MapView() {
     const map = mapRef.current;
     if (!map || !ready) return;
     const keep = new Set(visible.map((x) => x.i));
-    for (const [i, entry] of markers.current) {
+    for (const [i, m] of markers.current) {
       if (!keep.has(i)) {
-        entry.marker.remove();
+        m.remove();
         markers.current.delete(i);
       }
     }
     for (const { v, i } of visible) {
       if (markers.current.has(i)) continue;
-      const el = document.createElement("div");
-      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.18);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
-      el.textContent = initials(v.name);
-      el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.15)"));
-      el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"));
-      el.addEventListener("click", () => focus(i));
-      const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lng, v.lat]).addTo(map);
-      markers.current.set(i, { marker, el });
+      const m = L.marker([v.lat, v.lng], {
+        icon: markerIcon(v.sport, v.name, false),
+      })
+        .addTo(map)
+        .on("click", () => focus(i));
+      markers.current.set(i, m);
     }
   }, [visible, ready, focus]);
 
+  // Auswahl hervorheben
   useEffect(() => {
-    for (const [i, { el }] of markers.current) {
-      const active = i === selected;
-      el.style.zIndex = active ? "10" : "1";
-      el.style.transform = active ? "scale(1.25)" : "scale(1)";
-      el.style.boxShadow = active
-        ? "0 0 0 4px rgba(75,59,243,.30), 0 6px 16px rgba(0,0,0,.25)"
-        : "0 4px 12px rgba(0,0,0,.18)";
+    for (const [i, m] of markers.current) {
+      const v = VENUES[i];
+      m.setIcon(markerIcon(v.sport, v.name, i === selected));
+      if (i === selected) m.setZIndexOffset(1000);
+      else m.setZIndexOffset(0);
     }
   }, [selected, visible]);
 
@@ -238,10 +236,10 @@ export default function MapView() {
 
       {/* Karte */}
       <div className="relative flex-1 bg-neutral-100">
-        <div ref={mapEl} className="absolute inset-0" />
+        <div ref={mapEl} className="absolute inset-0 z-0" />
 
         {sel && (
-          <div className="absolute bottom-4 left-4 right-4 z-10 mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
+          <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
             <button
               type="button"
               onClick={() => setSelected(null)}
@@ -281,9 +279,9 @@ export default function MapView() {
         )}
       </div>
 
-      {/* Intro: Tennisball, blendet in die Karte über */}
+      {/* Intro: Tennisball */}
       <div
-        className={`pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
+        className={`pointer-events-none absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
           intro ? "opacity-100" : "opacity-0"
         }`}
       >
