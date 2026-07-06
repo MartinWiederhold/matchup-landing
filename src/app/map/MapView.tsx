@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { VENUES, type Sport, type VenueCategory, type Venue } from "@/lib/mapVenues";
+import { VENUES, type Sport, type VenueCategory } from "@/lib/mapVenues";
+import { initials, venueSlug } from "@/lib/venueUtils";
 
 const SPORT_COLOR: Record<Sport, string> = {
   tennis: "#4b3bf3",
@@ -27,6 +28,9 @@ const ZURICH: [number, number] = [8.5417, 47.3769];
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<Map<number, { marker: maplibregl.Marker; el: HTMLDivElement }>>(
+    new Map(),
+  );
   const [ready, setReady] = useState(false);
 
   const [query, setQuery] = useState("");
@@ -45,17 +49,11 @@ export default function MapView() {
     });
   }, [query, sportFilter, catFilter]);
 
-  const geojson = useMemo(
-    () => ({
-      type: "FeatureCollection" as const,
-      features: visible.map(({ v, i }) => ({
-        type: "Feature" as const,
-        properties: { i, sport: v.sport, name: v.name },
-        geometry: { type: "Point" as const, coordinates: [v.lng, v.lat] },
-      })),
-    }),
-    [visible],
-  );
+  const focus = useCallback((i: number) => {
+    setSelected(i);
+    const v = VENUES[i];
+    mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 15, speed: 1 });
+  }, []);
 
   // Karte initialisieren
   useEffect(() => {
@@ -65,9 +63,11 @@ export default function MapView() {
       style: "https://tiles.openfreemap.org/styles/positron",
       center: [10, 30],
       zoom: 1.6,
+      attributionControl: false,
     });
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
     map.on("load", () => {
       try {
@@ -75,83 +75,7 @@ export default function MapView() {
       } catch {
         /* ältere Version → flach */
       }
-      map.addSource("venues", {
-        type: "geojson",
-        data: geojson,
-        cluster: true,
-        clusterRadius: 44,
-        clusterMaxZoom: 13,
-      });
-      // Cluster-Kreise
-      map.addLayer({
-        id: "clusters",
-        type: "circle",
-        source: "venues",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": "#4b3bf3",
-          "circle-radius": ["step", ["get", "point_count"], 16, 10, 22, 30, 30],
-          "circle-stroke-width": 3,
-          "circle-stroke-color": "#ffffff",
-        },
-      });
-      map.addLayer({
-        id: "cluster-count",
-        type: "symbol",
-        source: "venues",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-size": 13,
-          "text-font": ["Noto Sans Bold"],
-        },
-        paint: { "text-color": "#ffffff" },
-      });
-      // Einzel-Punkte (Farbe nach Sport)
-      map.addLayer({
-        id: "points",
-        type: "circle",
-        source: "venues",
-        filter: ["!", ["has", "point_count"]],
-        paint: {
-          "circle-color": [
-            "match",
-            ["get", "sport"],
-            "padel",
-            SPORT_COLOR.padel,
-            "pickleball",
-            SPORT_COLOR.pickleball,
-            SPORT_COLOR.tennis,
-          ],
-          "circle-radius": 8,
-          "circle-stroke-width": 2.5,
-          "circle-stroke-color": "#ffffff",
-        },
-      });
-
-      map.on("click", "clusters", (e) => {
-        const f = map.queryRenderedFeatures(e.point, { layers: ["clusters"] })[0];
-        const cid = f.properties?.cluster_id;
-        const src = map.getSource("venues") as maplibregl.GeoJSONSource;
-        src.getClusterExpansionZoom(cid).then((z) => {
-          map.easeTo({
-            center: (f.geometry as GeoJSON.Point).coordinates as [number, number],
-            zoom: z,
-          });
-        });
-      });
-      map.on("click", "points", (e) => {
-        const idx = e.features?.[0]?.properties?.i;
-        if (typeof idx === "number") setSelected(idx);
-      });
-      const cursor = (v: string) => () => (map.getCanvas().style.cursor = v);
-      map.on("mouseenter", "clusters", cursor("pointer"));
-      map.on("mouseleave", "clusters", cursor(""));
-      map.on("mouseenter", "points", cursor("pointer"));
-      map.on("mouseleave", "points", cursor(""));
-
       setReady(true);
-      // Intro: sanft nach Zürich fliegen
       window.setTimeout(() => {
         map.flyTo({ center: ZURICH, zoom: 11.5, speed: 0.8 });
       }, 700);
@@ -160,23 +84,46 @@ export default function MapView() {
     return () => {
       map.remove();
       mapRef.current = null;
+      markers.current.clear();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Quelle bei Filter-Änderung aktualisieren
+  // Marker (kreisrunde Monogramm-Badges) mit den sichtbaren Venies abgleichen
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    const src = map.getSource("venues") as maplibregl.GeoJSONSource | undefined;
-    src?.setData(geojson);
-  }, [geojson, ready]);
+    const keep = new Set(visible.map((x) => x.i));
 
-  function focus(idx: number) {
-    setSelected(idx);
-    const v = VENUES[idx];
-    mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 15, speed: 1 });
-  }
+    for (const [i, entry] of markers.current) {
+      if (!keep.has(i)) {
+        entry.marker.remove();
+        markers.current.delete(i);
+      }
+    }
+    for (const { v, i } of visible) {
+      if (markers.current.has(i)) continue;
+      const el = document.createElement("div");
+      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.28);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
+      el.textContent = initials(v.name);
+      el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.15)"));
+      el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"));
+      el.addEventListener("click", () => focus(i));
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lng, v.lat]).addTo(map);
+      markers.current.set(i, { marker, el });
+    }
+  }, [visible, ready, focus]);
+
+  // Ausgewählten Marker hervorheben
+  useEffect(() => {
+    for (const [i, { el }] of markers.current) {
+      const active = i === selected;
+      el.style.zIndex = active ? "10" : "1";
+      el.style.transform = active ? "scale(1.25)" : "scale(1)";
+      el.style.boxShadow = active
+        ? "0 0 0 4px rgba(75,59,243,.35), 0 6px 16px rgba(0,0,0,.35)"
+        : "0 4px 12px rgba(0,0,0,.28)";
+    }
+  }, [selected, visible]);
 
   const sel = selected != null ? VENUES[selected] : null;
 
@@ -236,9 +183,11 @@ export default function MapView() {
               }`}
             >
               <span
-                className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: SPORT_COLOR[v.sport] }}
-              />
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-extrabold text-black"
+                style={{ border: `2.5px solid ${SPORT_COLOR[v.sport]}` }}
+              >
+                {initials(v.name)}
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{v.name}</span>
                 <span className="block text-xs text-white/40">
@@ -255,7 +204,6 @@ export default function MapView() {
       <div className="relative flex-1">
         <div ref={mapEl} className="absolute inset-0" />
 
-        {/* Detail-Panel */}
         {sel && (
           <div className="absolute bottom-4 left-4 right-4 z-10 mx-auto max-w-md rounded-2xl bg-neutral-900/95 p-5 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur">
             <button
@@ -266,28 +214,32 @@ export default function MapView() {
             >
               ✕
             </button>
-            <span
-              className="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
-              style={{ backgroundColor: SPORT_COLOR[sel.sport], color: "#fff" }}
-            >
-              {SPORT_LABEL[sel.sport]}
-            </span>
-            <h2 className="mt-2 text-xl font-bold tracking-tight">{sel.name}</h2>
-            <p className="mt-1 text-sm text-white/60">
-              {CAT_LABEL[sel.category]}
-              {sel.city ? ` · ${sel.city}` : ""}
-            </p>
+            <div className="flex items-center gap-3">
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-sm font-extrabold text-black"
+                style={{ border: `3px solid ${SPORT_COLOR[sel.sport]}` }}
+              >
+                {initials(sel.name)}
+              </span>
+              <div className="min-w-0">
+                <span
+                  className="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+                  style={{ backgroundColor: SPORT_COLOR[sel.sport], color: "#fff" }}
+                >
+                  {SPORT_LABEL[sel.sport]}
+                </span>
+                <h2 className="mt-1 truncate text-lg font-bold tracking-tight">{sel.name}</h2>
+                <p className="text-xs text-white/60">
+                  {CAT_LABEL[sel.category]}
+                  {sel.city ? ` · ${sel.city}` : ""}
+                </p>
+              </div>
+            </div>
             <a
-              href={sel.website || "#"}
-              target={sel.website ? "_blank" : undefined}
-              rel="noreferrer"
-              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-bold ${
-                sel.website
-                  ? "bg-matchup text-white hover:bg-matchup-hover"
-                  : "cursor-default bg-white/10 text-white/40"
-              }`}
+              href={`/map/${venueSlug(sel, selected!)}`}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
             >
-              {sel.website ? "Vollständiges Profil →" : "Profil folgt bald"}
+              Vollständiges Profil →
             </a>
           </div>
         )}
