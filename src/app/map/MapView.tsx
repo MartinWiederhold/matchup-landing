@@ -95,6 +95,22 @@ function PinIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function PhoneIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" />
+    </svg>
+  );
+}
+
+function NavIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+    </svg>
+  );
+}
+
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -148,7 +164,15 @@ export default function MapView() {
       "@keyframes muPop{0%{transform:scale(.4);opacity:0}62%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}" +
       ".mu-pop{animation:muPop .4s cubic-bezier(.34,1.56,.64,1) both}" +
       "@keyframes muSheet{0%{transform:translateY(100%)}100%{transform:translateY(0)}}" +
-      ".mu-sheet{animation:muSheet .34s cubic-bezier(.22,1,.36,1) both}";
+      ".mu-sheet{animation:muSheet .34s cubic-bezier(.22,1,.36,1) both}" +
+      // moderne Zoom-Buttons unten rechts
+      ".leaflet-control-zoom{border:none!important;border-radius:16px!important;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.16)!important;margin:0 14px 20px 0!important}" +
+      ".leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:22px!important;font-weight:500!important;color:#1f2937!important;background:#fff!important;border:none!important;transition:background .15s}" +
+      ".leaflet-control-zoom a:first-child{border-bottom:1px solid #f0f0f0!important}" +
+      ".leaflet-control-zoom a:hover{background:#f6f6f7!important;color:#4b3bf3!important}" +
+      // dezente Attribution ohne Flagge
+      ".leaflet-control-attribution{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(4px);font-size:9px!important;color:#9ca3af!important;padding:1px 6px!important;border-radius:8px 0 0 0!important}" +
+      ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}";
     document.head.appendChild(el);
     return () => {
       el.remove();
@@ -157,14 +181,16 @@ export default function MapView() {
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = L.map(mapEl.current, { center: ZURICH, zoom: 12 });
+    const map = L.map(mapEl.current, { center: ZURICH, zoom: 12, zoomControl: false });
     mapRef.current = map;
     layerRef.current = L.layerGroup().addTo(map);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       subdomains: "abcd",
       maxZoom: 20,
-      attribution: "© OpenStreetMap · © CARTO",
+      attribution: "© OpenStreetMap · CARTO",
     }).addTo(map);
+    map.attributionControl.setPrefix(false); // entfernt "Leaflet" + Ukraine-Flagge
+    L.control.zoom({ position: "bottomright" }).addTo(map);
     setZoom(map.getZoom());
     map.on("zoomend", () => setZoom(map.getZoom()));
     setReady(true);
@@ -215,42 +241,59 @@ export default function MapView() {
 
   function backToList() {
     setSelectedId(null);
-    if (typeof window !== "undefined" && window.innerWidth >= 768)
-      mapRef.current?.flyTo(ZURICH, 12, { duration: 0.6 });
+    // Leicht rauszoomen, damit man direkt wieder mehrere Clubs der Umgebung sieht
+    const map = mapRef.current;
+    if (map && map.getZoom() > 13) map.flyTo(map.getCenter(), 13, { duration: 0.5 });
   }
 
-  const sportChips = (
+  const sportChips = (mobile: boolean) => (
     <>
-      {[null, "tennis", "padel", "pickleball"].map((s) => (
-        <button
-          key={s ?? "all"}
-          type="button"
-          onClick={() => setSportFilter(s)}
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-            sportFilter === s
-              ? "bg-matchup text-white"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-          }`}
-        >
-          {s ? SPORT_LABEL[s] : "Alle"}
-        </button>
-      ))}
+      {[null, "tennis", "padel", "pickleball"].map((s) => {
+        const active = sportFilter === s;
+        return (
+          <button
+            key={s ?? "all"}
+            type="button"
+            onClick={() => setSportFilter(s)}
+            className={`shrink-0 whitespace-nowrap rounded-full font-semibold transition-colors ${
+              mobile ? "px-3.5 py-1.5 text-sm" : "px-3 py-1 text-xs"
+            } ${
+              active
+                ? "bg-matchup text-white shadow-sm"
+                : mobile
+                  ? "bg-white/95 text-neutral-700 shadow-sm ring-1 ring-neutral-300 backdrop-blur"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+            }`}
+          >
+            {s ? SPORT_LABEL[s] : "Alle"}
+          </button>
+        );
+      })}
     </>
   );
-  const catChips = (
+  const catChips = (mobile: boolean) => (
     <>
-      {[null, "club", "public", "private", "hotel"].map((c) => (
-        <button
-          key={c ?? "allc"}
-          type="button"
-          onClick={() => setCatFilter(c)}
-          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-            catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
-          }`}
-        >
-          {c ? CAT_LABEL[c] : "Alle Typen"}
-        </button>
-      ))}
+      {[null, "club", "public", "private", "hotel"].map((c) => {
+        const active = catFilter === c;
+        return (
+          <button
+            key={c ?? "allc"}
+            type="button"
+            onClick={() => setCatFilter(c)}
+            className={`shrink-0 whitespace-nowrap rounded-full font-medium transition-colors ${
+              mobile ? "px-3.5 py-1.5 text-sm" : "px-3 py-1 text-[11px]"
+            } ${
+              active
+                ? "bg-neutral-900 text-white shadow-sm"
+                : mobile
+                  ? "bg-white/95 text-neutral-600 shadow-sm ring-1 ring-neutral-300 backdrop-blur"
+                  : "bg-neutral-100 text-neutral-500"
+            }`}
+          >
+            {c ? CAT_LABEL[c] : "Alle Typen"}
+          </button>
+        );
+      })}
     </>
   );
 
@@ -274,8 +317,8 @@ export default function MapView() {
                 placeholder="Suchen…"
                 className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
               />
-              <div className="flex flex-wrap gap-1.5">{sportChips}</div>
-              <div className="flex flex-wrap gap-1.5">{catChips}</div>
+              <div className="flex flex-wrap gap-1.5">{sportChips(false)}</div>
+              <div className="flex flex-wrap gap-1.5">{catChips(false)}</div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -332,9 +375,9 @@ export default function MapView() {
               <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
             </div>
             <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {sportChips}
+              {sportChips(true)}
               <span className="shrink-0 self-center text-neutral-300">·</span>
-              {catChips}
+              {catChips(true)}
             </div>
           </div>
         )}
@@ -429,6 +472,63 @@ function VenueDetail({
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
+        {(v.booking_url || v.website || v.phone || (v.lat != null && v.lng != null)) && (
+          <div className="space-y-2">
+            {(v.booking_url || v.website) && (
+              <div className="flex gap-2">
+                {v.booking_url && (
+                  <a
+                    href={v.booking_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-1 items-center justify-center rounded-full bg-matchup px-3 py-3 text-sm font-bold text-white hover:bg-matchup-hover"
+                  >
+                    Platz buchen
+                  </a>
+                )}
+                {v.website && (
+                  <a
+                    href={v.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`flex flex-1 items-center justify-center rounded-full px-3 py-3 text-sm ${
+                      v.booking_url
+                        ? "border border-neutral-300 font-semibold text-neutral-700 hover:bg-neutral-50"
+                        : "bg-matchup font-bold text-white hover:bg-matchup-hover"
+                    }`}
+                  >
+                    Website öffnen
+                  </a>
+                )}
+              </div>
+            )}
+            {(v.phone || (v.lat != null && v.lng != null)) && (
+              <div className="flex gap-2">
+                {v.phone && (
+                  <a
+                    href={`tel:${v.phone}`}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+                  >
+                    <PhoneIcon className="h-4 w-4 text-matchup" />
+                    Anrufen
+                  </a>
+                )}
+                {v.lat != null && v.lng != null && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+                  >
+                    <NavIcon className="h-4 w-4 text-matchup" />
+                    Route
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {v.cover_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={v.cover_url} alt="" className="h-36 w-full rounded-xl object-cover" />
@@ -492,62 +592,6 @@ function VenueDetail({
             </div>
           </div>
         )}
-
-        <div className="space-y-2">
-          {v.booking_url ? (
-            <>
-              <a
-                href={v.booking_url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex w-full items-center justify-center rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
-              >
-                Platz buchen →
-              </a>
-              {v.website && (
-                <a
-                  href={v.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex w-full items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-                >
-                  Website öffnen
-                </a>
-              )}
-            </>
-          ) : (
-            v.website && (
-              <a
-                href={v.website}
-                target="_blank"
-                rel="noreferrer"
-                className="flex w-full items-center justify-center rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
-              >
-                Website öffnen →
-              </a>
-            )
-          )}
-          <div className="flex gap-2">
-            {v.phone && (
-              <a
-                href={`tel:${v.phone}`}
-                className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                Anrufen
-              </a>
-            )}
-            {v.lat != null && v.lng != null && (
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                Route
-              </a>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
