@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { VENUES, type Sport, type VenueCategory } from "@/lib/mapVenues";
 import { initials, venueSlug } from "@/lib/venueUtils";
 
@@ -23,19 +23,19 @@ const CAT_LABEL: Record<VenueCategory, string> = {
   hotel: "Hotel",
 };
 
-const ZURICH: [number, number] = [47.3769, 8.5417];
+const ZURICH: [number, number] = [8.5417, 47.3769];
 
-function markerIcon(sport: Sport, name: string, active: boolean): L.DivIcon {
-  const shadow = active
-    ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28);"
-    : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
-  const scale = active ? "transform:scale(1.22);" : "";
-  return L.divIcon({
-    className: "",
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;border:3px solid ${SPORT_COLOR[sport]};${shadow}${scale}transition:transform .15s;">${initials(name)}</div>`,
-  });
+function webglSupported(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(
+      c.getContext("webgl2") ||
+      c.getContext("webgl") ||
+      c.getContext("experimental-webgl")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function TennisBall({ className = "" }: { className?: string }) {
@@ -57,10 +57,13 @@ function TennisBall({ className = "" }: { className?: string }) {
 
 export default function MapView() {
   const mapEl = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markers = useRef<Map<number, L.Marker>>(new Map());
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<Map<number, { marker: maplibregl.Marker; el: HTMLDivElement }>>(
+    new Map(),
+  );
   const [ready, setReady] = useState(false);
   const [intro, setIntro] = useState(true);
+  const [noWebgl, setNoWebgl] = useState(false);
 
   const [query, setQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<Sport | null>(null);
@@ -81,34 +84,43 @@ export default function MapView() {
   const focus = useCallback((i: number) => {
     setSelected(i);
     const v = VENUES[i];
-    mapRef.current?.flyTo([v.lat, v.lng], 15, { duration: 0.8 });
+    mapRef.current?.flyTo({ center: [v.lng, v.lat], zoom: 14.5, speed: 0.9 });
   }, []);
 
-  // Karte initialisieren
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = L.map(mapEl.current, {
-      center: ZURICH,
-      zoom: 12,
-      zoomControl: true,
-      attributionControl: true,
+    if (!webglSupported()) {
+      setNoWebgl(true);
+      setIntro(false);
+      return;
+    }
+    const map = new maplibregl.Map({
+      container: mapEl.current,
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      center: [8.2, 46.8],
+      zoom: 2.2,
+      attributionControl: false,
     });
     mapRef.current = map;
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        subdomains: "abcd",
-        maxZoom: 20,
-        attribution: "© OpenStreetMap · © CARTO",
-      },
-    ).addTo(map);
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
-    setReady(true);
-    // Container-Größe kann im Flex-Layout verzögert kommen → mehrfach nachmessen.
-    [50, 250, 600, 1200].forEach((ms) =>
-      window.setTimeout(() => map.invalidateSize(), ms),
-    );
-    const onResize = () => map.invalidateSize();
+    map.on("load", () => {
+      map.setProjection({ type: "globe" });
+      map.resize();
+      setReady(true);
+      // Aus dem Globus sanft nach Zürich zoomen (startupvalleys-Effekt).
+      window.setTimeout(() => {
+        map.flyTo({ center: ZURICH, zoom: 11, speed: 0.55, curve: 1.6 });
+      }, 1500);
+    });
+    map.on("error", (e) => {
+      // Style/Tiles-Fehler nicht als leere Karte verschlucken.
+      console.warn("map error", e?.error?.message);
+    });
+
+    [200, 600, 1400].forEach((ms) => window.setTimeout(() => map.resize(), ms));
+    const onResize = () => map.resize();
     window.addEventListener("resize", onResize);
 
     return () => {
@@ -120,39 +132,41 @@ export default function MapView() {
   }, []);
 
   useEffect(() => {
-    const t = window.setTimeout(() => setIntro(false), 1700);
+    const t = window.setTimeout(() => setIntro(false), 2400);
     return () => window.clearTimeout(t);
   }, []);
 
-  // Marker abgleichen
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
     const keep = new Set(visible.map((x) => x.i));
-    for (const [i, m] of markers.current) {
+    for (const [i, entry] of markers.current) {
       if (!keep.has(i)) {
-        m.remove();
+        entry.marker.remove();
         markers.current.delete(i);
       }
     }
     for (const { v, i } of visible) {
       if (markers.current.has(i)) continue;
-      const m = L.marker([v.lat, v.lng], {
-        icon: markerIcon(v.sport, v.name, false),
-      })
-        .addTo(map)
-        .on("click", () => focus(i));
-      markers.current.set(i, m);
+      const el = document.createElement("div");
+      el.style.cssText = `width:34px;height:34px;border-radius:9999px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#111;box-shadow:0 4px 12px rgba(0,0,0,.22);border:3px solid ${SPORT_COLOR[v.sport]};cursor:pointer;transition:transform .15s;`;
+      el.textContent = initials(v.name);
+      el.addEventListener("mouseenter", () => (el.style.transform = "scale(1.15)"));
+      el.addEventListener("mouseleave", () => (el.style.transform = "scale(1)"));
+      el.addEventListener("click", () => focus(i));
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lng, v.lat]).addTo(map);
+      markers.current.set(i, { marker, el });
     }
   }, [visible, ready, focus]);
 
-  // Auswahl hervorheben
   useEffect(() => {
-    for (const [i, m] of markers.current) {
-      const v = VENUES[i];
-      m.setIcon(markerIcon(v.sport, v.name, i === selected));
-      if (i === selected) m.setZIndexOffset(1000);
-      else m.setZIndexOffset(0);
+    for (const [i, { el }] of markers.current) {
+      const active = i === selected;
+      el.style.zIndex = active ? "10" : "1";
+      el.style.transform = active ? "scale(1.25)" : "scale(1)";
+      el.style.boxShadow = active
+        ? "0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28)"
+        : "0 4px 12px rgba(0,0,0,.22)";
     }
   }, [selected, visible]);
 
@@ -236,7 +250,22 @@ export default function MapView() {
 
       {/* Karte */}
       <div className="relative flex-1 bg-neutral-100">
-        <div ref={mapEl} className="absolute inset-0 z-0" />
+        <div ref={mapEl} className="absolute inset-0" />
+
+        {noWebgl && (
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="max-w-md rounded-2xl bg-white p-6 text-center shadow-xl ring-1 ring-neutral-200">
+              <TennisBall className="mx-auto h-16 w-16" />
+              <h2 className="mt-4 text-lg font-bold">3D-Globus benötigt WebGL</h2>
+              <p className="mt-2 text-sm text-neutral-600">
+                Dein Browser rendert gerade kein WebGL — deshalb erscheint der Globus
+                nicht. Aktiviere die <strong>Hardwarebeschleunigung</strong> in den
+                Browser-Einstellungen, deaktiviere Content-/Privacy-Blocker für diese
+                Seite, oder öffne die Seite in <strong>Chrome</strong>. Danach neu laden.
+              </p>
+            </div>
+          </div>
+        )}
 
         {sel && (
           <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
@@ -279,17 +308,19 @@ export default function MapView() {
         )}
       </div>
 
-      {/* Intro: Tennisball */}
-      <div
-        className={`pointer-events-none absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
-          intro ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <TennisBall className="h-28 w-28 animate-[spin_2.4s_linear_infinite] drop-shadow-xl" />
-        <p className="mt-5 text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
-          Matchup Map
-        </p>
-      </div>
+      {/* Intro: Tennisball → Globus */}
+      {!noWebgl && (
+        <div
+          className={`pointer-events-none absolute inset-0 z-[1000] flex flex-col items-center justify-center bg-white transition-opacity duration-700 ${
+            intro ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <TennisBall className="h-28 w-28 animate-[spin_2.4s_linear_infinite] drop-shadow-xl" />
+          <p className="mt-5 text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">
+            Matchup Map
+          </p>
+        </div>
+      )}
     </div>
   );
 }
