@@ -19,6 +19,22 @@ const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
 const CLUSTER_ZOOM = 11;
 
+// Vororte/Agglomeration werden ihrer Hauptstadt zugeordnet, damit es beim Rauszoomen
+// EINE saubere Städte-Bubble gibt (Zürich, Bern, Basel …) – nicht viele Vorort-Punkte.
+const CITY_HUB: Record<string, string> = {
+  Zürich: "Zürich", Schlieren: "Zürich", Bassersdorf: "Zürich", Wallisellen: "Zürich",
+  Greifensee: "Zürich", "Wangen bei Dübendorf": "Zürich", Dübendorf: "Zürich",
+  Küsnacht: "Zürich", Zumikon: "Zürich", Dielsdorf: "Zürich", Opfikon: "Zürich", Rüti: "Zürich",
+};
+// Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
+const CITY_IMAGE: Record<string, string> = {
+  Zürich: "/map-cities/zuerich.jpg", Bern: "/map-cities/bern.jpg", Basel: "/map-cities/basel.jpg",
+  Genf: "/map-cities/genf.jpg", "Genève": "/map-cities/genf.jpg", Lausanne: "/map-cities/lausanne.jpg",
+  Luzern: "/map-cities/luzern.jpg", "St. Gallen": "/map-cities/st-gallen.jpg",
+  Winterthur: "/map-cities/winterthur.jpg", Lugano: "/map-cities/lugano.jpg",
+};
+const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
+
 const AMENITY_LABEL: Record<string, string> = {
   restaurant: "Restaurant / Bar",
   showers: "Duschen",
@@ -48,14 +64,24 @@ function markerIcon(v: Venue, active: boolean): L.DivIcon {
 }
 
 function clusterIcon(city: string, count: number): L.DivIcon {
-  const size = count >= 20 ? 52 : count >= 5 ? 46 : 40;
+  const size = count >= 20 ? 62 : count >= 5 ? 54 : 46;
+  const img = CITY_IMAGE[city];
+  const inner = img
+    ? `<img src="${img}" style="width:100%;height:100%;object-fit:cover;" />`
+    : `<div style="width:100%;height:100%;background:#4b3bf3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${count >= 100 ? 13 : 15}px;">${count}</div>`;
+  const badge = img
+    ? `<div style="position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:9999px;background:#4b3bf3;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);">${count}</div>`
+    : "";
   return L.divIcon({
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-8px);">
-      <div style="width:${size}px;height:${size}px;border-radius:9999px;background:#4b3bf3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${count >= 100 ? 13 : 15}px;border:3px solid #fff;box-shadow:0 6px 18px rgba(75,59,243,.35);">${count}</div>
-      <span style="margin-top:5px;background:rgba(17,17,17,.82);color:#fff;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:9999px;white-space:nowrap;text-transform:uppercase;">${city}</span>
+    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-10px);">
+      <div style="position:relative;width:${size}px;height:${size}px;">
+        <div style="width:100%;height:100%;border-radius:9999px;overflow:hidden;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.32);">${inner}</div>
+        ${badge}
+      </div>
+      <span style="margin-top:6px;background:rgba(17,17,17,.82);color:#fff;font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:9999px;white-space:nowrap;text-transform:uppercase;">${city}</span>
     </div>`,
   });
 }
@@ -143,7 +169,7 @@ export default function MapView() {
     if (zoom <= CLUSTER_ZOOM) {
       const groups = new Map<string, Venue[]>();
       for (const v of visible) {
-        const c = v.city || "Übrige";
+        const c = hubFor(v.city);
         (groups.get(c) ?? groups.set(c, []).get(c)!).push(v);
       }
       for (const [city, vs] of groups) {
