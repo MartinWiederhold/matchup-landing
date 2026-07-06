@@ -10,11 +10,23 @@ import {
   SPORT_COLOR,
   SPORT_LABEL,
   CAT_LABEL,
+  WEEKDAYS,
   initials,
   primarySport,
 } from "@/lib/venuesDb";
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
+
+const AMENITY_LABEL: Record<string, string> = {
+  restaurant: "Restaurant / Bar",
+  showers: "Duschen",
+  parking: "Parkplatz",
+  proshop: "Pro-Shop",
+  ballmachine: "Ballmaschine",
+  coaching: "Trainer / Schule",
+  wallball: "Trainingswand",
+  transit: "ÖV-Anbindung",
+};
 
 function markerIcon(v: Venue, active: boolean): L.DivIcon {
   const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
@@ -132,133 +144,283 @@ export default function MapView() {
 
   const sel = venues.find((v) => v.id === selectedId) ?? null;
 
+  function backToList() {
+    setSelectedId(null);
+    mapRef.current?.flyTo(ZURICH, 12, { duration: 0.6 });
+  }
+
   return (
     <div className="relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900">
       <aside className="flex w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white">
-        <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
-          <div className="flex items-center gap-2">
-            <PinIcon className="h-5 w-5 text-matchup" />
-            <span className="text-lg font-bold tracking-tight">Zürich</span>
-            <span className="ml-auto text-xs text-neutral-400">{visible.length} Orte</span>
-          </div>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Suchen…"
-            className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
-          />
-          <div className="flex flex-wrap gap-1.5">
-            {[null, "tennis", "padel", "pickleball"].map((s) => (
-              <button
-                key={s ?? "all"}
-                type="button"
-                onClick={() => setSportFilter(s)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                  sportFilter === s
-                    ? "bg-matchup text-white"
-                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-                }`}
-              >
-                {s ? SPORT_LABEL[s] : "Alle"}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {[null, "club", "public", "private", "hotel"].map((c) => (
-              <button
-                key={c ?? "allc"}
-                type="button"
-                onClick={() => setCatFilter(c)}
-                className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
-                  catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
-                }`}
-              >
-                {c ? CAT_LABEL[c] : "Alle Typen"}
-              </button>
-            ))}
-          </div>
-        </div>
+        {sel ? (
+          <VenueDetail venue={sel} onBack={backToList} />
+        ) : (
+          <>
+            <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
+              <div className="flex items-center gap-2">
+                <PinIcon className="h-5 w-5 text-matchup" />
+                <span className="text-lg font-bold tracking-tight">Zürich</span>
+                <span className="ml-auto text-xs text-neutral-400">{visible.length} Orte</span>
+              </div>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Suchen…"
+                className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {[null, "tennis", "padel", "pickleball"].map((s) => (
+                  <button
+                    key={s ?? "all"}
+                    type="button"
+                    onClick={() => setSportFilter(s)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                      sportFilter === s
+                        ? "bg-matchup text-white"
+                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                    }`}
+                  >
+                    {s ? SPORT_LABEL[s] : "Alle"}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[null, "club", "public", "private", "hotel"].map((c) => (
+                  <button
+                    key={c ?? "allc"}
+                    type="button"
+                    onClick={() => setCatFilter(c)}
+                    className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                      catFilter === c ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"
+                    }`}
+                  >
+                    {c ? CAT_LABEL[c] : "Alle Typen"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {visible.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              onClick={() => focus(v)}
-              className={`flex w-full items-center gap-3 border-b border-neutral-100 px-4 py-3 text-left transition-colors hover:bg-neutral-50 ${
-                selectedId === v.id ? "bg-matchup/5" : ""
-              }`}
-            >
-              <span
-                className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-[10px] font-extrabold text-neutral-900 shadow-sm"
-                style={{ border: `2.5px solid ${SPORT_COLOR[primarySport(v)]}` }}
-              >
-                {v.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={v.logo_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  initials(v.name)
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{v.name}</span>
-                <span className="block text-xs text-neutral-400">
-                  {v.sports.map((s) => SPORT_LABEL[s] ?? s).join(", ")} · {CAT_LABEL[v.category] ?? v.category}
-                  {v.city ? ` · ${v.city}` : ""}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
+            <div className="flex-1 overflow-y-auto">
+              {visible.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => focus(v)}
+                  className="flex w-full items-center gap-3 border-b border-neutral-100 px-4 py-3 text-left transition-colors hover:bg-neutral-50"
+                >
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-[10px] font-extrabold text-neutral-900 shadow-sm"
+                    style={{ border: `2.5px solid ${SPORT_COLOR[primarySport(v)]}` }}
+                  >
+                    {v.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={v.logo_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      initials(v.name)
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{v.name}</span>
+                    <span className="block text-xs text-neutral-400">
+                      {v.sports.map((s) => SPORT_LABEL[s] ?? s).join(", ")} · {CAT_LABEL[v.category] ?? v.category}
+                      {v.city ? ` · ${v.city}` : ""}
+                    </span>
+                  </span>
+                </button>
+              ))}
+              {visible.length === 0 && (
+                <p className="px-4 py-8 text-center text-sm text-neutral-400">Keine Treffer.</p>
+              )}
+            </div>
+          </>
+        )}
       </aside>
 
       <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0 z-0" />
+      </div>
+    </div>
+  );
+}
 
-        {sel && (
-          <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md rounded-2xl bg-white p-5 text-neutral-900 shadow-2xl ring-1 ring-neutral-200">
-            <button
-              type="button"
-              onClick={() => setSelectedId(null)}
-              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
-              aria-label="Schliessen"
+function VenueDetail({ venue: v, onBack }: { venue: Venue; onBack: () => void }) {
+  const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
+
+  const facts: { label: string; value: string }[] = [];
+  const courts = (v.courts_indoor ?? 0) + (v.courts_outdoor ?? 0) || null;
+  if (courts)
+    facts.push({
+      label: "Plätze",
+      value: [
+        v.courts_indoor ? `${v.courts_indoor} Indoor` : "",
+        v.courts_outdoor ? `${v.courts_outdoor} Outdoor` : "",
+      ].filter(Boolean).join(" · "),
+    });
+  if (v.surfaces?.length) facts.push({ label: "Belag", value: v.surfaces.join(", ") });
+  if (v.floodlight != null) facts.push({ label: "Flutlicht", value: v.floodlight ? "Ja" : "Nein" });
+  if (v.member_count) facts.push({ label: "Mitglieder", value: String(v.member_count) });
+  if (v.founded) facts.push({ label: "Gegründet", value: String(v.founded) });
+  if (v.guest_access != null)
+    facts.push({ label: "Gäste", value: v.guest_access ? "Willkommen" : "Nur Mitglieder" });
+  if (v.guest_fee) facts.push({ label: "Gastgebühr", value: v.guest_fee });
+  if (v.court_price) facts.push({ label: "Platzmiete", value: v.court_price });
+  if (v.membership_fee) facts.push({ label: "Mitgliedschaft", value: v.membership_fee });
+  if (v.season) facts.push({ label: "Saison", value: v.season });
+
+  const hasHours = v.opening_hours && Object.keys(v.opening_hours).length > 0;
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 border-b border-neutral-200 p-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline"
+        >
+          ← Alle Clubs
+        </button>
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-base font-extrabold text-neutral-900"
+            style={{ border: `3px solid ${color}` }}
+          >
+            {v.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={v.logo_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials(v.name)
+            )}
+          </span>
+          <div className="min-w-0">
+            <span
+              className="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+              style={{ backgroundColor: color }}
             >
-              ✕
-            </button>
-            <div className="flex items-center gap-3">
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-sm font-extrabold text-neutral-900 shadow-sm"
-                style={{ border: `3px solid ${SPORT_COLOR[primarySport(sel)]}` }}
+              {v.sports.map((s) => SPORT_LABEL[s] ?? s).join(" · ")}
+            </span>
+            <h2 className="mt-1 text-lg font-bold leading-tight tracking-tight">{v.name}</h2>
+            <p className="text-xs text-neutral-500">
+              {CAT_LABEL[v.category] ?? v.category}
+              {v.city ? ` · ${v.city}` : ""}
+              {v.verified ? " · ✓" : ""}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 space-y-5 overflow-y-auto p-4">
+        {v.cover_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={v.cover_url} alt="" className="h-36 w-full rounded-xl object-cover" />
+        )}
+
+        {v.description && (
+          <p className="text-sm leading-relaxed text-neutral-600">{v.description}</p>
+        )}
+
+        {v.address && (
+          <p className="text-sm text-neutral-500">
+            📍 {v.address}
+            {v.postal_code ? `, ${v.postal_code}` : ""} {v.city}
+          </p>
+        )}
+
+        {facts.length > 0 && (
+          <div className="overflow-hidden rounded-xl border border-neutral-200">
+            {facts.map((f) => (
+              <div
+                key={f.label}
+                className="flex items-center justify-between border-b border-neutral-100 px-3 py-2.5 text-sm last:border-0"
               >
-                {sel.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={sel.logo_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  initials(sel.name)
-                )}
-              </span>
-              <div className="min-w-0">
-                <span
-                  className="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
-                  style={{ backgroundColor: SPORT_COLOR[primarySport(sel)], color: "#fff" }}
-                >
-                  {sel.sports.map((s) => SPORT_LABEL[s] ?? s).join(" · ")}
-                </span>
-                <h2 className="mt-1 truncate text-lg font-bold tracking-tight">{sel.name}</h2>
-                <p className="text-xs text-neutral-500">
-                  {CAT_LABEL[sel.category] ?? sel.category}
-                  {sel.city ? ` · ${sel.city}` : ""}
-                </p>
+                <span className="text-neutral-500">{f.label}</span>
+                <span className="text-right font-semibold">{f.value}</span>
               </div>
-            </div>
-            <a
-              href={`/map/${sel.slug}`}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-matchup py-3 text-sm font-bold text-white hover:bg-matchup-hover"
-            >
-              Vollständiges Profil →
-            </a>
+            ))}
           </div>
         )}
+
+        {hasHours && (
+          <div>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
+              Öffnungszeiten
+            </h3>
+            <div className="overflow-hidden rounded-xl border border-neutral-200">
+              {WEEKDAYS.map((d) => (
+                <div
+                  key={d.key}
+                  className="flex items-center justify-between border-b border-neutral-100 px-3 py-2 text-sm last:border-0"
+                >
+                  <span className="text-neutral-500">{d.label}</span>
+                  <span className="font-medium">{v.opening_hours?.[d.key] || "—"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {v.amenities?.length > 0 && (
+          <div>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
+              Ausstattung
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {v.amenities.map((a) => (
+                <span key={a} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600">
+                  {AMENITY_LABEL[a] ?? a}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {v.booking_url && (
+            <a
+              href={v.booking_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center rounded-full bg-matchup py-2.5 text-sm font-bold text-white hover:bg-matchup-hover"
+            >
+              Platz buchen →
+            </a>
+          )}
+          {v.website && (
+            <a
+              href={v.website}
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              Website öffnen
+            </a>
+          )}
+          <div className="flex gap-2">
+            {v.phone && (
+              <a
+                href={`tel:${v.phone}`}
+                className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                Anrufen
+              </a>
+            )}
+            {v.lat != null && v.lng != null && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                Route
+              </a>
+            )}
+          </div>
+          <a
+            href={`/map/${v.slug}`}
+            className="flex w-full items-center justify-center pt-1 text-xs font-semibold text-neutral-400 hover:text-neutral-700"
+          >
+            Vollständiges Profil öffnen →
+          </a>
+        </div>
       </div>
     </div>
   );
