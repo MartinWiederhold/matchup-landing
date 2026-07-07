@@ -90,6 +90,20 @@ const CITY_HUB: Record<string, string> = {
   "Cinisello Balsamo": "Milano", Rho: "Milano", "Bovisio Masciago": "Milano", Villasanta: "Milano",
   // Roma
   Roma: "Roma",
+  // London (Greater London bereits als city="London" normiert)
+  London: "London",
+  // Paris Metro
+  Paris: "Paris", "Boulogne-Billancourt": "Paris", "Neuilly-sur-Seine": "Paris", "Sucy-en-Brie": "Paris",
+  "Saint-Denis": "Paris", Montreuil: "Paris", "Issy-les-Moulineaux": "Paris", "Levallois-Perret": "Paris",
+  // Berlin Metro
+  Berlin: "Berlin", Potsdam: "Berlin",
+  // Amsterdam Metro
+  Amsterdam: "Amsterdam", Amstelveen: "Amsterdam",
+  // Dubai (Stadtteile als city="Dubai" normiert)
+  Dubai: "Dubai",
+  // Miami Metro
+  Miami: "Miami", "Miami Beach": "Miami", "Coral Gables": "Miami", Doral: "Miami", Aventura: "Miami",
+  "Key Biscayne": "Miami", "North Miami": "Miami", Kendall: "Miami", Hialeah: "Miami",
 };
 // Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
 const CITY_IMAGE: Record<string, string> = {
@@ -100,6 +114,8 @@ const CITY_IMAGE: Record<string, string> = {
   "New York": "/map-cities/new-york.jpg", Portland: "/map-cities/portland.jpg",
   Madrid: "/map-cities/madrid.jpg", Barcelona: "/map-cities/barcelona.jpg", Palma: "/map-cities/palma.jpg",
   Milano: "/map-cities/milano.jpg", Roma: "/map-cities/roma.jpg",
+  London: "/map-cities/london.jpg", Paris: "/map-cities/paris.jpg", Berlin: "/map-cities/berlin.jpg",
+  Amsterdam: "/map-cities/amsterdam.jpg", Dubai: "/map-cities/dubai.jpg", Miami: "/map-cities/miami.jpg",
 };
 const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
 
