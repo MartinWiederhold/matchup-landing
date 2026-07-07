@@ -151,13 +151,13 @@ function markerIcon(v: Venue, active: boolean): L.DivIcon {
     : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
   const scale = active ? "transform:scale(1.22);" : "";
   const inner = v.logo_url
-    ? `<img src="${v.logo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;" />`
+    ? `<img src="${v.logo_url}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;" />`
     : `<span style="font-weight:800;font-size:11px;color:#111;">${initials(v.name)}</span>`;
   return L.divIcon({
     className: "",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
-    html: `<div class="mu-pop" style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;">${inner}</div>`,
+    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;">${inner}</div>`,
   });
 }
 
@@ -215,6 +215,7 @@ export default function MapView() {
   const layerRef = useRef<L.LayerGroup | null>(null);
   const [ready, setReady] = useState(false);
   const [zoom, setZoom] = useState(12);
+  const [moveTick, setMoveTick] = useState(0); // bumpt bei jedem Pan/Zoom-Ende → Viewport neu berechnen
 
   const [venues, setVenues] = useState<Venue[]>([]);
   const [query, setQuery] = useState("");
@@ -227,6 +228,7 @@ export default function MapView() {
       .from("venues")
       .select(VENUE_SELECT)
       .order("name")
+      .limit(3000) // sonst kappt PostgREST bei 1000 Zeilen → Anlagen fehlen
       .then(({ data }) => setVenues((data as Venue[]) ?? []));
   }, []);
 
@@ -240,6 +242,23 @@ export default function MapView() {
       return v.lat != null && v.lng != null;
     });
   }, [venues, query, sportFilter, catFilter]);
+
+  // Nur Marker im aktuell sichtbaren Kartenausschnitt rendern (Viewport-Culling).
+  // Beim weiten Rauszoomen (Cluster-Modus) werden ohnehin nur ~Städte-Bubbles gebaut.
+  const MARKER_CAP = 350;
+  const inView = useMemo(() => {
+    const map = mapRef.current;
+    if (!map || !ready || zoom <= CLUSTER_ZOOM) return visible;
+    const b = map.getBounds().pad(0.3);
+    const s = b.getSouth(), n = b.getNorth(), w = b.getWest(), e = b.getEast();
+    const out: Venue[] = [];
+    for (const v of visible) {
+      const la = v.lat as number, lo = v.lng as number;
+      if (la >= s && la <= n && lo >= w && lo <= e) out.push(v);
+    }
+    return out.length > MARKER_CAP ? out.slice(0, MARKER_CAP) : out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, zoom, ready, moveTick]);
 
   const focus = useCallback((v: Venue) => {
     setSelectedId(v.id);
@@ -291,6 +310,7 @@ export default function MapView() {
     L.control.zoom({ position: "bottomright" }).addTo(map);
     setZoom(map.getZoom());
     map.on("zoomend", () => setZoom(map.getZoom()));
+    map.on("moveend", () => setMoveTick((t) => t + 1));
     setReady(true);
     [50, 250, 600, 1200].forEach((ms) =>
       window.setTimeout(() => map.invalidateSize(), ms),
@@ -326,16 +346,22 @@ export default function MapView() {
           .on("click", () => map.flyTo([lat, lng], 13, { duration: 0.8 }));
       }
     } else {
-      for (const v of visible) {
-        L.marker([v.lat!, v.lng!], { icon: markerIcon(v, v.id === selectedId) })
+      for (const v of inView) {
+        L.marker([v.lat!, v.lng!], { icon: markerIcon(v, v.id === selectedId), keyboard: false })
           .addTo(layer)
           .on("click", () => focus(v))
           .setZIndexOffset(v.id === selectedId ? 1000 : 0);
       }
     }
-  }, [visible, ready, zoom, selectedId, focus]);
+  }, [visible, inView, ready, zoom, selectedId, focus]);
 
   const sel = venues.find((v) => v.id === selectedId) ?? null;
+
+  // Liste nur mit den relevanten Orten füllen (Karte im Blick), nicht alle 1000+ DOM-Knoten rendern.
+  // Bei aktiver Suche aber global zeigen, damit man auch ferne Treffer anklicken (und hinfliegen) kann.
+  const listSource = query.trim() || zoom <= CLUSTER_ZOOM ? visible : inView;
+  const listItems = listSource.slice(0, 80);
+  const listMore = listSource.length - listItems.length;
 
   function backToList() {
     setSelectedId(null);
@@ -420,7 +446,7 @@ export default function MapView() {
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {visible.map((v) => (
+              {listItems.map((v) => (
                 <button
                   key={v.id}
                   type="button"
@@ -433,7 +459,7 @@ export default function MapView() {
                   >
                     {v.logo_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={v.logo_url} alt="" className="h-full w-full object-cover" />
+                      <img src={v.logo_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     ) : (
                       initials(v.name)
                     )}
@@ -447,6 +473,11 @@ export default function MapView() {
                   </span>
                 </button>
               ))}
+              {listMore > 0 && (
+                <p className="px-4 py-4 text-center text-xs text-neutral-400">
+                  +{listMore} weitere · auf der Karte reinzoomen zum Eingrenzen
+                </p>
+              )}
               {visible.length === 0 && (
                 <p className="px-4 py-8 text-center text-sm text-neutral-400">Keine Treffer.</p>
               )}
