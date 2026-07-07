@@ -50,6 +50,22 @@ const CITY_HUB: Record<string, string> = {
   "St. Gallen": "St. Gallen", Gossau: "St. Gallen", Herisau: "St. Gallen", Wittenbach: "St. Gallen",
   Abtwil: "St. Gallen", Gaiserwald: "St. Gallen", Rorschach: "St. Gallen", "St.Gallen": "St. Gallen",
   Tübach: "St. Gallen", Goldach: "St. Gallen", Rorschacherberg: "St. Gallen",
+  // Agglomeration Genf
+  "Genève": "Genève", Genf: "Genève", Carouge: "Genève", Lancy: "Genève", Meyrin: "Genève",
+  Vernier: "Genève", Onex: "Genève", "Grand-Saconnex": "Genève", "Le Grand-Saconnex": "Genève",
+  "Chêne-Bougeries": "Genève", Thônex: "Genève", "Plan-les-Ouates": "Genève", Versoix: "Genève",
+  Cologny: "Genève", Veyrier: "Genève", "Chêne-Bourg": "Genève", "Vésenaz": "Genève",
+  Vessy: "Genève", Bellevue: "Genève", "Grand-Lancy": "Genève", "Petit-Lancy": "Genève",
+  "Pregny-Chambésy": "Genève", Bernex: "Genève",
+  // Agglomeration Lausanne
+  Lausanne: "Lausanne", Renens: "Lausanne", Pully: "Lausanne", Prilly: "Lausanne", Ecublens: "Lausanne",
+  Crissier: "Lausanne", "Le Mont-sur-Lausanne": "Lausanne", "Épalinges": "Lausanne", Epalinges: "Lausanne",
+  "Chavannes-près-Renens": "Lausanne", Lutry: "Lausanne", Morges: "Lausanne", "Saint-Sulpice": "Lausanne",
+  "Romanel-sur-Lausanne": "Lausanne", "La Croix-sur-Lutry": "Lausanne",
+  // Agglomeration Lugano
+  Lugano: "Lugano", Massagno: "Lugano", Paradiso: "Lugano", Agno: "Lugano", Bioggio: "Lugano",
+  Manno: "Lugano", Savosa: "Lugano", Comano: "Lugano", Canobbio: "Lugano", Caslano: "Lugano",
+  Pregassona: "Lugano", Viganello: "Lugano", Tesserete: "Lugano", Cadempino: "Lugano", Grancia: "Lugano",
 };
 // Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
 const CITY_IMAGE: Record<string, string> = {
