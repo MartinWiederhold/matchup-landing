@@ -66,6 +66,30 @@ const CITY_HUB: Record<string, string> = {
   Lugano: "Lugano", Massagno: "Lugano", Paradiso: "Lugano", Agno: "Lugano", Bioggio: "Lugano",
   Manno: "Lugano", Savosa: "Lugano", Comano: "Lugano", Canobbio: "Lugano", Caslano: "Lugano",
   Pregassona: "Lugano", Viganello: "Lugano", Tesserete: "Lugano", Cadempino: "Lugano", Grancia: "Lugano",
+  // New York (Metro inkl. NJ-Waterfront)
+  "New York": "New York", Brooklyn: "New York", Queens: "New York", Bronx: "New York",
+  "Staten Island": "New York", "Jersey City": "New York", Hoboken: "New York",
+  // Portland (OR) Metro
+  Portland: "Portland", Beaverton: "Portland", Tualatin: "Portland", Vancouver: "Portland",
+  Gresham: "Portland", "Lake Oswego": "Portland", Tigard: "Portland", Hillsboro: "Portland",
+  // Madrid Metro
+  Madrid: "Madrid", "San Sebastián de los Reyes": "Madrid", Alcobendas: "Madrid",
+  "Rivas-Vaciamadrid": "Madrid", "Alcorcón": "Madrid", "Las Rozas de Madrid": "Madrid",
+  "Pozuelo de Alarcón": "Madrid", Algete: "Madrid", Getafe: "Madrid", Majadahonda: "Madrid",
+  // Barcelona Metro
+  Barcelona: "Barcelona", "L'Hospitalet de Llobregat": "Barcelona", "Sant Cugat del Vallès": "Barcelona",
+  Terrassa: "Barcelona", Sabadell: "Barcelona", "Gavà": "Barcelona", "Cornellà de Llobregat": "Barcelona",
+  "El Prat de Llobregat": "Barcelona", Badalona: "Barcelona", "Esplugues de Llobregat": "Barcelona",
+  Viladecans: "Barcelona", "Sant Boi de Llobregat": "Barcelona", Castelldefels: "Barcelona",
+  // Palma / Mallorca
+  Palma: "Palma", Manacor: "Palma", "Calvià": "Palma", "Marratxí": "Palma", "Alcúdia": "Palma", Llucmajor: "Palma",
+  // Milano Metro
+  Milano: "Milano", Buccinasco: "Milano", Assago: "Milano", Segrate: "Milano", "Paderno Dugnano": "Milano",
+  Basiglio: "Milano", "Novate Milanese": "Milano", Cornaredo: "Milano", Monza: "Milano",
+  "Sesto San Giovanni": "Milano", "San Donato Milanese": "Milano", "Cologno Monzese": "Milano",
+  "Cinisello Balsamo": "Milano", Rho: "Milano", "Bovisio Masciago": "Milano", Villasanta: "Milano",
+  // Roma
+  Roma: "Roma",
 };
 // Stadt → Bild (self-hosted). Fallback: lila Kreis mit Zahl.
 const CITY_IMAGE: Record<string, string> = {
@@ -73,6 +97,9 @@ const CITY_IMAGE: Record<string, string> = {
   Genf: "/map-cities/genf.jpg", "Genève": "/map-cities/genf.jpg", Lausanne: "/map-cities/lausanne.jpg",
   Luzern: "/map-cities/luzern.jpg", Zug: "/map-cities/zug.jpg", "St. Gallen": "/map-cities/st-gallen.jpg",
   Winterthur: "/map-cities/winterthur.jpg", Lugano: "/map-cities/lugano.jpg",
+  "New York": "/map-cities/new-york.jpg", Portland: "/map-cities/portland.jpg",
+  Madrid: "/map-cities/madrid.jpg", Barcelona: "/map-cities/barcelona.jpg", Palma: "/map-cities/palma.jpg",
+  Milano: "/map-cities/milano.jpg", Roma: "/map-cities/roma.jpg",
 };
 const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
 
