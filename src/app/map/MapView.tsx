@@ -116,6 +116,12 @@ const CITY_IMAGE: Record<string, string> = {
   Milano: "/map-cities/milano.jpg", Roma: "/map-cities/roma.jpg",
   London: "/map-cities/london.jpg", Paris: "/map-cities/paris.jpg", Berlin: "/map-cities/berlin.jpg",
   Amsterdam: "/map-cities/amsterdam.jpg", Dubai: "/map-cities/dubai.jpg", Miami: "/map-cities/miami.jpg",
+  Tokyo: "/map-cities/tokyo.jpg", Sydney: "/map-cities/sydney.jpg", Melbourne: "/map-cities/melbourne.jpg",
+  "São Paulo": "/map-cities/sao-paulo.jpg", "Rio de Janeiro": "/map-cities/rio.jpg",
+  "Buenos Aires": "/map-cities/buenos-aires.jpg", "Mexico City": "/map-cities/mexico-city.jpg",
+  Toronto: "/map-cities/toronto.jpg", Stockholm: "/map-cities/stockholm.jpg", Lisbon: "/map-cities/lisbon.jpg",
+  Vienna: "/map-cities/vienna.jpg", Brussels: "/map-cities/brussels.jpg", Singapore: "/map-cities/singapore.jpg",
+  Doha: "/map-cities/doha.jpg", "Cape Town": "/map-cities/cape-town.jpg",
 };
 const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
 
