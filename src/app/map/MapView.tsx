@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +14,15 @@ import {
   initials,
   primarySport,
 } from "@/lib/venuesDb";
+import SeasonPlanner from "./SeasonPlanner";
+import {
+  TOURNAMENTS,
+  TIER_META,
+  HOME_BASES,
+  byDate,
+  type Tournament,
+  type HomeBase,
+} from "@/lib/tournaments";
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
@@ -184,6 +193,38 @@ function clusterIcon(city: string, count: number): L.DivIcon {
   });
 }
 
+// Startpunkt der Saison (grün, mit START-Label)
+function startMarkerIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    iconSize: [40, 44],
+    iconAnchor: [20, 22],
+    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-8px)">
+      <div style="width:34px;height:34px;border-radius:9999px;background:#16a34a;border:3px solid #fff;box-shadow:0 5px 14px rgba(0,0,0,.32);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:800;">⌂</div>
+      <span style="margin-top:4px;background:#16a34a;color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;padding:1px 7px;border-radius:9999px;white-space:nowrap;">START</span>
+    </div>`,
+  });
+}
+
+// Turnier-Marker: nummeriert wenn im Plan, sonst Stern; eingefärbt nach Kategorie
+function tourMarkerIcon(t: Tournament, order: number | null, active: boolean): L.DivIcon {
+  const c = TIER_META[t.tier].color;
+  const size = order != null ? 32 : 24;
+  const inner =
+    order != null
+      ? `<span style="color:#fff;font-weight:800;font-size:13px;">${order}</span>`
+      : `<span style="color:#fff;font-size:12px;line-height:1;">★</span>`;
+  const ring = active
+    ? "box-shadow:0 0 0 4px rgba(75,59,243,.32),0 6px 14px rgba(0,0,0,.3);transform:scale(1.12);"
+    : "box-shadow:0 3px 10px rgba(0,0,0,.28);";
+  return L.divIcon({
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;transition:transform .15s;">${inner}</div>`,
+  });
+}
+
 function PinIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -222,6 +263,43 @@ export default function MapView() {
   const [sportFilter, setSportFilter] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Saison-planen-Tab (ATP/Challenger/ITF)
+  const [tab, setTab] = useState<"discover" | "season">("discover");
+  const [planIds, setPlanIds] = useState<string[]>([]);
+  const [startBase, setStartBase] = useState<HomeBase>(HOME_BASES[0]);
+  const [budget, setBudget] = useState(15000);
+  const [selTid, setSelTid] = useState<string | null>(null);
+
+  // Plan aus localStorage laden / speichern
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("mu-season");
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (Array.isArray(s.planIds)) setPlanIds(s.planIds.filter((id: string) => TOURNAMENTS.some((t) => t.id === id)));
+      if (typeof s.budget === "number") setBudget(s.budget);
+      if (s.startBase) {
+        const b = HOME_BASES.find((h) => h.name === s.startBase);
+        if (b) setStartBase(b);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase: startBase.name }));
+    } catch {}
+  }, [planIds, budget, startBase]);
+
+  const togglePlan = useCallback(
+    (id: string) => setPlanIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
+    [],
+  );
+  const focusTour = useCallback((t: Tournament) => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.7 });
+  }, []);
 
   useEffect(() => {
     supabase
@@ -282,6 +360,8 @@ export default function MapView() {
       ".mu-pop{animation:muPop .4s cubic-bezier(.34,1.56,.64,1) both}" +
       "@keyframes muSheet{0%{transform:translateY(100%)}100%{transform:translateY(0)}}" +
       ".mu-sheet{animation:muSheet .34s cubic-bezier(.22,1,.36,1) both}" +
+      // animierte Reiseroute (Flight-Path-Look)
+      ".mu-route{stroke-dasharray:6 10;animation:muDash 1.1s linear infinite}@keyframes muDash{to{stroke-dashoffset:-16}}" +
       // moderne Zoom-Buttons unten rechts
       ".leaflet-control-zoom{border:none!important;border-radius:16px!important;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.16)!important;margin:0 14px 20px 0!important}" +
       ".leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:22px!important;font-weight:500!important;color:#1f2937!important;background:#fff!important;border:none!important;transition:background .15s}" +
@@ -329,7 +409,7 @@ export default function MapView() {
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
-    if (!map || !layer || !ready) return;
+    if (!map || !layer || !ready || tab !== "discover") return;
     layer.clearLayers();
 
     if (zoom <= CLUSTER_ZOOM) {
@@ -353,7 +433,64 @@ export default function MapView() {
           .setZIndexOffset(v.id === selectedId ? 1000 : 0);
       }
     }
-  }, [visible, inView, ready, zoom, selectedId, focus]);
+  }, [visible, inView, ready, zoom, selectedId, focus, tab]);
+
+  // Saison-Modus: Turnier-Marker + animierte Reiseroute vom Startpunkt durch alle Stops
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = layerRef.current;
+    if (!map || !layer || !ready || tab !== "season") return;
+    layer.clearLayers();
+
+    const plan = planIds
+      .map((id) => TOURNAMENTS.find((t) => t.id === id))
+      .filter(Boolean)
+      .sort(byDate as never) as Tournament[];
+
+    const pts: [number, number][] = [
+      [startBase.lat, startBase.lng],
+      ...plan.map((t) => [t.lat, t.lng] as [number, number]),
+    ];
+    if (pts.length > 1) {
+      L.polyline(pts, {
+        className: "mu-route",
+        color: "#4b3bf3",
+        weight: 3,
+        opacity: 0.95,
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(layer);
+    }
+
+    L.marker([startBase.lat, startBase.lng], { icon: startMarkerIcon(), keyboard: false, zIndexOffset: 400 }).addTo(layer);
+
+    for (const t of TOURNAMENTS) {
+      const order = plan.findIndex((p) => p.id === t.id);
+      L.marker([t.lat, t.lng], {
+        icon: tourMarkerIcon(t, order >= 0 ? order + 1 : null, t.id === selTid),
+        keyboard: false,
+        zIndexOffset: t.id === selTid ? 600 : order >= 0 ? 300 : 0,
+      })
+        .addTo(layer)
+        .on("click", () => {
+          setSelTid(t.id);
+          map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.6 });
+        });
+    }
+  }, [ready, tab, planIds, startBase, selTid]);
+
+  // Route beim Ändern des Plans/Startpunkts einpassen
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || tab !== "season") return;
+    const plan = planIds.map((id) => TOURNAMENTS.find((t) => t.id === id)).filter(Boolean) as Tournament[];
+    const pts: [number, number][] = [
+      [startBase.lat, startBase.lng],
+      ...plan.map((t) => [t.lat, t.lng] as [number, number]),
+    ];
+    if (pts.length > 1) map.flyToBounds(L.latLngBounds(pts).pad(0.25), { duration: 0.8 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planIds, startBase, tab, ready]);
 
   const sel = venues.find((v) => v.id === selectedId) ?? null;
 
@@ -425,7 +562,25 @@ export default function MapView() {
     <div className="relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900">
       {/* Desktop: Sidebar (Liste bzw. Detail) */}
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
-        {sel ? (
+        <div className="shrink-0 border-b border-neutral-200 p-3">
+          <div className="flex rounded-full bg-neutral-100 p-1">
+            <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
+            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>Saison planen</TabBtn>
+          </div>
+        </div>
+        {tab === "season" ? (
+          <SeasonPlanner
+            planIds={planIds}
+            onTogglePlan={togglePlan}
+            start={startBase}
+            setStart={setStartBase}
+            budget={budget}
+            setBudget={setBudget}
+            selTid={selTid}
+            setSelTid={setSelTid}
+            onFocus={focusTour}
+          />
+        ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
         ) : (
           <>
@@ -490,35 +645,89 @@ export default function MapView() {
       <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0 z-0" />
 
-        {/* Mobile: Filterleiste oben über der Karte */}
-        {!sel && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] space-y-2 p-3 md:hidden">
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-              <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Club oder Ort suchen…"
-                className="h-11 w-full bg-transparent text-sm outline-none"
-              />
-              <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
+        {/* Mobile: Tab-Umschalter + (nur Entdecken) Suche/Filter oben */}
+        {!(tab === "discover" && sel) && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[550] space-y-2 p-3 md:hidden">
+            <div className="flex justify-center">
+              <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
+                <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>Saison</TabBtn>
+              </div>
             </div>
-            <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {sportChips(true)}
-              <span className="shrink-0 self-center text-neutral-300">·</span>
-              {catChips(true)}
-            </div>
+            {tab === "discover" && (
+              <>
+                <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                  <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Club oder Ort suchen…"
+                    className="h-11 w-full bg-transparent text-sm outline-none"
+                  />
+                  <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
+                </div>
+                <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {sportChips(true)}
+                  <span className="shrink-0 self-center text-neutral-300">·</span>
+                  {catChips(true)}
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* Mobile: Detail als Bottom-Sheet, Karte bleibt oben sichtbar */}
-        {sel && (
+        {/* Mobile: Club-Detail als Bottom-Sheet */}
+        {tab === "discover" && sel && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] h-[66%] overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
             <VenueDetail venue={sel} onBack={backToList} sheet />
           </div>
         )}
+
+        {/* Mobile: Saisonplaner als Bottom-Sheet, Karte + Route bleiben sichtbar */}
+        {tab === "season" && (
+          <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] flex h-[70%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
+            <div className="flex shrink-0 justify-center pt-2.5">
+              <span className="h-1.5 w-10 rounded-full bg-neutral-300" />
+            </div>
+            <SeasonPlanner
+              planIds={planIds}
+              onTogglePlan={togglePlan}
+              start={startBase}
+              setStart={setStartBase}
+              budget={budget}
+              setBudget={setBudget}
+              selTid={selTid}
+              setSelTid={setSelTid}
+              onFocus={focusTour}
+            />
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function TabBtn({
+  active,
+  onClick,
+  children,
+  small = false,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  small?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full font-semibold transition-colors ${
+        small ? "px-4 py-1.5 text-sm" : "flex-1 px-3 py-2 text-sm"
+      } ${active ? "bg-matchup text-white shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
+    >
+      {children}
+    </button>
   );
 }
 
