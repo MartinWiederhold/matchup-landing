@@ -22,6 +22,7 @@ import {
 } from "@/lib/tournaments";
 import {
   eligibility,
+  cutoffFor,
   ELIG_COLOR,
   missingDocs,
   requiredDocs,
@@ -502,6 +503,22 @@ function TournamentDetail({
         <Fact label="Preisgeld (Sieger)" value={fmtEUR(prizeFor(t))} />
         <Fact label="Aufenthalt" value={`${nights(t)} Nächte`} />
       </div>
+
+      {/* Cut-Off (Meldeliste offiziell, sonst kalibrierter Richtwert) */}
+      {(() => {
+        const co = cutoffFor(t);
+        return (
+          <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+            <div className="text-sm">
+              <span className="font-semibold text-neutral-700">Cut-Off</span>
+              <span className="text-neutral-500"> · Hauptfeld ~{co.direct} · Quali ~{co.quali}</span>
+            </div>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${co.official ? "bg-emerald-50 text-emerald-600" : "bg-neutral-200 text-neutral-500"}`}>
+              {co.official ? "offiziell" : "Richtwert"}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Wetter zur Turnierzeit (Klimawerte Vorjahr) */}
       <div>

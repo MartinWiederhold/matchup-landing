@@ -28,6 +28,9 @@ export type Tournament = {
   end: string; // ISO
   url?: string; // offizielle Seite (aus DB/Sync)
   prize?: number; // Sieger-Preisgeld EUR (aus DB/Sync)
+  cutDirect?: number | null; // offizieller Hauptfeld-Cut-Off (aus Meldeliste), sonst Richtwert
+  cutQuali?: number | null; // offizieller Quali-Cut-Off (aus Meldeliste), sonst Richtwert
+  cutSource?: string | null; // z.B. "official" | "manual" | null (=Richtwert aus Modell)
 };
 
 // Punkte je Runde [Sieger, Finale, HF, VF, AF] + Preisgeld (Sieger, EUR) + Farbe + Kürzel

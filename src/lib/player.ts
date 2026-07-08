@@ -131,6 +131,18 @@ const CUT: Record<Tier, { direct: number; quali: number; minAge: number }> = {
   ITF15: { direct: 1000, quali: 1600, minAge: 15 },
 };
 
+/**
+ * Cut-Off je Turnier: offizielle Werte (aus Meldeliste, in DB gepflegt) haben Vorrang,
+ * sonst kalibrierter Richtwert aus dem Kategorie-Modell (CUT). `official` steuert die Beschriftung.
+ */
+export function cutoffFor(t: Tournament): { direct: number; quali: number; minAge: number; official: boolean } {
+  const base = CUT[t.tier];
+  if (t.cutDirect != null && t.cutQuali != null) {
+    return { direct: t.cutDirect, quali: t.cutQuali, minAge: base.minAge, official: true };
+  }
+  return { direct: base.direct, quali: base.quali, minAge: base.minAge, official: false };
+}
+
 export function rankForTier(p: PlayerProfile, tier: Tier): number | null {
   const isW = p.gender === "w";
   if (tier.startsWith("ITF")) return (isW ? p.wta : p.itf) ?? p.itf ?? (isW ? p.wta : p.atp);
@@ -145,7 +157,7 @@ export type Eligibility = {
 };
 
 export function eligibility(p: PlayerProfile, t: Tournament): Eligibility {
-  const cut = CUT[t.tier];
+  const cut = cutoffFor(t);
   const rank = rankForTier(p, t.tier);
   const age = computeAge(p.birthdate);
   const reasons: { ok: boolean; text: string }[] = [];
@@ -158,11 +170,12 @@ export function eligibility(p: PlayerProfile, t: Tournament): Eligibility {
   const ageOk = age == null || age >= cut.minAge;
   reasons.push({ ok: ageOk, text: age == null ? `Mindestalter ${cut.minAge} (Geburtsdatum fehlt)` : ageOk ? `Mindestalter ${cut.minAge} erfüllt` : `Mindestalter ${cut.minAge} nicht erfüllt (du: ${age})` });
 
-  // Ranking
+  // Ranking — Cut-Off offiziell (Meldeliste) oder Richtwert
+  const tag = cut.official ? "offiziell" : "Richtwert";
   const direct = rank <= cut.direct;
   const quali = rank <= cut.quali;
-  reasons.push({ ok: direct, text: direct ? `Hauptfeld: Ranking reicht (Cut-Off ~${cut.direct}, du: ${rank})` : `Hauptfeld: Cut-Off ~${cut.direct} · dein Ranking ${rank}` });
-  if (!direct) reasons.push({ ok: quali, text: quali ? `Qualifikation möglich (Quali-Cut ~${cut.quali}, du: ${rank})` : `Auch Quali nicht erreichbar (Quali-Cut ~${cut.quali})` });
+  reasons.push({ ok: direct, text: direct ? `Hauptfeld: Ranking reicht (Cut-Off ~${cut.direct}, ${tag} · du: ${rank})` : `Hauptfeld: Cut-Off ~${cut.direct} (${tag}) · dein Ranking ${rank}` });
+  if (!direct) reasons.push({ ok: quali, text: quali ? `Qualifikation möglich (Quali-Cut ~${cut.quali}, ${tag} · du: ${rank})` : `Auch Quali nicht erreichbar (Quali-Cut ~${cut.quali}, ${tag})` });
 
   // Meldeschluss
   const dl = entryDeadline(t);

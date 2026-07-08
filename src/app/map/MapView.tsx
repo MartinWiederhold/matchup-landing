@@ -422,6 +422,9 @@ export default function MapView() {
             end: r.end_date as string,
             url: (r.url as string) ?? undefined,
             prize: (r.prize as number) ?? undefined,
+            cutDirect: (r.cut_direct as number) ?? null,
+            cutQuali: (r.cut_quali as number) ?? null,
+            cutSource: (r.cut_source as string) ?? null,
           })),
         );
       });
