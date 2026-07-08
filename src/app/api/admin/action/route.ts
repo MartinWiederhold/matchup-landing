@@ -237,6 +237,25 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      case "saveCutoff": {
+        const id = String(body.id);
+        const toInt = (v: unknown) => {
+          if (v === null || v === "" || v === undefined) return null;
+          const n = Math.round(Number(v));
+          return Number.isFinite(n) && n > 0 ? n : null;
+        };
+        const cutDirect = toInt(body.cutDirect);
+        const cutQuali = toInt(body.cutQuali);
+        // Quelle nur "official", wenn der Hauptfeld-Cut gesetzt ist; sonst Richtwert (null)
+        const cutSource = cutDirect != null ? "official" : null;
+        const { error } = await svc
+          .from("tournaments")
+          .update({ cut_direct: cutDirect, cut_quali: cutQuali, cut_source: cutSource, updated_at: new Date().toISOString() })
+          .eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
       default:
         return NextResponse.json({ error: "Unbekannte Aktion" }, { status: 400 });
     }
