@@ -28,6 +28,15 @@ import {
   type PlayerProfile,
   type PlayerDocs,
 } from "@/lib/player";
+import type { Venue } from "@/lib/venuesDb";
+
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(s)));
+}
 
 const GROUPS = ["Alle", "Grand Slam", "ATP", "Challenger", "ITF"] as const;
 const SURFACES = ["Alle", "Sand", "Hartplatz", "Rasen"] as const;
@@ -50,6 +59,7 @@ export default function SeasonPlanner({
   setProfile,
   onlyEligible,
   setOnlyEligible,
+  venues,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -67,6 +77,7 @@ export default function SeasonPlanner({
   setProfile: (p: PlayerProfile) => void;
   onlyEligible: boolean;
   setOnlyEligible: (v: boolean) => void;
+  venues: Venue[];
 }) {
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
@@ -89,7 +100,7 @@ export default function SeasonPlanner({
 
   const sel = selTid ? tours.find((t) => t.id === selTid) ?? null : null;
   if (sel) {
-    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} profile={profile} />;
+    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} profile={profile} venues={venues} />;
   }
 
   const spentPct = budget > 0 ? Math.min(100, Math.round((cost.total / budget) * 100)) : 0;
@@ -347,6 +358,7 @@ function TournamentDetail({
   onBack,
   start,
   profile,
+  venues,
 }: {
   t: Tournament;
   inPlan: boolean;
@@ -355,6 +367,7 @@ function TournamentDetail({
   onBack: () => void;
   start: HomeBase;
   profile: PlayerProfile;
+  venues: Venue[];
 }) {
   const meta = TIER_META[t.tier];
   const cost = computePlan([t], start).perTour[0];
@@ -363,6 +376,12 @@ function TournamentDetail({
   const elig = hasRank ? eligibility(profile, t) : null;
   const req = requiredDocs(t);
   const missing = missingDocs(profile, t);
+  const nearby = venues
+    .filter((v) => v.lat != null && v.lng != null && v.sports?.includes("tennis"))
+    .map((v) => ({ v, km: haversineKm(t.lat, t.lng, v.lat as number, v.lng as number) }))
+    .filter((x) => x.km <= 80)
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 5);
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline">
@@ -495,6 +514,29 @@ function TournamentDetail({
           ))}
         </div>
       </div>
+
+      {nearby.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Trainingsplätze in der Nähe</h3>
+          <div className="space-y-1.5">
+            {nearby.map(({ v, km }) => (
+              <a
+                key={v.id}
+                href={v.website || `https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 hover:border-matchup/40"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{v.name}</span>
+                  <span className="block text-[11px] text-neutral-400">{v.city ? `${v.city} · ` : ""}{km} km entfernt</span>
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-matchup">↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

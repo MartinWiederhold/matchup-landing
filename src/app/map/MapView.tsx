@@ -644,6 +644,7 @@ export default function MapView() {
             setProfile={setProfile}
             onlyEligible={onlyEligible}
             setOnlyEligible={setOnlyEligible}
+            venues={venues}
           />
         ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
@@ -771,6 +772,7 @@ export default function MapView() {
               setProfile={setProfile}
               onlyEligible={onlyEligible}
               setOnlyEligible={setOnlyEligible}
+              venues={venues}
             />
           </div>
         )}
