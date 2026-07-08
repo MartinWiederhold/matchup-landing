@@ -63,7 +63,7 @@ export const HOME_BASES: HomeBase[] = [
 ];
 
 // Realistischer Kalender 2026 (chronologisch)
-export const TOURNAMENTS: Tournament[] = [
+const BASE_TOURNAMENTS: Tournament[] = [
   { id: "brisbane", name: "Brisbane International", city: "Brisbane", country: "Australien", lat: -27.4705, lng: 153.026, tier: "ATP250", surface: "Hartplatz", indoor: false, start: "2026-01-04", end: "2026-01-11", url: "https://brisbaneinternational.com.au", prize: 120000 },
   { id: "hongkong", name: "Hong Kong Tennis Open", city: "Hongkong", country: "Hongkong", lat: 22.3193, lng: 114.1694, tier: "ATP250", surface: "Hartplatz", indoor: false, start: "2026-01-05", end: "2026-01-11", url: "https://www.hktennisopen.hk", prize: 120000 },
   { id: "adelaide", name: "Adelaide International", city: "Adelaide", country: "Australien", lat: -34.9285, lng: 138.6007, tier: "ATP250", surface: "Hartplatz", indoor: false, start: "2026-01-12", end: "2026-01-17", url: "https://www.adelaideinternational.com.au", prize: 110000 },
@@ -128,6 +128,95 @@ export const TOURNAMENTS: Tournament[] = [
   { id: "stockholm", name: "BNP Paribas Nordic Open", city: "Stockholm", country: "Schweden", lat: 59.33, lng: 18.06, tier: "ATP250", surface: "Hartplatz", indoor: true, start: "2026-11-08", end: "2026-11-14", url: "https://www.bnppnordicopen.com", prize: 100000 },
   { id: "atpfinals", name: "Nitto ATP Finals", city: "Turin", country: "Italien", lat: 45.07, lng: 7.69, tier: "ATP1000", surface: "Hartplatz", indoor: true, start: "2026-11-15", end: "2026-11-22", url: "https://www.nittoatpfinals.com", prize: 2400000 },
 ];
+
+// ── ITF/Challenger-Cluster (Low-Budget-Hubs aus der Tour-Analyse) ────────────────
+// Diese Standorte tragen fast wöchentlich M15/M25 aus (+ vereinzelt Challenger).
+// Clustering = mehrere Wochen am selben Ort → 1 Anreise. Auf der Karte als Cluster-
+// Bubble dargestellt, im Planer als aufklappbare Cluster-Karte. Wochen deterministisch generiert.
+export type ClusterHub = {
+  id: string;
+  name: string;
+  country: string;
+  region: "Nordafrika" | "Türkei" | "Südeuropa";
+  lat: number;
+  lng: number;
+  surface: Surface;
+  note: string;
+  blocks: { tier: Tier; from: string; weeks: number }[];
+};
+
+export const CLUSTER_HUBS: ClusterHub[] = [
+  {
+    id: "monastir", name: "Monastir", country: "Tunesien", region: "Nordafrika", lat: 35.777, lng: 10.826,
+    surface: "Hartplatz", note: "Günstigster Hub weltweit – fast durchgehend M15, Hotel-Pakete, Flughafen am Resort.",
+    blocks: [
+      { tier: "ITF15", from: "2026-01-05", weeks: 10 },
+      { tier: "ITF15", from: "2026-03-30", weeks: 6 },
+      { tier: "ITF25", from: "2026-05-18", weeks: 2 },
+      { tier: "ITF15", from: "2026-07-13", weeks: 12 },
+      { tier: "ITF15", from: "2026-10-05", weeks: 3 },
+      { tier: "CH75", from: "2026-10-26", weeks: 1 },
+    ],
+  },
+  {
+    id: "antalya", name: "Antalya", country: "Türkei", region: "Türkei", lat: 36.897, lng: 30.713,
+    surface: "Sand", note: "All-Inclusive-Camps, Sand & Hart, mildes Klima – ideal für lange Blöcke.",
+    blocks: [
+      { tier: "ITF15", from: "2026-01-12", weeks: 8 },
+      { tier: "ITF25", from: "2026-03-09", weeks: 3 },
+      { tier: "ITF15", from: "2026-09-14", weeks: 8 },
+      { tier: "ITF15", from: "2026-11-09", weeks: 3 },
+    ],
+  },
+  {
+    id: "cairo", name: "Kairo", country: "Ägypten", region: "Nordafrika", lat: 30.044, lng: 31.236,
+    surface: "Sand", note: "Sehr günstig, hohe Turnierdichte (Sandplatz).",
+    blocks: [
+      { tier: "ITF15", from: "2026-02-02", weeks: 8 },
+      { tier: "ITF15", from: "2026-08-31", weeks: 8 },
+    ],
+  },
+  {
+    id: "sharm", name: "Sharm el-Sheikh", country: "Ägypten", region: "Nordafrika", lat: 27.915, lng: 34.329,
+    surface: "Hartplatz", note: "Resort-Hub am Roten Meer, günstige Hartplatz-Wochen.",
+    blocks: [
+      { tier: "ITF15", from: "2026-01-19", weeks: 8 },
+      { tier: "ITF15", from: "2026-09-21", weeks: 6 },
+    ],
+  },
+  {
+    id: "heraklion", name: "Heraklion", country: "Griechenland", region: "Südeuropa", lat: 35.339, lng: 25.145,
+    surface: "Hartplatz", note: "Sommer-Hub in Südeuropa (Kreta), günstige Hartplatz-Serie.",
+    blocks: [
+      { tier: "ITF15", from: "2026-06-29", weeks: 10 },
+    ],
+  },
+];
+
+function generateClusterEvents(): Tournament[] {
+  const out: Tournament[] = [];
+  const DAY = 86400000;
+  for (const h of CLUSTER_HUBS) {
+    for (const b of h.blocks) {
+      const base = Date.parse(b.from + "T00:00:00Z");
+      const short = b.tier.startsWith("ITF") ? b.tier.replace("ITF", "M") : b.tier;
+      for (let i = 0; i < b.weeks; i++) {
+        const start = new Date(base + i * 7 * DAY).toISOString().slice(0, 10);
+        const end = new Date(base + (i * 7 + 6) * DAY).toISOString().slice(0, 10);
+        out.push({
+          id: `${h.id}-${b.tier.toLowerCase()}-${start}`,
+          name: `${short} ${h.name}`,
+          city: h.name, country: h.country, lat: h.lat, lng: h.lng,
+          tier: b.tier, surface: h.surface, indoor: false, start, end,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+export const CLUSTER_EVENTS: Tournament[] = generateClusterEvents();
+export const TOURNAMENTS: Tournament[] = [...BASE_TOURNAMENTS, ...CLUSTER_EVENTS];
 
 // Offizielle Turnier-Website (öffentliche Quelle) + verifiziertes Sieger-Preisgeld (EUR).
 // Wird aus öffentlichen Quellen (ATP/ITF/offizielle Seiten) gepflegt.

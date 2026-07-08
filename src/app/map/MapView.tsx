@@ -245,6 +245,22 @@ function tourMarkerIcon(t: Tournament, order: number | null, active: boolean, co
   return L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: inner });
 }
 
+// Cluster-Bubble: viele Wochen am selben Ort (ITF/Challenger-Hub) → EIN Marker statt Pin-Stapel.
+function clusterMarkerIcon(count: number, label: string, highlight: boolean): L.DivIcon {
+  const ring = highlight
+    ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.32);"
+    : "box-shadow:0 4px 12px rgba(0,0,0,.32);";
+  return L.divIcon({
+    className: "",
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    html: `<div style="min-width:40px;height:40px;padding:0 7px;border-radius:9999px;background:linear-gradient(135deg,#4b3bf3,#8b5cf6);border:3px solid #fff;${ring}display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;line-height:1.05;">
+      <span style="font-size:14px;font-weight:800;">${count}×</span>
+      <span style="font-size:7.5px;font-weight:700;letter-spacing:.03em;opacity:.95;">${label}</span>
+    </div>`,
+  });
+}
+
 function PinIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -584,22 +600,59 @@ export default function MapView() {
 
     L.marker([startBase.lat, startBase.lng], { icon: startMarkerIcon(), keyboard: false, zIndexOffset: 400 }).addTo(layer);
 
+    // Turniere nach Ort gruppieren → Cluster-Hubs (viele Wochen am selben Ort) als EINE Bubble.
+    const passesFilter = (t: Tournament, inP: boolean) => {
+      if (!(onlyEligible && hasRank) || inP) return true;
+      return eligibility(profile, t).status !== "red";
+    };
+    const byLoc = new Map<string, Tournament[]>();
     for (const t of tours) {
-      const order = plan.findIndex((p) => p.id === t.id);
-      const inP = order >= 0;
-      const status = hasRank ? eligibility(profile, t).status : null;
-      if (onlyEligible && hasRank && !inP && status === "red") continue;
-      const color = status ? ELIG_COLOR[status] : undefined;
-      L.marker([t.lat, t.lng], {
-        icon: tourMarkerIcon(t, inP ? order + 1 : null, t.id === selTid, color),
-        keyboard: false,
-        zIndexOffset: t.id === selTid ? 600 : inP ? 300 : 0,
-      })
-        .addTo(layer)
-        .on("click", () => {
-          setSelTid(t.id);
-          map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.6 });
-        });
+      const k = `${t.lat.toFixed(3)},${t.lng.toFixed(3)}`;
+      const arr = byLoc.get(k);
+      if (arr) arr.push(t);
+      else byLoc.set(k, [t]);
+    }
+
+    for (const group of byLoc.values()) {
+      const shown = group.filter((t) => passesFilter(t, plan.some((p) => p.id === t.id)));
+      if (shown.length === 0) continue;
+
+      if (shown.length >= 3) {
+        // Cluster-Bubble
+        const anyInPlan = shown.some((t) => plan.some((p) => p.id === t.id));
+        const active = shown.some((t) => t.id === selTid);
+        const label = Array.from(new Set(shown.map((t) => TIER_META[t.tier].short))).slice(0, 2).join("·");
+        const soonest = [...shown].sort(byDate as never)[0] as Tournament;
+        const [lat, lng] = [shown[0].lat, shown[0].lng];
+        L.marker([lat, lng], {
+          icon: clusterMarkerIcon(shown.length, label, active || anyInPlan),
+          keyboard: false,
+          zIndexOffset: anyInPlan ? 300 : 60,
+        })
+          .addTo(layer)
+          .on("click", () => {
+            setSelTid(soonest.id);
+            map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 0.6 });
+          });
+        continue;
+      }
+
+      for (const t of shown) {
+        const order = plan.findIndex((p) => p.id === t.id);
+        const inP = order >= 0;
+        const status = hasRank ? eligibility(profile, t).status : null;
+        const color = status ? ELIG_COLOR[status] : undefined;
+        L.marker([t.lat, t.lng], {
+          icon: tourMarkerIcon(t, inP ? order + 1 : null, t.id === selTid, color),
+          keyboard: false,
+          zIndexOffset: t.id === selTid ? 600 : inP ? 300 : 0,
+        })
+          .addTo(layer)
+          .on("click", () => {
+            setSelTid(t.id);
+            map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.6 });
+          });
+      }
     }
   }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible]);
 

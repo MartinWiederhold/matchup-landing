@@ -15,6 +15,7 @@ import {
   prizeFor,
   urlFor,
   tournamentLogo,
+  CLUSTER_HUBS,
   EXTRAS,
   planSpanDays,
   type Tournament,
@@ -110,6 +111,27 @@ export default function SeasonPlanner({
       return true;
     });
   }, [group, surface, tours]);
+
+  // Katalog nach Ort gruppieren: Hubs mit ≥3 Wochen → Cluster-Karte, Rest → Einzelzeilen.
+  const grouped = useMemo(() => {
+    const byLoc = new Map<string, Tournament[]>();
+    for (const t of catalog) {
+      if (onlyEligible && hasRank && !planIds.includes(t.id) && eligibility(profile, t).status === "red") continue;
+      const k = `${t.city}|${t.country}`;
+      const a = byLoc.get(k);
+      if (a) a.push(t);
+      else byLoc.set(k, [t]);
+    }
+    const clusters: { key: string; hub: string; country: string; items: Tournament[] }[] = [];
+    const singles: Tournament[] = [];
+    for (const [key, items] of byLoc) {
+      if (items.length >= 3) clusters.push({ key, hub: items[0].city, country: items[0].country, items });
+      else singles.push(...items);
+    }
+    clusters.sort((a, b) => (a.items[0].start < b.items[0].start ? -1 : 1));
+    singles.sort(byDate);
+    return { clusters, singles };
+  }, [catalog, onlyEligible, hasRank, profile, planIds]);
 
   const sel = selTid ? tours.find((t) => t.id === selTid) ?? null : null;
   if (sel) {
@@ -323,55 +345,104 @@ export default function SeasonPlanner({
           ))}
         </div>
         <div className="space-y-1.5">
-          {catalog.map((t) => {
-            const meta = TIER_META[t.tier];
-            const added = inPlan(t.id);
-            const el = hasRank ? eligibility(profile, t) : null;
-            if (onlyEligible && el && el.status === "red" && !added) return null;
-            return (
-              <div
-                key={t.id}
-                className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2"
-              >
-                <button
-                  type="button"
-                  onClick={() => { setSelTid(t.id); onFocus(t); }}
-                  className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
-                >
-                  <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: el ? ELIG_COLOR[el.status] : meta.color }} />
-                  {tournamentLogo(t) ? (
-                    <img src={tournamentLogo(t)!} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain ring-1 ring-neutral-200" />
-                  ) : (
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{t.name}</span>
-                    <span className="block text-[11px] text-neutral-400">
-                      {fmtRange(t)} · {t.city} · {SURFACE_LABEL[t.surface]}
-                      {t.indoor ? " (Indoor)" : ""}
-                    </span>
-                  </span>
-                  <span
-                    className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white"
-                    style={{ background: meta.color }}
-                  >
-                    {meta.short}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onTogglePlan(t.id)}
-                  className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors ${
-                    added ? "bg-emerald-50 text-emerald-600" : "bg-matchup text-white hover:bg-matchup-hover"
-                  }`}
-                >
-                  {added ? "✓" : "+"}
-                </button>
-              </div>
-            );
-          })}
+          {grouped.clusters.map((c) => (
+            <ClusterCard
+              key={c.key}
+              hub={c.hub}
+              country={c.country}
+              items={c.items}
+              planIds={planIds}
+              onOpen={(t) => { setSelTid(t.id); onFocus(t); }}
+              onToggle={onTogglePlan}
+              eligOf={(t) => (hasRank ? eligibility(profile, t) : null)}
+            />
+          ))}
+          {grouped.singles.map((t) => (
+            <CatalogRow
+              key={t.id}
+              t={t}
+              added={inPlan(t.id)}
+              el={hasRank ? eligibility(profile, t) : null}
+              onOpen={() => { setSelTid(t.id); onFocus(t); }}
+              onToggle={() => onTogglePlan(t.id)}
+            />
+          ))}
+          {grouped.clusters.length === 0 && grouped.singles.length === 0 && (
+            <p className="rounded-xl border border-dashed border-neutral-200 px-3 py-4 text-center text-sm text-neutral-400">Keine Turniere für diese Auswahl.</p>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+type Elig = ReturnType<typeof eligibility> | null;
+
+function CatalogRow({ t, added, el, onOpen, onToggle }: { t: Tournament; added: boolean; el: Elig; onOpen: () => void; onToggle: () => void }) {
+  const meta = TIER_META[t.tier];
+  const logo = tournamentLogo(t);
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: el ? ELIG_COLOR[el.status] : meta.color }} />
+        {logo ? (
+          <img src={logo} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain ring-1 ring-neutral-200" />
+        ) : (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{t.name}</span>
+          <span className="block text-[11px] text-neutral-400">{fmtRange(t)} · {t.city} · {SURFACE_LABEL[t.surface]}{t.indoor ? " (Indoor)" : ""}</span>
+        </span>
+        <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
+      </button>
+      <button type="button" onClick={onToggle}
+        className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors ${added ? "bg-emerald-50 text-emerald-600" : "bg-matchup text-white hover:bg-matchup-hover"}`}>
+        {added ? "✓" : "+"}
+      </button>
+    </div>
+  );
+}
+
+function ClusterCard({
+  hub, country, items, planIds, onOpen, onToggle, eligOf,
+}: {
+  hub: string;
+  country: string;
+  items: Tournament[];
+  planIds: string[];
+  onOpen: (t: Tournament) => void;
+  onToggle: (id: string) => void;
+  eligOf: (t: Tournament) => Elig;
+}) {
+  const [open, setOpen] = useState(false);
+  const info = CLUSTER_HUBS.find((h) => h.name === hub);
+  const tiers = Array.from(new Set(items.map((t) => TIER_META[t.tier].short)));
+  const addedCount = items.filter((t) => planIds.includes(t.id)).length;
+  const lowBudget = info?.region === "Nordafrika" || info?.region === "Türkei";
+  return (
+    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-2.5 p-2.5 text-left">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[11px] font-extrabold text-white" style={{ background: "linear-gradient(135deg,#4b3bf3,#8b5cf6)" }}>{items.length}×</span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-bold">{hub}</span>
+            {lowBudget && <span className="shrink-0 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-600">Low-Budget</span>}
+          </span>
+          <span className="block truncate text-[11px] text-neutral-400">
+            {country} · {tiers.join("/")} · {items.length} Wochen{addedCount ? ` · ${addedCount} geplant` : ""}
+          </span>
+        </span>
+        <span className="shrink-0 text-xs font-semibold text-matchup">{open ? "Schliessen" : "Wochen"}</span>
+      </button>
+      {open && (
+        <div className="space-y-1.5 border-t border-neutral-100 p-2.5">
+          {info && <p className="text-[11px] text-neutral-500">📍 {info.note}</p>}
+          {items.map((t) => (
+            <CatalogRow key={t.id} t={t} added={planIds.includes(t.id)} el={eligOf(t)} onOpen={() => onOpen(t)} onToggle={() => onToggle(t.id)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
