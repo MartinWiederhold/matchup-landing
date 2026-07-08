@@ -50,6 +50,14 @@ function endFrom(start: string): string {
   return new Date(Date.parse(start) + 6 * 86400000).toISOString().slice(0, 10);
 }
 
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
 async function geocode(city: string, country: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const u = `https://nominatim.openstreetmap.org/search?${new URLSearchParams({ q: `${city}, ${country}`, format: "json", limit: "1" })}`;
@@ -101,14 +109,14 @@ async function runSync() {
 
   // verwaiste 'sync'-Zeilen entfernen (robust per Diff); 'wikipedia'-Zeilen bleiben
   const canon = new Set(rows.map((r) => r.id));
-  const { data: existing } = await svc.from("tournaments").select("id,city,start_date,source");
+  const { data: existing } = await svc.from("tournaments").select("id,city,lat,lng,start_date,source");
   const orphans = (existing ?? []).filter((r) => r.source === "sync" && !canon.has(r.id as string)).map((r) => r.id as string);
   if (orphans.length) await svc.from("tournaments").delete().in("id", orphans);
 
   return { synced: rows.length, existing: existing ?? [] };
 }
 
-async function discover(existing: { id: string; city: string | null; start_date: string | null }[]) {
+async function discover(existing: { id: string; city: string | null; lat: number | null; lng: number | null; start_date: string | null }[]) {
   const res = await fetch(`https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(WIKI_YEAR + " ATP Tour")}&prop=wikitext&format=json&formatversion=2`, {
     headers: { "User-Agent": "MatchupMap/1.0 (wiederhold.martin@web.de)" },
   });
@@ -116,16 +124,23 @@ async function discover(existing: { id: string; city: string | null; start_date:
   if (!txt) return { discovered: 0, added: 0 };
   const parsed = parseWikipedia(txt);
 
-  // Dedup gegen bestehende: gleiche Stadt + gleicher Monat → überspringen (verifiziert gewinnt)
+  // 1. Vorfilter (billig): gleiche Stadt+Monat oder gleiche id → sicher Duplikat, kein Geocode nötig
   const have = new Set(existing.filter((r) => r.city && r.start_date).map((r) => `${normCity(r.city!)}-${r.start_date!.slice(5, 7)}`));
   const haveIds = new Set(existing.map((r) => r.id));
-  const fresh = parsed.filter((p) => !have.has(`${normCity(p.city)}-${p.start.slice(5, 7)}`) && !haveIds.has(p.id));
+  const candidates = parsed.filter((p) => !have.has(`${normCity(p.city)}-${p.start.slice(5, 7)}`) && !haveIds.has(p.id));
+  const existingGeo = existing.filter((r) => r.lat != null && r.lng != null && r.start_date);
 
   const svc = getServiceClient();
   let added = 0;
-  for (const p of fresh.slice(0, 12)) {
+  for (const p of candidates.slice(0, 12)) {
     const geo = await geocode(p.city, p.country);
     if (!geo) continue;
+    // 2. Geo-Nähe-Dedup: gleiche Location (≤60 km) + ±12 Tage → selbes Turnier (fängt DE/EN-Namen)
+    const pStart = Date.parse(p.start);
+    const dup = existingGeo.some(
+      (r) => haversineKm(geo.lat, geo.lng, r.lat!, r.lng!) < 60 && Math.abs(Date.parse(r.start_date!) - pStart) < 12 * 86400000,
+    );
+    if (dup) continue;
     const { error } = await svc.from("tournaments").upsert(
       [{ id: p.id, name: p.name, city: p.city, country: p.country, lat: geo.lat, lng: geo.lng, tier: p.tier, surface: p.surface, indoor: false, start_date: p.start, end_date: p.end, url: null, prize: p.prize ?? TIER_META[p.tier as keyof typeof TIER_META].prize, source: "wikipedia", status: "active", updated_at: new Date().toISOString() }],
       { onConflict: "id" },
