@@ -7,22 +7,14 @@ export const tpActive = MARKER.length > 0;
 
 type Stop = { city: string; country: string; start: string; end: string };
 
-/** Hotels am Turnierort (Ort + Check-in/out vorausgefüllt). */
+/**
+ * Hotels am Turnierort (Ort + Check-in/out vorausgefüllt).
+ * Booking.com-Suche (live) — Travelpayouts Drive (Script im Layout) macht daraus automatisch
+ * einen Provisions-Link. Hotellook wurde 10/2025 eingestellt, deshalb NICHT mehr verwenden.
+ */
 export function hotelUrl(t: Stop): string {
   const place = encodeURIComponent(`${t.city}, ${t.country}`);
-  if (!tpActive) {
-    return `https://www.booking.com/searchresults.html?ss=${place}&checkin=${t.start}&checkout=${t.end}&group_adults=1&no_rooms=1`;
-  }
-  const q = new URLSearchParams({
-    destination: `${t.city}, ${t.country}`,
-    checkIn: t.start,
-    checkOut: t.end,
-    adults: "1",
-    marker: MARKER,
-    currency: "eur",
-    locale: "de",
-  });
-  return `https://search.hotellook.com/hotels?${q}`;
+  return `https://www.booking.com/searchresults.html?ss=${place}&checkin=${t.start}&checkout=${t.end}&group_adults=1&no_rooms=1`;
 }
 
 /** Flüge zum Turnierort (ab Heimatflughafen, falls im Profil hinterlegt). */
@@ -52,8 +44,9 @@ async function getPrice(params: Record<string, string>): Promise<LivePrice> {
   }
 }
 
-export function hotelPriceQuery(t: Stop): Promise<LivePrice> {
-  return getPrice({ type: "hotel", city: t.city, country: t.country, checkIn: t.start, checkOut: t.end });
+export function hotelPriceQuery(_t: Stop): Promise<LivePrice> {
+  // Keine Hotel-Preis-Daten-API mehr verfügbar (Hotellook 10/2025 eingestellt, kein Ersatz bei Travelpayouts).
+  return Promise.resolve({ configured: false, price: null });
 }
 
 export function flightPriceQuery(t: Stop, homeAirport?: string): Promise<LivePrice> {
