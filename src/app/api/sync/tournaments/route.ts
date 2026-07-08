@@ -43,6 +43,14 @@ async function runSync() {
   }));
   const { error } = await svc.from("tournaments").upsert(rows, { onConflict: "id" });
   if (error) throw new Error(error.message);
+
+  // Verwaiste 'sync'-Zeilen entfernen (Kalender geändert). Robust per Diff + .in-Delete,
+  // damit keine alten IDs als Doppel-Marker hängen bleiben. 'wikipedia'-Zeilen bleiben unberührt.
+  const canon = new Set(rows.map((r) => r.id));
+  const { data: existing } = await svc.from("tournaments").select("id").eq("source", "sync");
+  const orphans = (existing ?? []).map((r) => r.id as string).filter((id) => !canon.has(id));
+  if (orphans.length) await svc.from("tournaments").delete().in("id", orphans);
+
   return rows.length;
 }
 
