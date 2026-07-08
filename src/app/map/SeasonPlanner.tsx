@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   TIER_META,
   ROUND_LABELS,
@@ -60,6 +60,7 @@ export default function SeasonPlanner({
   onlyEligible,
   setOnlyEligible,
   venues,
+  profileSynced,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -78,6 +79,7 @@ export default function SeasonPlanner({
   onlyEligible: boolean;
   setOnlyEligible: (v: boolean) => void;
   venues: Venue[];
+  profileSynced: boolean;
 }) {
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
@@ -115,11 +117,11 @@ export default function SeasonPlanner({
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-4">
       {/* Spielerprofil (treibt die Eligibility-Ampel) */}
-      <ProfileCard profile={profile} setProfile={setProfile} />
+      <ProfileCard profile={profile} setProfile={setProfile} synced={profileSynced} />
 
       {/* Status-Übersicht der geplanten Saison */}
       {plan.length > 0 && (
-        <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} />
+        <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
       )}
 
       {/* Smart-Planer */}
@@ -382,6 +384,20 @@ function TournamentDetail({
     .filter((x) => x.km <= 80)
     .sort((a, b) => a.km - b.km)
     .slice(0, 5);
+
+  // Wetter: Klimawerte des Vorjahres-Zeitraums am Austragungsort (Open-Meteo, kein Key nötig).
+  const wx = useWeather(t);
+
+  // Deep-Links (Buchung beim Anbieter; später Affiliate-ID → Provision)
+  const place = encodeURIComponent(`${t.city}, ${t.country}`);
+  const bookingUrl = `https://www.booking.com/searchresults.html?ss=${place}&checkin=${t.start}&checkout=${t.end}&group_adults=1&no_rooms=1`;
+  const carUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Mietwagen ${t.city}`)}`;
+  const flightDest = encodeURIComponent(t.city);
+  const flightUrl = profile.homeAirport
+    ? `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flug ${profile.homeAirport} nach ${t.city} am ${t.start}`)}`
+    : `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flug nach ${t.city} am ${t.start}`)}`;
+  void flightDest;
+
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline">
@@ -456,6 +472,44 @@ function TournamentDetail({
         <Fact label="Aufenthalt" value={`${nights(t)} Nächte`} />
       </div>
 
+      {/* Wetter zur Turnierzeit (Klimawerte Vorjahr) */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Wetter zur Turnierzeit</h3>
+        {t.indoor ? (
+          <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-600">
+            <span>🏟️</span> Indoor-Turnier – wetterunabhängig.
+          </div>
+        ) : wx === "loading" ? (
+          <div className="rounded-2xl border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-400">Wetterdaten werden geladen …</div>
+        ) : wx === "err" ? (
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-xs text-neutral-400">Wetterdaten aktuell nicht verfügbar.</div>
+        ) : (
+          <>
+            <div
+              className="grid grid-cols-3 overflow-hidden rounded-2xl border border-neutral-200 text-center"
+              style={{ background: `linear-gradient(135deg, ${wx.maxT >= 26 ? "#fff7ed" : wx.maxT >= 15 ? "#f0f9ff" : "#eef2ff"}, #ffffff)` }}
+            >
+              <div className="px-2 py-3">
+                <div className="text-lg">{wx.maxT >= 28 ? "🔥" : wx.maxT >= 18 ? "☀️" : wx.maxT >= 8 ? "⛅" : "❄️"}</div>
+                <div className="mt-0.5 text-xl font-extrabold tracking-tight text-neutral-800">{wx.maxT}°</div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">Tag Ø</div>
+              </div>
+              <div className="border-x border-neutral-100 px-2 py-3">
+                <div className="text-lg">🌙</div>
+                <div className="mt-0.5 text-xl font-extrabold tracking-tight text-neutral-800">{wx.minT}°</div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">Nacht Ø</div>
+              </div>
+              <div className="px-2 py-3">
+                <div className="text-lg">{wx.rainDays >= 3 ? "🌧️" : wx.rainDays >= 1 ? "🌦️" : "💧"}</div>
+                <div className="mt-0.5 text-xl font-extrabold tracking-tight text-neutral-800">{wx.rainDays}</div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">Regentage</div>
+              </div>
+            </div>
+            <p className="mt-1.5 text-[11px] text-neutral-400">Ø der Vorsaison am Austragungsort · Quelle: Open-Meteo</p>
+          </>
+        )}
+      </div>
+
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Punkte je Runde</h3>
         <div className="overflow-hidden rounded-xl border border-neutral-200">
@@ -504,6 +558,18 @@ function TournamentDetail({
             <span>{fmtEUR(cost.total)}</span>
           </div>
         </div>
+        <p className="mt-1.5 text-[11px] text-neutral-400">Richtwerte (Distanz &amp; Kategorie). Live-Preise beim Anbieter buchen ↓</p>
+      </div>
+
+      {/* Unterkunft & Transfer – Deep-Links (Buchung beim Anbieter, für Turnierdaten vorausgefüllt) */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Unterkunft &amp; Transfer</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <BookLink href={bookingUrl} icon="🏨" label="Hotels" sub={`${nights(t)} Nächte`} />
+          <BookLink href={flightUrl} icon="✈️" label="Flüge" sub={profile.homeAirport || "ab Heimat"} />
+          <BookLink href={carUrl} icon="🚗" label="Mietwagen" sub={t.city} />
+        </div>
+        <p className="mt-1.5 text-[11px] text-neutral-400">Vorausgefüllt mit Ort &amp; Turnierdaten. Öffnet den Anbieter in neuem Tab.</p>
       </div>
 
       <div>
@@ -573,35 +639,85 @@ function Line({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function StatusOverview({ plan, profile, hasRank, over }: { plan: Tournament[]; profile: PlayerProfile; hasRank: boolean; over: boolean }) {
+type StatusTone = "green" | "amber" | "red" | "neutral";
+const TONE: Record<StatusTone, { from: string; to: string; text: string; dot: string }> = {
+  green: { from: "#34d399", to: "#059669", text: "#059669", dot: "#10b981" },
+  amber: { from: "#fbbf24", to: "#d97706", text: "#b45309", dot: "#f59e0b" },
+  red: { from: "#fb7185", to: "#e11d48", text: "#e11d48", dot: "#f43f5e" },
+  neutral: { from: "#cbd5e1", to: "#94a3b8", text: "#64748b", dot: "#cbd5e1" },
+};
+
+function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tournament[]; profile: PlayerProfile; hasRank: boolean; over: boolean; spentPct: number }) {
   const reds = hasRank ? plan.map((t) => eligibility(profile, t).status).filter((s) => s === "red").length : 0;
-  const partOk = hasRank && reds === 0;
   const miss = plan.length ? missingDocs(profile, plan[0]) : [];
+  const reqCount = plan.length ? requiredDocs(plan[0]).length : 4;
   const docsOk = miss.length === 0;
-  const rows: { label: string; ok: boolean; value: string; unknown?: boolean }[] = [
-    { label: "Teilnahme", ok: partOk, unknown: !hasRank, value: !hasRank ? "Ranking fehlt" : reds === 0 ? "Möglich" : `${reds} nicht möglich` },
-    { label: "Unterlagen", ok: docsOk, value: docsOk ? "Vollständig" : `${miss.length} fehlen` },
-    { label: "Budget", ok: !over, value: over ? "Über Budget" : "Ausreichend" },
+
+  const rows: { label: string; value: string; tone: StatusTone; pct: number }[] = [
+    {
+      label: "Teilnahme",
+      tone: !hasRank ? "neutral" : reds === 0 ? "green" : "amber",
+      value: !hasRank ? "Ranking fehlt" : reds === 0 ? "Alle möglich" : `${reds} nicht möglich`,
+      pct: !hasRank ? 8 : plan.length ? Math.round(((plan.length - reds) / plan.length) * 100) : 100,
+    },
+    {
+      label: "Unterlagen",
+      tone: docsOk ? "green" : "red",
+      value: docsOk ? "Vollständig" : `${miss.length} von ${reqCount} fehlen`,
+      pct: Math.round(((reqCount - miss.length) / reqCount) * 100),
+    },
+    {
+      label: "Budget",
+      tone: over ? "red" : spentPct > 85 ? "amber" : "green",
+      value: over ? "Über Budget" : "Ausreichend",
+      pct: Math.min(100, Math.max(6, spentPct)),
+    },
   ];
+  const ready = rows.filter((r) => r.tone === "green").length;
+  const worst: StatusTone = rows.some((r) => r.tone === "red") ? "red" : rows.some((r) => r.tone === "amber") ? "amber" : rows.some((r) => r.tone === "neutral") ? "neutral" : "green";
+  const head = TONE[worst];
+
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
-      <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400">Status</div>
-      <div className="space-y-1.5">
-        {rows.map((r) => (
-          <div key={r.label} className="flex items-center justify-between text-sm">
-            <span className="text-neutral-600">{r.label}</span>
-            <span className={`flex items-center gap-1.5 font-semibold ${r.unknown ? "text-neutral-400" : r.ok ? "text-emerald-600" : "text-red-600"}`}>
-              <span>{r.unknown ? "⚪" : r.ok ? "🟢" : "🔴"}</span>
-              {r.value}
-            </span>
+    <div className="overflow-hidden rounded-3xl border border-neutral-200/70 bg-white shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Saison-Status</div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-2xl font-extrabold tracking-tight text-neutral-900">{ready}</span>
+            <span className="text-sm font-semibold text-neutral-400">/ 3 bereit</span>
           </div>
-        ))}
+        </div>
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-2xl text-lg text-white shadow-sm"
+          style={{ background: `linear-gradient(135deg, ${head.from}, ${head.to})` }}
+        >
+          {worst === "green" ? "✓" : worst === "red" ? "!" : worst === "neutral" ? "?" : "◔"}
+        </span>
+      </div>
+      <div className="space-y-px bg-neutral-100">
+        {rows.map((r) => {
+          const c = TONE[r.tone];
+          return (
+            <div key={r.label} className="flex items-center gap-3 bg-white px-4 py-3">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.dot, boxShadow: `0 0 0 3px ${c.dot}22` }} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-neutral-700">{r.label}</span>
+                  <span className="text-[13px] font-bold" style={{ color: c.text }}>{r.value}</span>
+                </div>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${r.pct}%`, background: `linear-gradient(90deg, ${c.from}, ${c.to})` }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function ProfileCard({ profile, setProfile }: { profile: PlayerProfile; setProfile: (p: PlayerProfile) => void }) {
+function ProfileCard({ profile, setProfile, synced }: { profile: PlayerProfile; setProfile: (p: PlayerProfile) => void; synced: boolean }) {
   const [open, setOpen] = useState(false);
   const set = <K extends keyof PlayerProfile>(k: K, v: PlayerProfile[K]) => setProfile({ ...profile, [k]: v });
   const setDoc = (k: keyof PlayerDocs, v: boolean) => setProfile({ ...profile, docs: { ...profile.docs, [k]: v } });
@@ -616,7 +732,17 @@ function ProfileCard({ profile, setProfile }: { profile: PlayerProfile; setProfi
           {(profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "") || "👤"}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold">{name}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-bold">{name}</span>
+            <span
+              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                synced ? "bg-emerald-50 text-emerald-600" : "bg-neutral-100 text-neutral-400"
+              }`}
+              title={synced ? "Mit deinem Matchup-Konto synchronisiert – auf allen Geräten verfügbar" : "Lokal auf diesem Gerät gespeichert – in der App anmelden für geräteübergreifenden Sync"}
+            >
+              {synced ? "☁ Konto" : "Lokal"}
+            </span>
+          </span>
           <span className="block text-xs text-neutral-400">{rankSummary}{profile.nationality ? ` · ${profile.nationality}` : ""}</span>
         </span>
         <span className="text-xs font-semibold text-matchup">{open ? "Schliessen" : "Bearbeiten"}</span>
@@ -624,6 +750,14 @@ function ProfileCard({ profile, setProfile }: { profile: PlayerProfile; setProfi
 
       {open && (
         <div className="space-y-3 border-t border-neutral-100 p-3">
+          <div className={`flex items-start gap-2 rounded-xl px-2.5 py-2 text-[11px] ${synced ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"}`}>
+            <span>{synced ? "☁" : "ℹ"}</span>
+            <span>
+              {synced
+                ? "Dein Profil ist mit deinem Matchup-Konto verknüpft und auf allen Geräten verfügbar."
+                : "Dein Profil wird lokal gespeichert. Melde dich in der Matchup-App an – dann ist es automatisch auf allen Geräten verfügbar (dieselbe Anmeldung)."}
+            </span>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Vorname"><input value={profile.firstName} onChange={(e) => set("firstName", e.target.value)} className="mu-in" /></Field>
             <Field label="Nachname"><input value={profile.lastName} onChange={(e) => set("lastName", e.target.value)} className="mu-in" /></Field>
@@ -668,6 +802,49 @@ function ProfileCard({ profile, setProfile }: { profile: PlayerProfile; setProfi
         </div>
       )}
     </div>
+  );
+}
+
+type Wx = { maxT: number; minT: number; rainDays: number } | "loading" | "err";
+function useWeather(t: Tournament): Wx {
+  const [wx, setWx] = useState<Wx>("loading");
+  useEffect(() => {
+    if (t.indoor) return;
+    let cancel = false;
+    setWx("loading");
+    const y = Number(t.start.slice(0, 4)) - 1; // Vorjahres-Referenzzeitraum = Klimawert
+    const s = `${y}${t.start.slice(4)}`;
+    const e = `${y}${t.end.slice(4)}`;
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${t.lat}&longitude=${t.lng}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancel) return;
+        const mx = ((d?.daily?.temperature_2m_max ?? []) as (number | null)[]).filter((v): v is number => v != null);
+        const mn = ((d?.daily?.temperature_2m_min ?? []) as (number | null)[]).filter((v): v is number => v != null);
+        const pr = ((d?.daily?.precipitation_sum ?? []) as (number | null)[]).filter((v): v is number => v != null);
+        if (!mx.length) { setWx("err"); return; }
+        const avg = (a: number[]) => Math.round(a.reduce((x, y) => x + y, 0) / a.length);
+        setWx({ maxT: avg(mx), minT: avg(mn.length ? mn : mx), rainDays: pr.filter((v) => v >= 1).length });
+      })
+      .catch(() => { if (!cancel) setWx("err"); });
+    return () => { cancel = true; };
+  }, [t.id, t.indoor, t.lat, t.lng, t.start, t.end]);
+  return wx;
+}
+
+function BookLink({ href, icon, label, sub }: { href: string; icon: string; label: string; sub: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="flex flex-col items-center gap-1 rounded-2xl border border-neutral-200 bg-white px-2 py-3 text-center transition hover:border-matchup/40 hover:shadow-sm"
+    >
+      <span className="text-xl">{icon}</span>
+      <span className="text-xs font-bold text-neutral-700">{label}</span>
+      <span className="w-full truncate text-[10px] text-neutral-400">{sub}</span>
+    </a>
   );
 }
 

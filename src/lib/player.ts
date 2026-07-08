@@ -1,5 +1,6 @@
 // Spielerprofil (lokal) + Eligibility-Logik: zeigt, für welche Turniere ein Spieler infrage kommt.
 import { entryDeadline, type Surface, type Tier, type Tournament } from "./tournaments";
+import { supabase } from "./supabase";
 
 export type Gender = "m" | "w";
 
@@ -63,6 +64,43 @@ export function saveProfile(p: PlayerProfile) {
   try {
     localStorage.setItem(KEY, JSON.stringify(p));
   } catch {}
+}
+
+function mergeProfile(d: Partial<PlayerProfile> | null | undefined): PlayerProfile {
+  return { ...EMPTY_PROFILE, ...(d ?? {}), docs: { ...EMPTY_PROFILE.docs, ...(d?.docs ?? {}) } };
+}
+
+/** UID der aktiven App-Anmeldung (dieselbe Supabase-Session wie die Haupt-App), sonst null. */
+export async function currentUserId(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Profil des angemeldeten Nutzers aus web.player_profiles laden (RLS: nur eigenes). */
+export async function loadProfileRemote(userId: string): Promise<PlayerProfile | null> {
+  try {
+    const { data, error } = await supabase.from("player_profiles").select("data").eq("user_id", userId).maybeSingle();
+    if (error || !data) return null;
+    return mergeProfile(data.data as Partial<PlayerProfile>);
+  } catch {
+    return null;
+  }
+}
+
+/** Profil des angemeldeten Nutzers in web.player_profiles speichern (geräteübergreifend). */
+export async function saveProfileRemote(userId: string, p: PlayerProfile): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("player_profiles")
+      .upsert({ user_id: userId, data: p, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 export function computeAge(birthdate: string): number | null {

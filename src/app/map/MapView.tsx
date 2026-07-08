@@ -28,6 +28,9 @@ import {
 import {
   loadProfile,
   saveProfile,
+  loadProfileRemote,
+  saveProfileRemote,
+  currentUserId,
   eligibility,
   ELIG_COLOR,
   EMPTY_PROFILE,
@@ -283,8 +286,36 @@ export default function MapView() {
   const [tours, setTours] = useState<Tournament[]>(TOURNAMENTS); // DB > statischer Fallback
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
-  useEffect(() => setProfile(loadProfile()), []);
-  useEffect(() => saveProfile(profile), [profile]);
+  const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
+  const profileReady = useRef(false);
+  // Laden: eingeloggt → aus DB (geräteübergreifend), sonst lokal.
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const uid = await currentUserId();
+      if (cancel) return;
+      setProfileUser(uid);
+      if (uid) {
+        const remote = await loadProfileRemote(uid);
+        if (cancel) return;
+        setProfile(remote ?? loadProfile()); // kein DB-Eintrag → lokales Profil migrieren
+      } else {
+        setProfile(loadProfile());
+      }
+      profileReady.current = true;
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, []);
+  // Speichern: immer lokal (Cache); eingeloggt zusätzlich in DB (entprellt).
+  useEffect(() => {
+    if (!profileReady.current) return;
+    saveProfile(profile);
+    if (!profileUser) return;
+    const id = setTimeout(() => void saveProfileRemote(profileUser, profile), 800);
+    return () => clearTimeout(id);
+  }, [profile, profileUser]);
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
 
   // Plan aus localStorage laden / speichern
@@ -642,6 +673,7 @@ export default function MapView() {
             tours={tours}
             profile={profile}
             setProfile={setProfile}
+            profileSynced={!!profileUser}
             onlyEligible={onlyEligible}
             setOnlyEligible={setOnlyEligible}
             venues={venues}
@@ -770,6 +802,7 @@ export default function MapView() {
               tours={tours}
               profile={profile}
               setProfile={setProfile}
+              profileSynced={!!profileUser}
               onlyEligible={onlyEligible}
               setOnlyEligible={setOnlyEligible}
               venues={venues}
