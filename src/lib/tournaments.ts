@@ -26,6 +26,8 @@ export type Tournament = {
   indoor: boolean;
   start: string; // ISO
   end: string; // ISO
+  url?: string; // offizielle Seite (aus DB/Sync)
+  prize?: number; // Sieger-Preisgeld EUR (aus DB/Sync)
 };
 
 // Punkte je Runde [Sieger, Finale, HF, VF, AF] + Preisgeld (Sieger, EUR) + Farbe + Kürzel
@@ -126,12 +128,14 @@ export const TOURNAMENT_PRIZE: Record<string, number> = {
   cincinnati: 1034430, usopen: 4600000, tokyo: 383056, shanghai: 1034430, vienna: 511835,
   parisbercy: 946610,
 };
-export const prizeFor = (t: Tournament) => TOURNAMENT_PRIZE[t.id] ?? TIER_META[t.tier].prize;
-// offizielle Seite wenn bekannt, sonst nie-toter Such-Fallback → jedes Turnier hat IMMER einen Link
-export const urlFor = (t: Tournament): { url: string; official: boolean } =>
-  TOURNAMENT_URL[t.id]
-    ? { url: TOURNAMENT_URL[t.id], official: true }
+export const prizeFor = (t: Tournament) => t.prize ?? TOURNAMENT_PRIZE[t.id] ?? TIER_META[t.tier].prize;
+// offizielle Seite (DB > Map) wenn bekannt, sonst nie-toter Such-Fallback → jedes Turnier hat IMMER einen Link
+export const urlFor = (t: Tournament): { url: string; official: boolean } => {
+  const official = t.url ?? TOURNAMENT_URL[t.id];
+  return official
+    ? { url: official, official: true }
     : { url: `https://www.google.com/search?q=${encodeURIComponent(t.name + " tennis " + t.start.slice(0, 4))}`, official: false };
+};
 
 export const byDate = (a: Tournament, b: Tournament) => a.start.localeCompare(b.start);
 
@@ -207,15 +211,15 @@ export function bestStartBase(plan: Tournament[]): HomeBase {
 // Smart-Planer: kostengünstigste Saison im Budget zusammenstellen.
 // Greedy nach bestem Punkte-pro-Zusatzkosten-Verhältnis → bündelt automatisch geografisch
 // (nahe Turniere haben tiefe Zusatz-Reisekosten → hohes Verhältnis) und spart so Flüge.
-export function autoPlan(budgetLimit: number, start: HomeBase): string[] {
+export function autoPlan(list: Tournament[], budgetLimit: number, start: HomeBase): string[] {
   const chosen: Tournament[] = [];
-  const remaining = new Set(TOURNAMENTS.map((t) => t.id));
+  const remaining = new Set(list.map((t) => t.id));
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const base = computePlan([...chosen].sort(byDate), start).total;
     let best: { t: Tournament; ratio: number } | null = null;
     for (const id of remaining) {
-      const t = TOURNAMENTS.find((x) => x.id === id)!;
+      const t = list.find((x) => x.id === id)!;
       const trial = [...chosen, t].sort(byDate);
       const c = computePlan(trial, start);
       if (c.total > budgetLimit) continue;

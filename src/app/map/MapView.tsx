@@ -272,6 +272,7 @@ export default function MapView() {
   const [startBase, setStartBase] = useState<HomeBase>(HOME_BASES[0]);
   const [budget, setBudget] = useState(15000);
   const [selTid, setSelTid] = useState<string | null>(null);
+  const [tours, setTours] = useState<Tournament[]>(TOURNAMENTS); // DB > statischer Fallback
 
   // Plan aus localStorage laden / speichern
   useEffect(() => {
@@ -279,7 +280,7 @@ export default function MapView() {
       const raw = localStorage.getItem("mu-season");
       if (!raw) return;
       const s = JSON.parse(raw);
-      if (Array.isArray(s.planIds)) setPlanIds(s.planIds.filter((id: string) => TOURNAMENTS.some((t) => t.id === id)));
+      if (Array.isArray(s.planIds)) setPlanIds(s.planIds.filter((x: unknown) => typeof x === "string"));
       if (typeof s.budget === "number") setBudget(s.budget);
       if (s.startBase) {
         const b = HOME_BASES.find((h) => h.name === s.startBase);
@@ -305,12 +306,12 @@ export default function MapView() {
   // Smart-Planer: günstigste Saison automatisch füllen / beste Startbasis wählen
   const smartFill = useCallback(() => {
     setSelTid(null);
-    setPlanIds(autoPlan(budget, startBase));
-  }, [budget, startBase]);
+    setPlanIds(autoPlan(tours, budget, startBase));
+  }, [tours, budget, startBase]);
   const cheapestStart = useCallback(() => {
-    const plan = planIds.map((id) => TOURNAMENTS.find((t) => t.id === id)).filter(Boolean) as Tournament[];
+    const plan = planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean) as Tournament[];
     if (plan.length) setStartBase(bestStartBase(plan));
-  }, [planIds]);
+  }, [planIds, tours]);
 
   useEffect(() => {
     supabase
@@ -319,6 +320,35 @@ export default function MapView() {
       .order("name")
       .limit(3000) // sonst kappt PostgREST bei 1000 Zeilen → Anlagen fehlen
       .then(({ data }) => setVenues((data as Venue[]) ?? []));
+  }, []);
+
+  // Turnierkalender aus der DB (wird per Cron/Sync aus öffentlichen Quellen aktuell gehalten).
+  // Fällt auf die eingebaute Liste zurück, falls die DB (noch) leer ist.
+  useEffect(() => {
+    supabase
+      .from("tournaments")
+      .select("*")
+      .eq("status", "active")
+      .then(({ data }) => {
+        if (!data || !data.length) return;
+        setTours(
+          data.map((r) => ({
+            id: r.id as string,
+            name: r.name as string,
+            city: r.city as string,
+            country: r.country as string,
+            lat: r.lat as number,
+            lng: r.lng as number,
+            tier: r.tier as Tournament["tier"],
+            surface: r.surface as Tournament["surface"],
+            indoor: !!r.indoor,
+            start: r.start_date as string,
+            end: r.end_date as string,
+            url: (r.url as string) ?? undefined,
+            prize: (r.prize as number) ?? undefined,
+          })),
+        );
+      });
   }, []);
 
   const visible = useMemo(() => {
@@ -454,7 +484,7 @@ export default function MapView() {
     layer.clearLayers();
 
     const plan = planIds
-      .map((id) => TOURNAMENTS.find((t) => t.id === id))
+      .map((id) => tours.find((t) => t.id === id))
       .filter(Boolean)
       .sort(byDate as never) as Tournament[];
 
@@ -475,7 +505,7 @@ export default function MapView() {
 
     L.marker([startBase.lat, startBase.lng], { icon: startMarkerIcon(), keyboard: false, zIndexOffset: 400 }).addTo(layer);
 
-    for (const t of TOURNAMENTS) {
+    for (const t of tours) {
       const order = plan.findIndex((p) => p.id === t.id);
       L.marker([t.lat, t.lng], {
         icon: tourMarkerIcon(t, order >= 0 ? order + 1 : null, t.id === selTid),
@@ -488,20 +518,20 @@ export default function MapView() {
           map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.6 });
         });
     }
-  }, [ready, tab, planIds, startBase, selTid]);
+  }, [ready, tab, planIds, startBase, selTid, tours]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready || tab !== "season") return;
-    const plan = planIds.map((id) => TOURNAMENTS.find((t) => t.id === id)).filter(Boolean) as Tournament[];
+    const plan = planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean) as Tournament[];
     const pts: [number, number][] = [
       [startBase.lat, startBase.lng],
       ...plan.map((t) => [t.lat, t.lng] as [number, number]),
     ];
     if (pts.length > 1) map.flyToBounds(L.latLngBounds(pts).pad(0.25), { duration: 0.8 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planIds, startBase, tab, ready]);
+  }, [planIds, startBase, tab, ready, tours]);
 
   const sel = venues.find((v) => v.id === selectedId) ?? null;
 
@@ -592,6 +622,7 @@ export default function MapView() {
             onFocus={focusTour}
             onSmartFill={smartFill}
             onCheapestStart={cheapestStart}
+            tours={tours}
           />
         ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
@@ -714,6 +745,7 @@ export default function MapView() {
               onFocus={focusTour}
               onSmartFill={smartFill}
               onCheapestStart={cheapestStart}
+              tours={tours}
             />
           </div>
         )}

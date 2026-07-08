@@ -20,6 +20,7 @@ function isProtected(pathname: string): boolean {
     pathname === "/locked" ||
     pathname.startsWith("/api/unlock") ||
     pathname.startsWith("/api/qr/scan") || // QR-Scan-Zähler muss auch ohne Code erreichbar sein
+    pathname.startsWith("/api/sync") || // Cron/Sync-Endpoint muss ohne Gate erreichbar sein
     pathname.startsWith("/reset-password") // Passwort-Reset-Link aus der Mail muss offen sein
   )
     return false;

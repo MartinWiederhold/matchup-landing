@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  TOURNAMENTS,
   TIER_META,
   ROUND_LABELS,
   HOME_BASES,
@@ -35,6 +34,7 @@ export default function SeasonPlanner({
   onFocus,
   onSmartFill,
   onCheapestStart,
+  tours,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -47,26 +47,27 @@ export default function SeasonPlanner({
   onFocus: (t: Tournament) => void;
   onSmartFill: () => void;
   onCheapestStart: () => void;
+  tours: Tournament[];
 }) {
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
   const [surface, setSurface] = useState<(typeof SURFACES)[number]>("Alle");
 
   const plan = useMemo(
-    () => planIds.map((id) => TOURNAMENTS.find((t) => t.id === id)).filter(Boolean).sort(byDate as never) as Tournament[],
-    [planIds],
+    () => planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean).sort(byDate as never) as Tournament[],
+    [planIds, tours],
   );
   const cost = useMemo(() => computePlan(plan, start), [plan, start]);
   const inPlan = (id: string) => planIds.includes(id);
 
   const catalog = useMemo(() => {
-    return [...TOURNAMENTS].sort(byDate).filter((t) => {
+    return [...tours].sort(byDate).filter((t) => {
       if (group !== "Alle" && TIER_META[t.tier].group !== group) return false;
       if (surface !== "Alle" && t.surface !== surface) return false;
       return true;
     });
-  }, [group, surface]);
+  }, [group, surface, tours]);
 
-  const sel = selTid ? TOURNAMENTS.find((t) => t.id === selTid) ?? null : null;
+  const sel = selTid ? tours.find((t) => t.id === selTid) ?? null : null;
   if (sel) {
     return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} />;
   }
