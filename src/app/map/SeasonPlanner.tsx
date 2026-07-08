@@ -29,6 +29,7 @@ import {
   type PlayerDocs,
 } from "@/lib/player";
 import type { Venue } from "@/lib/venuesDb";
+import { hotelUrl, flightUrl, carUrl } from "@/lib/travelpayouts";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371;
@@ -388,15 +389,12 @@ function TournamentDetail({
   // Wetter: Klimawerte des Vorjahres-Zeitraums am Austragungsort (Open-Meteo, kein Key nötig).
   const wx = useWeather(t);
 
-  // Deep-Links (Buchung beim Anbieter; später Affiliate-ID → Provision)
-  const place = encodeURIComponent(`${t.city}, ${t.country}`);
-  const bookingUrl = `https://www.booking.com/searchresults.html?ss=${place}&checkin=${t.start}&checkout=${t.end}&group_adults=1&no_rooms=1`;
-  const carUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`Mietwagen ${t.city}`)}`;
-  const flightDest = encodeURIComponent(t.city);
-  const flightUrl = profile.homeAirport
-    ? `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flug ${profile.homeAirport} nach ${t.city} am ${t.start}`)}`
-    : `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flug nach ${t.city} am ${t.start}`)}`;
-  void flightDest;
+  // Buchungs-Deep-Links: Travelpayouts-Affiliate (Provision), sobald NEXT_PUBLIC_TP_MARKER gesetzt ist,
+  // sonst sauberer Fallback auf Booking/Google.
+  const stop = { city: t.city, country: t.country, start: t.start, end: t.end };
+  const bookingUrl = hotelUrl(stop);
+  const carLink = carUrl(stop);
+  const flightLink = flightUrl(stop, profile.homeAirport || undefined);
 
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
@@ -566,8 +564,8 @@ function TournamentDetail({
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Unterkunft &amp; Transfer</h3>
         <div className="grid grid-cols-3 gap-2">
           <BookLink href={bookingUrl} icon="🏨" label="Hotels" sub={`${nights(t)} Nächte`} />
-          <BookLink href={flightUrl} icon="✈️" label="Flüge" sub={profile.homeAirport || "ab Heimat"} />
-          <BookLink href={carUrl} icon="🚗" label="Mietwagen" sub={t.city} />
+          <BookLink href={flightLink} icon="✈️" label="Flüge" sub={profile.homeAirport || "ab Heimat"} />
+          <BookLink href={carLink} icon="🚗" label="Mietwagen" sub={t.city} />
         </div>
         <p className="mt-1.5 text-[11px] text-neutral-400">Vorausgefüllt mit Ort &amp; Turnierdaten. Öffnet den Anbieter in neuem Tab.</p>
       </div>
