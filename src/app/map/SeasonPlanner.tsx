@@ -14,6 +14,8 @@ import {
   computePlan,
   prizeFor,
   urlFor,
+  EXTRAS,
+  planSpanDays,
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
@@ -177,6 +179,7 @@ export default function SeasonPlanner({
           <Row label="Nenngelder" value={fmtEUR(cost.entry)} />
         </div>
         <div className="mt-3 flex gap-2 border-t border-neutral-100 pt-3">
+          <Stat label="Dauer" value={`${planSpanDays(plan)} T`} />
           <Stat label="Punkte bei Sieg" value={cost.points.toLocaleString("de-CH")} accent />
           <Stat label="Preisgeld bei Sieg" value={fmtEUR(cost.prize)} />
         </div>
@@ -481,6 +484,15 @@ function TournamentDetail({
             <span>Gesamt</span>
             <span>{fmtEUR(cost.total)}</span>
           </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Vor Ort</h3>
+        <div className="flex flex-wrap gap-1.5">
+          {EXTRAS[t.tier].map((x) => (
+            <span key={x} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600">✔ {x}</span>
+          ))}
         </div>
       </div>
     </div>

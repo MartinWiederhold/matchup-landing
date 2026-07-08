@@ -174,6 +174,28 @@ export const urlFor = (t: Tournament): { url: string; official: boolean } => {
     : { url: `https://www.google.com/search?q=${encodeURIComponent(t.name + " tennis " + t.start.slice(0, 4))}`, official: false };
 };
 
+// Service-Angebot vor Ort je Kategorie (Richtwerte; grössere Events bieten mehr)
+export const EXTRAS: Record<Tier, string[]> = {
+  GS: ["Besaitungsservice", "Physiotherapie", "Fitnessstudio", "Spielerrestaurant", "Players Lounge", "Shuttle", "Wäscheservice", "Offizielles Spielerhotel", "Trainingsplätze", "Hawkeye", "Live-Streaming"],
+  ATP1000: ["Besaitungsservice", "Physiotherapie", "Fitnessstudio", "Spielerrestaurant", "Players Lounge", "Shuttle", "Wäscheservice", "Offizielles Spielerhotel", "Trainingsplätze", "Hawkeye", "Live-Streaming"],
+  ATP500: ["Besaitungsservice", "Physiotherapie", "Fitnessstudio", "Spielerrestaurant", "Players Lounge", "Shuttle", "Trainingsplätze", "Hawkeye", "Live-Streaming"],
+  ATP250: ["Besaitungsservice", "Physiotherapie", "Fitnessstudio", "Players Lounge", "Trainingsplätze", "Live-Streaming"],
+  CH125: ["Besaitungsservice", "Physiotherapie", "Trainingsplätze", "Live-Streaming"],
+  CH100: ["Besaitungsservice", "Physiotherapie", "Trainingsplätze"],
+  CH75: ["Besaitungsservice", "Trainingsplätze"],
+  CH50: ["Besaitungsservice", "Trainingsplätze"],
+  ITF25: ["Besaitungsservice", "Trainingsplätze"],
+  ITF15: ["Trainingsplätze"],
+};
+
+// Gesamtdauer der Saison (erster Turnierstart bis letztes Turnierende, in Tagen)
+export function planSpanDays(plan: Tournament[]): number {
+  if (!plan.length) return 0;
+  const starts = plan.map((t) => Date.parse(t.start));
+  const ends = plan.map((t) => Date.parse(t.end));
+  return Math.round((Math.max(...ends) - Math.min(...starts)) / 86400000) + 1;
+}
+
 export const byDate = (a: Tournament, b: Tournament) => a.start.localeCompare(b.start);
 
 const MS_DAY = 86400000;
