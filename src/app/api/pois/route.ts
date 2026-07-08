@@ -46,14 +46,13 @@ export async function GET(req: Request) {
   ];
 
   try {
+    // Ohne AbortController-Signal, damit Next die Antwort im Data-Cache (7 Tage) behält
+    // → gleicher Ort wird danach sofort geliefert. Overpass begrenzt die Rechenzeit selbst ([timeout:12]).
     let data: { elements?: El[] } | null = null;
     for (const base of MIRRORS) {
-      const ctrl = new AbortController();
-      const to = setTimeout(() => ctrl.abort(), 10000); // Mirror, der hängt, schnell überspringen
       try {
         const r = await fetch(`${base}?data=${encodeURIComponent(q)}`, {
           headers: { ...UA, Accept: "application/json" },
-          signal: ctrl.signal,
           next: { revalidate: 604800 }, // 7 Tage
         });
         if (r.ok) {
@@ -62,8 +61,6 @@ export async function GET(req: Request) {
         }
       } catch {
         // nächster Mirror
-      } finally {
-        clearTimeout(to);
       }
     }
     if (!data) return NextResponse.json({ categories: null });
