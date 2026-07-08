@@ -29,7 +29,7 @@ import {
   type PlayerDocs,
 } from "@/lib/player";
 import type { Venue } from "@/lib/venuesDb";
-import { hotelUrl, flightUrl, carUrl } from "@/lib/travelpayouts";
+import { hotelUrl, flightUrl, carUrl, hotelPriceQuery, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 6371;
@@ -395,6 +395,10 @@ function TournamentDetail({
   const bookingUrl = hotelUrl(stop);
   const carLink = carUrl(stop);
   const flightLink = flightUrl(stop, profile.homeAirport || undefined);
+  // Echte Preise (nur wenn TRAVELPAYOUTS_TOKEN server-seitig gesetzt ist)
+  const live = useLivePrices(stop, profile.homeAirport || undefined);
+  const hotelSub = live.hotel.price != null ? `ab ${fmtEUR(live.hotel.price)}` : `${nights(t)} Nächte`;
+  const flightSub = live.flight.price != null ? `ab ${fmtEUR(live.flight.price)}` : profile.homeAirport || "ab Heimat";
 
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
@@ -563,11 +567,15 @@ function TournamentDetail({
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Unterkunft &amp; Transfer</h3>
         <div className="grid grid-cols-3 gap-2">
-          <BookLink href={bookingUrl} icon="🏨" label="Hotels" sub={`${nights(t)} Nächte`} />
-          <BookLink href={flightLink} icon="✈️" label="Flüge" sub={profile.homeAirport || "ab Heimat"} />
+          <BookLink href={bookingUrl} icon="🏨" label="Hotels" sub={hotelSub} live={live.hotel.price != null} />
+          <BookLink href={flightLink} icon="✈️" label="Flüge" sub={flightSub} live={live.flight.price != null} />
           <BookLink href={carLink} icon="🚗" label="Mietwagen" sub={t.city} />
         </div>
-        <p className="mt-1.5 text-[11px] text-neutral-400">Vorausgefüllt mit Ort &amp; Turnierdaten. Öffnet den Anbieter in neuem Tab.</p>
+        <p className="mt-1.5 text-[11px] text-neutral-400">
+          {live.hotel.price != null || live.flight.price != null
+            ? "Echte Preise (ab), tagesaktuell. Öffnet den Anbieter in neuem Tab."
+            : "Vorausgefüllt mit Ort & Turnierdaten. Öffnet den Anbieter in neuem Tab."}
+        </p>
       </div>
 
       <div>
@@ -840,17 +848,38 @@ function useWeather(t: Tournament): Wx {
   return wx;
 }
 
-function BookLink({ href, icon, label, sub }: { href: string; icon: string; label: string; sub: string }) {
+type LiveBundle = { hotel: LivePrice; flight: LivePrice };
+function useLivePrices(stop: { city: string; country: string; start: string; end: string }, homeAirport?: string): LiveBundle {
+  const [live, setLive] = useState<LiveBundle>({ hotel: { configured: false, price: null }, flight: { configured: false, price: null } });
+  const key = `${stop.city}|${stop.start}|${homeAirport ?? ""}`;
+  useEffect(() => {
+    let cancel = false;
+    setLive({ hotel: { configured: false, price: null }, flight: { configured: false, price: null } });
+    Promise.all([hotelPriceQuery(stop), flightPriceQuery(stop, homeAirport)]).then(([hotel, flight]) => {
+      if (!cancel) setLive({ hotel, flight });
+    });
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return live;
+}
+
+function BookLink({ href, icon, label, sub, live = false }: { href: string; icon: string; label: string; sub: string; live?: boolean }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="flex flex-col items-center gap-1 rounded-2xl border border-neutral-200 bg-white px-2 py-3 text-center transition hover:border-matchup/40 hover:shadow-sm"
+      className={`relative flex flex-col items-center gap-1 rounded-2xl border bg-white px-2 py-3 text-center transition hover:shadow-sm ${
+        live ? "border-matchup/40" : "border-neutral-200 hover:border-matchup/40"
+      }`}
     >
+      {live && (
+        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" title="Live-Preis" />
+      )}
       <span className="text-xl">{icon}</span>
       <span className="text-xs font-bold text-neutral-700">{label}</span>
-      <span className="w-full truncate text-[10px] text-neutral-400">{sub}</span>
+      <span className={`w-full truncate text-[10px] ${live ? "font-bold text-matchup" : "text-neutral-400"}`}>{sub}</span>
     </a>
   );
 }

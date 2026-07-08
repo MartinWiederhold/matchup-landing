@@ -38,6 +38,29 @@ export function flightUrl(t: Stop, homeAirport?: string): string {
   return `https://www.aviasales.com/search?${q}`;
 }
 
+// --- Echte Preise über die server-seitige /api/prices-Route (Token bleibt geheim) ---
+export type LivePrice = { configured: boolean; price: number | null };
+
+async function getPrice(params: Record<string, string>): Promise<LivePrice> {
+  try {
+    const r = await fetch(`/api/prices?${new URLSearchParams(params)}`);
+    if (!r.ok) return { configured: false, price: null };
+    const d = (await r.json()) as { configured?: boolean; price?: number | null };
+    return { configured: !!d.configured, price: typeof d.price === "number" ? d.price : null };
+  } catch {
+    return { configured: false, price: null };
+  }
+}
+
+export function hotelPriceQuery(t: Stop): Promise<LivePrice> {
+  return getPrice({ type: "hotel", city: t.city, country: t.country, checkIn: t.start, checkOut: t.end });
+}
+
+export function flightPriceQuery(t: Stop, homeAirport?: string): Promise<LivePrice> {
+  if (!homeAirport) return Promise.resolve({ configured: true, price: null });
+  return getPrice({ type: "flight", origin: homeAirport, city: t.city, date: t.start });
+}
+
 /** Mietwagen am Turnierort. */
 export function carUrl(t: Stop): string {
   if (!tpActive) {
