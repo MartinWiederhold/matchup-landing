@@ -609,9 +609,9 @@ function TournamentDetail({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-neutral-500">{label}</span>
-      <span className="font-semibold text-neutral-700">{value}</span>
+    <div className="flex items-center justify-between gap-1.5">
+      <span className="min-w-0 text-neutral-500">{label}</span>
+      <span className="shrink-0 whitespace-nowrap font-semibold text-neutral-700">{value}</span>
     </div>
   );
 }
@@ -639,13 +639,49 @@ function Line({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-type StatusTone = "green" | "amber" | "red" | "neutral";
-const TONE: Record<StatusTone, { from: string; to: string; text: string; dot: string }> = {
-  green: { from: "#34d399", to: "#059669", text: "#059669", dot: "#10b981" },
-  amber: { from: "#fbbf24", to: "#d97706", text: "#b45309", dot: "#f59e0b" },
-  red: { from: "#fb7185", to: "#e11d48", text: "#e11d48", dot: "#f43f5e" },
-  neutral: { from: "#cbd5e1", to: "#94a3b8", text: "#64748b", dot: "#cbd5e1" },
-};
+function StatusRing({ id, label, value, pct, done }: { id: number; label: string; value: string; pct: number; done: boolean }) {
+  const R = 26;
+  const C = 2 * Math.PI * R;
+  const p = Math.min(100, Math.max(0, pct));
+  const off = C * (1 - p / 100);
+  const gid = `mu-ring-${id}`;
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative h-16 w-16">
+        <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#4b3bf3" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r={R} fill="none" stroke="#eceaff" strokeWidth="5" />
+          <circle
+            cx="32" cy="32" r={R} fill="none" stroke={`url(#${gid})`} strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={off} className="transition-all duration-700"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          {done ? (
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-full shadow-sm"
+              style={{ background: "linear-gradient(135deg, #4b3bf3, #8b5cf6)" }}
+            >
+              {/* Matchup-Mark (weiss) sobald dieser Punkt vollständig ist */}
+              <img src="/icon-192.png" alt="" className="h-4 w-4" style={{ filter: "brightness(0) invert(1)" }} />
+            </span>
+          ) : (
+            <span className="text-sm font-extrabold text-matchup">{Math.round(p)}%</span>
+          )}
+        </div>
+      </div>
+      <div className="text-center leading-tight">
+        <div className="text-[11px] font-bold text-neutral-700">{label}</div>
+        <div className="text-[10px] text-neutral-400">{value}</div>
+      </div>
+    </div>
+  );
+}
 
 function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tournament[]; profile: PlayerProfile; hasRank: boolean; over: boolean; spentPct: number }) {
   const reds = hasRank ? plan.map((t) => eligibility(profile, t).status).filter((s) => s === "red").length : 0;
@@ -653,65 +689,38 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
   const reqCount = plan.length ? requiredDocs(plan[0]).length : 4;
   const docsOk = miss.length === 0;
 
-  const rows: { label: string; value: string; tone: StatusTone; pct: number }[] = [
+  const rows: { label: string; value: string; pct: number; done: boolean }[] = [
     {
       label: "Teilnahme",
-      tone: !hasRank ? "neutral" : reds === 0 ? "green" : "amber",
-      value: !hasRank ? "Ranking fehlt" : reds === 0 ? "Alle möglich" : `${reds} nicht möglich`,
-      pct: !hasRank ? 8 : plan.length ? Math.round(((plan.length - reds) / plan.length) * 100) : 100,
+      value: !hasRank ? "Ranking fehlt" : reds === 0 ? "Alle möglich" : `${reds} offen`,
+      pct: !hasRank ? 6 : plan.length ? Math.round(((plan.length - reds) / plan.length) * 100) : 100,
+      done: hasRank && reds === 0,
     },
     {
       label: "Unterlagen",
-      tone: docsOk ? "green" : "red",
-      value: docsOk ? "Vollständig" : `${miss.length} von ${reqCount} fehlen`,
+      value: docsOk ? "Vollständig" : `${miss.length}/${reqCount} fehlen`,
       pct: Math.round(((reqCount - miss.length) / reqCount) * 100),
+      done: docsOk,
     },
     {
       label: "Budget",
-      tone: over ? "red" : spentPct > 85 ? "amber" : "green",
       value: over ? "Über Budget" : "Ausreichend",
-      pct: Math.min(100, Math.max(6, spentPct)),
+      pct: over ? 42 : 100,
+      done: !over,
     },
   ];
-  const ready = rows.filter((r) => r.tone === "green").length;
-  const worst: StatusTone = rows.some((r) => r.tone === "red") ? "red" : rows.some((r) => r.tone === "amber") ? "amber" : rows.some((r) => r.tone === "neutral") ? "neutral" : "green";
-  const head = TONE[worst];
+  const ready = rows.filter((r) => r.done).length;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-neutral-200/70 bg-white shadow-[0_4px_24px_-8px_rgba(15,23,42,0.12)]">
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Saison-Status</div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-2xl font-extrabold tracking-tight text-neutral-900">{ready}</span>
-            <span className="text-sm font-semibold text-neutral-400">/ 3 bereit</span>
-          </div>
-        </div>
-        <span
-          className="flex h-11 w-11 items-center justify-center rounded-2xl text-lg text-white shadow-sm"
-          style={{ background: `linear-gradient(135deg, ${head.from}, ${head.to})` }}
-        >
-          {worst === "green" ? "✓" : worst === "red" ? "!" : worst === "neutral" ? "?" : "◔"}
-        </span>
+    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">Saison-Status</span>
+        <span className="rounded-full bg-matchup/10 px-2 py-0.5 text-[11px] font-bold text-matchup">{ready} / 3 bereit</span>
       </div>
-      <div className="space-y-px bg-neutral-100">
-        {rows.map((r) => {
-          const c = TONE[r.tone];
-          return (
-            <div key={r.label} className="flex items-center gap-3 bg-white px-4 py-3">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.dot, boxShadow: `0 0 0 3px ${c.dot}22` }} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-neutral-700">{r.label}</span>
-                  <span className="text-[13px] font-bold" style={{ color: c.text }}>{r.value}</span>
-                </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${r.pct}%`, background: `linear-gradient(90deg, ${c.from}, ${c.to})` }} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-3 gap-1">
+        {rows.map((r, i) => (
+          <StatusRing key={r.label} id={i} label={r.label} value={r.value} pct={r.pct} done={r.done} />
+        ))}
       </div>
     </div>
   );

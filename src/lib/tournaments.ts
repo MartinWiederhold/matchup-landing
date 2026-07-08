@@ -214,7 +214,8 @@ export function fmtRange(t: Tournament): string {
   return `${fmtDate(t.start)}–${fmtDate(t.end)}`;
 }
 export function fmtEUR(n: number): string {
-  return n.toLocaleString("de-CH", { maximumFractionDigits: 0 }) + " €";
+  // geschütztes Leerzeichen vor € → Betrag bricht nie auf zwei Zeilen um
+  return n.toLocaleString("de-CH", { maximumFractionDigits: 0 }) + " €";
 }
 
 function haversine(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
