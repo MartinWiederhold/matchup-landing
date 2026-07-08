@@ -30,7 +30,6 @@ import {
   saveProfile,
   loadProfileRemote,
   saveProfileRemote,
-  currentUserId,
   eligibility,
   ELIG_COLOR,
   EMPTY_PROFILE,
@@ -287,27 +286,37 @@ export default function MapView() {
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
+  const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const profileReady = useRef(false);
-  // Laden: eingeloggt → aus DB (geräteübergreifend), sonst lokal.
-  useEffect(() => {
-    let cancel = false;
-    (async () => {
-      const uid = await currentUserId();
-      if (cancel) return;
-      setProfileUser(uid);
-      if (uid) {
-        const remote = await loadProfileRemote(uid);
-        if (cancel) return;
-        setProfile(remote ?? loadProfile()); // kein DB-Eintrag → lokales Profil migrieren
+
+  // Auf angemeldeten Nutzer anwenden: DB-Profil laden, sonst lokales Profil in die DB migrieren.
+  const applyUser = useCallback(async (uid: string | null, email: string | null) => {
+    setProfileUser(uid);
+    setProfileEmail(email);
+    if (uid) {
+      const remote = await loadProfileRemote(uid);
+      if (remote) {
+        setProfile(remote);
       } else {
-        setProfile(loadProfile());
+        const local = loadProfile(); // erstes Sichern: lokales Profil übernehmen
+        setProfile(local);
+        await saveProfileRemote(uid, local);
       }
-      profileReady.current = true;
-    })();
-    return () => {
-      cancel = true;
-    };
+    } else {
+      setProfile(loadProfile());
+    }
+    profileReady.current = true;
   }, []);
+
+  // Session beim Start + auf Änderungen (An-/Abmeldung) — dieselbe Supabase-Auth wie die App.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user;
+      void applyUser(u?.id ?? null, u?.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [applyUser]);
+
   // Speichern: immer lokal (Cache); eingeloggt zusätzlich in DB (entprellt).
   useEffect(() => {
     if (!profileReady.current) return;
@@ -316,6 +325,21 @@ export default function MapView() {
     const id = setTimeout(() => void saveProfileRemote(profileUser, profile), 800);
     return () => clearTimeout(id);
   }, [profile, profileUser]);
+
+  // Anmelde-Aktionen (gleiche Anmeldung wie in der App)
+  const authSignIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  }, []);
+  const authSignUp = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { error: error.message, needsConfirm: false };
+    return { error: null, needsConfirm: !data.session }; // ohne Session → E-Mail-Bestätigung nötig
+  }, []);
+  const authSignOut = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
+
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
 
   // Plan aus localStorage laden / speichern
@@ -674,6 +698,10 @@ export default function MapView() {
             profile={profile}
             setProfile={setProfile}
             profileSynced={!!profileUser}
+            profileEmail={profileEmail}
+            onSignIn={authSignIn}
+            onSignUp={authSignUp}
+            onSignOut={authSignOut}
             onlyEligible={onlyEligible}
             setOnlyEligible={setOnlyEligible}
             venues={venues}
@@ -803,6 +831,10 @@ export default function MapView() {
               profile={profile}
               setProfile={setProfile}
               profileSynced={!!profileUser}
+              profileEmail={profileEmail}
+              onSignIn={authSignIn}
+              onSignUp={authSignUp}
+              onSignOut={authSignOut}
               onlyEligible={onlyEligible}
               setOnlyEligible={setOnlyEligible}
               venues={venues}

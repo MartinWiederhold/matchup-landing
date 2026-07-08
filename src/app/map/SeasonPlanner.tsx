@@ -62,6 +62,10 @@ export default function SeasonPlanner({
   setOnlyEligible,
   venues,
   profileSynced,
+  profileEmail,
+  onSignIn,
+  onSignUp,
+  onSignOut,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -81,6 +85,10 @@ export default function SeasonPlanner({
   setOnlyEligible: (v: boolean) => void;
   venues: Venue[];
   profileSynced: boolean;
+  profileEmail: string | null;
+  onSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSignUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirm: boolean }>;
+  onSignOut: () => Promise<void>;
 }) {
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
@@ -118,7 +126,15 @@ export default function SeasonPlanner({
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-4">
       {/* Spielerprofil (treibt die Eligibility-Ampel) */}
-      <ProfileCard profile={profile} setProfile={setProfile} synced={profileSynced} />
+      <ProfileCard
+        profile={profile}
+        setProfile={setProfile}
+        synced={profileSynced}
+        email={profileEmail}
+        onSignIn={onSignIn}
+        onSignUp={onSignUp}
+        onSignOut={onSignOut}
+      />
 
       {/* Status-Übersicht der geplanten Saison */}
       {plan.length > 0 && (
@@ -732,20 +748,149 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
   );
 }
 
-function ProfileCard({ profile, setProfile, synced }: { profile: PlayerProfile; setProfile: (p: PlayerProfile) => void; synced: boolean }) {
+function readAvatar(file: File, cb: (dataUrl: string) => void) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const min = Math.min(img.width, img.height); // quadratischer Center-Crop
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, size, size);
+      cb(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.src = reader.result as string;
+  };
+  reader.readAsDataURL(file);
+}
+
+function AuthBlock({
+  synced,
+  email,
+  onSignIn,
+  onSignUp,
+  onSignOut,
+}: {
+  synced: boolean;
+  email: string | null;
+  onSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSignUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirm: boolean }>;
+  onSignOut: () => Promise<void>;
+}) {
+  const [mode, setMode] = useState<"in" | "up">("up");
+  const [em, setEm] = useState("");
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  if (synced) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-2.5">
+        <span className="min-w-0 text-[12px] text-emerald-700">
+          ☁ Gesichert als <b className="break-all">{email ?? "deinem Konto"}</b>
+        </span>
+        <button type="button" onClick={() => void onSignOut()} className="shrink-0 text-[11px] font-bold text-emerald-700 hover:underline">
+          Abmelden
+        </button>
+      </div>
+    );
+  }
+
+  const submit = async () => {
+    if (!em || pw.length < 6) {
+      setMsg({ ok: false, text: "E-Mail und Passwort (mind. 6 Zeichen) eingeben." });
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    const res = mode === "up" ? await onSignUp(em, pw) : await onSignIn(em, pw);
+    setBusy(false);
+    if (res.error) {
+      setMsg({ ok: false, text: res.error });
+      return;
+    }
+    if (mode === "up" && "needsConfirm" in res && res.needsConfirm) {
+      setMsg({ ok: true, text: "Fast fertig – bestätige den Link in deiner E-Mail, dann ist dein Profil gesichert." });
+      setPw("");
+    }
+    // Erfolg mit Session: onAuthStateChange schaltet automatisch auf „gesichert".
+  };
+
+  return (
+    <div className="rounded-xl bg-indigo-50 p-3">
+      <div className="mb-0.5 flex items-center gap-1.5 text-[12px] font-bold text-indigo-700">🔒 Profil mit Passwort sichern</div>
+      <p className="mb-2 text-[11px] text-indigo-700/80">Dieselbe Anmeldung wie in der Matchup-App – danach ist dein Profil (inkl. Bild) auf allen Geräten verfügbar.</p>
+      <div className="space-y-1.5">
+        <input type="email" value={em} onChange={(e) => setEm(e.target.value)} placeholder="E-Mail" autoComplete="email" className="mu-in" />
+        <input
+          type="password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          placeholder="Passwort"
+          autoComplete={mode === "up" ? "new-password" : "current-password"}
+          onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
+          className="mu-in"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={() => void submit()}
+        disabled={busy}
+        className="mt-2 w-full rounded-full bg-matchup px-3 py-2 text-xs font-bold text-white transition hover:bg-matchup-hover disabled:opacity-50"
+      >
+        {busy ? "…" : mode === "up" ? "Registrieren & sichern" : "Anmelden"}
+      </button>
+      <button
+        type="button"
+        onClick={() => { setMode(mode === "up" ? "in" : "up"); setMsg(null); }}
+        className="mt-1.5 block w-full text-center text-[11px] font-semibold text-indigo-700 hover:underline"
+      >
+        {mode === "up" ? "Ich habe schon ein Konto → Anmelden" : "Neu hier? → Konto erstellen"}
+      </button>
+      {msg && <p className={`mt-1.5 text-[11px] ${msg.ok ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>}
+    </div>
+  );
+}
+
+function ProfileCard({
+  profile,
+  setProfile,
+  synced,
+  email,
+  onSignIn,
+  onSignUp,
+  onSignOut,
+}: {
+  profile: PlayerProfile;
+  setProfile: (p: PlayerProfile) => void;
+  synced: boolean;
+  email: string | null;
+  onSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSignUp: (email: string, password: string) => Promise<{ error: string | null; needsConfirm: boolean }>;
+  onSignOut: () => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const set = <K extends keyof PlayerProfile>(k: K, v: PlayerProfile[K]) => setProfile({ ...profile, [k]: v });
   const setDoc = (k: keyof PlayerDocs, v: boolean) => setProfile({ ...profile, docs: { ...profile.docs, [k]: v } });
   const num = (v: string) => (v === "" ? null : Math.max(1, Math.round(Number(v)) || 0));
   const rankSummary = profile.atp ? `ATP ${profile.atp}` : profile.wta ? `WTA ${profile.wta}` : profile.itf ? `ITF ${profile.itf}` : "kein Ranking";
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Spielerprofil";
+  const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "");
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-left">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup">
-          {(profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "") || "👤"}
-        </span>
+        {profile.avatar ? (
+          <img src={profile.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-neutral-200" />
+        ) : (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup">
+            {initials || "👤"}
+          </span>
+        )}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-sm font-bold">{name}</span>
@@ -753,7 +898,7 @@ function ProfileCard({ profile, setProfile, synced }: { profile: PlayerProfile; 
               className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
                 synced ? "bg-emerald-50 text-emerald-600" : "bg-neutral-100 text-neutral-400"
               }`}
-              title={synced ? "Mit deinem Matchup-Konto synchronisiert – auf allen Geräten verfügbar" : "Lokal auf diesem Gerät gespeichert – in der App anmelden für geräteübergreifenden Sync"}
+              title={synced ? "Mit deinem Matchup-Konto synchronisiert – auf allen Geräten verfügbar" : "Lokal auf diesem Gerät gespeichert – mit Passwort sichern für geräteübergreifenden Sync"}
             >
               {synced ? "☁ Konto" : "Lokal"}
             </span>
@@ -765,14 +910,39 @@ function ProfileCard({ profile, setProfile, synced }: { profile: PlayerProfile; 
 
       {open && (
         <div className="space-y-3 border-t border-neutral-100 p-3">
-          <div className={`flex items-start gap-2 rounded-xl px-2.5 py-2 text-[11px] ${synced ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-indigo-700"}`}>
-            <span>{synced ? "☁" : "ℹ"}</span>
-            <span>
-              {synced
-                ? "Dein Profil ist mit deinem Matchup-Konto verknüpft und auf allen Geräten verfügbar."
-                : "Dein Profil wird lokal gespeichert. Melde dich in der Matchup-App an – dann ist es automatisch auf allen Geräten verfügbar (dieselbe Anmeldung)."}
-            </span>
+          <AuthBlock synced={synced} email={email} onSignIn={onSignIn} onSignUp={onSignUp} onSignOut={onSignOut} />
+
+          {/* Profilbild */}
+          <div className="flex items-center gap-3">
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-neutral-200" />
+            ) : (
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-base font-extrabold text-matchup">
+                {initials || "👤"}
+              </span>
+            )}
+            <div className="flex flex-1 flex-wrap gap-1.5">
+              <label className="cursor-pointer rounded-full bg-matchup px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-matchup-hover">
+                {profile.avatar ? "Bild ändern" : "Profilbild hochladen"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) readAvatar(f, (url) => set("avatar", url));
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              {profile.avatar && (
+                <button type="button" onClick={() => set("avatar", "")} className="rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold text-neutral-500 hover:bg-neutral-200">
+                  Entfernen
+                </button>
+              )}
+            </div>
           </div>
+
           <div className="grid grid-cols-2 gap-2">
             <Field label="Vorname"><input value={profile.firstName} onChange={(e) => set("firstName", e.target.value)} className="mu-in" /></Field>
             <Field label="Nachname"><input value={profile.lastName} onChange={(e) => set("lastName", e.target.value)} className="mu-in" /></Field>

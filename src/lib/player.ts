@@ -22,6 +22,7 @@ export type PlayerProfile = {
   homeCity: string;
   birthdate: string; // ISO yyyy-mm-dd
   gender: Gender;
+  avatar: string; // Profilbild als komprimierter Data-URL (leer = keins)
   atp: number | null;
   wta: number | null;
   itf: number | null;
@@ -39,6 +40,7 @@ export const EMPTY_PROFILE: PlayerProfile = {
   homeCity: "",
   birthdate: "",
   gender: "m",
+  avatar: "",
   atp: null,
   wta: null,
   itf: null,
