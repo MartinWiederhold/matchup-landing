@@ -87,6 +87,50 @@ export const TOURNAMENTS: Tournament[] = [
   { id: "parisbercy", name: "Rolex Paris Masters", city: "Paris", country: "Frankreich", lat: 48.8566, lng: 2.3522, tier: "ATP1000", surface: "Hartplatz", indoor: true, start: "2026-11-02", end: "2026-11-08" },
 ];
 
+// Offizielle Turnier-Website (öffentliche Quelle) + verifiziertes Sieger-Preisgeld (EUR).
+// Wird aus öffentlichen Quellen (ATP/ITF/offizielle Seiten) gepflegt.
+export const TOURNAMENT_URL: Record<string, string> = {
+  ao: "https://ausopen.com",
+  marseille: "https://www.open13.fr",
+  cherbourg: "https://www.challengerdecherbourg.fr",
+  dubai: "https://dubaidutyfreetennischampionships.com",
+  indianwells: "https://bnpparibasopen.com",
+  miami: "https://www.miamiopen.com",
+  montecarlo: "https://montecarlotennismasters.com",
+  barcelona: "https://www.barcelonaopenbancsabadell.com",
+  madrid: "https://www.mutuamadridopen.com",
+  rome: "https://www.internazionalibnlditalia.com",
+  rolandgarros: "https://www.rolandgarros.com",
+  stuttgart: "https://www.mercedescup.de",
+  halle: "https://www.terrawortmann-open.de",
+  queens: "https://www.lta.org.uk/fan-zone/international/hsbc-championships/",
+  wimbledon: "https://www.wimbledon.com",
+  braunschweig: "https://brawo-open.de",
+  hamburg: "https://hamburgopenatp500.com",
+  porto: "https://eupagoportoopen.org",
+  toronto: "https://nationalbankopen.com",
+  cincinnati: "https://cincinnatiopen.com",
+  usopen: "https://www.usopen.org",
+  tokyo: "https://www.japanopentennis.com",
+  shanghai: "https://www.shanghairolexmasters.com",
+  vienna: "https://www.erstebankopen.com",
+  parisbercy: "https://www.rolexparismasters.com",
+};
+// Sieger-Preisgeld (Einzel, ca. EUR) – öffentliche Turnier-/ATP-Angaben, letzte Edition (2025)
+export const TOURNAMENT_PRIZE: Record<string, number> = {
+  ao: 2100000, marseille: 112660, cherbourg: 12980, dubai: 557088, indianwells: 1105035,
+  miami: 1034430, montecarlo: 946610, barcelona: 500000, madrid: 1000000, rome: 950000,
+  rolandgarros: 2400000, stuttgart: 130000, halle: 420000, queens: 471755, wimbledon: 3510000,
+  braunschweig: 25740, hamburg: 403665, porto: 20630, toronto: 1034430, cincinnati: 1034430,
+  usopen: 3300000, tokyo: 400000, shanghai: 1000000, vienna: 430000, parisbercy: 950000,
+};
+export const prizeFor = (t: Tournament) => TOURNAMENT_PRIZE[t.id] ?? TIER_META[t.tier].prize;
+// offizielle Seite wenn bekannt, sonst nie-toter Such-Fallback → jedes Turnier hat IMMER einen Link
+export const urlFor = (t: Tournament): { url: string; official: boolean } =>
+  TOURNAMENT_URL[t.id]
+    ? { url: TOURNAMENT_URL[t.id], official: true }
+    : { url: `https://www.google.com/search?q=${encodeURIComponent(t.name + " tennis " + t.start.slice(0, 4))}`, official: false };
+
 export const byDate = (a: Tournament, b: Tournament) => a.start.localeCompare(b.start);
 
 const MS_DAY = 86400000;
@@ -194,7 +238,7 @@ export function computePlan(plan: Tournament[], start: HomeBase): PlanCost {
     const fee = ENTRY_FEE[t.tier];
     const meta = TIER_META[t.tier];
     travel += lg.cost; hotels += hotel; transfers += TRANSFER; entry += fee;
-    points += meta.points[0]; prize += meta.prize;
+    points += meta.points[0]; prize += prizeFor(t);
     prev = t;
     return { t, nights: n, hotel, transfer: TRANSFER, entry: fee, total: lg.cost + hotel + TRANSFER + fee, leg: lg };
   });

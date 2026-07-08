@@ -13,6 +13,8 @@ import {
   fmtDate,
   fmtEUR,
   computePlan,
+  prizeFor,
+  urlFor,
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
@@ -309,6 +311,7 @@ function TournamentDetail({
 }) {
   const meta = TIER_META[t.tier];
   const cost = computePlan([t], start).perTour[0];
+  const url = urlFor(t);
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline">
@@ -325,29 +328,39 @@ function TournamentDetail({
         </p>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`flex flex-1 items-center justify-center rounded-full px-3 py-3 text-sm font-bold ${
-            inPlan ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-matchup text-white hover:bg-matchup-hover"
-          }`}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            className={`flex flex-1 items-center justify-center rounded-full px-3 py-3 text-sm font-bold ${
+              inPlan ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-matchup text-white hover:bg-matchup-hover"
+            }`}
+          >
+            {inPlan ? "✓ In der Saison" : "+ Zur Saison hinzufügen"}
+          </button>
+          <button
+            type="button"
+            onClick={onFocus}
+            className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 px-3 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+          >
+            Auf Karte zeigen
+          </button>
+        </div>
+        <a
+          href={url.url}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center rounded-full border border-neutral-300 px-3 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
         >
-          {inPlan ? "✓ In der Saison" : "+ Zur Saison hinzufügen"}
-        </button>
-        <button
-          type="button"
-          onClick={onFocus}
-          className="flex flex-1 items-center justify-center rounded-full border border-neutral-300 px-3 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-        >
-          Auf Karte zeigen
-        </button>
+          {url.official ? "Offizielle Turnierseite ↗" : "Turnier-Infos suchen ↗"}
+        </a>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <Fact label="Termin" value={fmtRange(t)} />
         <Fact label="Meldeschluss" value={fmtDate(entryDeadline(t))} />
-        <Fact label="Preisgeld (Sieger)" value={fmtEUR(meta.prize)} />
+        <Fact label="Preisgeld (Sieger)" value={fmtEUR(prizeFor(t))} />
         <Fact label="Aufenthalt" value={`${nights(t)} Nächte`} />
       </div>
 
