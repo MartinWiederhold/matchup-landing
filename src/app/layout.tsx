@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -73,6 +74,8 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${dmSans.variable} h-full bg-black antialiased`}>
       <body className="min-h-full flex flex-col bg-black text-black">
+        {/* Travelpayouts Drive – Affiliate-Monetarisierung (Marker 547946) */}
+        <Script id="tp-drive" src="https://tpembars.com/NTQ3OTQ2.js?t=547946" strategy="beforeInteractive" data-cfasync="false" />
         <LocaleProvider initialLocale={locale}>
           {children}
           <ServiceWorkerRegister />
