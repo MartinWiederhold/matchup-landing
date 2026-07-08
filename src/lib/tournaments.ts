@@ -166,6 +166,18 @@ export const TOURNAMENT_PRIZE: Record<string, number> = {
   parisbercy: 946610,
 };
 export const prizeFor = (t: Tournament) => t.prize ?? TOURNAMENT_PRIZE[t.id] ?? TIER_META[t.tier].prize;
+// Turnier-Logo = Favicon der offiziellen Turnier-Domain (jede Seite hat ihr eigenes Icon).
+// Kein Key/Lizenzthema. Fällt auf null, wenn keine offizielle URL bekannt ist.
+export function tournamentLogo(t: Tournament): string | null {
+  const u = t.url ?? TOURNAMENT_URL[t.id];
+  if (!u) return null;
+  try {
+    return `https://www.google.com/s2/favicons?domain=${new URL(u).hostname}&sz=64`;
+  } catch {
+    return null;
+  }
+}
+
 // offizielle Seite (DB > Map) wenn bekannt, sonst nie-toter Such-Fallback → jedes Turnier hat IMMER einen Link
 export const urlFor = (t: Tournament): { url: string; official: boolean } => {
   const official = t.url ?? TOURNAMENT_URL[t.id];

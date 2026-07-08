@@ -14,6 +14,7 @@ import {
   computePlan,
   prizeFor,
   urlFor,
+  tournamentLogo,
   EXTRAS,
   planSpanDays,
   type Tournament,
@@ -337,6 +338,11 @@ export default function SeasonPlanner({
                   className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
                 >
                   <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: el ? ELIG_COLOR[el.status] : meta.color }} />
+                  {tournamentLogo(t) ? (
+                    <img src={tournamentLogo(t)!} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain ring-1 ring-neutral-200" />
+                  ) : (
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{t.name}</span>
                     <span className="block text-[11px] text-neutral-400">
@@ -423,15 +429,20 @@ function TournamentDetail({
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline">
         ← Saison
       </button>
-      <div>
-        <span className="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: meta.color }}>
-          {meta.label}
-        </span>
-        <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight">{t.name}</h2>
-        <p className="text-sm text-neutral-500">
-          {t.city}, {t.country} · {SURFACE_LABEL[t.surface]}
-          {t.indoor ? " (Indoor)" : " (Outdoor)"}
-        </p>
+      <div className="flex items-start gap-3">
+        {tournamentLogo(t) && (
+          <img src={tournamentLogo(t)!} alt="" className="mt-0.5 h-12 w-12 shrink-0 rounded-xl object-contain ring-1 ring-neutral-200" />
+        )}
+        <div className="min-w-0">
+          <span className="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: meta.color }}>
+            {meta.label}
+          </span>
+          <h2 className="mt-1.5 text-xl font-bold leading-tight tracking-tight">{t.name}</h2>
+          <p className="text-sm text-neutral-500">
+            {t.city}, {t.country} · {SURFACE_LABEL[t.surface]}
+            {t.indoor ? " (Indoor)" : " (Outdoor)"}
+          </p>
+        </div>
       </div>
 
       {/* Eligibility-Ampel */}

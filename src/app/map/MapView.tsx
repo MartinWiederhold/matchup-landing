@@ -22,6 +22,7 @@ import {
   byDate,
   autoPlan,
   bestStartBase,
+  tournamentLogo,
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
@@ -218,23 +219,30 @@ function startMarkerIcon(): L.DivIcon {
   });
 }
 
-// Turnier-Marker: nummeriert wenn im Plan, sonst Stern; eingefärbt nach Kategorie
+// Turnier-Marker: nummeriert wenn im Plan; sonst das echte Turnier-Logo (Favicon), sonst Stern.
 function tourMarkerIcon(t: Tournament, order: number | null, active: boolean, color?: string): L.DivIcon {
   const c = color ?? TIER_META[t.tier].color;
-  const size = order != null ? 32 : 24;
-  const inner =
-    order != null
-      ? `<span style="color:#fff;font-weight:800;font-size:13px;">${order}</span>`
-      : `<span style="color:#fff;font-size:12px;line-height:1;">★</span>`;
   const ring = active
     ? "box-shadow:0 0 0 4px rgba(75,59,243,.32),0 6px 14px rgba(0,0,0,.3);transform:scale(1.12);"
     : "box-shadow:0 3px 10px rgba(0,0,0,.28);";
-  return L.divIcon({
-    className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;transition:transform .15s;">${inner}</div>`,
-  });
+  const logo = order == null ? tournamentLogo(t) : null;
+
+  if (order != null) {
+    const size = 32;
+    return L.divIcon({
+      className: "",
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+      html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;transition:transform .15s;"><span style="color:#fff;font-weight:800;font-size:13px;">${order}</span></div>`,
+    });
+  }
+
+  const size = 26;
+  // Logo auf weissem Grund mit Kategorie-Farbring; Fallback = Stern auf farbigem Grund
+  const inner = logo
+    ? `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:#fff;border:2.5px solid ${c};${ring}display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${logo}" width="16" height="16" style="border-radius:3px;display:block" alt="" /></div>`
+    : `<div style="width:24px;height:24px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:12px;line-height:1;">★</span></div>`;
+  return L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: inner });
 }
 
 function PinIcon({ className = "" }: { className?: string }) {
