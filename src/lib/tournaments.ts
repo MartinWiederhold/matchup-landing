@@ -97,11 +97,12 @@ export const TOURNAMENT_URL: Record<string, string> = {
   indianwells: "https://bnpparibasopen.com",
   miami: "https://www.miamiopen.com",
   montecarlo: "https://montecarlotennismasters.com",
+  vic: "https://www.itftennis.com/en/tournament/m25-vic/esp/2026/m-itf-esp-2026-015/",
   barcelona: "https://www.barcelonaopenbancsabadell.com",
-  madrid: "https://www.mutuamadridopen.com",
-  rome: "https://www.internazionalibnlditalia.com",
+  madrid: "https://mutuamadridopen.com",
+  rome: "https://internazionalibnlditalia.com",
   rolandgarros: "https://www.rolandgarros.com",
-  stuttgart: "https://www.mercedescup.de",
+  stuttgart: "https://bossopen.com",
   halle: "https://www.terrawortmann-open.de",
   queens: "https://www.lta.org.uk/fan-zone/international/hsbc-championships/",
   wimbledon: "https://www.wimbledon.com",
@@ -112,17 +113,18 @@ export const TOURNAMENT_URL: Record<string, string> = {
   cincinnati: "https://cincinnatiopen.com",
   usopen: "https://www.usopen.org",
   tokyo: "https://www.japanopentennis.com",
-  shanghai: "https://www.shanghairolexmasters.com",
-  vienna: "https://www.erstebankopen.com",
+  shanghai: "https://en.rolexshanghaimasters.com/en",
+  vienna: "https://www.erstebank-open.com",
   parisbercy: "https://www.rolexparismasters.com",
 };
 // Sieger-Preisgeld (Einzel, ca. EUR) – öffentliche Turnier-/ATP-Angaben, letzte Edition (2025)
 export const TOURNAMENT_PRIZE: Record<string, number> = {
   ao: 2100000, marseille: 112660, cherbourg: 12980, dubai: 557088, indianwells: 1105035,
-  miami: 1034430, montecarlo: 946610, barcelona: 500000, madrid: 1000000, rome: 950000,
-  rolandgarros: 2400000, stuttgart: 130000, halle: 420000, queens: 471755, wimbledon: 3510000,
-  braunschweig: 25740, hamburg: 403665, porto: 20630, toronto: 1034430, cincinnati: 1034430,
-  usopen: 3300000, tokyo: 400000, shanghai: 1000000, vienna: 430000, parisbercy: 950000,
+  miami: 1034430, montecarlo: 946610, vic: 4243, barcelona: 546400, madrid: 985030,
+  rome: 985030, rolandgarros: 2550000, stuttgart: 114335, halle: 471755, queens: 471755,
+  wimbledon: 3510000, braunschweig: 25740, hamburg: 403665, porto: 20630, toronto: 1034430,
+  cincinnati: 1034430, usopen: 4600000, tokyo: 383056, shanghai: 1034430, vienna: 511835,
+  parisbercy: 946610,
 };
 export const prizeFor = (t: Tournament) => TOURNAMENT_PRIZE[t.id] ?? TIER_META[t.tier].prize;
 // offizielle Seite wenn bekannt, sonst nie-toter Such-Fallback → jedes Turnier hat IMMER einen Link
