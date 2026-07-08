@@ -147,6 +147,43 @@ export type PlanCost = {
   points: number;
   prize: number;
 };
+// Smart-Planer: beste Startbasis (minimale Reisekosten) für einen gegebenen Plan
+export function bestStartBase(plan: Tournament[]): HomeBase {
+  let best = HOME_BASES[0];
+  let bestCost = Infinity;
+  for (const b of HOME_BASES) {
+    const c = computePlan(plan, b).travel;
+    if (c < bestCost) { bestCost = c; best = b; }
+  }
+  return best;
+}
+
+// Smart-Planer: kostengünstigste Saison im Budget zusammenstellen.
+// Greedy nach bestem Punkte-pro-Zusatzkosten-Verhältnis → bündelt automatisch geografisch
+// (nahe Turniere haben tiefe Zusatz-Reisekosten → hohes Verhältnis) und spart so Flüge.
+export function autoPlan(budgetLimit: number, start: HomeBase): string[] {
+  const chosen: Tournament[] = [];
+  const remaining = new Set(TOURNAMENTS.map((t) => t.id));
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const base = computePlan([...chosen].sort(byDate), start).total;
+    let best: { t: Tournament; ratio: number } | null = null;
+    for (const id of remaining) {
+      const t = TOURNAMENTS.find((x) => x.id === id)!;
+      const trial = [...chosen, t].sort(byDate);
+      const c = computePlan(trial, start);
+      if (c.total > budgetLimit) continue;
+      const marginalCost = Math.max(1, c.total - base);
+      const ratio = TIER_META[t.tier].points[0] / marginalCost;
+      if (!best || ratio > best.ratio) best = { t, ratio };
+    }
+    if (!best) break;
+    chosen.push(best.t);
+    remaining.delete(best.t.id);
+  }
+  return chosen.sort(byDate).map((t) => t.id);
+}
+
 export function computePlan(plan: Tournament[], start: HomeBase): PlanCost {
   let travel = 0, hotels = 0, transfers = 0, entry = 0, points = 0, prize = 0;
   let prev: { name?: string; city?: string; lat: number; lng: number } = start;

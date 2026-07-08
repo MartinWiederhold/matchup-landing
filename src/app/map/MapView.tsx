@@ -20,6 +20,8 @@ import {
   TIER_META,
   HOME_BASES,
   byDate,
+  autoPlan,
+  bestStartBase,
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
@@ -300,6 +302,15 @@ export default function MapView() {
     if (!map) return;
     map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.7 });
   }, []);
+  // Smart-Planer: günstigste Saison automatisch füllen / beste Startbasis wählen
+  const smartFill = useCallback(() => {
+    setSelTid(null);
+    setPlanIds(autoPlan(budget, startBase));
+  }, [budget, startBase]);
+  const cheapestStart = useCallback(() => {
+    const plan = planIds.map((id) => TOURNAMENTS.find((t) => t.id === id)).filter(Boolean) as Tournament[];
+    if (plan.length) setStartBase(bestStartBase(plan));
+  }, [planIds]);
 
   useEffect(() => {
     supabase
@@ -579,6 +590,8 @@ export default function MapView() {
             selTid={selTid}
             setSelTid={setSelTid}
             onFocus={focusTour}
+            onSmartFill={smartFill}
+            onCheapestStart={cheapestStart}
           />
         ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
@@ -699,6 +712,8 @@ export default function MapView() {
               selTid={selTid}
               setSelTid={setSelTid}
               onFocus={focusTour}
+              onSmartFill={smartFill}
+              onCheapestStart={cheapestStart}
             />
           </div>
         )}

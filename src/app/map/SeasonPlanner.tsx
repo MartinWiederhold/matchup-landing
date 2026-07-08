@@ -31,6 +31,8 @@ export default function SeasonPlanner({
   selTid,
   setSelTid,
   onFocus,
+  onSmartFill,
+  onCheapestStart,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -41,6 +43,8 @@ export default function SeasonPlanner({
   selTid: string | null;
   setSelTid: (id: string | null) => void;
   onFocus: (t: Tournament) => void;
+  onSmartFill: () => void;
+  onCheapestStart: () => void;
 }) {
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
   const [surface, setSurface] = useState<(typeof SURFACES)[number]>("Alle");
@@ -68,9 +72,49 @@ export default function SeasonPlanner({
   const spentPct = budget > 0 ? Math.min(100, Math.round((cost.total / budget) * 100)) : 0;
   const remaining = budget - cost.total;
   const over = remaining < 0;
+  const flights = cost.perTour.filter((p) => p.leg.mode === "Flug").length;
+  const priciest = cost.perTour.reduce<(typeof cost.perTour)[number] | null>(
+    (m, p) => (!m || p.leg.cost > m.leg.cost ? p : m),
+    null,
+  );
 
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      {/* Smart-Planer */}
+      <div className="rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
+        <div className="flex items-center gap-1.5 text-sm font-bold">
+          <span>⚡</span> Smart-Planer
+        </div>
+        <p className="mt-0.5 text-xs text-white/80">
+          Füllt automatisch die günstigste Saison für dein Budget – maximale Punkte pro Euro, minimale Flüge.
+        </p>
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onSmartFill}
+            className="flex-1 rounded-full bg-white px-3 py-2 text-xs font-bold text-matchup shadow-sm transition hover:bg-white/90"
+          >
+            Günstigste Saison füllen
+          </button>
+          <button
+            type="button"
+            onClick={onCheapestStart}
+            disabled={plan.length === 0}
+            className="flex-1 rounded-full bg-white/15 px-3 py-2 text-xs font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25 disabled:opacity-40"
+          >
+            Beste Startbasis
+          </button>
+        </div>
+        {plan.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-white/80">
+            <span>{plan.length} Turniere</span>
+            <span>· {flights} {flights === 1 ? "Flug" : "Flüge"}</span>
+            <span>· {cost.points.toLocaleString("de-CH")} Punkte</span>
+            {priciest && <span>· teuerste Etappe: {priciest.leg.from}→{priciest.leg.to} ({fmtEUR(priciest.leg.cost)})</span>}
+          </div>
+        )}
+      </div>
+
       {/* Budget */}
       <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
