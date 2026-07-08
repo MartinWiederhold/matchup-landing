@@ -404,6 +404,8 @@ function TournamentDetail({
 
   // Wetter: Klimawerte des Vorjahres-Zeitraums am Austragungsort (Open-Meteo, kein Key nötig).
   const wx = useWeather(t);
+  // POIs rund ums Turnier (OpenStreetMap/Overpass, kein Key)
+  const pois = useNearbyPOIs(t);
 
   // Buchungs-Deep-Links: Travelpayouts-Affiliate (Provision), sobald NEXT_PUBLIC_TP_MARKER gesetzt ist,
   // sonst sauberer Fallback auf Booking/Google.
@@ -601,6 +603,12 @@ function TournamentDetail({
             <span key={x} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600">✔ {x}</span>
           ))}
         </div>
+      </div>
+
+      {/* Rund ums Turnier (OSM) */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Rund ums Turnier</h3>
+        <POINearby pois={pois} />
       </div>
 
       {nearby.length > 0 && (
@@ -1032,6 +1040,66 @@ function useLivePrices(stop: { city: string; country: string; start: string; end
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   return live;
+}
+
+type Poi = { name: string; lat: number; lng: number; dist: number };
+type PoiCats = Record<"food" | "physio" | "fitness" | "pharmacy" | "supermarket", Poi[]>;
+function useNearbyPOIs(t: Tournament): PoiCats | "loading" | "err" {
+  const [state, setState] = useState<PoiCats | "loading" | "err">("loading");
+  useEffect(() => {
+    let cancel = false;
+    setState("loading");
+    fetch(`/api/pois?lat=${t.lat}&lng=${t.lng}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancel) setState(d?.categories ?? "err"); })
+      .catch(() => { if (!cancel) setState("err"); });
+    return () => { cancel = true; };
+  }, [t.id, t.lat, t.lng]);
+  return state;
+}
+
+const POI_META: { key: keyof PoiCats; icon: string; label: string }[] = [
+  { key: "food", icon: "🍽️", label: "Restaurants & Cafés" },
+  { key: "physio", icon: "🧑‍⚕️", label: "Physio" },
+  { key: "fitness", icon: "🏋️", label: "Fitness & Sportcenter" },
+  { key: "supermarket", icon: "🛒", label: "Supermarkt" },
+  { key: "pharmacy", icon: "💊", label: "Apotheke" },
+];
+function fmtDist(m: number): string {
+  return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`;
+}
+function POINearby({ pois }: { pois: PoiCats | "loading" | "err" }) {
+  if (pois === "loading") return <div className="rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-400">Umgebung wird geladen …</div>;
+  if (pois === "err") return <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-xs text-neutral-400">Umgebungsdaten aktuell nicht verfügbar.</div>;
+  const groups = POI_META.filter((m) => pois[m.key]?.length);
+  if (!groups.length) return <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-xs text-neutral-400">Keine Einträge im Umkreis gefunden.</div>;
+  return (
+    <div className="space-y-3">
+      {groups.map((m) => (
+        <div key={m.key}>
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-neutral-500">
+            <span>{m.icon}</span> {m.label}
+          </div>
+          <div className="space-y-1">
+            {pois[m.key].slice(0, 4).map((p, i) => (
+              <a
+                key={i}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.name} ${p.lat},${p.lng}`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 hover:border-matchup/40"
+              >
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-neutral-700">{p.name}</span>
+                <span className="shrink-0 text-[11px] font-semibold text-neutral-400">{fmtDist(p.dist)}</span>
+                <span className="shrink-0 text-[11px] text-matchup">↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+      <p className="text-[11px] text-neutral-400">Umkreis ~3 km · Quelle: OpenStreetMap</p>
+    </div>
+  );
 }
 
 function BookLink({ href, icon, label, sub, live = false }: { href: string; icon: string; label: string; sub: string; live?: boolean }) {
