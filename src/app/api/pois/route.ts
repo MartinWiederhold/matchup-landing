@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 /**
  * POIs rund um einen Turnierort aus OpenStreetMap (Overpass API, öffentlich, kein Key).
@@ -38,26 +38,32 @@ export async function GET(req: Request) {
   const lng = parseFloat(u.searchParams.get("lng") ?? "");
   if (!isFinite(lat) || !isFinite(lng)) return NextResponse.json({ categories: null });
 
-  const q = `[out:json][timeout:25];(nwr(around:${RADIUS},${lat},${lng})[amenity~"^(restaurant|cafe)$"];nwr(around:${RADIUS},${lat},${lng})[healthcare=physiotherapist];nwr(around:${RADIUS},${lat},${lng})[leisure~"^(fitness_centre|sports_centre)$"];nwr(around:${RADIUS},${lat},${lng})[amenity=pharmacy];nwr(around:${RADIUS},${lat},${lng})[shop=supermarket];);out center tags 150;`;
+  const q = `[out:json][timeout:12];(nwr(around:${RADIUS},${lat},${lng})[amenity~"^(restaurant|cafe)$"];nwr(around:${RADIUS},${lat},${lng})[healthcare=physiotherapist];nwr(around:${RADIUS},${lat},${lng})[leisure~"^(fitness_centre|sports_centre)$"];nwr(around:${RADIUS},${lat},${lng})[amenity=pharmacy];nwr(around:${RADIUS},${lat},${lng})[shop=supermarket];);out center tags 150;`;
   const MIRRORS = [
-    "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
   ];
 
   try {
     let data: { elements?: El[] } | null = null;
     for (const base of MIRRORS) {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 13000); // Mirror, der hängt, schnell überspringen
       try {
         const r = await fetch(`${base}?data=${encodeURIComponent(q)}`, {
           headers: { ...UA, Accept: "application/json" },
+          signal: ctrl.signal,
           next: { revalidate: 604800 }, // 7 Tage
         });
-        if (!r.ok) continue;
-        data = (await r.json()) as { elements?: El[] };
-        break;
+        if (r.ok) {
+          data = (await r.json()) as { elements?: El[] };
+          break;
+        }
       } catch {
         // nächster Mirror
+      } finally {
+        clearTimeout(to);
       }
     }
     if (!data) return NextResponse.json({ categories: null });
