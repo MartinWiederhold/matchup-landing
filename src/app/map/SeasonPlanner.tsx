@@ -17,6 +17,15 @@ import {
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
+import {
+  eligibility,
+  ELIG_COLOR,
+  missingDocs,
+  requiredDocs,
+  DOC_LABELS,
+  type PlayerProfile,
+  type PlayerDocs,
+} from "@/lib/player";
 
 const GROUPS = ["Alle", "Grand Slam", "ATP", "Challenger", "ITF"] as const;
 const SURFACES = ["Alle", "Sand", "Hartplatz", "Rasen"] as const;
@@ -35,6 +44,10 @@ export default function SeasonPlanner({
   onSmartFill,
   onCheapestStart,
   tours,
+  profile,
+  setProfile,
+  onlyEligible,
+  setOnlyEligible,
 }: {
   planIds: string[];
   onTogglePlan: (id: string) => void;
@@ -48,7 +61,12 @@ export default function SeasonPlanner({
   onSmartFill: () => void;
   onCheapestStart: () => void;
   tours: Tournament[];
+  profile: PlayerProfile;
+  setProfile: (p: PlayerProfile) => void;
+  onlyEligible: boolean;
+  setOnlyEligible: (v: boolean) => void;
 }) {
+  const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
   const [surface, setSurface] = useState<(typeof SURFACES)[number]>("Alle");
 
@@ -69,7 +87,7 @@ export default function SeasonPlanner({
 
   const sel = selTid ? tours.find((t) => t.id === selTid) ?? null : null;
   if (sel) {
-    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} />;
+    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} profile={profile} />;
   }
 
   const spentPct = budget > 0 ? Math.min(100, Math.round((cost.total / budget) * 100)) : 0;
@@ -83,6 +101,14 @@ export default function SeasonPlanner({
 
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      {/* Spielerprofil (treibt die Eligibility-Ampel) */}
+      <ProfileCard profile={profile} setProfile={setProfile} />
+
+      {/* Status-Übersicht der geplanten Saison */}
+      {plan.length > 0 && (
+        <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} />
+      )}
+
       {/* Smart-Planer */}
       <div className="rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
         <div className="flex items-center gap-1.5 text-sm font-bold">
@@ -235,7 +261,20 @@ export default function SeasonPlanner({
 
       {/* Turnierkatalog */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Turniere</h3>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Turniere</h3>
+          {hasRank && (
+            <button
+              type="button"
+              onClick={() => setOnlyEligible(!onlyEligible)}
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                onlyEligible ? "bg-emerald-600 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              }`}
+            >
+              {onlyEligible ? "✓ Nur für mich mögliche" : "Nur für mich mögliche"}
+            </button>
+          )}
+        </div>
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           {GROUPS.map((g) => (
             <Chip key={g} active={group === g} onClick={() => setGroup(g)}>{g}</Chip>
@@ -252,6 +291,8 @@ export default function SeasonPlanner({
           {catalog.map((t) => {
             const meta = TIER_META[t.tier];
             const added = inPlan(t.id);
+            const el = hasRank ? eligibility(profile, t) : null;
+            if (onlyEligible && el && el.status === "red" && !added) return null;
             return (
               <div
                 key={t.id}
@@ -262,7 +303,7 @@ export default function SeasonPlanner({
                   onClick={() => { setSelTid(t.id); onFocus(t); }}
                   className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
                 >
-                  <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: meta.color }} />
+                  <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: el ? ELIG_COLOR[el.status] : meta.color }} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{t.name}</span>
                     <span className="block text-[11px] text-neutral-400">
@@ -302,6 +343,7 @@ function TournamentDetail({
   onFocus,
   onBack,
   start,
+  profile,
 }: {
   t: Tournament;
   inPlan: boolean;
@@ -309,10 +351,15 @@ function TournamentDetail({
   onFocus: () => void;
   onBack: () => void;
   start: HomeBase;
+  profile: PlayerProfile;
 }) {
   const meta = TIER_META[t.tier];
   const cost = computePlan([t], start).perTour[0];
   const url = urlFor(t);
+  const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
+  const elig = hasRank ? eligibility(profile, t) : null;
+  const req = requiredDocs(t);
+  const missing = missingDocs(profile, t);
   return (
     <div className="flex-1 space-y-5 overflow-y-auto p-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline">
@@ -328,6 +375,28 @@ function TournamentDetail({
           {t.indoor ? " (Indoor)" : " (Outdoor)"}
         </p>
       </div>
+
+      {/* Eligibility-Ampel */}
+      {elig ? (
+        <div className="rounded-2xl p-3" style={{ background: ELIG_COLOR[elig.status] + "1a" }}>
+          <div className="flex items-center gap-2 text-sm font-extrabold" style={{ color: ELIG_COLOR[elig.status] }}>
+            <span>{elig.status === "green" ? "🟢" : elig.status === "yellow" ? "🟡" : "🔴"}</span>
+            {elig.label}
+          </div>
+          <ul className="mt-2 space-y-1">
+            {elig.reasons.map((r, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-xs text-neutral-600">
+                <span className={r.ok ? "text-emerald-600" : "text-red-500"}>{r.ok ? "✔" : "✕"}</span>
+                {r.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-neutral-50 p-3 text-xs text-neutral-500">
+          Trage im Profil dein Ranking und Geburtsdatum ein, um zu sehen, ob du hier teilnehmen kannst.
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex gap-2">
@@ -375,6 +444,30 @@ function TournamentDetail({
             </div>
           ))}
         </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Benötigte Dokumente</h3>
+        <div className="flex flex-wrap gap-1.5">
+          {req.map((k) => {
+            const ok = !missing.includes(k);
+            return (
+              <span
+                key={k}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                  ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                }`}
+              >
+                {ok ? "✔" : "⚠"} {DOC_LABELS[k]}
+              </span>
+            );
+          })}
+        </div>
+        {missing.length > 0 && (
+          <p className="mt-2 text-xs text-red-600">
+            ⚠ Fehlt: {missing.map((k) => DOC_LABELS[k]).join(", ")} — im Profil abhaken.
+          </p>
+        )}
       </div>
 
       <div>
@@ -426,6 +519,113 @@ function Line({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+function StatusOverview({ plan, profile, hasRank, over }: { plan: Tournament[]; profile: PlayerProfile; hasRank: boolean; over: boolean }) {
+  const reds = hasRank ? plan.map((t) => eligibility(profile, t).status).filter((s) => s === "red").length : 0;
+  const partOk = hasRank && reds === 0;
+  const miss = plan.length ? missingDocs(profile, plan[0]) : [];
+  const docsOk = miss.length === 0;
+  const rows: { label: string; ok: boolean; value: string; unknown?: boolean }[] = [
+    { label: "Teilnahme", ok: partOk, unknown: !hasRank, value: !hasRank ? "Ranking fehlt" : reds === 0 ? "Möglich" : `${reds} nicht möglich` },
+    { label: "Unterlagen", ok: docsOk, value: docsOk ? "Vollständig" : `${miss.length} fehlen` },
+    { label: "Budget", ok: !over, value: over ? "Über Budget" : "Ausreichend" },
+  ];
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
+      <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-neutral-400">Status</div>
+      <div className="space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center justify-between text-sm">
+            <span className="text-neutral-600">{r.label}</span>
+            <span className={`flex items-center gap-1.5 font-semibold ${r.unknown ? "text-neutral-400" : r.ok ? "text-emerald-600" : "text-red-600"}`}>
+              <span>{r.unknown ? "⚪" : r.ok ? "🟢" : "🔴"}</span>
+              {r.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProfileCard({ profile, setProfile }: { profile: PlayerProfile; setProfile: (p: PlayerProfile) => void }) {
+  const [open, setOpen] = useState(false);
+  const set = <K extends keyof PlayerProfile>(k: K, v: PlayerProfile[K]) => setProfile({ ...profile, [k]: v });
+  const setDoc = (k: keyof PlayerDocs, v: boolean) => setProfile({ ...profile, docs: { ...profile.docs, [k]: v } });
+  const num = (v: string) => (v === "" ? null : Math.max(1, Math.round(Number(v)) || 0));
+  const rankSummary = profile.atp ? `ATP ${profile.atp}` : profile.wta ? `WTA ${profile.wta}` : profile.itf ? `ITF ${profile.itf}` : "kein Ranking";
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Spielerprofil";
+
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-left">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup">
+          {(profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "") || "👤"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-bold">{name}</span>
+          <span className="block text-xs text-neutral-400">{rankSummary}{profile.nationality ? ` · ${profile.nationality}` : ""}</span>
+        </span>
+        <span className="text-xs font-semibold text-matchup">{open ? "Schliessen" : "Bearbeiten"}</span>
+      </button>
+
+      {open && (
+        <div className="space-y-3 border-t border-neutral-100 p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Vorname"><input value={profile.firstName} onChange={(e) => set("firstName", e.target.value)} className="mu-in" /></Field>
+            <Field label="Nachname"><input value={profile.lastName} onChange={(e) => set("lastName", e.target.value)} className="mu-in" /></Field>
+            <Field label="Nationalität"><input value={profile.nationality} onChange={(e) => set("nationality", e.target.value)} placeholder="z.B. Deutschland" className="mu-in" /></Field>
+            <Field label="Geburtsdatum"><input type="date" value={profile.birthdate} onChange={(e) => set("birthdate", e.target.value)} className="mu-in" /></Field>
+          </div>
+          <div>
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-neutral-400">Geschlecht</div>
+            <div className="flex gap-1.5">
+              <Chip active={profile.gender === "m"} onClick={() => set("gender", "m")}>Herren</Chip>
+              <Chip active={profile.gender === "w"} onClick={() => set("gender", "w")}>Damen</Chip>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            <Field label="ATP"><input inputMode="numeric" value={profile.atp ?? ""} onChange={(e) => set("atp", num(e.target.value))} className="mu-in" /></Field>
+            <Field label="WTA"><input inputMode="numeric" value={profile.wta ?? ""} onChange={(e) => set("wta", num(e.target.value))} className="mu-in" /></Field>
+            <Field label="ITF"><input inputMode="numeric" value={profile.itf ?? ""} onChange={(e) => set("itf", num(e.target.value))} className="mu-in" /></Field>
+            <Field label="UTR"><input inputMode="numeric" value={profile.utr ?? ""} onChange={(e) => set("utr", num(e.target.value))} className="mu-in" /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Heimatflughafen"><input value={profile.homeAirport} onChange={(e) => set("homeAirport", e.target.value)} placeholder="z.B. FRA" className="mu-in" /></Field>
+            <Field label="Wohnort"><input value={profile.homeCity} onChange={(e) => set("homeCity", e.target.value)} className="mu-in" /></Field>
+          </div>
+          <div>
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-neutral-400">Dokumente (vorhanden abhaken)</div>
+            <div className="flex flex-wrap gap-1.5">
+              {(Object.keys(DOC_LABELS) as (keyof PlayerDocs)[]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setDoc(k, !profile.docs[k])}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                    profile.docs[k] ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-neutral-100 text-neutral-500"
+                  }`}
+                >
+                  {profile.docs[k] ? "✔ " : ""}{DOC_LABELS[k]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <style>{`.mu-in{width:100%;border:1px solid #e5e7eb;border-radius:0.6rem;padding:0.4rem 0.6rem;font-size:0.85rem;outline:none}.mu-in:focus{border-color:#4b3bf3}`}</style>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-neutral-400">{label}</span>
+      {children}
+    </label>
+  );
+}
+
 function Chip({ children, active, onClick, subtle = false }: { children: ReactNode; active: boolean; onClick: () => void; subtle?: boolean }) {
   return (
     <button

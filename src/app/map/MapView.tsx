@@ -25,6 +25,14 @@ import {
   type Tournament,
   type HomeBase,
 } from "@/lib/tournaments";
+import {
+  loadProfile,
+  saveProfile,
+  eligibility,
+  ELIG_COLOR,
+  EMPTY_PROFILE,
+  type PlayerProfile,
+} from "@/lib/player";
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
@@ -209,8 +217,8 @@ function startMarkerIcon(): L.DivIcon {
 }
 
 // Turnier-Marker: nummeriert wenn im Plan, sonst Stern; eingefärbt nach Kategorie
-function tourMarkerIcon(t: Tournament, order: number | null, active: boolean): L.DivIcon {
-  const c = TIER_META[t.tier].color;
+function tourMarkerIcon(t: Tournament, order: number | null, active: boolean, color?: string): L.DivIcon {
+  const c = color ?? TIER_META[t.tier].color;
   const size = order != null ? 32 : 24;
   const inner =
     order != null
@@ -273,6 +281,11 @@ export default function MapView() {
   const [budget, setBudget] = useState(15000);
   const [selTid, setSelTid] = useState<string | null>(null);
   const [tours, setTours] = useState<Tournament[]>(TOURNAMENTS); // DB > statischer Fallback
+  const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
+  const [onlyEligible, setOnlyEligible] = useState(false);
+  useEffect(() => setProfile(loadProfile()), []);
+  useEffect(() => saveProfile(profile), [profile]);
+  const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
 
   // Plan aus localStorage laden / speichern
   useEffect(() => {
@@ -507,10 +520,14 @@ export default function MapView() {
 
     for (const t of tours) {
       const order = plan.findIndex((p) => p.id === t.id);
+      const inP = order >= 0;
+      const status = hasRank ? eligibility(profile, t).status : null;
+      if (onlyEligible && hasRank && !inP && status === "red") continue;
+      const color = status ? ELIG_COLOR[status] : undefined;
       L.marker([t.lat, t.lng], {
-        icon: tourMarkerIcon(t, order >= 0 ? order + 1 : null, t.id === selTid),
+        icon: tourMarkerIcon(t, inP ? order + 1 : null, t.id === selTid, color),
         keyboard: false,
-        zIndexOffset: t.id === selTid ? 600 : order >= 0 ? 300 : 0,
+        zIndexOffset: t.id === selTid ? 600 : inP ? 300 : 0,
       })
         .addTo(layer)
         .on("click", () => {
@@ -518,7 +535,7 @@ export default function MapView() {
           map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.6 });
         });
     }
-  }, [ready, tab, planIds, startBase, selTid, tours]);
+  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -623,6 +640,10 @@ export default function MapView() {
             onSmartFill={smartFill}
             onCheapestStart={cheapestStart}
             tours={tours}
+            profile={profile}
+            setProfile={setProfile}
+            onlyEligible={onlyEligible}
+            setOnlyEligible={setOnlyEligible}
           />
         ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
@@ -746,6 +767,10 @@ export default function MapView() {
               onSmartFill={smartFill}
               onCheapestStart={cheapestStart}
               tours={tours}
+              profile={profile}
+              setProfile={setProfile}
+              onlyEligible={onlyEligible}
+              setOnlyEligible={setOnlyEligible}
             />
           </div>
         )}
