@@ -416,6 +416,47 @@ export function bestStartBase(plan: Tournament[]): HomeBase {
 // Smart-Planer: kostengünstigste Saison im Budget zusammenstellen.
 // Greedy nach bestem Punkte-pro-Zusatzkosten-Verhältnis → bündelt automatisch geografisch
 // (nahe Turniere haben tiefe Zusatz-Reisekosten → hohes Verhältnis) und spart so Flüge.
+/**
+ * Ranking-Projektion (Richtwert). Erwartete Punkte pro Turnier bei Match-Siegquote p:
+ * points[] = Punkte je erreichter Runde (Index 0 = Titel … 4 = Achtelfinale). Wer jedes
+ * Match mit W'keit p gewinnt, erreicht Runde k mit p^k → Erwartungswert über die Zugewinne.
+ */
+export function expectedPointsForWinRate(tier: Tier, p: number): number {
+  const arr = [...TIER_META[tier].points].reverse(); // pointsByWins[1..5], aufsteigend
+  let e = 0, prev = 0;
+  for (let k = 1; k <= arr.length; k++) {
+    e += (arr[k - 1] - prev) * Math.pow(p, k);
+    prev = arr[k - 1];
+  }
+  return e;
+}
+
+/** Projizierte Saisonpunkte: beste 19 Turnier-Erwartungswerte (ATP zählt ~19 Resultate). */
+export function projectSeasonPoints(plan: Tournament[], p: number): number {
+  const pts = plan.map((t) => expectedPointsForWinRate(t.tier, p)).sort((a, b) => b - a);
+  return Math.round(pts.slice(0, 19).reduce((s, x) => s + x, 0));
+}
+
+// Grobe Punkte→Rang-Kurve (ATP/WTA-Richtwerte, kein offizieller Cut).
+const RANK_TABLE: { pts: number; rank: number }[] = [
+  { pts: 11000, rank: 1 }, { pts: 5500, rank: 5 }, { pts: 3400, rank: 10 }, { pts: 2000, rank: 20 },
+  { pts: 1500, rank: 30 }, { pts: 1050, rank: 50 }, { pts: 780, rank: 75 }, { pts: 600, rank: 100 },
+  { pts: 410, rank: 150 }, { pts: 300, rank: 200 }, { pts: 195, rank: 300 }, { pts: 130, rank: 400 },
+  { pts: 95, rank: 500 }, { pts: 60, rank: 700 }, { pts: 27, rank: 1000 }, { pts: 10, rank: 1500 },
+  { pts: 0, rank: 2000 },
+];
+export function pointsToRank(points: number): number {
+  if (points >= RANK_TABLE[0].pts) return 1;
+  for (let i = 0; i < RANK_TABLE.length - 1; i++) {
+    const hi = RANK_TABLE[i], lo = RANK_TABLE[i + 1];
+    if (points <= hi.pts && points >= lo.pts) {
+      const frac = (points - lo.pts) / (hi.pts - lo.pts || 1);
+      return Math.max(1, Math.round(lo.rank + (hi.rank - lo.rank) * frac));
+    }
+  }
+  return 2000;
+}
+
 /** Region-Zuordnung für den „Nur Europa / Nur USA / Alle"-Filter. */
 export type RegionFilter = "all" | "europe" | "usa";
 const EUROPE_COUNTRIES = new Set([

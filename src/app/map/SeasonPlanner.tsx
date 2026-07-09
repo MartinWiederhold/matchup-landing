@@ -13,6 +13,8 @@ import {
   fmtEUR,
   computePlan,
   regionMatch,
+  projectSeasonPoints,
+  pointsToRank,
   prizeFor,
   prizeByRound,
   urlFor,
@@ -201,6 +203,9 @@ export default function SeasonPlanner({
       {plan.length > 0 && (
         <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
       )}
+
+      {/* Ranking-Projektion: welchen Rang könntest du mit dieser Saison erreichen? */}
+      {plan.length > 0 && <ProjectionCard plan={plan} profile={profile} />}
 
       {/* Region-Filter: Europa / USA / Alle */}
       <div>
@@ -991,6 +996,48 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
           <StatusRing key={r.label} id={i} label={r.label} value={r.value} pct={r.pct} done={r.done} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: PlayerProfile }) {
+  const [open, setOpen] = useState(true);
+  const currentRank = profile.gender === "w" ? profile.wta : profile.atp;
+  const scenarios = [
+    { key: "100", label: "Alles gewinnen", p: 1.0, accent: "text-emerald-600" },
+    { key: "50", label: "50 % der Matches", p: 0.5, accent: "text-matchup" },
+    { key: "20", label: "20 % der Matches", p: 0.2, accent: "text-neutral-500" },
+  ] as const;
+  const rows = scenarios.map((s) => {
+    const pts = projectSeasonPoints(plan, s.p);
+    return { ...s, pts, rank: pointsToRank(pts) };
+  });
+
+  return (
+    <div className="rounded-2xl border border-matchup/20 bg-white p-3.5 shadow-sm">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">
+        <span>📈 Mögliches Ranking mit dieser Saison</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={open ? "rotate-180" : ""}><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      {currentRank != null && (
+        <div className="mt-1 text-[11px] text-neutral-400">Aktuell: Rang {currentRank}</div>
+      )}
+      {open && (
+        <div className="mt-2.5 space-y-1.5">
+          {rows.map((r) => (
+            <div key={r.key} className="flex items-center justify-between rounded-xl bg-neutral-50 px-3 py-2">
+              <span className="text-[12px] font-semibold text-neutral-600">{r.label}</span>
+              <span className="flex items-baseline gap-2">
+                <span className="text-[11px] text-neutral-400">{r.pts.toLocaleString("de-CH")} P.</span>
+                <span className={`text-sm font-extrabold ${r.accent}`}>Rang ~{r.rank}</span>
+              </span>
+            </div>
+          ))}
+          <p className="pt-0.5 text-[10px] leading-relaxed text-neutral-400">
+            Richtwert: beste 19 Turniere, erwartete Punkte je Siegquote. Grobe Schätzung, kein offizieller Cut-Off.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
