@@ -133,8 +133,8 @@ export default function GamesTab() {
   }, [load]);
 
   return (
-    <div className="relative flex h-full flex-col">
-      <div className="flex shrink-0 gap-2 p-3">
+    <div className="relative flex flex-col">
+      <div className="sticky top-0 z-20 flex shrink-0 gap-2 bg-black/80 p-3 backdrop-blur-xl">
         {(["mine", "open", "past"] as const).map((m) => (
           <button
             key={m}
@@ -149,7 +149,7 @@ export default function GamesTab() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-20">
+      <div className="px-3 pb-20">
         {loading ? (
           <FullLoading />
         ) : games.length === 0 ? (

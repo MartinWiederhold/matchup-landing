@@ -19,8 +19,8 @@ export default function MatchesTab() {
   ];
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 border-b border-zinc-800">
+    <div className="flex flex-col">
+      <div className="sticky top-0 z-20 flex shrink-0 border-b border-zinc-800 bg-black/80 backdrop-blur-xl">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -36,7 +36,7 @@ export default function MatchesTab() {
           </button>
         ))}
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div>
         {sub === "matches" && <MatchesList />}
         {sub === "groups" && <GroupsList />}
         {sub === "feed" && <CommunityFeed />}

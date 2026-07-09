@@ -129,7 +129,7 @@ export default function CommunityFeed() {
   if (loading) return <FullLoading />;
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex flex-col">
       {/* Club / Global */}
       {profile.club_id && (
         <div className="flex shrink-0 gap-2 p-3">
@@ -148,7 +148,7 @@ export default function CommunityFeed() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="pb-24">
         {posts.length === 0 ? (
           <EmptyState
             icon={<MegaphoneIcon size={44} />}

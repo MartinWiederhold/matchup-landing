@@ -61,7 +61,7 @@ export default function GroupsList() {
   }
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex flex-col">
       <div className="shrink-0 space-y-3 p-3">
         <div className="flex gap-2">
           {(["all", "mine"] as const).map((m) => (
@@ -105,7 +105,7 @@ export default function GroupsList() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-20">
+      <div className="px-3 pb-20">
         {loading ? (
           <FullLoading />
         ) : groups.length === 0 ? (

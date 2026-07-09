@@ -68,14 +68,14 @@ export default function LikesTab() {
   const visible = likes.filter((l) => !dismissed.has(l.id));
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center justify-center border-b border-zinc-800">
+    <div className="flex flex-col">
+      <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-center border-b border-zinc-800 bg-black/80 backdrop-blur-xl">
         <span className="font-bold tracking-wide">
           {t("discover.requestsTitle", { count: visible.length })}
         </span>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div>
         {visible.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}

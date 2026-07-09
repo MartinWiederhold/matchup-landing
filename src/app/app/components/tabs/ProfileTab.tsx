@@ -70,7 +70,7 @@ export default function ProfileTab() {
   ) as string[];
 
   return (
-    <div className="h-full overflow-y-auto pb-6">
+    <div className="pb-6">
       <div className="flex items-center justify-end gap-2 px-4 pt-4">
         <button
           type="button"

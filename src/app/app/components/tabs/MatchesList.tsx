@@ -80,7 +80,7 @@ export default function MatchesList() {
     );
 
   return (
-    <ul className="h-full divide-y divide-zinc-800 overflow-y-auto">
+    <ul className="divide-y divide-zinc-800">
       {matches.map((m) => {
         const u = other(m);
         if (!u) return null;
