@@ -34,6 +34,17 @@ function labelBottom(key: string): string {
 function fmtTime(iso: string): string {
   try { return new Intl.DateTimeFormat("de-CH", { hour: "2-digit", minute: "2-digit", timeZone: TZ }).format(new Date(iso)); } catch { return ""; }
 }
+/** Offizielles Turnier-Icon über die echte Domain (Google-Favicon-Dienst). */
+function slamLogo(name: string): string | null {
+  const n = name.toLowerCase();
+  let domain = "";
+  if (n.includes("wimbledon")) domain = "wimbledon.com";
+  else if (n.includes("roland") || n.includes("french")) domain = "rolandgarros.com";
+  else if (n.includes("us open")) domain = "usopen.org";
+  else if (n.includes("australian")) domain = "ausopen.com";
+  else return null;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
 function fmtRange(a: string | null, b: string | null): string {
   if (!a || !b) return "";
   const da = new Date(a), db = new Date(b);
@@ -48,6 +59,7 @@ export default function WimbledonWidget() {
   const [status, setStatus] = useState<"loading" | "ok" | "empty">("loading");
   const [catKey, setCatKey] = useState("ms");
   const [day, setDay] = useState<string | null>(null);
+  const [open, setOpen] = useState(false); // eingeklappt starten
   const touched = useRef(false); // hat der Nutzer eine Kategorie gewählt?
 
   useEffect(() => {
@@ -99,41 +111,58 @@ export default function WimbledonWidget() {
   }, [cat, day]);
 
   const t = data?.tournament;
+  const logo = t?.name ? slamLogo(t.name) : null;
+  const liveAny = cats.some((c) => c.matches.some((m) => m.state === "in"));
 
   return (
     <div className="mt-4 overflow-hidden rounded-[24px] ring-1 ring-white/10">
-      {/* Kopf (Matchup-Lila) */}
+      {/* Kopf (Matchup-Lila) — klickbar zum Auf-/Zuklappen */}
       <div className="bg-gradient-to-br from-matchup to-indigo-700 px-4 pt-4">
-        <div className="flex items-center gap-3 pb-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.7" strokeLinecap="round">
-              <path d="M7 3l4 8M17 3l-4 8M4 6l6 4M20 6l-6 4" />
-              <circle cx="12" cy="15" r="6" />
-            </svg>
+        <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 pb-4 text-left">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/95 ring-1 ring-white/30">
+            {logo ? (
+              <img src={logo} alt="" className="h-7 w-7 object-contain" />
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4b3bf3" strokeWidth="1.7" strokeLinecap="round">
+                <path d="M7 3l4 8M17 3l-4 8M4 6l6 4M20 6l-6 4" />
+                <circle cx="12" cy="15" r="6" />
+              </svg>
+            )}
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="truncate text-[19px] font-bold leading-tight text-white">{t?.name || "Grand Slam"}</h3>
             {t?.startDate && <p className="text-[13px] text-white/70">{fmtRange(t.startDate, t.endDate)}</p>}
           </div>
-        </div>
-        {/* Kategorie-Tabs */}
-        <div className="no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4">
-          {cats.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
-              className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
-                c.key === (cat?.key ?? "") ? "border-white text-white" : "border-transparent text-white/55"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+          {liveAny && (
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> Live
+            </span>
+          )}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-white transition-transform ${open ? "rotate-180" : ""}`}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {/* Kategorie-Tabs (nur aufgeklappt) */}
+        {open && (
+          <div className="no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4">
+            {cats.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
+                className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                  c.key === (cat?.key ?? "") ? "border-white text-white" : "border-transparent text-white/55"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Tages-Leiste */}
+      {/* Tages-Leiste + Matches (nur aufgeklappt) */}
+      {open && (
       <div className="bg-[#0c0c0f]">
         {days.length > 0 && (
           <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-white/[0.07] px-2 py-2">
@@ -171,6 +200,7 @@ export default function WimbledonWidget() {
           {data?.updatedAt && <span>Quelle ESPN · {fmtTime(data.updatedAt)}</span>}
         </div>
       </div>
+      )}
     </div>
   );
 }
