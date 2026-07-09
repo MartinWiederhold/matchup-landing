@@ -903,9 +903,31 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
 
 function StrategyCard({ profile, setGroup }: { profile: PlayerProfile; setGroup: (g: (typeof GROUPS)[number]) => void }) {
   const s = strategyFor(profile);
+  const [open, setOpen] = useState(false);
+
+  // Eingeklappt: kompakter Chip (spart Platz). Aufgeklappt: volle Empfehlung.
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-2 rounded-full border border-matchup/20 bg-matchup/5 px-3.5 py-2 text-left transition hover:bg-matchup/10"
+      >
+        <span className="text-sm">🎯</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-neutral-700">
+          <span className="text-matchup">Strategie:</span> {s.headline} · {s.focus}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-neutral-400"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-matchup/20 bg-matchup/5 p-3.5">
-      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">🎯 Strategie für dich</div>
+      <button type="button" onClick={() => setOpen(false)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">
+        <span>🎯 Strategie für dich</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
       <div className="mt-1 text-sm font-bold text-neutral-800">{s.headline}</div>
       <div className="mt-0.5 text-sm font-semibold text-matchup">{s.focus}</div>
       <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">{s.note}</p>
