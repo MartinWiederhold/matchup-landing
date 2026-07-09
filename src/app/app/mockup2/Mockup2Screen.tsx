@@ -61,6 +61,23 @@ const CIRCLE = [
   "https://i.pravatar.cc/120?img=7",
 ];
 
+type ReqPerson = { id: number; name: string; age: number; img: string; sport: string; level: string };
+const REQUESTS_INIT: ReqPerson[] = [
+  { id: 1, name: "Clara", age: 27, img: "https://i.pravatar.cc/300?img=31", sport: "Padel", level: "Fortgeschritten" },
+  { id: 2, name: "Diego", age: 31, img: "https://i.pravatar.cc/300?img=59", sport: "Tennis", level: "Mittel" },
+  { id: 3, name: "Aisha", age: 24, img: "https://i.pravatar.cc/300?img=48", sport: "Pickleball", level: "Anfänger" },
+  { id: 4, name: "Noah", age: 29, img: "https://i.pravatar.cc/300?img=68", sport: "Tennis", level: "Profi" },
+];
+
+type ChatItem = { id: number; name: string; img: string; last: string; time: string; unread: number; online?: boolean };
+const CHATS_INIT: ChatItem[] = [
+  { id: 101, name: "Adzana", img: "https://i.pravatar.cc/160?img=5", last: "Sehen wir uns Samstag um 10? 🎾", time: "jetzt", unread: 2, online: true },
+  { id: 102, name: "Kevin", img: "https://i.pravatar.cc/160?img=12", last: "Guter Satz gestern! Rematch?", time: "12 Min.", unread: 0, online: true },
+  { id: 103, name: "Laila", img: "https://i.pravatar.cc/160?img=16", last: "Du: Ich buche den Court 👍", time: "1 Std.", unread: 0 },
+  { id: 104, name: "Fernando", img: "https://i.pravatar.cc/160?img=13", last: "Bringst du die Bälle mit?", time: "3 Std.", unread: 1 },
+  { id: 105, name: "Feera", img: "https://i.pravatar.cc/160?img=9", last: "Danke fürs Spiel 🙌", time: "Gestern", unread: 0 },
+];
+
 type Post = { id: number; text: string; image: string | null; time: string };
 type Tab = "home" | "chat" | "earth" | "stats" | "people";
 
@@ -74,7 +91,16 @@ const TABS: { key: Tab; path: string }[] = [
 
 export default function Mockup2Screen() {
   const [tab, setTab] = useState<Tab>("home");
+  const [reqList, setReqList] = useState<ReqPerson[]>(REQUESTS_INIT);
+  const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
+  const [profileView, setProfileView] = useState<ReqPerson | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+
+  function connectRequest(r: ReqPerson) {
+    setReqList((l) => l.filter((x) => x.id !== r.id));
+    setChatList((c) => [{ id: 1000 + r.id, name: r.name, img: r.img, last: "Ihr seid jetzt verbunden — sag Hallo 👋", time: "jetzt", unread: 0, online: true }, ...c]);
+    setProfileView(null);
+  }
   const [composerOpen, setComposerOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [draftImg, setDraftImg] = useState<string | null>(null);
@@ -108,6 +134,55 @@ export default function Mockup2Screen() {
         {tab === "earth" ? (
           // Erde-Tab → echte /map (mit Discover/Season-Toggle wie auf der Map-Seite)
           <iframe title="Matchup Map" src="/map" className="h-[100dvh] w-full border-0" />
+        ) : tab === "chat" ? (
+          <div className="pb-32 pt-[max(20px,env(safe-area-inset-top))]">
+            <header className="flex items-center justify-between px-5 pb-2 pt-2">
+              <h1 className="text-[26px] font-extrabold tracking-tight text-neutral-900">Chat</h1>
+              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-black/[0.04] text-black ring-1 ring-black/10">
+                <Icon path="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3" size={19} />
+              </button>
+            </header>
+
+            {/* Anfragen ganz oben */}
+            {reqList.length > 0 && (
+              <section className="px-5 pt-2">
+                <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Anfragen · {reqList.length}</p>
+                <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+                  {reqList.map((r) => (
+                    <button key={r.id} type="button" onClick={() => setProfileView(r)} className="flex w-[64px] shrink-0 flex-col items-center gap-1.5">
+                      <span className="relative block h-[64px] w-[64px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2.5px]">
+                        <img src={r.img} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
+                        <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-matchup ring-2 ring-white">
+                          <Icon path="M12 5v14M5 12h14" size={12} className="text-white" />
+                        </span>
+                      </span>
+                      <span className="max-w-[64px] truncate text-[11px] font-medium text-neutral-600">{r.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Chat-Liste */}
+            <div className="mt-3">
+              {chatList.map((c) => (
+                <button key={c.id} type="button" className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-black/[0.03]">
+                  <span className="relative shrink-0">
+                    <img src={c.img} alt="" className="h-14 w-14 rounded-full object-cover" />
+                    {c.online && <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-neutral-900">{c.name}</p>
+                    <p className={`truncate text-sm ${c.unread ? "font-medium text-neutral-800" : "text-neutral-400"}`}>{c.last}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="text-[11px] text-neutral-400">{c.time}</span>
+                    {c.unread > 0 && <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-matchup px-1.5 text-[11px] font-bold text-white">{c.unread}</span>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="px-5 pb-32 pt-[max(20px,env(safe-area-inset-top))]">
             {/* Header */}
@@ -369,6 +444,40 @@ export default function Mockup2Screen() {
             })}
           </nav>
         </div>
+
+        {/* Profil-Overlay (grösser) mit Verbinden */}
+        {profileView && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm" onClick={() => setProfileView(null)}>
+            <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="relative">
+                <img src={profileView.img} alt="" className="h-72 w-full object-cover" />
+                <button type="button" onClick={() => setProfileView(null)} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur">
+                  <Icon path="M18 6 6 18M6 6l12 12" size={17} />
+                </button>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <h3 className="text-[22px] font-extrabold text-white">{profileView.name}, {profileView.age}</h3>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-black/[0.05] px-3 py-1.5 text-xs font-semibold text-neutral-700">{profileView.sport}</span>
+                  <span className="rounded-full bg-black/[0.05] px-3 py-1.5 text-xs font-semibold text-neutral-700">{profileView.level}</span>
+                  <span className="flex items-center gap-1 rounded-full bg-black/[0.05] px-3 py-1.5 text-xs font-semibold text-neutral-700">
+                    <Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={13} /> 3 km
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-snug text-neutral-500">Möchte mit dir spielen und hat dich angefragt. Verbinde dich, um direkt zu chatten.</p>
+                <button
+                  type="button"
+                  onClick={() => connectRequest(profileView)}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-matchup py-3.5 text-sm font-bold text-white"
+                >
+                  <Icon path="M20 6 9 17l-5-5" size={18} /> Verbinden
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Composer */}
         {composerOpen && (
