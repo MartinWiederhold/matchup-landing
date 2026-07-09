@@ -116,10 +116,10 @@ export default function WimbledonWidget() {
 
   return (
     <div className="mt-4 overflow-hidden rounded-[24px] ring-1 ring-white/10">
-      {/* Kopf (Matchup-Lila) — klickbar zum Auf-/Zuklappen */}
-      <div className="bg-gradient-to-br from-matchup to-indigo-700 px-4 pt-4">
+      {/* Kopf (Weiss) — klickbar zum Auf-/Zuklappen */}
+      <div className="bg-white px-4 pt-4">
         <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 pb-4 text-left">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/95 ring-1 ring-white/30">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-black/10">
             {logo ? (
               <img src={logo} alt="" className="h-7 w-7 object-contain" />
             ) : (
@@ -130,15 +130,15 @@ export default function WimbledonWidget() {
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-[19px] font-bold leading-tight text-white">{t?.name || "Grand Slam"}</h3>
-            {t?.startDate && <p className="text-[13px] text-white/70">{fmtRange(t.startDate, t.endDate)}</p>}
+            <h3 className="truncate text-[19px] font-bold leading-tight text-neutral-900">{t?.name || "Grand Slam"}</h3>
+            {t?.startDate && <p className="text-[13px] text-neutral-500">{fmtRange(t.startDate, t.endDate)}</p>}
           </div>
           {liveAny && (
-            <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-matchup px-2.5 py-1 text-[11px] font-bold text-white">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> Live
             </span>
           )}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-white transition-transform ${open ? "rotate-180" : ""}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-neutral-500 transition-transform ${open ? "rotate-180" : ""}`}>
             <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
@@ -151,7 +151,7 @@ export default function WimbledonWidget() {
                 type="button"
                 onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
                 className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
-                  c.key === (cat?.key ?? "") ? "border-white text-white" : "border-transparent text-white/55"
+                  c.key === (cat?.key ?? "") ? "border-matchup text-neutral-900" : "border-transparent text-neutral-400"
                 }`}
               >
                 {c.label}
