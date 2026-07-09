@@ -23,8 +23,10 @@ import {
   autoPlan,
   bestStartBase,
   tournamentLogo,
+  regionMatch,
   type Tournament,
   type HomeBase,
+  type RegionFilter,
 } from "@/lib/tournaments";
 import {
   loadProfile,
@@ -318,6 +320,7 @@ export default function MapView() {
   const [presence, setPresence] = useState<Record<string, number>>({}); // tournament_id → Spieler vor Ort
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
+  const [region, setRegion] = useState<RegionFilter>("all");
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const profileReady = useRef(false);
@@ -383,6 +386,7 @@ export default function MapView() {
       const s = JSON.parse(raw);
       if (Array.isArray(s.planIds)) setPlanIds(s.planIds.filter((x: unknown) => typeof x === "string"));
       if (typeof s.budget === "number") setBudget(s.budget);
+      if (s.region === "all" || s.region === "europe" || s.region === "usa") setRegion(s.region);
       if (s.startBase) {
         const b = HOME_BASES.find((h) => h.name === s.startBase);
         if (b) setStartBase(b);
@@ -391,9 +395,9 @@ export default function MapView() {
   }, []);
   useEffect(() => {
     try {
-      localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase: startBase.name }));
+      localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase: startBase.name, region }));
     } catch {}
-  }, [planIds, budget, startBase]);
+  }, [planIds, budget, startBase, region]);
 
   const togglePlan = useCallback(
     (id: string) => setPlanIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
@@ -404,11 +408,15 @@ export default function MapView() {
     if (!map) return;
     map.flyTo([t.lat, t.lng], Math.max(map.getZoom(), 5), { duration: 0.7 });
   }, []);
-  // Smart-Planer: günstigste Saison automatisch füllen / beste Startbasis wählen
+  // Smart-Planer: günstigste Saison automatisch füllen — nur Turniere, die für dich
+  // realistisch spielbar sind (kein „rot") und in der gewählten Region liegen.
   const smartFill = useCallback(() => {
     setSelTid(null);
-    setPlanIds(autoPlan(tours, budget, startBase));
-  }, [tours, budget, startBase]);
+    const pool = tours.filter(
+      (t) => regionMatch(region, t.country) && (!hasRank || eligibility(profile, t).status !== "red"),
+    );
+    setPlanIds(autoPlan(pool, budget, startBase));
+  }, [tours, budget, startBase, region, hasRank, profile]);
   const cheapestStart = useCallback(() => {
     const plan = planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean) as Tournament[];
     if (plan.length) setStartBase(bestStartBase(plan));
@@ -632,8 +640,10 @@ export default function MapView() {
 
     // Turniere nach Ort gruppieren → Cluster-Hubs (viele Wochen am selben Ort) als EINE Bubble.
     const passesFilter = (t: Tournament, inP: boolean) => {
-      if (!(onlyEligible && hasRank) || inP) return true;
-      return eligibility(profile, t).status !== "red";
+      if (inP) return true;
+      if (!regionMatch(region, t.country)) return false;
+      if (onlyEligible && hasRank) return eligibility(profile, t).status !== "red";
+      return true;
     };
     const byLoc = new Map<string, Tournament[]>();
     for (const t of tours) {
@@ -685,7 +695,7 @@ export default function MapView() {
           });
       }
     }
-  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, presence]);
+  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, presence]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -784,6 +794,8 @@ export default function MapView() {
             setStart={setStartBase}
             budget={budget}
             setBudget={setBudget}
+            region={region}
+            setRegion={setRegion}
             selTid={selTid}
             setSelTid={setSelTid}
             onFocus={focusTour}
@@ -917,6 +929,8 @@ export default function MapView() {
               setStart={setStartBase}
               budget={budget}
               setBudget={setBudget}
+              region={region}
+              setRegion={setRegion}
               selTid={selTid}
               setSelTid={setSelTid}
               onFocus={focusTour}

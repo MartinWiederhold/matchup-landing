@@ -416,6 +416,22 @@ export function bestStartBase(plan: Tournament[]): HomeBase {
 // Smart-Planer: kostengünstigste Saison im Budget zusammenstellen.
 // Greedy nach bestem Punkte-pro-Zusatzkosten-Verhältnis → bündelt automatisch geografisch
 // (nahe Turniere haben tiefe Zusatz-Reisekosten → hohes Verhältnis) und spart so Flüge.
+/** Region-Zuordnung für den „Nur Europa / Nur USA / Alle"-Filter. */
+export type RegionFilter = "all" | "europe" | "usa";
+const EUROPE_COUNTRIES = new Set([
+  "Belgien", "Deutschland", "Frankreich", "Griechenland", "Grossbritannien", "Großbritannien",
+  "Italien", "Kroatien", "Monaco", "Niederlande", "Portugal", "Rumänien", "Schweden",
+  "Schweiz", "Spanien", "Österreich", "Türkei",
+]);
+export function regionOf(country: string): "europe" | "usa" | "other" {
+  if (country === "USA") return "usa";
+  if (EUROPE_COUNTRIES.has(country)) return "europe";
+  return "other";
+}
+export function regionMatch(region: RegionFilter, country: string): boolean {
+  return region === "all" || regionOf(country) === region;
+}
+
 export function autoPlan(list: Tournament[], budgetLimit: number, start: HomeBase): string[] {
   const chosen: Tournament[] = [];
   const remaining = new Set(list.map((t) => t.id));

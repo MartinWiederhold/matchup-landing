@@ -12,6 +12,7 @@ import {
   fmtDate,
   fmtEUR,
   computePlan,
+  regionMatch,
   prizeFor,
   prizeByRound,
   urlFor,
@@ -21,6 +22,7 @@ import {
   planSpanDays,
   type Tournament,
   type HomeBase,
+  type RegionFilter,
 } from "@/lib/tournaments";
 import {
   eligibility,
@@ -60,6 +62,8 @@ export default function SeasonPlanner({
   setStart,
   budget,
   setBudget,
+  region,
+  setRegion,
   selTid,
   setSelTid,
   onFocus,
@@ -83,6 +87,8 @@ export default function SeasonPlanner({
   setStart: (b: HomeBase) => void;
   budget: number;
   setBudget: (n: number) => void;
+  region: RegionFilter;
+  setRegion: (r: RegionFilter) => void;
   selTid: string | null;
   setSelTid: (id: string | null) => void;
   onFocus: (t: Tournament) => void;
@@ -113,11 +119,12 @@ export default function SeasonPlanner({
 
   const catalog = useMemo(() => {
     return [...tours].sort(byDate).filter((t) => {
+      if (!regionMatch(region, t.country) && !planIds.includes(t.id)) return false;
       if (group !== "Alle" && TIER_META[t.tier].group !== group) return false;
       if (surface !== "Alle" && t.surface !== surface) return false;
       return true;
     });
-  }, [group, surface, tours]);
+  }, [group, surface, tours, region, planIds]);
 
   // Katalog nach Ort gruppieren: Hubs mit ≥3 Wochen → Cluster-Karte, Rest → Einzelzeilen.
   const grouped = useMemo(() => {
@@ -174,6 +181,29 @@ export default function SeasonPlanner({
       {plan.length > 0 && (
         <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
       )}
+
+      {/* Region-Filter: Europa / USA / Alle */}
+      <div>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">Region</div>
+        <div className="flex gap-1.5">
+          {([
+            { key: "all", label: "Alle" },
+            { key: "europe", label: "Nur Europa" },
+            { key: "usa", label: "Nur USA" },
+          ] as const).map((r) => (
+            <button
+              key={r.key}
+              type="button"
+              onClick={() => setRegion(r.key)}
+              className={`flex-1 rounded-full px-3 py-2 text-[12px] font-semibold transition-colors ${
+                region === r.key ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Smart-Planer */}
       <div className="rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
