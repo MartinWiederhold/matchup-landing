@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type P = { name: string; country: string | null; flag: string | null; seed: number | null; sets: number[]; won: boolean };
 type M = { round: string; court: string | null; state: "pre" | "in" | "post"; statusText: string; date: string | null; players: P[] };
@@ -48,6 +48,7 @@ export default function WimbledonWidget() {
   const [status, setStatus] = useState<"loading" | "ok" | "empty">("loading");
   const [catKey, setCatKey] = useState("ms");
   const [day, setDay] = useState<string | null>(null);
+  const touched = useRef(false); // hat der Nutzer eine Kategorie gewählt?
 
   useEffect(() => {
     let alive = true;
@@ -69,6 +70,13 @@ export default function WimbledonWidget() {
 
   const cats = data?.categories ?? [];
   const cat = cats.find((c) => c.key === catKey) ?? cats[0];
+
+  // Beim ersten Laden automatisch die Kategorie mit Live-Match zeigen
+  useEffect(() => {
+    if (touched.current || !cats.length) return;
+    const liveCat = cats.find((c) => c.matches.some((m) => m.state === "in"));
+    if (liveCat && liveCat.key !== catKey) { setCatKey(liveCat.key); setDay(null); }
+  }, [cats, catKey]);
 
   const days = useMemo(() => {
     const s = new Set<string>();
@@ -114,7 +122,7 @@ export default function WimbledonWidget() {
             <button
               key={c.key}
               type="button"
-              onClick={() => { setCatKey(c.key); setDay(null); }}
+              onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
               className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
                 c.key === (cat?.key ?? "") ? "border-white text-white" : "border-transparent text-white/55"
               }`}
@@ -173,10 +181,7 @@ function MatchRow({ m }: { m: M }) {
   return (
     <div className="px-4 py-3">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="truncate text-[12px] text-zinc-400">
-          {m.round || "Match"}
-          {m.court && <span className="text-zinc-600"> · {m.court}</span>}
-        </span>
+        <span className="truncate text-[12px] text-zinc-400">{m.round || "Match"}</span>
         {live ? (
           <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-400">
             Live
