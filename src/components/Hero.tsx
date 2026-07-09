@@ -5,7 +5,15 @@ import { useT } from "@/lib/i18n";
 
 const HERO_VIDEO = "/hero.mp4";
 const HERO_AUDIO = "/hero-audio.m4a";
-const AUDIO_END = 20; // Musik endet nach 20s (bzw. startet mit dem Video neu)
+const FADE_START = 12; // ab hier leiser werden
+const FADE_END = 15; // hier praktisch still → sauberer Loop-Übergang
+
+// Lautstärke entlang der Video-Zeit: voll bis 12s, linear aus bis 15s.
+function volAt(time: number): number {
+  if (time < FADE_START) return 1;
+  if (time >= FADE_END) return 0;
+  return Math.max(0, (FADE_END - time) / (FADE_END - FADE_START));
+}
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -34,9 +42,10 @@ export default function Hero() {
     setSound(next);
     if (!a) return;
     if (next) {
-      // Ab aktueller Video-Position starten (nur wenn noch < 20s)
-      if (v && v.currentTime < AUDIO_END) {
+      // Ab aktueller Video-Position starten (nur solange die Musik noch läuft)
+      if (v && v.currentTime < FADE_END) {
         a.currentTime = v.currentTime;
+        a.volume = volAt(v.currentTime);
         a.muted = false;
         void a.play();
       }
@@ -57,14 +66,16 @@ export default function Hero() {
       if (!a.paused) a.pause();
       return;
     }
-    if (wrapped && v.currentTime < AUDIO_END) {
+    if (wrapped && v.currentTime < FADE_END) {
       a.currentTime = 0;
+      a.volume = 1;
       void a.play();
       return;
     }
-    if (v.currentTime >= AUDIO_END) {
+    if (v.currentTime >= FADE_END) {
       if (!a.paused) a.pause();
     } else {
+      a.volume = volAt(v.currentTime); // sanfter Fade 12→15s
       if (a.paused) {
         a.currentTime = v.currentTime;
         void a.play();
