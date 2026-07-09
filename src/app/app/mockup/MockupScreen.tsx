@@ -1,7 +1,8 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import WimbledonWidget from "./WimbledonWidget";
 
 /* ── kleine Inline-Icons (saubere Linien) ─────────────────── */
 function Icon({ path, className = "", size = 22, fill = "none" }: { path: string; className?: string; size?: number; fill?: string }) {
@@ -28,12 +29,6 @@ const CIRCLE = [
   "https://i.pravatar.cc/120?img=11",
   "https://i.pravatar.cc/120?img=7",
 ];
-
-/* ── Live-Tennis (echte Daten via /api/tennis) ────────────── */
-type Player = { name: string; country: string | null; flag: string | null; seed: number | null; sets: number[]; won: boolean };
-type Match = { round: string; state: "pre" | "in" | "post"; statusText: string; players: Player[] };
-type Side = { name: string; matches: Match[] } | null;
-type TennisData = { updatedAt: string; men: Side; women: Side };
 
 type Post = { id: number; text: string; image: string | null; time: string };
 
@@ -66,34 +61,6 @@ export default function MockupScreen() {
     setDraft("");
     setDraftImg(null);
   }
-
-  /* Live-Tennis laden */
-  const [tennis, setTennis] = useState<TennisData | null>(null);
-  const [tState, setTState] = useState<"loading" | "ok" | "empty">("loading");
-  const [tside, setTside] = useState<"men" | "women">("men");
-
-  useEffect(() => {
-    let alive = true;
-    async function load() {
-      try {
-        const r = await fetch("/api/tennis", { cache: "no-store" });
-        const d = (await r.json()) as TennisData;
-        if (!alive) return;
-        setTennis(d);
-        setTState(d.men?.matches?.length || d.women?.matches?.length ? "ok" : "empty");
-      } catch {
-        if (alive) setTState("empty");
-      }
-    }
-    void load();
-    const id = setInterval(load, 30000);
-    return () => { alive = false; clearInterval(id); };
-  }, []);
-
-  const side = tside === "men" ? tennis?.men : tennis?.women;
-  const tournamentName = tennis?.men?.name || tennis?.women?.name || "Grand Slam";
-  const matches = (side?.matches ?? []).slice(0, 4);
-  const liveCount = (side?.matches ?? []).filter((m) => m.state === "in").length;
 
   return (
     <div className="min-h-[100dvh] w-full bg-black text-white">
@@ -176,44 +143,8 @@ export default function MockupScreen() {
           </div>
         )}
 
-        {/* Live-Turnier (echte Daten von /api/tennis) */}
-        <div className="mt-4 overflow-hidden rounded-[24px] bg-white/[0.045] p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {liveCount > 0 && <span className="h-2 w-2 animate-pulse rounded-full bg-matchup" />}
-              <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-matchup">
-                {liveCount > 0 ? `Live · ${liveCount}` : "Profitennis"}
-              </span>
-            </div>
-            <div className="flex gap-1 rounded-full bg-white/[0.06] p-0.5">
-              {(["men", "women"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setTside(s)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${tside === s ? "bg-matchup text-white" : "text-zinc-400"}`}
-                >
-                  {s === "men" ? "Herren" : "Damen"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <h3 className="mt-3 text-[22px] font-bold leading-tight tracking-tight">{tournamentName}</h3>
-
-          <div className="mt-4 space-y-2">
-            {tState === "loading" && <p className="py-4 text-center text-sm text-zinc-500">Lädt Live-Daten …</p>}
-            {tState === "empty" && <p className="py-4 text-center text-sm text-zinc-500">Aktuell keine Live-Einzel im Feed.</p>}
-            {tState === "ok" && matches.length === 0 && <p className="py-4 text-center text-sm text-zinc-500">Keine {tside === "men" ? "Herren" : "Damen"}-Matches.</p>}
-            {matches.map((m, i) => (
-              <MatchRow key={i} m={m} />
-            ))}
-          </div>
-
-          {tennis?.updatedAt && tState === "ok" && (
-            <p className="mt-3 text-[10px] text-zinc-600">Quelle ESPN · {new Date(tennis.updatedAt).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}</p>
-          )}
-        </div>
+        {/* Live-Turnier (Google-Style, echte Daten von /api/tennis) */}
+        <WimbledonWidget />
 
         {/* Karten-Raster */}
         <div className="mt-4 grid grid-cols-2 gap-4">
@@ -341,44 +272,6 @@ export default function MockupScreen() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-/* Kompakte Match-Zeile im Mockup-Stil */
-function MatchRow({ m }: { m: Match }) {
-  const live = m.state === "in";
-  const maxSets = Math.max(m.players[0]?.sets.length ?? 0, m.players[1]?.sets.length ?? 0);
-  return (
-    <div className="rounded-2xl bg-white/[0.04] px-3.5 py-2.5">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="truncate text-[10px] font-bold uppercase tracking-wider text-zinc-500">{m.round || "Match"}</span>
-        <span className={`flex items-center gap-1 text-[10px] font-bold uppercase ${live ? "text-matchup" : "text-zinc-500"}`}>
-          {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-matchup" />}
-          {live ? "Live" : m.state === "post" ? "Beendet" : "Bald"}
-        </span>
-      </div>
-      {m.players.map((p, i) => (
-        <div key={i} className="flex items-center gap-2 py-0.5">
-          {p.flag ? (
-            <img src={p.flag} alt="" className="h-3.5 w-5 shrink-0 rounded-sm object-cover" />
-          ) : (
-            <span className="h-3.5 w-5 shrink-0 rounded-sm bg-white/10" />
-          )}
-          {p.seed && <span className="w-4 shrink-0 text-center text-[10px] text-zinc-500">{p.seed}</span>}
-          <span className={`min-w-0 flex-1 truncate text-[13px] ${p.won ? "font-bold text-white" : "text-zinc-300"}`}>{p.name}</span>
-          <span className="flex shrink-0 gap-1.5 tabular-nums">
-            {Array.from({ length: maxSets }).map((_, s) => {
-              const v = p.sets[s];
-              const opp = m.players[1 - i]?.sets[s];
-              const setWon = v != null && opp != null && v > opp;
-              return (
-                <span key={s} className={`w-3 text-center text-[13px] ${setWon ? "font-bold text-white" : "text-zinc-500"}`}>{v ?? ""}</span>
-              );
-            })}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }
