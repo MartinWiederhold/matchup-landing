@@ -25,6 +25,7 @@ import {
 import {
   eligibility,
   cutoffFor,
+  strategyFor,
   ELIG_COLOR,
   missingDocs,
   requiredDocs,
@@ -160,6 +161,9 @@ export default function SeasonPlanner({
         onSignUp={onSignUp}
         onSignOut={onSignOut}
       />
+
+      {/* Strategie-Empfehlung nach Ranking */}
+      <StrategyCard profile={profile} setGroup={setGroup} />
 
       {/* Status-Übersicht der geplanten Saison */}
       {plan.length > 0 && (
@@ -886,6 +890,21 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
   );
 }
 
+function StrategyCard({ profile, setGroup }: { profile: PlayerProfile; setGroup: (g: (typeof GROUPS)[number]) => void }) {
+  const s = strategyFor(profile);
+  return (
+    <div className="rounded-2xl border border-matchup/20 bg-matchup/5 p-3.5">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">🎯 Strategie für dich</div>
+      <div className="mt-1 text-sm font-bold text-neutral-800">{s.headline}</div>
+      <div className="mt-0.5 text-sm font-semibold text-matchup">{s.focus}</div>
+      <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">{s.note}</p>
+      <button type="button" onClick={() => setGroup(s.group)} className="mt-2 rounded-full bg-matchup px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-matchup-hover">
+        Passende Turniere zeigen →
+      </button>
+    </div>
+  );
+}
+
 function readAvatar(file: File, cb: (dataUrl: string) => void) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -1099,6 +1118,7 @@ function ProfileCard({
             <Field label="WTA"><input inputMode="numeric" value={profile.wta ?? ""} onChange={(e) => set("wta", num(e.target.value))} className="mu-in" /></Field>
             <Field label="ITF"><input inputMode="numeric" value={profile.itf ?? ""} onChange={(e) => set("itf", num(e.target.value))} className="mu-in" /></Field>
             <Field label="UTR"><input inputMode="numeric" value={profile.utr ?? ""} onChange={(e) => set("utr", num(e.target.value))} className="mu-in" /></Field>
+            <Field label="WTN"><input inputMode="numeric" value={profile.wtn ?? ""} onChange={(e) => set("wtn", num(e.target.value))} className="mu-in" /></Field>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Heimatflughafen"><input value={profile.homeAirport} onChange={(e) => set("homeAirport", e.target.value)} placeholder="z.B. FRA" className="mu-in" /></Field>

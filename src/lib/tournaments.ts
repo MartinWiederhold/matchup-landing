@@ -307,7 +307,15 @@ export function nights(t: Tournament): number {
   return Math.max(1, Math.round((Date.parse(t.end) - Date.parse(t.start)) / MS_DAY) + 1);
 }
 export function entryDeadline(t: Tournament): string {
-  return new Date(Date.parse(t.start) - 42 * MS_DAY).toISOString().slice(0, 10);
+  const start = Date.parse(t.start);
+  if (t.tier.startsWith("ITF")) {
+    // ITF World Tennis Tour: Entry Deadline = Donnerstag, 18 Tage vor der Turnierwoche (14:00 GMT)
+    const d = new Date(start - 18 * MS_DAY);
+    const back = (d.getUTCDay() - 4 + 7) % 7; // auf den vorangehenden Donnerstag (=4) snappen
+    return new Date(d.getTime() - back * MS_DAY).toISOString().slice(0, 10);
+  }
+  const days = t.tier.startsWith("CH") ? 28 : 42; // Challenger ~4 Wochen, ATP/GS ~6 Wochen
+  return new Date(start - days * MS_DAY).toISOString().slice(0, 10);
 }
 
 export function fmtDate(iso: string): string {

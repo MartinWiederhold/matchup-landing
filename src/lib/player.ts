@@ -8,6 +8,8 @@ export type PlayerDocs = {
   passport: boolean;
   id: boolean;
   visa: boolean;
+  ipin: boolean; // IPIN / World Tennis ID (Pflicht für ITF-Events)
+  playerEducation: boolean; // ITF Player Education Course
   license: boolean; // Spielerlizenz (ATP/ITF IPIN)
   federationLicense: boolean; // Verbandslizenz (z.B. DTB)
   medical: boolean; // Medical Certificate
@@ -27,6 +29,7 @@ export type PlayerProfile = {
   wta: number | null;
   itf: number | null;
   utr: number | null;
+  wtn: number | null; // ITF World Tennis Number (1–40, niedriger = besser)
   surface: Surface | null;
   homeAirport: string;
   rentalCar: boolean;
@@ -45,10 +48,11 @@ export const EMPTY_PROFILE: PlayerProfile = {
   wta: null,
   itf: null,
   utr: null,
+  wtn: null,
   surface: null,
   homeAirport: "",
   rentalCar: false,
-  docs: { passport: false, id: false, visa: false, license: false, federationLicense: false, medical: false, insurance: false, vaccination: false },
+  docs: { passport: false, id: false, visa: false, ipin: false, playerEducation: false, license: false, federationLicense: false, medical: false, insurance: false, vaccination: false },
 };
 
 const KEY = "mu-player";
@@ -177,10 +181,11 @@ export function eligibility(p: PlayerProfile, t: Tournament): Eligibility {
   reasons.push({ ok: direct, text: direct ? `Hauptfeld: Ranking reicht (Cut-Off ~${cut.direct}, ${tag} · du: ${rank})` : `Hauptfeld: Cut-Off ~${cut.direct} (${tag}) · dein Ranking ${rank}` });
   if (!direct) reasons.push({ ok: quali, text: quali ? `Qualifikation möglich (Quali-Cut ~${cut.quali}, ${tag} · du: ${rank})` : `Auch Quali nicht erreichbar (Quali-Cut ~${cut.quali}, ${tag})` });
 
-  // Meldeschluss
+  // Meldeschluss (ITF: Donnerstag 14:00 GMT, 18 Tage vorher)
   const dl = entryDeadline(t);
+  const dlHint = t.tier.startsWith("ITF") ? " (Do. 14:00 GMT)" : "";
   const dlOk = new Date() <= new Date(dl + "T23:59:59");
-  reasons.push({ ok: dlOk, text: dlOk ? `Meldeschluss offen (bis ${dl})` : `Meldeschluss vorbei (${dl})` });
+  reasons.push({ ok: dlOk, text: dlOk ? `Meldeschluss offen (bis ${dl}${dlHint})` : `Meldeschluss vorbei (${dl})` });
 
   let status: EligStatus;
   if (!ageOk) status = "red";
@@ -204,16 +209,40 @@ export const DOC_LABELS: Record<keyof PlayerDocs, string> = {
   passport: "Reisepass",
   id: "Personalausweis",
   visa: "Visum",
+  ipin: "IPIN / World Tennis ID",
+  playerEducation: "Player Education Course",
   license: "Spielerlizenz",
   federationLicense: "Verbandslizenz",
   medical: "Medical Certificate",
   insurance: "Versicherung",
   vaccination: "Impfungen",
 };
-const REQUIRED: (keyof PlayerDocs)[] = ["passport", "license", "medical", "insurance"];
-export function requiredDocs(_t: Tournament): (keyof PlayerDocs)[] {
-  return REQUIRED;
+// ITF (M15/M25) verlangt IPIN/World Tennis ID + Player Education Course statt ATP-Lizenz/Medical.
+const REQUIRED_ITF: (keyof PlayerDocs)[] = ["passport", "ipin", "playerEducation", "insurance"];
+const REQUIRED_PRO: (keyof PlayerDocs)[] = ["passport", "license", "medical", "insurance"];
+export function requiredDocs(t: Tournament): (keyof PlayerDocs)[] {
+  return t.tier.startsWith("ITF") ? REQUIRED_ITF : REQUIRED_PRO;
 }
 export function missingDocs(p: PlayerProfile, t: Tournament): (keyof PlayerDocs)[] {
   return requiredDocs(t).filter((k) => !p.docs[k]);
+}
+
+// Strategie-Empfehlung nach Ranking (aus der Tour-Analyse: welcher Level ist sinnvoll?).
+export type Strategy = { headline: string; focus: string; note: string; group: "ITF" | "Challenger" | "ATP" };
+export function strategyFor(p: PlayerProfile): Strategy {
+  const rank = p.gender === "w" ? p.wta : p.atp;
+  if (rank == null) {
+    return {
+      headline: "Einstieg – noch kein ATP-Ranking",
+      focus: "ITF M15-Quali im Cluster (Monastir / Antalya / Ägypten)",
+      note: "Aufnahme über WTN bzw. nationale Rangliste. Ziel: erste ATP-Punkte, Quali regelmäßig überstehen. Clustern spart Reisekosten.",
+      group: "ITF",
+    };
+  }
+  if (rank > 1000) return { headline: `Rang ${rank}`, focus: "ITF M15 (Quali → Hauptfeld) im Cluster", note: "Punkte sammeln, konsequent clustern. Kostendeckend noch unmöglich → Liga-/Sponsoren-Finanzierung.", group: "ITF" };
+  if (rank > 700) return { headline: `Rang ${rank}`, focus: "M15 Hauptfeld + erste M25-Quali", note: "Matchvolumen aufbauen; M25 erst, wenn die Quali realistisch übersteht.", group: "ITF" };
+  if (rank > 500) return { headline: `Rang ${rank}`, focus: "M25 (Ziel Halbfinals) + erste Challenger-Quali", note: "M25-Halbfinale deckt eine Woche klar. Challenger-Quali nur bei realistischer Match-Chance.", group: "ITF" };
+  if (rank > 250) return { headline: `Rang ${rank}`, focus: "Challenger-Hauptfelder + M25-Titel", note: "Challenger-Reisen dominieren – Budget/Team hochskalieren (15k € reichen hier nicht mehr).", group: "Challenger" };
+  if (rank > 100) return { headline: `Rang ${rank}`, focus: "ATP 250/500-Quali + Challenger 125", note: "Erste wirtschaftliche Tragfähigkeit bei striktem Kostenmanagement.", group: "Challenger" };
+  return { headline: `Rang ${rank} – Top 100`, focus: "ATP Tour (250/500/1000) + Grand Slams", note: "Direkte Hauptfeld-Aufnahme; Preisgeld meist profitabel.", group: "ATP" };
 }
