@@ -829,9 +829,9 @@ function TournamentDetail({
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Unterkunft &amp; Transfer</h3>
         <div className="grid grid-cols-3 gap-2">
-          <BookLink href={bookingUrl} icon="🏨" label="Hotels" sub={hotelSub} live={live.hotel.price != null} />
-          <BookLink href={flightLink} icon="✈️" label="Flüge" sub={flightSub} live={live.flight.price != null} />
-          <BookLink href={carLink} icon="🚗" label="Mietwagen" sub={t.city} />
+          <BookLink href={bookingUrl} kind="hotel" label="Hotels" sub={hotelSub} live={live.hotel.price != null} />
+          <BookLink href={flightLink} kind="flight" label="Flüge" sub={flightSub} live={live.flight.price != null} />
+          <BookLink href={carLink} kind="car" label="Mietwagen" sub={t.city} />
         </div>
         <p className="mt-1.5 text-[11px] text-neutral-400">
           {live.hotel.price != null || live.flight.price != null
@@ -1002,16 +1002,14 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
 
 function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: PlayerProfile }) {
   const [open, setOpen] = useState(true);
-  const currentRank = profile.gender === "w" ? profile.wta : profile.atp;
-  const scenarios = [
-    { key: "100", label: "Alles gewinnen", p: 1.0, accent: "text-emerald-600" },
-    { key: "50", label: "50 % der Matches", p: 0.5, accent: "text-matchup" },
-    { key: "20", label: "20 % der Matches", p: 0.2, accent: "text-neutral-500" },
-  ] as const;
-  const rows = scenarios.map((s) => {
-    const pts = projectSeasonPoints(plan, s.p);
-    return { ...s, pts, rank: pointsToRank(pts) };
-  });
+  const [winPct, setWinPct] = useState(50); // frei einstellbare Siegquote
+  const gender = profile.gender === "w" ? "w" : "m";
+  const currentRank = gender === "w" ? profile.wta : profile.atp;
+
+  const pts = projectSeasonPoints(plan, winPct / 100);
+  const rank = pointsToRank(pts, gender);
+  const bestPts = projectSeasonPoints(plan, 1);
+  const bestRank = pointsToRank(bestPts, gender);
 
   return (
     <div className="rounded-2xl border border-matchup/20 bg-white p-3.5 shadow-sm">
@@ -1020,21 +1018,40 @@ function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: Player
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={open ? "rotate-180" : ""}><path d="M6 9l6 6 6-6" /></svg>
       </button>
       {currentRank != null && (
-        <div className="mt-1 text-[11px] text-neutral-400">Aktuell: Rang {currentRank}</div>
+        <div className="mt-1 text-[11px] text-neutral-400">Aktuell: {gender === "w" ? "WTA" : "ATP"} {currentRank}</div>
       )}
       {open && (
-        <div className="mt-2.5 space-y-1.5">
-          {rows.map((r) => (
-            <div key={r.key} className="flex items-center justify-between rounded-xl bg-neutral-50 px-3 py-2">
-              <span className="text-[12px] font-semibold text-neutral-600">{r.label}</span>
-              <span className="flex items-baseline gap-2">
-                <span className="text-[11px] text-neutral-400">{r.pts.toLocaleString("de-CH")} P.</span>
-                <span className={`text-sm font-extrabold ${r.accent}`}>Rang ~{r.rank}</span>
-              </span>
-            </div>
-          ))}
-          <p className="pt-0.5 text-[10px] leading-relaxed text-neutral-400">
-            Richtwert: beste 19 Turniere, erwartete Punkte je Siegquote. Grobe Schätzung, kein offizieller Cut-Off.
+        <div className="mt-3">
+          {/* Ergebnis */}
+          <div className="flex items-baseline justify-between">
+            <span className="text-[12px] font-semibold text-neutral-500">Bei <span className="text-matchup">{winPct}%</span> gewonnenen Matches</span>
+            <span className="text-[11px] text-neutral-400">{pts.toLocaleString("de-CH")} P.</span>
+          </div>
+          <div className="mt-0.5 text-[26px] font-extrabold tracking-tight text-neutral-900">Rang ~{rank}</div>
+
+          {/* Schieberegler */}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={winPct}
+            onChange={(e) => setWinPct(Number(e.target.value))}
+            className="mt-2 w-full accent-matchup"
+          />
+          <div className="flex justify-between text-[10px] text-neutral-400">
+            <span>0 %</span>
+            <span>50 %</span>
+            <span>100 %</span>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between rounded-xl bg-neutral-50 px-3 py-2">
+            <span className="text-[11px] font-semibold text-neutral-500">Maximal (alles gewinnen)</span>
+            <span className="text-sm font-extrabold text-emerald-600">Rang ~{bestRank}</span>
+          </div>
+
+          <p className="pt-1.5 text-[10px] leading-relaxed text-neutral-400">
+            Richtwert: beste 19 Turniere, erwartete Punkte je Siegquote ({gender === "w" ? "WTA" : "ATP"}-Kurve). Grobe Schätzung, kein offizieller Cut-Off.
           </p>
         </div>
       )}
@@ -1526,20 +1543,28 @@ function PresenceSection({ t, profile, synced }: { t: Tournament; profile: Playe
   );
 }
 
-function BookLink({ href, icon, label, sub, live = false }: { href: string; icon: string; label: string; sub: string; live?: boolean }) {
+const TRAVEL_ICON: Record<"hotel" | "flight" | "car", string> = {
+  hotel: "M3 21h18M5 21V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v15M9 9h.01M15 9h.01M9 13h.01M15 13h.01M10 21v-3a2 2 0 0 1 4 0v3",
+  flight: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z",
+  car: "M5 11l1.6-4.3A2 2 0 0 1 8.5 5.4h7a2 2 0 0 1 1.9 1.3L19 11M4 11h16a1 1 0 0 1 1 1v4h-3M4 11a1 1 0 0 0-1 1v4h3m0 0a2 2 0 1 0 4 0m-4 0h4m4 0a2 2 0 1 0 4 0m-4 0h4",
+};
+
+function BookLink({ href, kind, label, sub, live = false }: { href: string; kind: "hotel" | "flight" | "car"; label: string; sub: string; live?: boolean }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={`relative flex flex-col items-center gap-1 rounded-2xl border bg-white px-2 py-3 text-center transition hover:shadow-sm ${
+      className={`relative flex flex-col items-center gap-1.5 rounded-2xl border bg-white px-2 py-3 text-center transition hover:shadow-sm ${
         live ? "border-matchup/40" : "border-neutral-200 hover:border-matchup/40"
       }`}
     >
       {live && (
         <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" title="Live-Preis" />
       )}
-      <span className="text-xl">{icon}</span>
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-matchup/10 text-matchup">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={TRAVEL_ICON[kind]} /></svg>
+      </span>
       <span className="text-xs font-bold text-neutral-700">{label}</span>
       <span className={`w-full truncate text-[10px] ${live ? "font-bold text-matchup" : "text-neutral-400"}`}>{sub}</span>
     </a>

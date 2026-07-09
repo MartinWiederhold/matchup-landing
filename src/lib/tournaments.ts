@@ -437,18 +437,26 @@ export function projectSeasonPoints(plan: Tournament[], p: number): number {
   return Math.round(pts.slice(0, 19).reduce((s, x) => s + x, 0));
 }
 
-// Grobe Punkte→Rang-Kurve (ATP/WTA-Richtwerte, kein offizieller Cut).
-const RANK_TABLE: { pts: number; rank: number }[] = [
+// Grobe Punkte→Rang-Kurven (Richtwerte, kein offizieller Cut). Herren (ATP) & Damen (WTA) getrennt.
+const RANK_TABLE_ATP: { pts: number; rank: number }[] = [
   { pts: 11000, rank: 1 }, { pts: 5500, rank: 5 }, { pts: 3400, rank: 10 }, { pts: 2000, rank: 20 },
   { pts: 1500, rank: 30 }, { pts: 1050, rank: 50 }, { pts: 780, rank: 75 }, { pts: 600, rank: 100 },
   { pts: 410, rank: 150 }, { pts: 300, rank: 200 }, { pts: 195, rank: 300 }, { pts: 130, rank: 400 },
   { pts: 95, rank: 500 }, { pts: 60, rank: 700 }, { pts: 27, rank: 1000 }, { pts: 10, rank: 1500 },
   { pts: 0, rank: 2000 },
 ];
-export function pointsToRank(points: number): number {
-  if (points >= RANK_TABLE[0].pts) return 1;
-  for (let i = 0; i < RANK_TABLE.length - 1; i++) {
-    const hi = RANK_TABLE[i], lo = RANK_TABLE[i + 1];
+const RANK_TABLE_WTA: { pts: number; rank: number }[] = [
+  { pts: 10000, rank: 1 }, { pts: 5000, rank: 5 }, { pts: 3500, rank: 10 }, { pts: 2100, rank: 20 },
+  { pts: 1600, rank: 30 }, { pts: 1100, rank: 50 }, { pts: 820, rank: 75 }, { pts: 630, rank: 100 },
+  { pts: 430, rank: 150 }, { pts: 300, rank: 200 }, { pts: 180, rank: 300 }, { pts: 120, rank: 400 },
+  { pts: 85, rank: 500 }, { pts: 50, rank: 700 }, { pts: 22, rank: 1000 }, { pts: 9, rank: 1500 },
+  { pts: 0, rank: 2000 },
+];
+export function pointsToRank(points: number, gender: "m" | "w" = "m"): number {
+  const table = gender === "w" ? RANK_TABLE_WTA : RANK_TABLE_ATP;
+  if (points >= table[0].pts) return 1;
+  for (let i = 0; i < table.length - 1; i++) {
+    const hi = table[i], lo = table[i + 1];
     if (points <= hi.pts && points >= lo.pts) {
       const frac = (points - lo.pts) / (hi.pts - lo.pts || 1);
       return Math.max(1, Math.round(lo.rank + (hi.rank - lo.rank) * frac));
