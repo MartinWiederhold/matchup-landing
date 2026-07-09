@@ -54,7 +54,28 @@ function fmtRange(a: string | null, b: string | null): string {
   return `${dd(da)}. ${MON_S[mm(da)]} bis ${dd(db)}. ${MON_S[mm(db)]} ${yy(db)}`;
 }
 
-export default function WimbledonWidget() {
+export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "light" }) {
+  const dark = theme === "dark";
+  const cx = {
+    ring: dark ? "ring-1 ring-white/10" : "ring-1 ring-black/10 shadow-lg",
+    body: dark ? "bg-[#0c0c0f]" : "bg-white",
+    dayBorder: dark ? "border-white/[0.07]" : "border-black/10",
+    dayActive: dark ? "text-white" : "text-neutral-900",
+    dayIdle: dark ? "text-zinc-500" : "text-neutral-400",
+    dayUnderline: dark ? "bg-white" : "bg-matchup",
+    divide: dark ? "divide-white/[0.06]" : "divide-black/[0.07]",
+    round: dark ? "text-zinc-400" : "text-neutral-500",
+    nameWon: dark ? "text-white" : "text-neutral-900",
+    name: dark ? "text-zinc-200" : "text-neutral-700",
+    seed: dark ? "text-zinc-500" : "text-neutral-400",
+    setWon: dark ? "text-white" : "text-neutral-900",
+    set: dark ? "text-zinc-500" : "text-neutral-400",
+    cur: dark ? "bg-matchup/25 text-white ring-1 ring-matchup/50" : "bg-matchup/15 text-matchup ring-1 ring-matchup/40",
+    foot: dark ? "text-zinc-500" : "text-neutral-400",
+    flag: dark ? "bg-white/10" : "bg-black/10",
+    empty: dark ? "text-zinc-500" : "text-neutral-400",
+    live: dark ? "text-emerald-400" : "text-emerald-600",
+  };
   const [data, setData] = useState<Data | null>(null);
   const [status, setStatus] = useState<"loading" | "ok" | "empty">("loading");
   const [catKey, setCatKey] = useState("ms");
@@ -115,7 +136,7 @@ export default function WimbledonWidget() {
   const liveAny = cats.some((c) => c.matches.some((m) => m.state === "in"));
 
   return (
-    <div className="mt-4 overflow-hidden rounded-[24px] ring-1 ring-white/10">
+    <div className={`mt-4 overflow-hidden rounded-[24px] ${cx.ring}`}>
       {/* Kopf (Weiss) — klickbar zum Auf-/Zuklappen */}
       <div className="bg-white px-4 pt-4">
         <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 pb-4 text-left">
@@ -134,8 +155,8 @@ export default function WimbledonWidget() {
             {t?.startDate && <p className="text-[13px] text-neutral-500">{fmtRange(t.startDate, t.endDate)}</p>}
           </div>
           {liveAny && (
-            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-matchup px-2.5 py-1 text-[11px] font-bold text-white">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> Live
+            <span className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-neutral-900">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" /> Live
             </span>
           )}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 text-neutral-500 transition-transform ${open ? "rotate-180" : ""}`}>
@@ -163,9 +184,9 @@ export default function WimbledonWidget() {
 
       {/* Tages-Leiste + Matches (nur aufgeklappt) */}
       {open && (
-      <div className="bg-[#0c0c0f]">
+      <div className={cx.body}>
         {days.length > 0 && (
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-white/[0.07] px-2 py-2">
+          <div className={`no-scrollbar flex gap-1 overflow-x-auto border-b ${cx.dayBorder} px-2 py-2`}>
             {days.map((k) => {
               const active = k === day;
               return (
@@ -173,11 +194,11 @@ export default function WimbledonWidget() {
                   key={k}
                   type="button"
                   onClick={() => setDay(k)}
-                  className={`flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5 ${active ? "" : ""}`}
+                  className="flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5"
                 >
-                  <span className={`text-[12px] font-bold ${active ? "text-white" : "text-zinc-500"}`}>{labelTop(k)}</span>
-                  <span className={`text-[12px] ${active ? "text-white" : "text-zinc-500"}`}>{labelBottom(k)}</span>
-                  <span className={`mt-1 h-0.5 w-6 rounded-full ${active ? "bg-white" : "bg-transparent"}`} />
+                  <span className={`text-[12px] font-bold ${active ? cx.dayActive : cx.dayIdle}`}>{labelTop(k)}</span>
+                  <span className={`text-[12px] ${active ? cx.dayActive : cx.dayIdle}`}>{labelBottom(k)}</span>
+                  <span className={`mt-1 h-0.5 w-6 rounded-full ${active ? cx.dayUnderline : "bg-transparent"}`} />
                 </button>
               );
             })}
@@ -185,17 +206,17 @@ export default function WimbledonWidget() {
         )}
 
         {/* Matches */}
-        <div className="divide-y divide-white/[0.06]">
-          {status === "loading" && <p className="py-8 text-center text-sm text-zinc-500">Lädt Live-Daten …</p>}
-          {status === "empty" && <p className="py-8 text-center text-sm text-zinc-500">Aktuell keine Daten im Feed.</p>}
-          {status === "ok" && shown.length === 0 && <p className="py-8 text-center text-sm text-zinc-500">Keine Partien an diesem Tag.</p>}
+        <div className={`divide-y ${cx.divide}`}>
+          {status === "loading" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Lädt Live-Daten …</p>}
+          {status === "empty" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Aktuell keine Daten im Feed.</p>}
+          {status === "ok" && shown.length === 0 && <p className={`py-8 text-center text-sm ${cx.empty}`}>Keine Partien an diesem Tag.</p>}
           {shown.map((m, i) => (
-            <MatchRow key={i} m={m} />
+            <MatchRow key={i} m={m} cx={cx} />
           ))}
         </div>
 
         {/* Fuss */}
-        <div className="flex items-center justify-between px-4 py-3 text-[11px] text-zinc-500">
+        <div className={`flex items-center justify-between px-4 py-3 text-[11px] ${cx.foot}`}>
           <span>Alle Zeitangaben: MEZ</span>
           {data?.updatedAt && <span>Quelle ESPN · {fmtTime(data.updatedAt)}</span>}
         </div>
@@ -205,22 +226,23 @@ export default function WimbledonWidget() {
   );
 }
 
-function MatchRow({ m }: { m: M }) {
+type CX = Record<string, string>;
+function MatchRow({ m, cx }: { m: M; cx: CX }) {
   const live = m.state === "in";
   const maxSets = Math.max(m.players[0]?.sets.length ?? 0, m.players[1]?.sets.length ?? 0);
   return (
     <div className="px-4 py-3">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="truncate text-[12px] text-zinc-400">{m.round || "Match"}</span>
+        <span className={`truncate text-[12px] ${cx.round}`}>{m.round || "Match"}</span>
         {live ? (
-          <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-400">
+          <span className={`flex items-center gap-1 text-[12px] font-semibold ${cx.live}`}>
             Live
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
           </span>
         ) : m.state === "post" ? (
-          <span className="text-[12px] text-zinc-500">Beendet</span>
+          <span className={`text-[12px] ${cx.set}`}>Beendet</span>
         ) : (
-          <span className="text-[12px] text-zinc-400">{m.date ? fmtTime(m.date) : ""}</span>
+          <span className={`text-[12px] ${cx.round}`}>{m.date ? fmtTime(m.date) : ""}</span>
         )}
       </div>
       {m.players.map((p, i) => {
@@ -230,10 +252,10 @@ function MatchRow({ m }: { m: M }) {
             {p.flag ? (
               <img src={p.flag} alt="" className="h-4 w-[26px] shrink-0 rounded-sm object-cover" />
             ) : (
-              <span className="h-4 w-[26px] shrink-0 rounded-sm bg-white/10" />
+              <span className={`h-4 w-[26px] shrink-0 rounded-sm ${cx.flag}`} />
             )}
-            <span className="w-5 shrink-0 text-center text-[13px] text-zinc-500">{p.seed ?? ""}</span>
-            <span className={`min-w-0 flex-1 truncate text-[15px] ${p.won ? "font-bold text-white" : "text-zinc-200"}`}>{p.name}</span>
+            <span className={`w-5 shrink-0 text-center text-[13px] ${cx.seed}`}>{p.seed ?? ""}</span>
+            <span className={`min-w-0 flex-1 truncate text-[15px] ${p.won ? `font-bold ${cx.nameWon}` : cx.name}`}>{p.name}</span>
             <span className="flex shrink-0 items-center gap-1">
               {Array.from({ length: maxSets }).map((_, s) => {
                 const v = p.sets[s];
@@ -244,11 +266,7 @@ function MatchRow({ m }: { m: M }) {
                   <span
                     key={s}
                     className={`flex h-7 w-7 items-center justify-center text-[14px] tabular-nums ${
-                      isCurrent
-                        ? "rounded-md bg-matchup/25 font-bold text-white ring-1 ring-matchup/50"
-                        : won
-                        ? "font-bold text-white"
-                        : "text-zinc-500"
+                      isCurrent ? `rounded-md font-bold ${cx.cur}` : won ? `font-bold ${cx.setWon}` : cx.set
                     }`}
                   >
                     {v ?? ""}
