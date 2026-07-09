@@ -47,7 +47,7 @@ function ConnectIcon({ size = 16 }: { size?: number }) {
 export default function DiscoverTab() {
   const t = useT();
   const { locale } = useLocale();
-  const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
+  const { profile, setActiveTab, openSubView, refreshBadges, onScroll } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -293,7 +293,7 @@ export default function DiscoverTab() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-24" onScroll={onScroll}>
         {/* Form-Ring */}
         <section className="mt-4 px-4">
           <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />

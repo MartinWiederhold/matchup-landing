@@ -178,6 +178,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
         openSubView,
         closeSubView,
         refreshBadges,
+        onScroll: handleScroll,
       }}
     >
       <div

@@ -69,45 +69,43 @@ export default function TennisLive() {
     <div className="flex h-full flex-col bg-black">
       <SubViewHeader title="Live im Profitennis" />
 
-      {/* Herren / Damen */}
-      <div className="flex shrink-0 gap-2 px-4 pt-3">
-        {(["men", "women"] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setTab(s)}
-            className={`flex-1 rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition-colors ${
-              tab === s ? "bg-matchup text-white" : "bg-zinc-900 text-zinc-400"
-            }`}
-          >
-            {s === "men" ? "Herren" : "Damen"}
-          </button>
-        ))}
-      </div>
-
       <div className="flex-1 overflow-y-auto px-4 pb-24 pt-3">
-        {/* Turnier-Header */}
-        {side?.name && (
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-extrabold tracking-tight">{side.name}</h2>
+        {/* Turnier-Banner (Matchup-Lila) mit Herren/Damen */}
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 shadow-lg">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-extrabold tracking-tight text-white">{side?.name || "Profitennis"}</h2>
               {data?.updatedAt && (
-                <p className="text-[11px] text-zinc-500">
-                  Quelle ESPN · aktualisiert {new Date(data.updatedAt).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}
+                <p className="mt-0.5 text-[11px] text-white/70">
+                  Quelle ESPN · {new Date(data.updatedAt).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               )}
             </div>
             {liveCount > 0 && (
-              <span className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-2.5 py-1 text-[11px] font-extrabold text-red-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" /> {liveCount} LIVE
+              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-extrabold text-white">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> {liveCount} LIVE
               </span>
             )}
           </div>
-        )}
+          <div className="mt-3 flex gap-2">
+            {(["men", "women"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setTab(s)}
+                className={`flex-1 rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition-colors ${
+                  tab === s ? "bg-white text-matchup" : "bg-white/15 text-white"
+                }`}
+              >
+                {s === "men" ? "Herren" : "Damen"}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Fortschritt bis Finale */}
         {showProgress && (
-          <div className="mb-4 flex items-center gap-1">
+          <div className="mb-4 mt-4 flex items-center gap-1">
             {STAGES.map((st, i) => (
               <div key={st.key} className="flex flex-1 flex-col items-center gap-1">
                 <div className={`h-1 w-full rounded-full ${i <= furthest ? "bg-matchup" : "bg-zinc-800"}`} />
@@ -122,7 +120,7 @@ export default function TennisLive() {
         ) : matches.length === 0 ? (
           <p className="mt-10 text-center text-sm text-zinc-500">Aktuell keine Einzel-Matches im Live-Feed.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="mt-4 space-y-4">
             {groups.map(([round, ms]) => (
               <div key={round}>
                 <div className="mb-1.5 px-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-zinc-500">{round}</div>

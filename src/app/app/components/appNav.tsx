@@ -35,6 +35,7 @@ interface AppNavContextType {
   openSubView: (sv: SubViewState) => void;
   closeSubView: () => void;
   refreshBadges: () => void;
+  onScroll: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
 export const AppNavContext = createContext<AppNavContextType | undefined>(
