@@ -79,8 +79,15 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
         </button>
         {people.map((p) => (
           <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-            <span className="rounded-full bg-gradient-to-br from-matchup to-indigo-400 p-0.5">
-              <span className="block rounded-full ring-2 ring-black"><Avatar src={p.profile_image} alt={p.first_name} size="md" /></span>
+            <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-400 p-[2px]">
+              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-sm font-bold text-white ring-[2.5px] ring-black">
+                {p.profile_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (p.first_name?.[0] ?? "?").toUpperCase()
+                )}
+              </span>
             </span>
             <span className="max-w-[60px] truncate text-[11px] text-zinc-300">{p.first_name}</span>
           </button>

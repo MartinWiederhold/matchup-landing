@@ -324,7 +324,7 @@ export default function DiscoverTab() {
               onAction={() => setShowFilter(true)}
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {candidates.map((c) => (
                 <FeedCard
                   key={c.id}
@@ -417,11 +417,11 @@ function FeedCard({
 }) {
   const dist = distanceLabel(myLat, myLng, player);
   return (
-    <div className="overflow-hidden rounded-2xl bg-zinc-900">
+    <div className="overflow-hidden rounded-xl bg-zinc-900">
       <button
         type="button"
         onClick={onOpen}
-        className="relative block aspect-[4/5] w-full bg-zinc-800 text-left"
+        className="relative block aspect-[3/4] w-full bg-zinc-800 text-left"
       >
         {player.profile_image && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -436,49 +436,37 @@ function FeedCard({
             <CheckIcon size={11} /> {t("discover.verified")}
           </span>
         )}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-3 pt-10">
-          <h2 className="text-sm font-bold leading-tight text-white">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2 pt-8">
+          <h2 className="truncate text-[13px] font-bold leading-tight text-white">
             {player.first_name}, {player.age}
           </h2>
-          <p className="mt-0.5 text-[11px] text-zinc-200">
-            <SportIcon
-              sport={player.sports[0]}
-              size={12}
-              className="mr-0.5 inline-block align-[-2px]"
-            />{" "}
-            {skillLabel(player.skill_level)}
+          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-zinc-300">
+            <SportIcon sport={player.sports[0]} size={11} />
+            <span className="truncate">{skillLabel(player.skill_level)}</span>
           </p>
-          {(dist || player.club_name_manual) && (
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-400">
-              {dist && <MapPinIcon size={11} />}
-              <span className="truncate">
-                {dist}
-                {player.club_name_manual ? ` · ${player.club_name_manual}` : ""}
-              </span>
+          {dist && (
+            <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-zinc-400">
+              <MapPinIcon size={10} /> <span className="truncate">{dist}</span>
             </p>
           )}
         </div>
       </button>
 
-      <div className="p-2.5">
+      <div className="p-1.5">
         <button
           type="button"
           onClick={onConnect}
           disabled={requested}
-          className={`flex w-full items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold transition-colors ${
+          className={`flex w-full items-center justify-center gap-1 rounded-full py-1.5 text-[11px] font-bold transition-colors ${
             requested
               ? "bg-zinc-800 text-zinc-400"
               : "bg-matchup text-white hover:bg-matchup-hover"
           }`}
         >
           {requested ? (
-            <>
-              <CheckIcon size={14} /> {t("discover.requested")}
-            </>
+            <><CheckIcon size={13} /> {t("discover.requested")}</>
           ) : (
-            <>
-              <ConnectIcon size={14} /> {t("discover.connect")}
-            </>
+            <><ConnectIcon size={13} /> {t("discover.connect")}</>
           )}
         </button>
       </div>
