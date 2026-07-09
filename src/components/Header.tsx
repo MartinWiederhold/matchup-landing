@@ -41,25 +41,33 @@ type NavFeature = {
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [waitlist, setWaitlist] = useState<NavFeature | null>(null);
   const t = useT();
 
-  // Find a Partner & Events: normale Links. Shop & Advice: Warteliste (Coming soon).
-  const navItems: NavFeature[] = [
+  // Sichtbare Top-Level-Links. ATP/Tournaments: Warteliste-Popup (wie Shop/Advice).
+  const primaryItems: NavFeature[] = [
     { label: t("header.findPartner"), href: "/find-a-partner" },
+    { label: t("header.atp"), href: "/map", waitlist: true },
     { label: t("header.events"), href: "/events" },
+  ];
+
+  // Unter „Mehr"-Dropdown: Shop & Advice (Coming soon).
+  const moreItems: NavFeature[] = [
     { label: t("header.shop"), href: "/shop", waitlist: true },
     { label: t("header.beratung"), href: "/beratung", waitlist: true },
   ];
 
-  // Im Hamburger zusätzlich „About" anzeigen.
+  // Im Hamburger alles flach + „About".
   const mobileNavItems: NavFeature[] = [
-    ...navItems,
+    ...primaryItems,
+    ...moreItems,
     { label: t("header.about"), href: "/about" },
   ];
 
   function openWaitlist(item: NavFeature) {
     setOpen(false);
+    setMoreOpen(false);
     setWaitlist(item);
   }
 
@@ -72,7 +80,7 @@ export default function Header() {
 
         {/* Desktop-Nav + (Coming soon) */}
         <nav className="hidden items-center gap-5 lg:flex">
-          {navItems.map((item) =>
+          {primaryItems.map((item) =>
             item.waitlist ? (
               <button
                 key={item.href}
@@ -92,6 +100,38 @@ export default function Header() {
               </a>
             ),
           )}
+
+          {/* „Mehr"-Dropdown (schwarz) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+              className="flex items-center gap-1 text-[13px] font-semibold tracking-wide text-white/90 transition-colors hover:text-white"
+            >
+              {t("header.more")}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${moreOpen ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {moreOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                <div className="absolute right-0 top-full z-50 mt-3 w-48 overflow-hidden rounded-2xl border border-white/10 bg-black p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)]">
+                  {moreItems.map((item) => (
+                    <button
+                      key={item.href}
+                      type="button"
+                      onClick={() => openWaitlist(item)}
+                      className="block w-full rounded-xl px-3.5 py-2.5 text-left text-[13px] font-semibold tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </nav>
 
         <div className="flex items-center gap-3">

@@ -1,6 +1,8 @@
 export const header = {
   de: {
     findPartner: "Find a Partner",
+    atp: "ATP / Tournaments",
+    more: "Mehr",
     shop: "Shop",
     beratung: "Beratung",
     events: "Events",
@@ -27,6 +29,8 @@ export const header = {
   },
   en: {
     findPartner: "Find a Partner",
+    atp: "ATP / Tournaments",
+    more: "More",
     shop: "Shop",
     beratung: "Advice",
     events: "Events",
