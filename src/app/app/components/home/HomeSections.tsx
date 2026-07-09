@@ -72,7 +72,7 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.newPeople")} />
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto rounded-2xl border border-matchup/20 bg-matchup/[0.08] p-3.5">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
           <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-white/25 text-zinc-500"><PlusIcon size={22} /></span>
           <span className="max-w-[60px] truncate text-[11px] text-zinc-500">{t("discover.find")}</span>
@@ -230,17 +230,16 @@ export function LiveTennisCard({ onOpen }: { onOpen?: () => void }) {
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.liveTennis")} />
-      <button type="button" onClick={onOpen} className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b10] p-4 text-left">
-        <span className="absolute left-0 top-0 h-full w-[3px]" style={{ background: s.live ? "#ff4d5e" : "#4b3bf3" }} />
+      <button type="button" onClick={onOpen} className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-left shadow-lg">
         <div className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.14em] text-zinc-400">
-            <span className={`h-1.5 w-1.5 rounded-full ${s.live ? "animate-pulse" : ""}`} style={{ background: s.live ? "#ff4d5e" : "#4b3bf3" }} />
+          <span className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.14em] text-white/80">
+            <span className={`h-1.5 w-1.5 rounded-full bg-white ${s.live ? "animate-pulse" : ""}`} />
             {s.live ? t("discover.slamLive") : t("discover.slamNext")}
           </span>
-          <h3 className="mt-1 truncate text-[15px] font-extrabold tracking-tight">{s.name}</h3>
-          <div className="mt-0.5 text-[11px] text-zinc-500">{s.surface} · {fmt(s.start_date)}–{fmt(s.end_date)}</div>
+          <h3 className="mt-1 truncate text-[16px] font-extrabold tracking-tight text-white">{s.name}</h3>
+          <div className="mt-0.5 text-[11px] text-white/70">{s.surface} · {fmt(s.start_date)}–{fmt(s.end_date)}</div>
         </div>
-        <span className="flex shrink-0 items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">{t("discover.results")}<ChevronRightIcon size={14} /></span>
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/20 px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white">{t("discover.results")}<ChevronRightIcon size={13} /></span>
       </button>
     </section>
   );
