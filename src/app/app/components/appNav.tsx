@@ -19,6 +19,7 @@ export type SubViewState =
   | { type: "game-review"; gameId: string }
   | { type: "game-result"; gameId: string }
   | { type: "leaderboard" }
+  | { type: "tennis-live" }
   | { type: "game-requests"; gameId: string }
   | { type: "comments"; postId: string }
   | { type: "create-post" }

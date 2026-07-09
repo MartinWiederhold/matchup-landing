@@ -300,7 +300,7 @@ export default function DiscoverTab() {
         </section>
 
         {/* Live im Profitennis (aktueller Grand Slam) */}
-        <LiveTennisCard />
+        <LiveTennisCard onOpen={() => openSubView({ type: "tennis-live" })} />
 
         {/* Neue Leute (Stories) */}
         <StoryRow

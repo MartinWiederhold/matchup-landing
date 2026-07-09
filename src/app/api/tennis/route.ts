@@ -24,13 +24,14 @@ export type Match = {
   round: string;
   state: "pre" | "in" | "post";
   statusText: string;
-  players: { name: string; country: string | null; seed: number | null; sets: number[]; won: boolean }[];
+  players: { name: string; country: string | null; flag: string | null; seed: number | null; sets: number[]; won: boolean }[];
 };
 
 function player(c: EspnCompetitor) {
   return {
     name: c.athlete?.displayName || c.athlete?.shortName || "—",
     country: c.athlete?.flag?.alt ?? null,
+    flag: (c.athlete?.flag as { href?: string } | undefined)?.href ?? null,
     seed: c.curatedRank?.current && c.curatedRank.current < 100 ? c.curatedRank.current : null,
     sets: (c.linescores ?? []).map((l) => Math.round(l.value ?? 0)),
     won: !!c.winner,
@@ -61,7 +62,7 @@ function collect(ev: EspnEvent): Match[] {
 
 async function tour(league: "atp" | "wta"): Promise<{ name: string; matches: Match[] } | null> {
   try {
-    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${league}/scoreboard`, { headers: UA, next: { revalidate: 60 } });
+    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/tennis/${league}/scoreboard`, { headers: UA, next: { revalidate: 25 } });
     if (!r.ok) return null;
     const d = (await r.json()) as Espn;
     const events = d.events ?? [];
@@ -78,12 +79,9 @@ async function tour(league: "atp" | "wta"): Promise<{ name: string; matches: Mat
 
 export async function GET() {
   const [men, women] = await Promise.all([tour("atp"), tour("wta")]);
-  const tournament = men?.name || women?.name || null;
-  if (!tournament) return NextResponse.json({ tournament: null, men: [], women: [] });
   return NextResponse.json({
-    tournament,
     updatedAt: new Date().toISOString(),
-    men: men?.matches ?? [],
-    women: women?.matches ?? [],
+    men: men ? { name: men.name, matches: men.matches } : null,
+    women: women ? { name: women.name, matches: women.matches } : null,
   });
 }

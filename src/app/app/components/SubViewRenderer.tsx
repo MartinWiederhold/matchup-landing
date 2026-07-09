@@ -10,6 +10,7 @@ import CreateGroup from "./subviews/CreateGroup";
 import GameDetail from "./subviews/GameDetail";
 import CreateGame from "./subviews/CreateGame";
 import GameReview from "./subviews/GameReview";
+import TennisLive from "./subviews/TennisLive";
 import GameResult from "./subviews/GameResult";
 import Leaderboard from "./subviews/Leaderboard";
 import GameRequests from "./subviews/GameRequests";
@@ -49,6 +50,8 @@ export default function SubViewRenderer({
       return <CreateGame gameId={subView.gameId} />;
     case "game-review":
       return <GameReview gameId={subView.gameId} />;
+    case "tennis-live":
+      return <TennisLive />;
     case "game-result":
       return <GameResult gameId={subView.gameId} />;
     case "leaderboard":
