@@ -338,7 +338,39 @@ const HOTEL_NIGHT: Record<Tier, number> = {
 const ENTRY_FEE: Record<Tier, number> = {
   GS: 0, ATP1000: 0, ATP500: 0, ATP250: 0, CH125: 0, CH100: 0, CH75: 0, CH50: 0, ITF25: 45, ITF15: 40,
 };
+const FOOD_DAY: Record<Tier, number> = {
+  GS: 50, ATP1000: 48, ATP500: 42, ATP250: 38, CH125: 30, CH100: 30, CH75: 28, CH50: 26, ITF25: 24, ITF15: 22,
+};
 const TRANSFER = 45;
+
+// Regionale Kostenfaktoren (Unterkunft/Verpflegung/Transfer) – aus der Tour-Analyse:
+// Nordafrika/Türkei sind deutlich günstiger (~400–650 €/Woche) als West-/Mitteleuropa (~800–1250 €).
+type Region = "africa" | "turkey" | "southeu" | "westeu" | "dach" | "americas" | "asia" | "pricey" | "other";
+const REGION_FACTOR: Record<Region, number> = {
+  africa: 0.55, turkey: 0.6, southeu: 0.85, westeu: 1.0, dach: 1.2, americas: 1.15, asia: 1.05, pricey: 1.3, other: 0.95,
+};
+const REGION_OF: Record<string, Region> = {
+  Tunesien: "africa", Ägypten: "africa", Marokko: "africa", Südafrika: "africa", Algerien: "africa",
+  Türkei: "turkey",
+  Griechenland: "southeu", Spanien: "southeu", Portugal: "southeu", Italien: "southeu", Kroatien: "southeu",
+  Serbien: "southeu", Slowenien: "southeu", Ungarn: "southeu", Bulgarien: "southeu",
+  Frankreich: "westeu", Niederlande: "westeu", Belgien: "westeu", "Vereinigtes Königreich": "westeu",
+  Grossbritannien: "westeu", England: "westeu", Monaco: "westeu", Schweden: "westeu",
+  Deutschland: "dach", Österreich: "dach", Schweiz: "dach",
+  USA: "americas", Kanada: "americas", Mexiko: "americas", Brasilien: "americas", Argentinien: "americas", Chile: "americas",
+  China: "asia", Japan: "asia", Hongkong: "asia",
+  "Vereinigte Arabische Emirate": "pricey", Katar: "pricey", Australien: "pricey",
+};
+export function regionFactor(country: string): number {
+  return REGION_FACTOR[REGION_OF[country] ?? "other"];
+}
+
+// Preisgeld je Runde (Brutto-Richtwerte, Anteil am Sieger-Preisgeld) – Standard-ATP/ITF-Verteilung.
+const PRIZE_FRACTION = [1, 0.59, 0.35, 0.21, 0.13]; // Sieger, Finale, HF, VF, Achtelfinale
+export function prizeByRound(t: Tournament): number[] {
+  const w = prizeFor(t);
+  return PRIZE_FRACTION.map((f) => Math.round(w * f));
+}
 
 export type Leg = { from: string; to: string; mode: "Flug" | "Bahn" | "Auto"; km: number; cost: number };
 export function leg(from: { name?: string; city?: string; lat: number; lng: number }, to: { name?: string; city?: string; lat: number; lng: number }): Leg {
@@ -352,9 +384,10 @@ export function leg(from: { name?: string; city?: string; lat: number; lng: numb
 }
 
 export type PlanCost = {
-  perTour: { t: Tournament; nights: number; hotel: number; transfer: number; entry: number; total: number; leg: Leg }[];
+  perTour: { t: Tournament; nights: number; hotel: number; food: number; transfer: number; entry: number; total: number; leg: Leg }[];
   travel: number;
   hotels: number;
+  food: number;
   transfers: number;
   entry: number;
   total: number;
@@ -399,18 +432,21 @@ export function autoPlan(list: Tournament[], budgetLimit: number, start: HomeBas
 }
 
 export function computePlan(plan: Tournament[], start: HomeBase): PlanCost {
-  let travel = 0, hotels = 0, transfers = 0, entry = 0, points = 0, prize = 0;
+  let travel = 0, hotels = 0, food = 0, transfers = 0, entry = 0, points = 0, prize = 0;
   let prev: { name?: string; city?: string; lat: number; lng: number } = start;
   const perTour = plan.map((t) => {
     const lg = leg(prev, t);
     const n = nights(t);
-    const hotel = n * HOTEL_NIGHT[t.tier];
+    const rf = regionFactor(t.country); // Unterkunft/Verpflegung/Transfer nach Region
+    const hotel = Math.round(n * HOTEL_NIGHT[t.tier] * rf);
+    const fd = Math.round(n * FOOD_DAY[t.tier] * rf);
+    const transfer = Math.round(TRANSFER * rf);
     const fee = ENTRY_FEE[t.tier];
     const meta = TIER_META[t.tier];
-    travel += lg.cost; hotels += hotel; transfers += TRANSFER; entry += fee;
+    travel += lg.cost; hotels += hotel; food += fd; transfers += transfer; entry += fee;
     points += meta.points[0]; prize += prizeFor(t);
     prev = t;
-    return { t, nights: n, hotel, transfer: TRANSFER, entry: fee, total: lg.cost + hotel + TRANSFER + fee, leg: lg };
+    return { t, nights: n, hotel, food: fd, transfer, entry: fee, total: lg.cost + hotel + fd + transfer + fee, leg: lg };
   });
-  return { perTour, travel, hotels, transfers, entry, total: travel + hotels + transfers + entry, points, prize };
+  return { perTour, travel, hotels, food, transfers, entry, total: travel + hotels + food + transfers + entry, points, prize };
 }

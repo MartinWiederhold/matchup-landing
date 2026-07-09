@@ -13,6 +13,7 @@ import {
   fmtEUR,
   computePlan,
   prizeFor,
+  prizeByRound,
   urlFor,
   tournamentLogo,
   CLUSTER_HUBS,
@@ -228,7 +229,8 @@ export default function SeasonPlanner({
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
           <Row label="Reise (Flug/Bahn/Auto)" value={fmtEUR(cost.travel)} />
-          <Row label="Hotels" value={fmtEUR(cost.hotels)} />
+          <Row label="Unterkunft" value={fmtEUR(cost.hotels)} />
+          <Row label="Verpflegung" value={fmtEUR(cost.food)} />
           <Row label="Transfers" value={fmtEUR(cost.transfers)} />
           <Row label="Nenngelder" value={fmtEUR(cost.entry)} />
         </div>
@@ -629,17 +631,45 @@ function TournamentDetail({
         )}
       </div>
 
-      <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Punkte je Runde</h3>
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
-          {meta.points.map((p, i) => (
-            <div key={i} className="flex items-center justify-between border-b border-neutral-100 px-3 py-2 text-sm last:border-0">
-              <span className="text-neutral-500">{ROUND_LABELS[i]}</span>
-              <span className="font-bold">{p} Pkt</span>
+      {(() => {
+        const weekCost = cost.hotel + cost.food + cost.transfer + cost.entry; // Woche vor Ort, ohne Anreise
+        const roundPrize = prizeByRound(t);
+        let beIdx = -1;
+        for (let i = roundPrize.length - 1; i >= 0; i--) if (roundPrize[i] >= weekCost) { beIdx = i; break; }
+        return (
+          <div>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Punkte &amp; Preisgeld je Runde</h3>
+            {/* Break-even */}
+            <div className="mb-2 rounded-2xl p-3" style={{ background: beIdx >= 0 ? "#ecfdf5" : "#fff7ed" }}>
+              <div className="flex items-center gap-1.5 text-sm font-extrabold" style={{ color: beIdx >= 0 ? "#059669" : "#c2410c" }}>
+                <span>{beIdx >= 0 ? "💰" : "⚠️"}</span>
+                {beIdx >= 0 ? `Kostendeckend ab ${ROUND_LABELS[beIdx]}` : "Deckt die Woche nicht"}
+              </div>
+              <p className="mt-0.5 text-[11px] text-neutral-500">
+                Woche vor Ort ~{fmtEUR(weekCost)} (ohne Anreise) · Preisgeld brutto, vor Steuern
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="overflow-hidden rounded-xl border border-neutral-200">
+              <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">
+                <span>Runde</span>
+                <span className="flex gap-4"><span className="w-16 text-right">Preisgeld</span><span className="w-12 text-right">Punkte</span></span>
+              </div>
+              {meta.points.map((p, i) => {
+                const be = i === beIdx;
+                return (
+                  <div key={i} className={`flex items-center justify-between border-b border-neutral-100 px-3 py-2 text-sm last:border-0 ${be ? "bg-emerald-50" : ""}`}>
+                    <span className={be ? "font-bold text-emerald-700" : "text-neutral-500"}>{ROUND_LABELS[i]}{be ? " · Break-even" : ""}</span>
+                    <span className="flex gap-4">
+                      <span className="w-16 text-right font-semibold">{fmtEUR(roundPrize[i])}</span>
+                      <span className="w-12 text-right font-bold">{p} Pkt</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Benötigte Dokumente</h3>
@@ -669,7 +699,8 @@ function TournamentDetail({
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Kosten ab {start.name}</h3>
         <div className="overflow-hidden rounded-xl border border-neutral-200">
           <Line label={`Anreise (${cost.leg.mode}, ${cost.leg.km.toLocaleString("de-CH")} km)`} value={fmtEUR(cost.leg.cost)} />
-          <Line label={`Hotel (${cost.nights} Nächte)`} value={fmtEUR(cost.hotel)} />
+          <Line label={`Unterkunft (${cost.nights} Nächte)`} value={fmtEUR(cost.hotel)} />
+          <Line label={`Verpflegung (${cost.nights} Tage)`} value={fmtEUR(cost.food)} />
           <Line label="Transfer" value={fmtEUR(cost.transfer)} />
           {cost.entry > 0 && <Line label="Nenngeld" value={fmtEUR(cost.entry)} />}
           <div className="flex items-center justify-between bg-neutral-50 px-3 py-2.5 text-sm font-bold">
@@ -677,7 +708,7 @@ function TournamentDetail({
             <span>{fmtEUR(cost.total)}</span>
           </div>
         </div>
-        <p className="mt-1.5 text-[11px] text-neutral-400">Richtwerte (Distanz &amp; Kategorie). Live-Preise beim Anbieter buchen ↓</p>
+        <p className="mt-1.5 text-[11px] text-neutral-400">Kosten regional kalibriert ({t.country}). Richtwerte – Live-Preise beim Anbieter buchen ↓</p>
       </div>
 
       {/* Unterkunft & Transfer – Deep-Links (Buchung beim Anbieter, für Turnierdaten vorausgefüllt) */}
