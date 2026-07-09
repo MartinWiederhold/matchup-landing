@@ -49,11 +49,11 @@ export default function Header() {
   const primaryItems: NavFeature[] = [
     { label: t("header.findPartner"), href: "/find-a-partner" },
     { label: t("header.atp"), href: "/map", waitlist: true },
-    { label: t("header.events"), href: "/events" },
   ];
 
-  // Unter „Mehr"-Dropdown: Shop & Advice (Coming soon).
+  // Unter „Mehr"-Dropdown: Events (Link), dann Shop & Advice (Coming soon).
   const moreItems: NavFeature[] = [
+    { label: t("header.events"), href: "/events" },
     { label: t("header.shop"), href: "/shop", waitlist: true },
     { label: t("header.beratung"), href: "/beratung", waitlist: true },
   ];
@@ -118,16 +118,27 @@ export default function Header() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
                 <div className="absolute right-0 top-full z-50 mt-3 w-48 overflow-hidden rounded-2xl border border-white/10 bg-black p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)]">
-                  {moreItems.map((item) => (
-                    <button
-                      key={item.href}
-                      type="button"
-                      onClick={() => openWaitlist(item)}
-                      className="block w-full rounded-xl px-3.5 py-2.5 text-left text-[13px] font-semibold tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {moreItems.map((item) =>
+                    item.waitlist ? (
+                      <button
+                        key={item.href}
+                        type="button"
+                        onClick={() => openWaitlist(item)}
+                        className="block w-full rounded-xl px-3.5 py-2.5 text-left text-[13px] font-semibold tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMoreOpen(false)}
+                        className="block w-full rounded-xl px-3.5 py-2.5 text-left text-[13px] font-semibold tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+                      >
+                        {item.label}
+                      </a>
+                    ),
+                  )}
                 </div>
               </>
             )}
