@@ -43,23 +43,22 @@ export function FormRing({ score, onOpen }: { score: number; onOpen: () => void 
   const pct = Math.max(4, Math.min(100, ((score - 800) / 800) * 100));
   const off = C * (1 - pct / 100);
   return (
-    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl border border-matchup/25 bg-gradient-to-br from-matchup/25 to-indigo-600/10 p-4 text-left">
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-left text-white shadow-lg">
       <div className="relative h-[92px] w-[92px] shrink-0">
         <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
-          <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="8.5" />
-          <circle cx="46" cy="46" r={R} fill="none" stroke="url(#fg)" strokeWidth="8.5" strokeLinecap="round"
-            strokeDasharray={C} strokeDashoffset={off} style={{ filter: "drop-shadow(0 0 6px rgba(16,230,160,.45))" }} />
-          <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#10e6a0" /><stop offset="1" stopColor="#4b3bf3" /></linearGradient></defs>
+          <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="8.5" />
+          <circle cx="46" cy="46" r={R} fill="none" stroke="#ffffff" strokeWidth="8.5" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={off} style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,.5))" }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[22px] font-extrabold leading-none tracking-tight">{score}</span>
-          <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">{t("discover.matchScore")}</span>
+          <span className="text-[22px] font-extrabold leading-none tracking-tight text-white">{score}</span>
+          <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-white/60">{t("discover.matchScore")}</span>
         </div>
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-400">{t("discover.yourForm")}</div>
-        <h3 className="mt-1 text-base font-extrabold tracking-tight">{t("discover.formSub")}</h3>
-        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-zinc-400">{t("discover.formTap")} <ChevronRightIcon size={13} /></p>
+        <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/75">{t("discover.yourForm")}</div>
+        <h3 className="mt-1 text-base font-extrabold tracking-tight text-white">{t("discover.formSub")}</h3>
+        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-white/75">{t("discover.formTap")} <ChevronRightIcon size={13} /></p>
       </div>
     </button>
   );
@@ -72,24 +71,22 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.newPeople")} />
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto rounded-2xl border border-matchup/20 bg-matchup/[0.08] p-3.5">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-3.5 shadow-lg">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-white/25 text-zinc-500"><PlusIcon size={22} /></span>
-          <span className="max-w-[60px] truncate text-[11px] text-zinc-500">{t("discover.find")}</span>
+          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-white/45 text-white/75"><PlusIcon size={22} /></span>
+          <span className="max-w-[60px] truncate text-[11px] text-white/75">{t("discover.find")}</span>
         </button>
         {people.map((p) => (
           <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-            <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-400 p-[2px]">
-              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-sm font-bold text-white ring-[2.5px] ring-black">
-                {p.profile_image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (p.first_name?.[0] ?? "?").toUpperCase()
-                )}
-              </span>
+            <span className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full bg-white/15 text-sm font-bold text-white ring-2 ring-white/55">
+              {p.profile_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+              ) : (
+                (p.first_name?.[0] ?? "?").toUpperCase()
+              )}
             </span>
-            <span className="max-w-[60px] truncate text-[11px] text-zinc-300">{p.first_name}</span>
+            <span className="max-w-[60px] truncate text-[11px] font-medium text-white/90">{p.first_name}</span>
           </button>
         ))}
       </div>
@@ -128,7 +125,11 @@ export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect:
                     ))}
                   </div>
                 ) : (
-                  <SportIcon sport={s.key} size={26} className="text-white" />
+                  <div className="flex -space-x-2.5">
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className="h-8 w-8 rounded-full bg-white/10 ring-2 ring-[#0c0c12]" />
+                    ))}
+                  </div>
                 )}
                 <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full ring-2 ring-black" style={{ background: s.color }} />
               </div>
