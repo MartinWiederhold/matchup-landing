@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase";
 import { useOnline } from "@/lib/hooks/useOnline";
 import { AppNavContext, type TabKey, type SubViewState } from "./appNav";
 import DiscoverTab from "./tabs/DiscoverTab";
-import LikesTab from "./tabs/LikesTab";
 import MatchesTab from "./tabs/MatchesTab";
 import GamesTab from "./tabs/GamesTab";
 import ProfileTab from "./tabs/ProfileTab";
@@ -16,7 +15,6 @@ import TabBar, { type TabDef } from "./TabBar";
 
 const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
   { key: "discover", labelKey: "app.tabDiscover", icon: "M12 2 4 7v10l8 5 8-5V7z" },
-  { key: "likes", labelKey: "app.tabLikes", icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M19 8v6 M22 11h-6" },
   { key: "matches", labelKey: "app.tabMatches", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
   { key: "games", labelKey: "app.tabGames", icon: "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
   { key: "profile", labelKey: "app.tabProfile", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
@@ -227,7 +225,6 @@ export default function AppShell({ profile }: { profile: Profile }) {
           )}
           <div className="pb-28">
             {activeTab === "discover" && <DiscoverTab />}
-            {activeTab === "likes" && <LikesTab />}
             {activeTab === "matches" && <MatchesTab />}
             {activeTab === "games" && <GamesTab />}
             {activeTab === "profile" && <ProfileTab />}
@@ -237,7 +234,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
             tabs={tabs}
             active={activeTab}
             onSelect={selectTab}
-            badges={{ likes: likeCount, matches: unreadCount }}
+            badges={{ matches: unreadCount + likeCount }}
             hidden={navHidden}
           />
         </div>
