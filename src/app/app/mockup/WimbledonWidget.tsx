@@ -57,8 +57,11 @@ function fmtRange(a: string | null, b: string | null): string {
 export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const dark = theme === "dark";
   const cx = {
-    ring: dark ? "ring-1 ring-white/10" : "ring-1 ring-black/10 shadow-lg",
-    body: dark ? "bg-[#0c0c0f]" : "bg-white",
+    ring: dark ? "ring-1 ring-white/10" : "",
+    outer: dark ? "" : "bg-black/[0.035]",
+    headerBg: dark ? "bg-white" : "",
+    badge: dark ? "bg-neutral-100" : "bg-white",
+    body: dark ? "bg-[#0c0c0f]" : "",
     dayBorder: dark ? "border-white/[0.07]" : "border-black/10",
     dayActive: dark ? "text-white" : "text-neutral-900",
     dayIdle: dark ? "text-zinc-500" : "text-neutral-400",
@@ -136,11 +139,11 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
   const liveAny = cats.some((c) => c.matches.some((m) => m.state === "in"));
 
   return (
-    <div className={`mt-4 overflow-hidden rounded-[24px] ${cx.ring}`}>
-      {/* Kopf (Weiss) — klickbar zum Auf-/Zuklappen */}
-      <div className="bg-white px-4 pt-4">
+    <div className={`mt-4 overflow-hidden rounded-[24px] ${cx.ring} ${cx.outer}`}>
+      {/* Kopf — klickbar zum Auf-/Zuklappen */}
+      <div className={`${cx.headerBg} px-4 pt-4`}>
         <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 pb-4 text-left">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-1 ring-black/10">
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/10 ${cx.badge}`}>
             {logo ? (
               <img src={logo} alt="" className="h-7 w-7 object-contain" />
             ) : (
