@@ -57,11 +57,11 @@ function fmtRange(a: string | null, b: string | null): string {
 export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const dark = theme === "dark";
   const cx = {
-    ring: dark ? "ring-1 ring-white/10" : "",
-    outer: dark ? "" : "bg-black/[0.035]",
-    headerBg: dark ? "bg-white" : "",
-    badge: dark ? "bg-neutral-100" : "bg-white",
-    body: dark ? "bg-[#0c0c0f]" : "",
+    ring: dark ? "ring-1 ring-white/10" : "ring-1 ring-black/10 shadow-lg",
+    outer: "",
+    headerBg: dark ? "bg-white" : "bg-white",
+    badge: dark ? "bg-neutral-100" : "bg-neutral-100",
+    body: dark ? "bg-[#0c0c0f]" : "bg-white",
     dayBorder: dark ? "border-white/[0.07]" : "border-black/10",
     dayActive: dark ? "text-white" : "text-neutral-900",
     dayIdle: dark ? "text-zinc-500" : "text-neutral-400",
