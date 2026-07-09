@@ -299,6 +299,9 @@ export default function DiscoverTab() {
           <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />
         </section>
 
+        {/* Live im Profitennis (aktueller Grand Slam) */}
+        <LiveTennisCard />
+
         {/* Neue Leute (Stories) */}
         <StoryRow
           people={candidates.slice(0, 10)}
@@ -340,9 +343,6 @@ export default function DiscoverTab() {
             </div>
           )}
         </section>
-
-        {/* Live im Profitennis */}
-        <LiveTennisCard />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />
