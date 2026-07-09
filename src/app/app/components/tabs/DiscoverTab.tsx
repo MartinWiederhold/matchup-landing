@@ -19,7 +19,7 @@ import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
 import Avatar from "../shared/Avatar";
-import { greeting, FormRing, StoryRow, NextGameCard, LiveTennisCard, CommunityCard } from "../home/HomeSections";
+import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, LiveTennisCard, CommunityCard } from "../home/HomeSections";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
@@ -308,6 +308,9 @@ export default function DiscoverTab() {
           onOpen={(id) => openSubView({ type: "full-profile", userId: id })}
           onFind={() => setShowFilter(true)}
         />
+
+        {/* Nach Sportart (Tennis/Padel/Pickleball) */}
+        <SportGroups people={candidates} onSelect={(sport) => setFilters((f) => ({ ...f, sports: [sport] }))} />
 
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />

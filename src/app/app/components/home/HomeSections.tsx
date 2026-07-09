@@ -13,7 +13,7 @@ import {
   UsersIcon,
   SportIcon,
 } from "../shared/icons";
-import type { Profile, GameEvent } from "@/lib/types";
+import type { Profile, GameEvent, Sport } from "@/lib/types";
 
 /* ── Begrüßung nach Tageszeit ─────────────────────────────── */
 export function greeting(t: ReturnType<typeof useT>, name: string): string {
@@ -43,7 +43,7 @@ export function FormRing({ score, onOpen }: { score: number; onOpen: () => void 
   const pct = Math.max(4, Math.min(100, ((score - 800) / 800) * 100));
   const off = C * (1 - pct / 100);
   return (
-    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl border border-matchup/25 bg-gradient-to-br from-matchup/25 to-indigo-600/10 p-4 text-left">
       <div className="relative h-[92px] w-[92px] shrink-0">
         <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
           <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="8.5" />
@@ -92,6 +92,51 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
             <span className="max-w-[60px] truncate text-[11px] text-zinc-300">{p.first_name}</span>
           </button>
         ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Sport-Gruppen (Tennis/Padel/Pickleball) mit Mitglieder-Avataren ── */
+const SPORT_GROUPS: { key: Sport; color: string }[] = [
+  { key: "tennis", color: "#10e6a0" },
+  { key: "padel", color: "#7b6cff" },
+  { key: "pickleball", color: "#f59e0b" },
+];
+export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect: (sport: Sport) => void }) {
+  const t = useT();
+  return (
+    <section className="mt-6 px-4">
+      <SectionHead label={t("discover.sportsSection")} />
+      <div className="grid grid-cols-3 gap-3">
+        {SPORT_GROUPS.map((s) => {
+          const members = people.filter((p) => (p.sports ?? []).includes(s.key));
+          return (
+            <button key={s.key} type="button" onClick={() => onSelect(s.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] py-4">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full" style={{ background: `radial-gradient(circle at 32% 28%, ${s.color}55, ${s.color}14)` }}>
+                {members.length ? (
+                  <div className="flex -space-x-2.5">
+                    {members.slice(0, 3).map((p, i) => (
+                      <span key={i} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[10px] font-bold text-white ring-2 ring-[#0c0c12]">
+                        {p.profile_image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          (p.first_name?.[0] ?? "?").toUpperCase()
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <SportIcon sport={s.key} size={26} className="text-white" />
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full ring-2 ring-black" style={{ background: s.color }} />
+              </div>
+              <span className="text-xs font-extrabold">{sportLabel(s.key)}</span>
+              <span className="text-[10px] text-zinc-500">{members.length} {t("discover.players")}</span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );
@@ -179,7 +224,7 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.nextGame")} action={t("discover.openGamesAll")} onAction={onAll} />
-      <button type="button" onClick={() => onOpen(game.id)} className="flex w-full items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+      <button type="button" onClick={() => onOpen(game.id)} className="flex w-full items-center gap-3.5 rounded-2xl border border-white/15 bg-white/[0.10] p-4 text-left">
         <div className="w-14 shrink-0 text-center">
           <div className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">{dd}</div>
           <div className="mt-0.5 text-[19px] font-extrabold tracking-tight">{hh}</div>
