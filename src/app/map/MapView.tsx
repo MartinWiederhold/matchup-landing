@@ -219,34 +219,42 @@ function startMarkerIcon(): L.DivIcon {
   });
 }
 
+// „N Spieler hier"-Badge (Community-Präsenz) oben rechts am Marker.
+function playerBadge(players: number): string {
+  if (players <= 0) return "";
+  return `<span style="position:absolute;top:-6px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:9999px;background:#10b981;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:800;line-height:1;">${players}</span>`;
+}
+
 // Turnier-Marker: nummeriert wenn im Plan; sonst das echte Turnier-Logo (Favicon), sonst Stern.
-function tourMarkerIcon(t: Tournament, order: number | null, active: boolean, color?: string): L.DivIcon {
+function tourMarkerIcon(t: Tournament, order: number | null, active: boolean, color?: string, players = 0): L.DivIcon {
   const c = color ?? TIER_META[t.tier].color;
   const ring = active
     ? "box-shadow:0 0 0 4px rgba(75,59,243,.32),0 6px 14px rgba(0,0,0,.3);transform:scale(1.12);"
     : "box-shadow:0 3px 10px rgba(0,0,0,.28);";
   const logo = order == null ? tournamentLogo(t) : null;
 
+  let size: number;
+  let core: string;
   if (order != null) {
-    const size = 32;
-    return L.divIcon({
-      className: "",
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-      html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;transition:transform .15s;"><span style="color:#fff;font-weight:800;font-size:13px;">${order}</span></div>`,
-    });
+    size = 32;
+    core = `<div style="width:32px;height:32px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;transition:transform .15s;"><span style="color:#fff;font-weight:800;font-size:13px;">${order}</span></div>`;
+  } else if (logo) {
+    size = 26;
+    core = `<div style="width:26px;height:26px;border-radius:9999px;background:#fff;border:2.5px solid ${c};${ring}display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${logo}" width="16" height="16" style="border-radius:3px;display:block" alt="" /></div>`;
+  } else {
+    size = 24;
+    core = `<div style="width:24px;height:24px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:12px;line-height:1;">★</span></div>`;
   }
-
-  const size = 26;
-  // Logo auf weissem Grund mit Kategorie-Farbring; Fallback = Stern auf farbigem Grund
-  const inner = logo
-    ? `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:#fff;border:2.5px solid ${c};${ring}display:flex;align-items:center;justify-content:center;overflow:hidden;"><img src="${logo}" width="16" height="16" style="border-radius:3px;display:block" alt="" /></div>`
-    : `<div style="width:24px;height:24px;border-radius:9999px;background:${c};border:3px solid #fff;${ring}display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:12px;line-height:1;">★</span></div>`;
-  return L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: inner });
+  return L.divIcon({
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<div style="position:relative;width:${size}px;height:${size}px;">${core}${playerBadge(players)}</div>`,
+  });
 }
 
 // Cluster-Bubble: viele Wochen am selben Ort (ITF/Challenger-Hub) → EIN Marker statt Pin-Stapel.
-function clusterMarkerIcon(count: number, label: string, highlight: boolean): L.DivIcon {
+function clusterMarkerIcon(count: number, label: string, highlight: boolean, players = 0): L.DivIcon {
   const ring = highlight
     ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.32);"
     : "box-shadow:0 4px 12px rgba(0,0,0,.32);";
@@ -254,10 +262,10 @@ function clusterMarkerIcon(count: number, label: string, highlight: boolean): L.
     className: "",
     iconSize: [44, 44],
     iconAnchor: [22, 22],
-    html: `<div style="min-width:40px;height:40px;padding:0 7px;border-radius:9999px;background:linear-gradient(135deg,#4b3bf3,#8b5cf6);border:3px solid #fff;${ring}display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;line-height:1.05;">
+    html: `<div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><div style="min-width:40px;height:40px;padding:0 7px;border-radius:9999px;background:linear-gradient(135deg,#4b3bf3,#8b5cf6);border:3px solid #fff;${ring}display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;line-height:1.05;">
       <span style="font-size:14px;font-weight:800;">${count}×</span>
       <span style="font-size:7.5px;font-weight:700;letter-spacing:.03em;opacity:.95;">${label}</span>
-    </div>`,
+    </div>${playerBadge(players)}</div>`,
   });
 }
 
@@ -307,6 +315,7 @@ export default function MapView() {
   const [budget, setBudget] = useState(15000);
   const [selTid, setSelTid] = useState<string | null>(null);
   const [tours, setTours] = useState<Tournament[]>(TOURNAMENTS); // DB > statischer Fallback
+  const [presence, setPresence] = useState<Record<string, number>>({}); // tournament_id → Spieler vor Ort
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
@@ -445,6 +454,27 @@ export default function MapView() {
         );
       });
   }, []);
+
+  // Präsenz-Zähler je Turnier (nur für angemeldete Spieler sichtbar; RLS liefert sonst leer)
+  useEffect(() => {
+    if (tab !== "season") return;
+    let cancel = false;
+    supabase
+      .from("player_presence")
+      .select("tournament_id")
+      .then(({ data }) => {
+        if (cancel || !data) return;
+        const m: Record<string, number> = {};
+        for (const r of data) {
+          const id = r.tournament_id as string;
+          m[id] = (m[id] ?? 0) + 1;
+        }
+        setPresence(m);
+      });
+    return () => {
+      cancel = true;
+    };
+  }, [tab, selTid]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -624,8 +654,9 @@ export default function MapView() {
         const label = Array.from(new Set(shown.map((t) => TIER_META[t.tier].short))).slice(0, 2).join("·");
         const soonest = [...shown].sort(byDate as never)[0] as Tournament;
         const [lat, lng] = [shown[0].lat, shown[0].lng];
+        const players = shown.reduce((s, x) => s + (presence[x.id] ?? 0), 0);
         L.marker([lat, lng], {
-          icon: clusterMarkerIcon(shown.length, label, active || anyInPlan),
+          icon: clusterMarkerIcon(shown.length, label, active || anyInPlan, players),
           keyboard: false,
           zIndexOffset: anyInPlan ? 300 : 60,
         })
@@ -643,7 +674,7 @@ export default function MapView() {
         const status = hasRank ? eligibility(profile, t).status : null;
         const color = status ? ELIG_COLOR[status] : undefined;
         L.marker([t.lat, t.lng], {
-          icon: tourMarkerIcon(t, inP ? order + 1 : null, t.id === selTid, color),
+          icon: tourMarkerIcon(t, inP ? order + 1 : null, t.id === selTid, color, presence[t.id] ?? 0),
           keyboard: false,
           zIndexOffset: t.id === selTid ? 600 : inP ? 300 : 0,
         })
@@ -654,7 +685,7 @@ export default function MapView() {
           });
       }
     }
-  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible]);
+  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, presence]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
