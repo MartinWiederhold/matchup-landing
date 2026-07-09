@@ -13,7 +13,7 @@ import { DateField, TimeField } from "../shared/DateTimePicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
-export default function CreateGame({ gameId }: { gameId?: string }) {
+export default function CreateGame({ gameId, invite }: { gameId?: string; invite?: string }) {
   const t = useT();
   const { profile, closeSubView } = useAppNav();
   const isEdit = !!gameId;
@@ -29,7 +29,7 @@ export default function CreateGame({ gameId }: { gameId?: string }) {
   const [maxP, setMaxP] = useState(2);
   const [isOpen, setIsOpen] = useState(true);
   const [booked, setBooked] = useState(false);
-  const [contacts, setContacts] = useState<string[]>([]);
+  const [contacts, setContacts] = useState<string[]>(invite && !gameId ? [invite] : []);
   const [initialContacts, setInitialContacts] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");

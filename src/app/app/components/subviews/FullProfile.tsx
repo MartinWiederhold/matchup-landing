@@ -248,6 +248,7 @@ export default function FullProfile({
               </li>
               <li className="flex items-center gap-2">
                 <StatsIcon size={15} /> {skillLabel(p.skill_level)}
+                <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">{t("profile.selfRated")}</span>
               </li>
               {p.official_rating && (
                 <li className="flex items-center gap-2">

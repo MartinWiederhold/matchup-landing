@@ -101,7 +101,8 @@ export default function ProfileTab() {
         )}
         <p className="mt-1 text-sm text-zinc-400">
           <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {profile.sports.map(sportLabel).join(", ")} ·{" "}
-          {skillLabel(profile.skill_level)}
+          {skillLabel(profile.skill_level)}{" "}
+          <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 align-[1px] text-[10px] font-medium text-zinc-500">{t("profile.selfRated")}</span>
         </p>
 
         {/* MatchScore — Elo-Rating (tippen → Rangliste) */}

@@ -23,7 +23,8 @@ export const app = {
     // MatchAnimation
     youAreConnected: "IHR SEID VERBUNDEN!",
     connectedText:
-      "Du und {name} möchtet beide spielen — schreib direkt los und plant euer Match.",
+      "Du und {name} möchtet beide spielen — schlag direkt ein Match vor.",
+    suggestGame: "Spiel vorschlagen",
     sendMessage: "Nachricht senden",
     continueDiscovering: "Weiter entdecken",
     // AgeRangeSlider
@@ -64,7 +65,8 @@ export const app = {
     // MatchAnimation
     youAreConnected: "YOU'RE CONNECTED!",
     connectedText:
-      "You and {name} both want to play — start chatting and plan your match.",
+      "You and {name} both want to play — suggest a match right away.",
+    suggestGame: "Suggest a game",
     sendMessage: "Send message",
     continueDiscovering: "Keep discovering",
     // AgeRangeSlider

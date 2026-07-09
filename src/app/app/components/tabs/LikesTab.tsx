@@ -136,6 +136,11 @@ export default function LikesTab() {
         <MatchAnimation
           me={profile}
           other={matchWith}
+          onSuggestGame={() => {
+            const id = matchWith.id;
+            setMatchWith(null);
+            openSubView({ type: "create-game", invite: id });
+          }}
           onMessage={async () => {
             const [u1, u2] = [profile.id, matchWith.id].sort();
             const { data } = await supabase

@@ -14,7 +14,7 @@ export type SubViewState =
   | { type: "group-chat"; groupId: string }
   | { type: "create-group" }
   | { type: "game-detail"; gameId: string }
-  | { type: "create-game" }
+  | { type: "create-game"; invite?: string }
   | { type: "edit-game"; gameId: string }
   | { type: "game-review"; gameId: string }
   | { type: "game-result"; gameId: string }
