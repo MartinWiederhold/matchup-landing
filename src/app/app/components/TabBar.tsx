@@ -29,7 +29,7 @@ export default function TabBar({
 }) {
   return (
     <div
-      className={`pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(14px,env(safe-area-inset-bottom))] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+      className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[max(14px,env(safe-area-inset-bottom))] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
         hidden
           ? "translate-y-[160%] opacity-0"
           : "translate-y-0 opacity-100"

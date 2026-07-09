@@ -44,31 +44,42 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [kb, setKb] = useState(0);
   const [vtop, setVtop] = useState(0);
 
-  // Dokument-Scroll sperren + Body schwarz, solange die App offen ist.
-  // Verhindert, dass Safari beim Öffnen der Tastatur die Seite hochscrollt und
-  // darunter der (weisse) Body sichtbar wird.
+  const current = stack[stack.length - 1] ?? null;
+  const inSubview = !!current;
+
+  // Body immer schwarz (kein weisses Durchblitzen).
   useEffect(() => {
     const body = document.body;
+    const prevBg = body.style.background;
+    body.style.background = "#000";
+    return () => { body.style.background = prevBg; };
+  }, []);
+
+  // Harten Scroll-Lock (position:fixed) NUR in Subviews mit Texteingabe
+  // (Chat, Formulare), wo die Tastatur-Logik den fixen Rahmen braucht. In der
+  // Tab-Ansicht bleibt das Dokument frei scrollbar → iOS-Safari klappt seine
+  // untere Adressleiste ein (Blue-Cinema-Effekt) und die fixe Tab-Bar rutscht
+  // mit nach unten.
+  useEffect(() => {
+    const body = document.body;
+    if (!inSubview) return;
     const prev = {
-      background: body.style.background,
       overflow: body.style.overflow,
       position: body.style.position,
       width: body.style.width,
       height: body.style.height,
     };
-    body.style.background = "#000";
     body.style.overflow = "hidden";
     body.style.position = "fixed";
     body.style.width = "100%";
     body.style.height = "100%";
     return () => {
-      body.style.background = prev.background;
       body.style.overflow = prev.overflow;
       body.style.position = prev.position;
       body.style.width = prev.width;
       body.style.height = prev.height;
     };
-  }, []);
+  }, [inSubview]);
 
   useEffect(() => {
     // Tastaturhöhe aus dem visuellen Viewport ableiten. Da der Body per
@@ -120,8 +131,14 @@ export default function AppShell({ profile }: { profile: Profile }) {
     setActiveTab(t);
     setNavHidden(false);
     lastScroll.current = 0;
+    // Beim Tab-Wechsel nach oben, damit der neue Tab von oben startet.
+    window.scrollTo(0, 0);
   }, []);
 
+  // In der Tab-Ansicht scrollt jetzt das Dokument (window) selbst. Der Handler
+  // bleibt in den Context gehängt (Kompatibilität), wird aber nicht mehr zum
+  // Ausblenden der Tab-Bar genutzt — die bleibt sichtbar und rutscht wie bei
+  // Blue Cinema mit der einklappenden Safari-Leiste mit.
   function handleScroll(e: React.UIEvent<HTMLDivElement>) {
     const y = e.currentTarget.scrollTop;
     if (y > lastScroll.current + 6 && y > 56) setNavHidden(true);
@@ -167,8 +184,6 @@ export default function AppShell({ profile }: { profile: Profile }) {
     refreshBadges();
   }, [refreshBadges, activeTab]);
 
-  const current = stack[stack.length - 1] ?? null;
-
   return (
     <AppNavContext.Provider
       value={{
@@ -181,48 +196,52 @@ export default function AppShell({ profile }: { profile: Profile }) {
         onScroll: handleScroll,
       }}
     >
-      <div
-        className="fixed inset-x-0 flex justify-center overflow-hidden bg-black"
-        style={{
-          top: vtop,
-          bottom: kb,
-          // Kanten sanft nachziehen → der Ein-Frame-Sprung während der
-          // Tastatur-Animation wird zu einer gleitenden Bewegung geglättet.
-          transition: "top 0.16s ease-out, bottom 0.16s ease-out",
-        }}
-      >
-        <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+      {inSubview ? (
+        // Subview: fixer, tastatursicherer Rahmen (deckt sich exakt mit dem
+        // sichtbaren Viewport, kein Verrutschen beim Tastatur-Öffnen).
+        <div
+          className="fixed inset-x-0 flex justify-center overflow-hidden bg-black"
+          style={{
+            top: vtop,
+            bottom: kb,
+            transition: "top 0.16s ease-out, bottom 0.16s ease-out",
+          }}
+        >
+          <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+            {!online && (
+              <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
+                {t("app.offline")}
+              </div>
+            )}
+            <SubViewRenderer subView={current} />
+          </div>
+        </div>
+      ) : (
+        // Tab-Ansicht: das DOKUMENT scrollt (kein fixer Rahmen) → iOS-Safari
+        // klappt seine untere Leiste ein, die fixe Tab-Bar rutscht mit.
+        <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
           {!online && (
-            <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
+            <div className="bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
               {t("app.offline")}
             </div>
           )}
-          {current ? (
-            <SubViewRenderer subView={current} />
-          ) : (
-            <>
-              <div
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto overscroll-contain pb-28"
-              >
-                {activeTab === "discover" && <DiscoverTab />}
-                {activeTab === "likes" && <LikesTab />}
-                {activeTab === "matches" && <MatchesTab />}
-                {activeTab === "games" && <GamesTab />}
-                {activeTab === "profile" && <ProfileTab />}
-              </div>
+          <div className="pb-28">
+            {activeTab === "discover" && <DiscoverTab />}
+            {activeTab === "likes" && <LikesTab />}
+            {activeTab === "matches" && <MatchesTab />}
+            {activeTab === "games" && <GamesTab />}
+            {activeTab === "profile" && <ProfileTab />}
+          </div>
 
-              <TabBar
-                tabs={tabs}
-                active={activeTab}
-                onSelect={selectTab}
-                badges={{ likes: likeCount, matches: unreadCount }}
-                hidden={navHidden}
-              />
-            </>
-          )}
+          <TabBar
+            tabs={tabs}
+            active={activeTab}
+            onSelect={selectTab}
+            badges={{ likes: likeCount, matches: unreadCount }}
+            hidden={navHidden}
+          />
         </div>
-      </div>
+      )}
     </AppNavContext.Provider>
   );
 }

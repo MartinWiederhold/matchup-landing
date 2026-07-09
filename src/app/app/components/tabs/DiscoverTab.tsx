@@ -47,7 +47,7 @@ function ConnectIcon({ size = 16 }: { size?: number }) {
 export default function DiscoverTab() {
   const t = useT();
   const { locale } = useLocale();
-  const { profile, setActiveTab, openSubView, refreshBadges, onScroll } = useAppNav();
+  const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -270,9 +270,9 @@ export default function DiscoverTab() {
   const displayName = profile.display_name || profile.first_name;
 
   return (
-    <div className="relative flex h-full flex-col">
-      {/* Home-Header: Begrüßung + Filter + Avatar */}
-      <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 pb-1">
+    <div className="relative flex flex-col">
+      {/* Home-Header: Begrüßung + Filter + Avatar (sticky, damit er beim Fenster-Scroll bleibt) */}
+      <header className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 bg-black/80 px-4 pt-3 pb-2 backdrop-blur-xl">
         <div className="min-w-0 flex-1">
           <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">{dateLabel}</div>
           <h1 className="mt-1 truncate text-[22px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
@@ -293,7 +293,7 @@ export default function DiscoverTab() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pb-24" onScroll={onScroll}>
+      <div className="pb-28">
         {/* Form-Ring */}
         <section className="mt-4 px-4">
           <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />
