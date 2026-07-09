@@ -958,8 +958,9 @@ function AuthBlock({
   if (synced) {
     return (
       <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-2.5">
-        <span className="min-w-0 text-[12px] text-emerald-700">
-          ☁ Gesichert als <b className="break-all">{email ?? "deinem Konto"}</b>
+        <span className="flex min-w-0 items-baseline gap-1 text-[12px] text-emerald-700">
+          <span className="shrink-0">☁ Gesichert als</span>
+          <b className="min-w-0 flex-1 truncate" title={email ?? undefined}>{email ?? "deinem Konto"}</b>
         </span>
         <button type="button" onClick={() => void onSignOut()} className="shrink-0 text-[11px] font-bold text-emerald-700 hover:underline">
           Abmelden
