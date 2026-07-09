@@ -26,12 +26,17 @@ import {
   eligibility,
   cutoffFor,
   strategyFor,
+  loadPresence,
+  joinPresence,
+  leavePresence,
+  currentUserId,
   ELIG_COLOR,
   missingDocs,
   requiredDocs,
   DOC_LABELS,
   type PlayerProfile,
   type PlayerDocs,
+  type Presence,
 } from "@/lib/player";
 import type { Venue } from "@/lib/venuesDb";
 import { hotelUrl, flightUrl, carUrl, hotelPriceQuery, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
@@ -137,7 +142,7 @@ export default function SeasonPlanner({
 
   const sel = selTid ? tours.find((t) => t.id === selTid) ?? null : null;
   if (sel) {
-    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} profile={profile} venues={venues} />;
+    return <TournamentDetail t={sel} inPlan={inPlan(sel.id)} onToggle={() => onTogglePlan(sel.id)} onFocus={() => onFocus(sel)} onBack={() => setSelTid(null)} start={start} profile={profile} venues={venues} synced={profileSynced} />;
   }
 
   const spentPct = budget > 0 ? Math.min(100, Math.round((cost.total / budget) * 100)) : 0;
@@ -462,6 +467,7 @@ function TournamentDetail({
   start,
   profile,
   venues,
+  synced,
 }: {
   t: Tournament;
   inPlan: boolean;
@@ -471,6 +477,7 @@ function TournamentDetail({
   start: HomeBase;
   profile: PlayerProfile;
   venues: Venue[];
+  synced: boolean;
 }) {
   const meta = TIER_META[t.tier];
   const cost = computePlan([t], start).perTour[0];
@@ -573,6 +580,9 @@ function TournamentDetail({
           {url.official ? "Offizielle Turnierseite ↗" : "Turnier-Infos suchen ↗"}
         </a>
       </div>
+
+      {/* Wer ist diese Woche hier? + Trainingspartner (Community, opt-in) */}
+      <PresenceSection t={t} profile={profile} synced={synced} />
 
       <div className="grid grid-cols-2 gap-2">
         <Fact label="Termin" value={fmtRange(t)} />
@@ -1124,6 +1134,7 @@ function ProfileCard({
             <Field label="Heimatflughafen"><input value={profile.homeAirport} onChange={(e) => set("homeAirport", e.target.value)} placeholder="z.B. FRA" className="mu-in" /></Field>
             <Field label="Wohnort"><input value={profile.homeCity} onChange={(e) => set("homeCity", e.target.value)} className="mu-in" /></Field>
           </div>
+          <Field label="Kontakt (für Trainingspartner)"><input value={profile.contact} onChange={(e) => set("contact", e.target.value)} placeholder="@insta / WhatsApp-Nr. / E-Mail" className="mu-in" /></Field>
           <div>
             <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-neutral-400">Dokumente (vorhanden abhaken)</div>
             <div className="flex flex-wrap gap-1.5">
@@ -1193,7 +1204,7 @@ function useLivePrices(stop: { city: string; country: string; start: string; end
 }
 
 type Poi = { name: string; lat: number; lng: number; dist: number };
-type PoiCats = Record<"food" | "physio" | "fitness" | "pharmacy" | "supermarket", Poi[]>;
+type PoiCats = Record<"food" | "physio" | "fitness" | "stringer" | "pharmacy" | "supermarket", Poi[]>;
 function useNearbyPOIs(t: Tournament): PoiCats | "loading" | "err" {
   const [state, setState] = useState<PoiCats | "loading" | "err">("loading");
   useEffect(() => {
@@ -1211,6 +1222,7 @@ function useNearbyPOIs(t: Tournament): PoiCats | "loading" | "err" {
 const POI_META: { key: keyof PoiCats; icon: string; label: string }[] = [
   { key: "food", icon: "🍽️", label: "Restaurants & Cafés" },
   { key: "physio", icon: "🧑‍⚕️", label: "Physio" },
+  { key: "stringer", icon: "🎾", label: "Besaitung & Sportgeschäft" },
   { key: "fitness", icon: "🏋️", label: "Fitness & Sportcenter" },
   { key: "supermarket", icon: "🛒", label: "Supermarkt" },
   { key: "pharmacy", icon: "💊", label: "Apotheke" },
@@ -1248,6 +1260,103 @@ function POINearby({ pois }: { pois: PoiCats | "loading" | "err" }) {
         </div>
       ))}
       <p className="text-[11px] text-neutral-400">Umkreis ~3 km · Quelle: OpenStreetMap</p>
+    </div>
+  );
+}
+
+function contactHref(c: string): string {
+  const s = c.trim();
+  if (/^https?:\/\//.test(s)) return s;
+  if (s.startsWith("@")) return `https://instagram.com/${s.slice(1)}`;
+  if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s)) return `mailto:${s}`;
+  const digits = s.replace(/[^\d]/g, "");
+  if (digits.length >= 8) return `https://wa.me/${digits}`;
+  return `https://www.google.com/search?q=${encodeURIComponent(s)}`;
+}
+function nameInitials(name: string | null): string {
+  return (name ?? "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "🎾";
+}
+const PRES_INPUT = "w-full rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-matchup";
+
+function PresenceSection({ t, profile, synced }: { t: Tournament; profile: PlayerProfile; synced: boolean }) {
+  const [rows, setRows] = useState<Presence[] | null>(null);
+  const [uid, setUid] = useState<string | null>(null);
+  const [looking, setLooking] = useState(true);
+  const [contact, setContact] = useState(profile.contact || "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setRows(null);
+    currentUserId().then(setUid);
+    loadPresence(t.id).then(setRows);
+  }, [t.id]);
+
+  const me = uid ? (rows ?? []).find((r) => r.user_id === uid) ?? null : null;
+  const others = (rows ?? []).filter((r) => r.user_id !== uid);
+  useEffect(() => {
+    if (me) { setLooking(me.looking); setContact(me.contact ?? ""); }
+  }, [me?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const refresh = () => loadPresence(t.id).then(setRows);
+  const join = async () => { if (!uid) return; setBusy(true); await joinPresence(uid, t.id, profile, looking, contact); await refresh(); setBusy(false); };
+  const leave = async () => { if (!uid) return; setBusy(true); await leavePresence(uid, t.id); await refresh(); setBusy(false); };
+
+  return (
+    <div>
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
+        Wer ist hier?{rows ? ` · ${rows.length}` : ""}
+      </h3>
+
+      {synced ? (
+        <div className="rounded-2xl border border-matchup/20 bg-matchup/5 p-3">
+          <div className="text-sm font-bold text-neutral-800">{me ? "✓ Du bist eingetragen" : "Bist du diese Woche hier?"}</div>
+          <p className="mt-0.5 text-[11px] text-neutral-500">Trag dich ein, damit andere Spieler dich für gemeinsames Training finden.</p>
+          <label className="mt-2 flex items-center gap-2 text-sm text-neutral-700">
+            <input type="checkbox" checked={looking} onChange={(e) => setLooking(e.target.checked)} className="h-4 w-4 accent-matchup" />
+            Trainingspartner gesucht
+          </label>
+          <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Kontakt (z.B. @insta / WhatsApp-Nr. / E-Mail)" className={`${PRES_INPUT} mt-2`} />
+          <div className="mt-2 flex gap-2">
+            <button type="button" onClick={join} disabled={busy} className="flex-1 rounded-full bg-matchup px-3 py-2 text-xs font-bold text-white transition hover:bg-matchup-hover disabled:opacity-50">
+              {busy ? "…" : me ? "Aktualisieren" : "Ich bin hier"}
+            </button>
+            {me && (
+              <button type="button" onClick={leave} disabled={busy} className="rounded-full bg-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-500 hover:bg-neutral-200 disabled:opacity-50">
+                Austragen
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-neutral-50 p-3 text-xs text-neutral-500">
+          Melde dich oben im Profil an, um dich einzutragen und Trainingspartner vor Ort zu finden.
+        </div>
+      )}
+
+      {rows === null ? (
+        <p className="mt-2 text-xs text-neutral-400">lädt …</p>
+      ) : others.length === 0 ? (
+        <p className="mt-2 text-xs text-neutral-400">Noch niemand eingetragen — sei der erste.</p>
+      ) : (
+        <div className="mt-2 space-y-1.5">
+          {others.map((r) => (
+            <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[11px] font-bold text-matchup">{nameInitials(r.name)}</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold">{r.name}</span>
+                  {r.looking && <span className="shrink-0 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600">🎾 sucht Partner</span>}
+                </span>
+                <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality, r.surface && SURFACE_LABEL[r.surface]].filter(Boolean).join(" · ")}</span>
+              </span>
+              {r.contact && (
+                <a href={contactHref(r.contact)} target="_blank" rel="noreferrer" className="shrink-0 rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">Kontakt</a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mt-1.5 text-[11px] text-neutral-400">Community · Präsenz ist freiwillig und nur für angemeldete Spieler sichtbar.</p>
     </div>
   );
 }

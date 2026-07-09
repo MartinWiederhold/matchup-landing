@@ -33,6 +33,7 @@ export type PlayerProfile = {
   surface: Surface | null;
   homeAirport: string;
   rentalCar: boolean;
+  contact: string; // opt-in Kontakt für Trainingspartner-Vermittlung (z.B. @insta / WhatsApp)
   docs: PlayerDocs;
 };
 
@@ -52,6 +53,7 @@ export const EMPTY_PROFILE: PlayerProfile = {
   surface: null,
   homeAirport: "",
   rentalCar: false,
+  contact: "",
   docs: { passport: false, id: false, visa: false, ipin: false, playerEducation: false, license: false, federationLicense: false, medical: false, insurance: false, vaccination: false },
 };
 
@@ -74,6 +76,69 @@ export function saveProfile(p: PlayerProfile) {
 
 function mergeProfile(d: Partial<PlayerProfile> | null | undefined): PlayerProfile {
   return { ...EMPTY_PROFILE, ...(d ?? {}), docs: { ...EMPTY_PROFILE.docs, ...(d?.docs ?? {}) } };
+}
+
+// ── Spieler-Präsenz „Wer ist diese Woche hier?" + Trainingspartner (opt-in) ──────
+export type Presence = {
+  user_id: string;
+  tournament_id: string;
+  name: string | null;
+  rank_label: string | null;
+  nationality: string | null;
+  surface: string | null;
+  gender: string | null;
+  looking: boolean;
+  contact: string | null;
+  updated_at: string;
+};
+
+export function rankLabel(p: PlayerProfile): string {
+  if (p.atp) return `ATP ${p.atp}`;
+  if (p.wta) return `WTA ${p.wta}`;
+  if (p.itf) return `ITF ${p.itf}`;
+  if (p.wtn) return `WTN ${p.wtn}`;
+  return "kein Ranking";
+}
+
+export async function loadPresence(tournamentId: string): Promise<Presence[]> {
+  try {
+    const { data, error } = await supabase
+      .from("player_presence")
+      .select("*")
+      .eq("tournament_id", tournamentId)
+      .order("looking", { ascending: false })
+      .order("updated_at", { ascending: false });
+    if (error) return [];
+    return (data as Presence[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function joinPresence(userId: string, tournamentId: string, p: PlayerProfile, looking: boolean, contact: string): Promise<boolean> {
+  try {
+    const name = [p.firstName, p.lastName].filter(Boolean).join(" ") || "Spieler";
+    const { error } = await supabase.from("player_presence").upsert(
+      {
+        user_id: userId, tournament_id: tournamentId, name, rank_label: rankLabel(p),
+        nationality: p.nationality || null, surface: p.surface, gender: p.gender,
+        looking, contact: contact.trim() || null, updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,tournament_id" },
+    );
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function leavePresence(userId: string, tournamentId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("player_presence").delete().eq("user_id", userId).eq("tournament_id", tournamentId);
+    return !error;
+  } catch {
+    return false;
+  }
 }
 
 /** UID der aktiven App-Anmeldung (dieselbe Supabase-Session wie die Haupt-App), sonst null. */

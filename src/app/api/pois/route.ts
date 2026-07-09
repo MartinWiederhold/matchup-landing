@@ -11,7 +11,7 @@ export const maxDuration = 45;
 const UA = { "User-Agent": "MatchupMap/1.0 (wiederhold.martin@web.de)" };
 const RADIUS = 3000; // Meter
 
-type Cat = "food" | "physio" | "fitness" | "pharmacy" | "supermarket";
+type Cat = "food" | "physio" | "fitness" | "stringer" | "pharmacy" | "supermarket";
 type Tags = Record<string, string>;
 type El = { type: string; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Tags };
 
@@ -27,6 +27,7 @@ function categorize(t: Tags): Cat | null {
   if (t.amenity === "restaurant" || t.amenity === "cafe") return "food";
   if (t.healthcare === "physiotherapist" || t.amenity === "physiotherapist") return "physio";
   if (t.leisure === "fitness_centre" || t.leisure === "sports_centre") return "fitness";
+  if (t.shop === "sports") return "stringer"; // Sportgeschäft ≈ Besaitung/Equipment vor Ort
   if (t.amenity === "pharmacy") return "pharmacy";
   if (t.shop === "supermarket") return "supermarket";
   return null;
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
   const lng = parseFloat(u.searchParams.get("lng") ?? "");
   if (!isFinite(lat) || !isFinite(lng)) return NextResponse.json({ categories: null });
 
-  const q = `[out:json][timeout:12];(nwr(around:${RADIUS},${lat},${lng})[amenity~"^(restaurant|cafe)$"];nwr(around:${RADIUS},${lat},${lng})[healthcare=physiotherapist];nwr(around:${RADIUS},${lat},${lng})[leisure~"^(fitness_centre|sports_centre)$"];nwr(around:${RADIUS},${lat},${lng})[amenity=pharmacy];nwr(around:${RADIUS},${lat},${lng})[shop=supermarket];);out center tags 150;`;
+  const q = `[out:json][timeout:12];(nwr(around:${RADIUS},${lat},${lng})[amenity~"^(restaurant|cafe)$"];nwr(around:${RADIUS},${lat},${lng})[healthcare=physiotherapist];nwr(around:${RADIUS},${lat},${lng})[leisure~"^(fitness_centre|sports_centre)$"];nwr(around:${RADIUS},${lat},${lng})[shop=sports];nwr(around:${RADIUS},${lat},${lng})[amenity=pharmacy];nwr(around:${RADIUS},${lat},${lng})[shop=supermarket];);out center tags 170;`;
   const MIRRORS = [
     "https://overpass-api.de/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
     }
     if (!data) return NextResponse.json({ categories: null });
     const cats: Record<Cat, { name: string; lat: number; lng: number; dist: number }[]> = {
-      food: [], physio: [], fitness: [], pharmacy: [], supermarket: [],
+      food: [], physio: [], fitness: [], stringer: [], pharmacy: [], supermarket: [],
     };
     for (const el of data.elements ?? []) {
       const tags = el.tags;
