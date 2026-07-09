@@ -321,6 +321,7 @@ export default function MapView() {
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
   const [region, setRegion] = useState<RegionFilter>("all");
+  const [seasonStart, setSeasonStart] = useState<string>(""); // ab diesem Datum planen (leer = ganze Saison)
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const profileReady = useRef(false);
@@ -387,17 +388,22 @@ export default function MapView() {
       if (Array.isArray(s.planIds)) setPlanIds(s.planIds.filter((x: unknown) => typeof x === "string"));
       if (typeof s.budget === "number") setBudget(s.budget);
       if (s.region === "all" || s.region === "europe" || s.region === "usa") setRegion(s.region);
+      if (typeof s.seasonStart === "string") setSeasonStart(s.seasonStart);
       if (s.startBase) {
-        const b = HOME_BASES.find((h) => h.name === s.startBase);
-        if (b) setStartBase(b);
+        // Neu: vollständiges Objekt (freier Wohnort). Alt: nur Name → aus HOME_BASES.
+        if (typeof s.startBase === "object" && typeof s.startBase.lat === "number") setStartBase(s.startBase);
+        else {
+          const b = HOME_BASES.find((h) => h.name === s.startBase);
+          if (b) setStartBase(b);
+        }
       }
     } catch {}
   }, []);
   useEffect(() => {
     try {
-      localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase: startBase.name, region }));
+      localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase, region, seasonStart }));
     } catch {}
-  }, [planIds, budget, startBase, region]);
+  }, [planIds, budget, startBase, region, seasonStart]);
 
   const togglePlan = useCallback(
     (id: string) => setPlanIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
@@ -413,10 +419,13 @@ export default function MapView() {
   const smartFill = useCallback(() => {
     setSelTid(null);
     const pool = tours.filter(
-      (t) => regionMatch(region, t.country) && (!hasRank || eligibility(profile, t).status !== "red"),
+      (t) =>
+        regionMatch(region, t.country) &&
+        (!seasonStart || t.start >= seasonStart) &&
+        (!hasRank || eligibility(profile, t).status !== "red"),
     );
     setPlanIds(autoPlan(pool, budget, startBase));
-  }, [tours, budget, startBase, region, hasRank, profile]);
+  }, [tours, budget, startBase, region, seasonStart, hasRank, profile]);
   const cheapestStart = useCallback(() => {
     const plan = planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean) as Tournament[];
     if (plan.length) setStartBase(bestStartBase(plan));
@@ -641,6 +650,7 @@ export default function MapView() {
     // Turniere nach Ort gruppieren → Cluster-Hubs (viele Wochen am selben Ort) als EINE Bubble.
     const passesFilter = (t: Tournament, inP: boolean) => {
       if (inP) return true;
+      if (seasonStart && t.start < seasonStart) return false;
       if (!regionMatch(region, t.country)) return false;
       if (onlyEligible && hasRank) return eligibility(profile, t).status !== "red";
       return true;
@@ -695,7 +705,7 @@ export default function MapView() {
           });
       }
     }
-  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, presence]);
+  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, seasonStart, presence]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -796,6 +806,8 @@ export default function MapView() {
             setBudget={setBudget}
             region={region}
             setRegion={setRegion}
+            seasonStart={seasonStart}
+            setSeasonStart={setSeasonStart}
             selTid={selTid}
             setSelTid={setSelTid}
             onFocus={focusTour}
@@ -931,6 +943,8 @@ export default function MapView() {
               setBudget={setBudget}
               region={region}
               setRegion={setRegion}
+              seasonStart={seasonStart}
+              setSeasonStart={setSeasonStart}
               selTid={selTid}
               setSelTid={setSelTid}
               onFocus={focusTour}

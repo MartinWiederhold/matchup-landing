@@ -64,6 +64,8 @@ export default function SeasonPlanner({
   setBudget,
   region,
   setRegion,
+  seasonStart,
+  setSeasonStart,
   selTid,
   setSelTid,
   onFocus,
@@ -89,6 +91,8 @@ export default function SeasonPlanner({
   setBudget: (n: number) => void;
   region: RegionFilter;
   setRegion: (r: RegionFilter) => void;
+  seasonStart: string;
+  setSeasonStart: (d: string) => void;
   selTid: string | null;
   setSelTid: (id: string | null) => void;
   onFocus: (t: Tournament) => void;
@@ -109,6 +113,20 @@ export default function SeasonPlanner({
   const hasRank = profile.atp != null || profile.wta != null || profile.itf != null;
   const [group, setGroup] = useState<(typeof GROUPS)[number]>("Alle");
   const [surface, setSurface] = useState<(typeof SURFACES)[number]>("Alle");
+  const [locQuery, setLocQuery] = useState("");
+
+  // Freier Wohnort: alle bekannten Städte (Startbasen + Turnierorte) als wählbare Startpunkte.
+  const cityOptions = useMemo(() => {
+    const map = new Map<string, HomeBase>();
+    for (const b of HOME_BASES) map.set(b.name, b);
+    for (const t of tours) if (!map.has(t.city)) map.set(t.city, { name: t.city, lat: t.lat, lng: t.lng });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [tours]);
+  const locMatches = useMemo(() => {
+    const q = locQuery.trim().toLowerCase();
+    if (!q) return [];
+    return cityOptions.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [locQuery, cityOptions]);
 
   const plan = useMemo(
     () => planIds.map((id) => tours.find((t) => t.id === id)).filter(Boolean).sort(byDate as never) as Tournament[],
@@ -119,12 +137,14 @@ export default function SeasonPlanner({
 
   const catalog = useMemo(() => {
     return [...tours].sort(byDate).filter((t) => {
-      if (!regionMatch(region, t.country) && !planIds.includes(t.id)) return false;
+      if (planIds.includes(t.id)) return true;
+      if (seasonStart && t.start < seasonStart) return false;
+      if (!regionMatch(region, t.country)) return false;
       if (group !== "Alle" && TIER_META[t.tier].group !== group) return false;
       if (surface !== "Alle" && t.surface !== surface) return false;
       return true;
     });
-  }, [group, surface, tours, region, planIds]);
+  }, [group, surface, tours, region, seasonStart, planIds]);
 
   // Katalog nach Ort gruppieren: Hubs mit ≥3 Wochen → Cluster-Karte, Rest → Einzelzeilen.
   const grouped = useMemo(() => {
@@ -281,10 +301,54 @@ export default function SeasonPlanner({
         </div>
       </div>
 
-      {/* Startpunkt */}
+      {/* Startdatum */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Startpunkt</h3>
-        <div className="flex flex-wrap gap-1.5">
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Startdatum</h3>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={seasonStart}
+            min="2026-01-01"
+            max="2026-12-31"
+            onChange={(e) => setSeasonStart(e.target.value)}
+            className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-matchup"
+          />
+          {seasonStart && (
+            <button type="button" onClick={() => setSeasonStart("")} className="rounded-full bg-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-500 hover:bg-neutral-200">
+              Ganze Saison
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-[11px] text-neutral-400">Nur Turniere ab diesem Datum werden geplant &amp; angezeigt.</p>
+      </div>
+
+      {/* Wohnort / Startpunkt (frei wählbar) */}
+      <div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">Wohnort / Startpunkt</h3>
+        <div className="relative">
+          <input
+            type="text"
+            value={locQuery}
+            onChange={(e) => setLocQuery(e.target.value)}
+            placeholder={`Aktuell: ${start.name} — Stadt suchen…`}
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-matchup"
+          />
+          {locMatches.length > 0 && (
+            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-lg">
+              {locMatches.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={() => { setStart(c); setLocQuery(""); }}
+                  className="block w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {HOME_BASES.map((b) => {
             const active = b.name === start.name;
             return (
