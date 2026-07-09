@@ -177,8 +177,9 @@ export default function SeasonPlanner({
 
       {/* Smart-Planer */}
       <div className="rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
-        <div className="flex items-center gap-1.5 text-sm font-bold">
-          <span>⚡</span> Smart-Planer
+        <div className="flex items-center gap-2 text-sm font-bold">
+          <img src="/smart-planer.png" alt="" className="h-6 w-6 rounded-md object-cover ring-1 ring-white/25" />
+          Smart-Planer
         </div>
         <p className="mt-0.5 text-xs text-white/80">
           Füllt automatisch die günstigste Saison für dein Budget – maximale Punkte pro Euro, minimale Flüge.
