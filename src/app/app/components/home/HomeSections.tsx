@@ -1,0 +1,275 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
+import { useAppNav } from "../appNav";
+import Avatar from "../shared/Avatar";
+import { sportLabel } from "@/lib/utils/formatters";
+import {
+  ChevronRightIcon,
+  PlusIcon,
+  MapPinIcon,
+  UsersIcon,
+  SportIcon,
+} from "../shared/icons";
+import type { Profile, GameEvent } from "@/lib/types";
+
+/* ── Begrüßung nach Tageszeit ─────────────────────────────── */
+export function greeting(t: ReturnType<typeof useT>, name: string): string {
+  const h = new Date().getHours();
+  const key = h < 11 ? "discover.greetMorning" : h < 18 ? "discover.greetDay" : "discover.greetEvening";
+  return `${t(key)}, ${name}`;
+}
+
+function SectionHead({ label, action, onAction }: { label: string; action?: string; onAction?: () => void }) {
+  return (
+    <div className="mb-2.5 flex items-center justify-between px-0.5">
+      <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-zinc-500">{label}</span>
+      {action && (
+        <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+          {action} <ChevronRightIcon size={13} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Form-Ring (MatchScore/Elo) ───────────────────────────── */
+export function FormRing({ score, onOpen }: { score: number; onOpen: () => void }) {
+  const t = useT();
+  const R = 40;
+  const C = 2 * Math.PI * R;
+  const pct = Math.max(4, Math.min(100, ((score - 800) / 800) * 100));
+  const off = C * (1 - pct / 100);
+  return (
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+      <div className="relative h-[92px] w-[92px] shrink-0">
+        <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
+          <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="8.5" />
+          <circle cx="46" cy="46" r={R} fill="none" stroke="url(#fg)" strokeWidth="8.5" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={off} style={{ filter: "drop-shadow(0 0 6px rgba(16,230,160,.45))" }} />
+          <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#10e6a0" /><stop offset="1" stopColor="#4b3bf3" /></linearGradient></defs>
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[22px] font-extrabold leading-none tracking-tight">{score}</span>
+          <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">{t("discover.matchScore")}</span>
+        </div>
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-400">{t("discover.yourForm")}</div>
+        <h3 className="mt-1 text-base font-extrabold tracking-tight">{t("discover.formSub")}</h3>
+        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-zinc-400">{t("discover.formTap")} <ChevronRightIcon size={13} /></p>
+      </div>
+    </button>
+  );
+}
+
+/* ── Story-Reihe „Neue Leute" ─────────────────────────────── */
+export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen: (id: string) => void; onFind: () => void }) {
+  const t = useT();
+  if (!people.length) return null;
+  return (
+    <section className="mt-6 px-4">
+      <SectionHead label={t("discover.newPeople")} />
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+        <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-white/25 text-zinc-500"><PlusIcon size={22} /></span>
+          <span className="max-w-[60px] truncate text-[11px] text-zinc-500">{t("discover.find")}</span>
+        </button>
+        {people.map((p) => (
+          <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+            <span className="rounded-full bg-gradient-to-br from-matchup to-indigo-400 p-0.5">
+              <span className="block rounded-full ring-2 ring-black"><Avatar src={p.profile_image} alt={p.first_name} size="md" /></span>
+            </span>
+            <span className="max-w-[60px] truncate text-[11px] text-zinc-300">{p.first_name}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Wetter-Icon + Mapping (WMO-Code) ─────────────────────── */
+function wxKind(code: number): { d: string; good: boolean } {
+  if (code <= 1) return { d: "sun", good: true };
+  if (code <= 3) return { d: "cloudsun", good: true };
+  if (code <= 48) return { d: "cloud", good: true };
+  return { d: "rain", good: false };
+}
+function WxIcon({ kind }: { kind: string }) {
+  const c = "h-[15px] w-[15px]";
+  if (kind === "sun") return <svg className={c} viewBox="0 0 24 24" fill="none" stroke="#ffd06a" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4.2" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8" /></svg>;
+  if (kind === "rain") return <svg className={c} viewBox="0 0 24 24" fill="none" stroke="#9db4ff" strokeWidth="1.8" strokeLinecap="round"><path d="M17.5 15H7a4 4 0 0 1 0-8 6 6 0 0 1 11.3 1.6A3.5 3.5 0 0 1 17.5 15z" /><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2" /></svg>;
+  return <svg className={c} viewBox="0 0 24 24" fill="none" stroke="#cfd6e6" strokeWidth="1.8" strokeLinecap="round"><path d="M17.5 18H7a4 4 0 0 1 0-8 6 6 0 0 1 11.3 1.6A3.5 3.5 0 0 1 17.5 18z" /></svg>;
+}
+
+/* ── „Dein nächstes Spiel" (+ Wetter best-effort) ─────────── */
+type Wx = { temp: number; kind: string; good: boolean } | null;
+export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; onAll: () => void }) {
+  const t = useT();
+  const { profile } = useAppNav();
+  const [game, setGame] = useState<GameEvent | null>(null);
+  const [wx, setWx] = useState<Wx>(null);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const nowIso = new Date().toISOString();
+      const sel = `*, participants:game_participants(status, profile:profiles(first_name, profile_image)), creator:profiles!game_events_created_by_fkey(first_name, profile_image)`;
+      const [mine, joined] = await Promise.all([
+        supabase.from("game_events").select(sel).eq("created_by", profile.id).eq("status", "planned").gte("date_time", nowIso).order("date_time").limit(1),
+        supabase.from("game_participants").select(`game:game_events(${sel})`).eq("user_id", profile.id).eq("status", "accepted"),
+      ]);
+      const cand: GameEvent[] = [];
+      if (mine.data?.[0]) cand.push(mine.data[0] as GameEvent);
+      for (const r of joined.data ?? []) {
+        const raw = (r as { game: GameEvent | GameEvent[] }).game;
+        const g = Array.isArray(raw) ? raw[0] : raw;
+        if (g && g.status === "planned" && g.date_time >= nowIso) cand.push(g);
+      }
+      cand.sort((a, b) => (a.date_time < b.date_time ? -1 : 1));
+      const next = cand[0] ?? null;
+      if (cancel) return;
+      setGame(next);
+      if (next?.club_id) void loadWx(next);
+    })();
+    async function loadWx(g: GameEvent) {
+      try {
+        const { data: v } = await supabase.from("venues").select("lat,lng").eq("id", g.club_id!).maybeSingle();
+        if (!v?.lat || !v?.lng) return;
+        const day = g.date_time.slice(0, 10);
+        const diff = (Date.parse(day) - Date.now()) / 86400000;
+        if (diff > 15 || diff < -1) return; // Vorhersage nur ~16 Tage
+        const u = `https://api.open-meteo.com/v1/forecast?latitude=${v.lat}&longitude=${v.lng}&hourly=temperature_2m,weather_code&start_date=${day}&end_date=${day}&timezone=auto`;
+        const r = await fetch(u);
+        const d = await r.json();
+        const times: string[] = d?.hourly?.time ?? [];
+        const hour = g.date_time.slice(0, 13); // YYYY-MM-DDTHH
+        let idx = times.findIndex((x) => x.slice(0, 13) === hour);
+        if (idx < 0) idx = 12;
+        const temp = d?.hourly?.temperature_2m?.[idx];
+        const code = d?.hourly?.weather_code?.[idx];
+        if (typeof temp !== "number") return;
+        const k = wxKind(code ?? 0);
+        if (!cancel) setWx({ temp: Math.round(temp), kind: k.d, good: k.good });
+      } catch {}
+    };
+    return () => { cancel = true; };
+  }, [profile.id]);
+
+  if (!game) return null;
+  const d = new Date(game.date_time);
+  const dd = d.toLocaleDateString("de-CH", { weekday: "short", day: "numeric", month: "numeric" });
+  const hh = d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
+  const accepted = 1 + (game.participants?.filter((p) => p.status === "accepted").length ?? 0);
+  const cap = game.max_participants ?? (game.game_type === "singles" ? 2 : 4);
+  const free = Math.max(0, cap - accepted);
+  const people = [game.creator, ...((game.participants ?? []).filter((p) => p.status === "accepted").map((p) => p.profile))].filter(Boolean).slice(0, 3);
+
+  return (
+    <section className="mt-6 px-4">
+      <SectionHead label={t("discover.nextGame")} action={t("discover.openGamesAll")} onAction={onAll} />
+      <button type="button" onClick={() => onOpen(game.id)} className="flex w-full items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+        <div className="w-14 shrink-0 text-center">
+          <div className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">{dd}</div>
+          <div className="mt-0.5 text-[19px] font-extrabold tracking-tight">{hh}</div>
+        </div>
+        <div className="min-w-0 flex-1 border-l border-white/10 pl-3.5">
+          <div className="flex items-center gap-1.5 text-sm font-extrabold"><SportIcon sport={game.sport} size={15} /> {sportLabel(game.sport)}</div>
+          <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-zinc-400"><MapPinIcon size={13} /> {game.location}{free > 0 ? ` · ${free} frei` : ""}</div>
+          <div className="mt-2 flex items-center gap-2.5">
+            {wx && (
+              <span className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[11px] font-bold ${wx.good ? "text-zinc-200" : "text-amber-300"}`}>
+                <WxIcon kind={wx.kind} /> {wx.temp}° · {wx.good ? t("discover.wxGood") : t("discover.wxMeh")}
+              </span>
+            )}
+            <div className="flex -space-x-2">
+              {people.map((p, i) => <span key={i} className="rounded-full ring-2 ring-[#0d0d11]"><Avatar src={p!.profile_image} alt={p!.first_name} size="sm" /></span>)}
+            </div>
+          </div>
+        </div>
+      </button>
+    </section>
+  );
+}
+
+/* ── Live im Profitennis (aktueller/nächster Grand Slam) ──── */
+type Slam = { name: string; surface: string; start_date: string; end_date: string; url: string | null; live: boolean } | null;
+export function LiveTennisCard() {
+  const t = useT();
+  const [s, setS] = useState<Slam>(null);
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const sel = "name,surface,start_date,end_date,url";
+      let live = true;
+      let { data } = await supabase.from("tournaments").select(sel).eq("tier", "GS").lte("start_date", today).gte("end_date", today).limit(1);
+      if (!data?.length) {
+        live = false;
+        const r = await supabase.from("tournaments").select(sel).eq("tier", "GS").gt("start_date", today).order("start_date").limit(1);
+        data = r.data;
+      }
+      if (!cancel && data?.[0]) setS({ ...(data[0] as Omit<NonNullable<Slam>, "live">), live });
+    })();
+    return () => { cancel = true; };
+  }, []);
+  if (!s) return null;
+  const fmt = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString("de-CH", { day: "numeric", month: "short" });
+  const href = s.url || `https://www.google.com/search?q=${encodeURIComponent(s.name + " live")}`;
+  return (
+    <section className="mt-6 px-4">
+      <SectionHead label={t("discover.liveTennis")} />
+      <a href={href} target="_blank" rel="noreferrer" className="relative flex items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b10] p-4">
+        <span className="absolute left-0 top-0 h-full w-[3px]" style={{ background: s.live ? "#ff4d5e" : "#4b3bf3" }} />
+        <div className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.14em] text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.live ? "#ff4d5e" : "#4b3bf3" }} />
+            {s.live ? t("discover.slamLive") : t("discover.slamNext")}
+          </span>
+          <h3 className="mt-1 truncate text-[15px] font-extrabold tracking-tight">{s.name}</h3>
+          <div className="mt-0.5 text-[11px] text-zinc-500">{s.surface} · {fmt(s.start_date)}–{fmt(s.end_date)}</div>
+        </div>
+        <span className="flex shrink-0 items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">{t("discover.results")}<ChevronRightIcon size={14} /></span>
+      </a>
+    </section>
+  );
+}
+
+/* ── Community-Puls (neuester Beitrag) ────────────────────── */
+type PostRow = { content: string | null; author: { first_name: string | null; profile_image: string | null } | null };
+export function CommunityCard({ onOpen }: { onOpen: () => void }) {
+  const t = useT();
+  const [post, setPost] = useState<PostRow | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("community_posts")
+      .select("content, author:profiles!community_posts_author_id_fkey(first_name, profile_image)")
+      .is("club_id", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const row: any = data?.[0];
+    const author = row ? (Array.isArray(row.author) ? row.author[0] : row.author) ?? null : null;
+    setPost(row ? { content: row.content ?? null, author } : null);
+    setLoaded(true);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  if (!loaded || !post) return null;
+  return (
+    <section className="mt-6 px-4">
+      <button type="button" onClick={onOpen} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-zinc-400"><UsersIcon size={14} /> {t("discover.community")}</span>
+          <ChevronRightIcon size={16} className="text-zinc-600" />
+        </div>
+        <div className="mt-3 flex items-start gap-2.5">
+          <Avatar src={post.author?.profile_image} alt={post.author?.first_name ?? ""} size="sm" />
+          <p className="text-[12.5px] leading-snug text-zinc-400 line-clamp-2"><b className="text-white">{post.author?.first_name}</b> {post.content}</p>
+        </div>
+      </button>
+    </section>
+  );
+}

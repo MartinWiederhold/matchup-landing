@@ -18,6 +18,8 @@ import { useT, type TFunction } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
+import Avatar from "../shared/Avatar";
+import { greeting, FormRing, StoryRow, NextGameCard, LiveTennisCard, CommunityCard } from "../home/HomeSections";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
@@ -263,90 +265,87 @@ export default function DiscoverTab() {
 
   if (isLoading) return <FullLoading />;
 
+  const dateLabel = new Date().toLocaleDateString("de-CH", { weekday: "long", day: "numeric", month: "long" });
+  const displayName = profile.display_name || profile.first_name;
+
   return (
     <div className="relative flex h-full flex-col">
-      <header className="relative flex h-14 shrink-0 items-center justify-center border-b border-zinc-800 px-4">
-        <span className="font-bold tracking-wide">{t("discover.title")}</span>
-        <span className="absolute right-4 text-xs text-zinc-500">
-          {candidates.length}
-        </span>
+      {/* Home-Header: Begrüßung + Filter + Avatar */}
+      <header className="flex shrink-0 items-start justify-between px-4 pt-3 pb-1">
+        <div className="min-w-0">
+          <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">{dateLabel}</div>
+          <h1 className="mt-1 truncate text-[25px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5 pt-1">
+          <button
+            type="button"
+            onClick={() => setShowFilter(true)}
+            aria-label={t("discover.filter")}
+            className="relative flex h-[42px] w-[42px] items-center justify-center rounded-[13px] border border-white/10 bg-white/[0.04] text-white"
+          >
+            <FilterIcon size={20} />
+            {activeChips.length > 0 && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-matchup" />}
+          </button>
+          <button type="button" onClick={() => openSubView({ type: "edit-profile" })} aria-label="Profil">
+            <Avatar src={profile.profile_image} alt={profile.first_name} size="md" />
+          </button>
+        </div>
       </header>
 
-      {(profile.club_id || activeChips.length > 0) && (
-        <div className="no-scrollbar flex shrink-0 items-center gap-2 overflow-x-auto border-b border-zinc-800 px-4 py-2">
-          {profile.club_id && (
-            <button
-              type="button"
-              onClick={() =>
-                setFilters((f) => ({
-                  ...f,
-                  clubId: f.clubId === profile.club_id ? null : profile.club_id,
-                }))
-              }
-              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
-                filters.clubId === profile.club_id
-                  ? "bg-matchup text-white"
-                  : "bg-zinc-800 text-zinc-300"
-              }`}
-            >
-              {t("discover.onlyMyClub")}
-            </button>
-          )}
-          {activeChips.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              onClick={c.clear}
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-matchup/20 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-matchup/60"
-            >
-              {c.label}
-              <span className="text-white/60">✕</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="flex-1 overflow-y-auto pb-24">
-        {candidates.length === 0 ? (
-          <EmptyState
-            icon={<UsersIcon size={44} />}
-            title={t("discover.emptyTitle")}
-            message={t("discover.emptyMessage")}
-            actionLabel={t("discover.emptyAction")}
-            onAction={() => setShowFilter(true)}
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-3 p-3">
-            {candidates.map((c) => (
-              <FeedCard
-                key={c.id}
-                t={t}
-                player={c}
-                requested={requested.has(c.id)}
-                onConnect={() => connect(c)}
-                onOpen={() => openSubView({ type: "full-profile", userId: c.id })}
-                myLat={profile.latitude}
-                myLng={profile.longitude}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        {/* Form-Ring */}
+        <section className="mt-4 px-4">
+          <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />
+        </section>
 
-      {/* Schwebender Filter-Button (wie das Plus im Spiele-Tab) */}
-      <button
-        type="button"
-        onClick={() => setShowFilter(true)}
-        aria-label={t("discover.filter")}
-        className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
-      >
-        <FilterIcon size={24} />
-        {activeChips.length > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-matchup ring-2 ring-black">
-            {activeChips.length}
-          </span>
-        )}
-      </button>
+        {/* Neue Leute (Stories) */}
+        <StoryRow
+          people={candidates.slice(0, 10)}
+          onOpen={(id) => openSubView({ type: "full-profile", userId: id })}
+          onFind={() => setShowFilter(true)}
+        />
+
+        {/* Dein nächstes Spiel */}
+        <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />
+
+        {/* Für dich empfohlen */}
+        <section className="mt-6 px-4">
+          <div className="mb-2.5 flex items-center justify-between px-0.5">
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-zinc-500">{t("discover.forYou")}</span>
+            <span className="text-[11px] font-bold text-zinc-600">{candidates.length}</span>
+          </div>
+          {candidates.length === 0 ? (
+            <EmptyState
+              icon={<UsersIcon size={44} />}
+              title={t("discover.emptyTitle")}
+              message={t("discover.emptyMessage")}
+              actionLabel={t("discover.emptyAction")}
+              onAction={() => setShowFilter(true)}
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {candidates.map((c) => (
+                <FeedCard
+                  key={c.id}
+                  t={t}
+                  player={c}
+                  requested={requested.has(c.id)}
+                  onConnect={() => connect(c)}
+                  onOpen={() => openSubView({ type: "full-profile", userId: c.id })}
+                  myLat={profile.latitude}
+                  myLng={profile.longitude}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Live im Profitennis */}
+        <LiveTennisCard />
+
+        {/* Community-Puls */}
+        <CommunityCard onOpen={() => setActiveTab("matches")} />
+      </div>
 
       {showFilter && (
         <FilterSheet
