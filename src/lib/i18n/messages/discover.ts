@@ -3,6 +3,9 @@ export const discover = {
     // DiscoverTab
     filter: "Filter",
     title: "ENTDECKEN",
+    openGamesTitle: "Offene Spiele diese Woche",
+    openGamesAll: "Alle",
+    openGamesSpots: "{count} frei",
     onlyMyClub: "Nur aus meinem Club",
     clubChip: "Club: {name}",
     clubChipFallback: "Club",
@@ -43,6 +46,9 @@ export const discover = {
     // DiscoverTab
     filter: "Filter",
     title: "DISCOVER",
+    openGamesTitle: "Open games this week",
+    openGamesAll: "All",
+    openGamesSpots: "{count} open",
     onlyMyClub: "Only from my club",
     clubChip: "Club: {name}",
     clubChipFallback: "Club",

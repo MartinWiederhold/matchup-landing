@@ -18,6 +18,7 @@ import { useT, type TFunction } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
+import OpenGamesStrip from "../shared/OpenGamesStrip";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
@@ -307,6 +308,7 @@ export default function DiscoverTab() {
       )}
 
       <div className="flex-1 overflow-y-auto pb-24">
+        <OpenGamesStrip />
         {candidates.length === 0 ? (
           <EmptyState
             icon={<UsersIcon size={44} />}
