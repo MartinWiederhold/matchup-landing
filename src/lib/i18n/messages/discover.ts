@@ -84,6 +84,7 @@ export const discover = {
     slamNext: "Up next",
     results: "Results",
     community: "Community",
+    forYou: "For you",
     onlyMyClub: "Only from my club",
     clubChip: "Club: {name}",
     clubChipFallback: "Club",

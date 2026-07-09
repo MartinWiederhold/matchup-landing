@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { sportLabel } from "@/lib/utils/formatters";
@@ -108,6 +108,8 @@ function WxIcon({ kind }: { kind: string }) {
 type Wx = { temp: number; kind: string; good: boolean } | null;
 export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; onAll: () => void }) {
   const t = useT();
+  const { locale } = useLocale();
+  const loc = locale === "de" ? "de-CH" : "en-GB";
   const { profile } = useAppNav();
   const [game, setGame] = useState<GameEvent | null>(null);
   const [wx, setWx] = useState<Wx>(null);
@@ -160,8 +162,8 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
 
   if (!game) return null;
   const d = new Date(game.date_time);
-  const dd = d.toLocaleDateString("de-CH", { weekday: "short", day: "numeric", month: "numeric" });
-  const hh = d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
+  const dd = d.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "numeric" });
+  const hh = d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
   const accepted = 1 + (game.participants?.filter((p) => p.status === "accepted").length ?? 0);
   const cap = game.max_participants ?? (game.game_type === "singles" ? 2 : 4);
   const free = Math.max(0, cap - accepted);
@@ -177,7 +179,7 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
         </div>
         <div className="min-w-0 flex-1 border-l border-white/10 pl-3.5">
           <div className="flex items-center gap-1.5 text-sm font-extrabold"><SportIcon sport={game.sport} size={15} /> {sportLabel(game.sport)}</div>
-          <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-zinc-400"><MapPinIcon size={13} /> {game.location}{free > 0 ? ` · ${free} frei` : ""}</div>
+          <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-zinc-400"><MapPinIcon size={13} /> {game.location}{free > 0 ? ` · ${t("discover.openGamesSpots", { count: free })}` : ""}</div>
           <div className="mt-2 flex items-center gap-2.5">
             {wx && (
               <span className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[11px] font-bold ${wx.good ? "text-zinc-200" : "text-amber-300"}`}>
@@ -198,6 +200,7 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
 type Slam = { name: string; surface: string; start_date: string; end_date: string; url: string | null; live: boolean } | null;
 export function LiveTennisCard() {
   const t = useT();
+  const { locale } = useLocale();
   const [s, setS] = useState<Slam>(null);
   useEffect(() => {
     let cancel = false;
@@ -216,7 +219,7 @@ export function LiveTennisCard() {
     return () => { cancel = true; };
   }, []);
   if (!s) return null;
-  const fmt = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString("de-CH", { day: "numeric", month: "short" });
+  const fmt = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString(locale === "de" ? "de-CH" : "en-GB", { day: "numeric", month: "short" });
   const href = s.url || `https://www.google.com/search?q=${encodeURIComponent(s.name + " live")}`;
   return (
     <section className="mt-6 px-4">

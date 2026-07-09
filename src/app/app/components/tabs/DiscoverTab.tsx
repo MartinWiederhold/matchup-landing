@@ -14,7 +14,7 @@ import {
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
-import { useT, type TFunction } from "@/lib/i18n";
+import { useT, useLocale, type TFunction } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
@@ -46,6 +46,7 @@ function ConnectIcon({ size = 16 }: { size?: number }) {
 
 export default function DiscoverTab() {
   const t = useT();
+  const { locale } = useLocale();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -265,18 +266,18 @@ export default function DiscoverTab() {
 
   if (isLoading) return <FullLoading />;
 
-  const dateLabel = new Date().toLocaleDateString("de-CH", { weekday: "long", day: "numeric", month: "long" });
+  const dateLabel = new Date().toLocaleDateString(locale === "de" ? "de-CH" : "en-GB", { weekday: "long", day: "numeric", month: "long" });
   const displayName = profile.display_name || profile.first_name;
 
   return (
     <div className="relative flex h-full flex-col">
       {/* Home-Header: Begrüßung + Filter + Avatar */}
-      <header className="flex shrink-0 items-start justify-between px-4 pt-3 pb-1">
-        <div className="min-w-0">
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">{dateLabel}</div>
-          <h1 className="mt-1 truncate text-[25px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
+      <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 pb-1">
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">{dateLabel}</div>
+          <h1 className="mt-1 truncate text-[22px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
         </div>
-        <div className="flex shrink-0 items-center gap-2.5 pt-1">
+        <div className="flex shrink-0 items-center gap-2.5">
           <button
             type="button"
             onClick={() => setShowFilter(true)}
