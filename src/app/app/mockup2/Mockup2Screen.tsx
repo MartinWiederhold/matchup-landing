@@ -12,6 +12,15 @@ function Icon({ path, className = "", size = 22, fill = "none" }: { path: string
   );
 }
 
+function SettingRow({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex w-full items-center justify-between px-5 py-3 text-left active:bg-black/[0.03]">
+      <span className="text-sm text-neutral-800">{label}</span>
+      <Icon path="M9 6l6 6-6 6" size={16} className="text-neutral-400" />
+    </button>
+  );
+}
+
 function SectionHead({ label, action }: { label: string; action?: string }) {
   return (
     <div className="mb-3 flex items-center justify-between px-1">
@@ -138,6 +147,18 @@ export default function Mockup2Screen() {
   const [tab, setTab] = useState<Tab>("home");
   const [chatSub, setChatSub] = useState<ChatSub>("chats");
   const [gamesMode, setGamesMode] = useState<GamesMode>("mine");
+  // Profil bearbeiten / Einstellungen
+  const [profileScreen, setProfileScreen] = useState<null | "edit" | "settings">(null);
+  const [pName, setPName] = useState("Martin");
+  const [pCity, setPCity] = useState("Zürich");
+  const [pBio, setPBio] = useState("Spiele seit 10 Jahren Tennis, neu auch Padel. Suche regelmässige Partner in Zürich für Feierabend-Matches. 🎾");
+  const [pSports, setPSports] = useState<string[]>(["Tennis", "Padel"]);
+  const [pSkill, setPSkill] = useState("Fortgeschritten");
+  const [notif, setNotif] = useState({ matches: true, messages: true, community: false, reminders: true });
+  const [lang, setLang] = useState<"de" | "en">("de");
+  function toggleSport(s: string) {
+    setPSports((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
+  }
   const [reqList, setReqList] = useState<ReqPerson[]>(REQUESTS_INIT);
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
@@ -277,17 +298,17 @@ export default function Mockup2Screen() {
           /* Profil (wie /app Profile) */
           <div className="px-5 pb-32 pt-[max(20px,env(safe-area-inset-top))]">
             <div className="flex items-center justify-end gap-2">
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" size={17} /></button>
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" size={17} /></button>
+              <button type="button" onClick={() => setProfileScreen("edit")} aria-label="Profil bearbeiten" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" size={17} /></button>
+              <button type="button" onClick={() => setProfileScreen("settings")} aria-label="Einstellungen" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" size={17} /></button>
             </div>
             <div className="flex flex-col items-center pt-1 text-center">
               <img src={ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
-              <h1 className="mt-3 text-2xl font-extrabold text-neutral-900">Martin, 29</h1>
-              <p className="flex items-center gap-1 text-sm text-neutral-500"><Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={14} /> Zürich</p>
-              <button type="button" className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/10 px-4 py-1.5 ring-1 ring-matchup/30">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-matchup/80">MatchScore</span>
-                <span className="text-sm font-extrabold text-matchup">1080</span>
-                <Icon path="M9 6l6 6-6 6" size={13} className="text-matchup/70" />
+              <h1 className="mt-3 text-2xl font-extrabold text-neutral-900">{pName}, 29</h1>
+              <p className="flex items-center gap-1 text-sm text-neutral-500"><Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={14} /> {pCity}</p>
+              <button type="button" className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup px-4 py-1.5 text-white shadow-sm">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-white/80">MatchScore</span>
+                <span className="text-sm font-extrabold text-white">1080</span>
+                <Icon path="M9 6l6 6-6 6" size={13} className="text-white/80" />
               </button>
             </div>
 
@@ -303,7 +324,7 @@ export default function Mockup2Screen() {
             <section className="mt-6">
               <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Sportarten</p>
               <div className="flex flex-wrap gap-2">
-                {["Tennis", "Padel"].map((s) => (
+                {pSports.map((s) => (
                   <span key={s} className="rounded-full bg-black/[0.05] px-4 py-1.5 text-sm font-medium text-neutral-700">{s}</span>
                 ))}
               </div>
@@ -311,14 +332,14 @@ export default function Mockup2Screen() {
 
             <section className="mt-6">
               <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Über mich</p>
-              <p className="rounded-2xl bg-black/[0.035] p-4 text-sm leading-relaxed text-neutral-600">Spiele seit 10 Jahren Tennis, neu auch Padel. Suche regelmässige Partner in Zürich für Feierabend-Matches. 🎾</p>
+              <p className="rounded-2xl bg-black/[0.035] p-4 text-sm leading-relaxed text-neutral-600">{pBio}</p>
             </section>
 
             <section className="mt-6">
               <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Erfolge</p>
               <div className="flex flex-wrap gap-2">
                 {PROFILE_ACHIEVEMENTS.map((a) => (
-                  <span key={a} className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3 py-1.5 text-xs font-semibold text-matchup">
+                  <span key={a} className="flex items-center gap-1.5 rounded-full bg-matchup px-3 py-1.5 text-xs font-semibold text-white">
                     <Icon path="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" size={13} fill="currentColor" /> {a}
                   </span>
                 ))}
@@ -808,8 +829,98 @@ export default function Mockup2Screen() {
           </div>
         )}
 
-        {/* Tab-Bar (schwebend) — im Gespräch ausgeblendet */}
-        {!activeChat && (
+        {/* Profil bearbeiten */}
+        {profileScreen === "edit" && (
+          <div className="absolute inset-0 z-40 flex flex-col bg-white">
+            <header className="flex items-center justify-between border-b border-black/10 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3">
+              <button type="button" onClick={() => setProfileScreen(null)} className="text-sm font-medium text-neutral-500">Abbrechen</button>
+              <span className="font-bold text-neutral-900">Profil bearbeiten</span>
+              <button type="button" onClick={() => setProfileScreen(null)} className="text-sm font-bold text-matchup">Speichern</button>
+            </header>
+            <div className="flex-1 space-y-5 overflow-y-auto p-5 pb-10">
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <img src={ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
+                  <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-matchup text-white ring-2 ring-white"><Icon path="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" size={15} /></span>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Name</label>
+                <input value={pName} onChange={(e) => setPName(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Stadt</label>
+                <input value={pCity} onChange={(e) => setPCity(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Über mich</label>
+                <textarea value={pBio} onChange={(e) => setPBio(e.target.value)} rows={4} className="w-full resize-none rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Sportarten</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Tennis", "Padel", "Pickleball"].map((s) => (
+                    <button key={s} type="button" onClick={() => toggleSport(s)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${pSports.includes(s) ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}>{s}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Skill-Level</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Anfänger", "Mittel", "Fortgeschritten", "Profi"].map((s) => (
+                    <button key={s} type="button" onClick={() => setPSkill(s)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${pSkill === s ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}>{s}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Einstellungen */}
+        {profileScreen === "settings" && (
+          <div className="absolute inset-0 z-40 flex flex-col bg-white">
+            <header className="flex items-center gap-2 border-b border-black/10 px-2 pt-[max(12px,env(safe-area-inset-top))] pb-3">
+              <button type="button" onClick={() => setProfileScreen(null)} className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 active:bg-black/5"><Icon path="M15 18l-6-6 6-6" size={22} /></button>
+              <span className="font-bold text-neutral-900">Einstellungen</span>
+            </header>
+            <div className="flex-1 overflow-y-auto pb-10">
+              <p className="px-5 pb-1.5 pt-4 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Konto</p>
+              <SettingRow label="Konto-Infos" onClick={() => {}} />
+              <SettingRow label="Konto pausieren" onClick={() => {}} />
+
+              <p className="px-5 pb-1.5 pt-5 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Benachrichtigungen</p>
+              {([["matches", "Neue Matches"], ["messages", "Nachrichten"], ["community", "Community"], ["reminders", "Erinnerungen"]] as const).map(([k, label]) => (
+                <div key={k} className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-neutral-800">{label}</span>
+                  <button type="button" onClick={() => setNotif((n) => ({ ...n, [k]: !n[k] }))} className={`relative h-6 w-11 rounded-full transition-colors ${notif[k] ? "bg-matchup" : "bg-black/15"}`}>
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${notif[k] ? "left-[22px]" : "left-0.5"}`} />
+                  </button>
+                </div>
+              ))}
+
+              <p className="px-5 pb-1.5 pt-5 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Sprache</p>
+              <div className="flex gap-2 px-5">
+                {(["de", "en"] as const).map((l) => (
+                  <button key={l} type="button" onClick={() => setLang(l)} className={`flex-1 rounded-full py-2 text-sm font-semibold ${lang === l ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}>{l === "de" ? "Deutsch" : "English"}</button>
+                ))}
+              </div>
+
+              <p className="px-5 pb-1.5 pt-5 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Privatsphäre & Support</p>
+              <SettingRow label="Blockierte Nutzer" onClick={() => {}} />
+              <SettingRow label="Hilfe & Support" onClick={() => {}} />
+              <SettingRow label="Datenschutz" onClick={() => {}} />
+              <SettingRow label="AGB" onClick={() => {}} />
+
+              <div className="mt-5 px-5">
+                <button type="button" className="w-full rounded-xl bg-black/[0.05] py-3 text-sm font-semibold text-neutral-700">Abmelden</button>
+                <button type="button" className="mt-2 w-full rounded-xl py-3 text-sm font-semibold text-red-600">Konto löschen</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab-Bar (schwebend) — im Gespräch/Overlay ausgeblendet */}
+        {!activeChat && !profileScreen && (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] justify-center px-5 pb-[max(16px,env(safe-area-inset-bottom))]">
           <nav className="pointer-events-auto flex w-full items-center justify-between rounded-full bg-white px-3 py-2.5 shadow-[0_10px_40px_-8px_rgba(0,0,0,0.25)] ring-1 ring-black/10">
             {TABS.map((tb) => {
