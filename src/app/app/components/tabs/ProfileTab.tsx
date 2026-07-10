@@ -76,7 +76,7 @@ export default function ProfileTab() {
           type="button"
           onClick={() => openSubView({ type: "edit-profile" })}
           aria-label={t("profile.editAria")}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-800"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700 transition-colors hover:bg-black/10"
         >
           <PencilIcon size={18} />
         </button>
@@ -84,7 +84,7 @@ export default function ProfileTab() {
           type="button"
           onClick={() => openSubView({ type: "settings" })}
           aria-label={t("profile.settingsAria")}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white transition-colors hover:bg-zinc-800"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700 transition-colors hover:bg-black/10"
         >
           <GearIcon size={18} />
         </button>
@@ -95,14 +95,14 @@ export default function ProfileTab() {
           {profile.first_name}, {profile.age}
         </h1>
         {profile.city && (
-          <p className="flex items-center justify-center gap-1 text-sm text-zinc-400">
+          <p className="flex items-center justify-center gap-1 text-sm text-neutral-500">
             <MapPinIcon size={14} /> {profile.city}
           </p>
         )}
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-sm text-neutral-500">
           <SportIcon sport={profile.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {profile.sports.map(sportLabel).join(", ")} ·{" "}
           {skillLabel(profile.skill_level)}{" "}
-          <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 align-[1px] text-[10px] font-medium text-zinc-500">{t("profile.selfRated")}</span>
+          <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 align-[1px] text-[10px] font-medium text-neutral-400">{t("profile.selfRated")}</span>
         </p>
 
         {/* MatchScore — Elo-Rating (tippen → Rangliste) */}
@@ -137,7 +137,7 @@ export default function ProfileTab() {
 
         {profile.bio && (
           <Section title={t("profile.aboutMe")}>
-            <p className="text-sm text-zinc-300">{profile.bio}</p>
+            <p className="text-sm text-neutral-600">{profile.bio}</p>
           </Section>
         )}
 
@@ -146,7 +146,7 @@ export default function ProfileTab() {
             {profile.sports.map((s) => (
               <span
                 key={s}
-                className="rounded-full bg-zinc-800 px-4 py-1.5 text-sm"
+                className="rounded-full bg-neutral-100 px-4 py-1.5 text-sm"
               >
                 <SportIcon sport={s} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(s)}
               </span>
@@ -166,15 +166,15 @@ export default function ProfileTab() {
           <Section title={t("profile.progressNotes")}>
             <div className="space-y-2">
               {reviews.map((r) => (
-                <div key={r.id} className="rounded-xl bg-zinc-900 p-3">
+                <div key={r.id} className="rounded-xl bg-black/[0.035] p-3">
                   {r.work_on && (
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-neutral-900">
                       <span className="font-semibold text-sky-400">→ </span>
                       {r.work_on}
                     </p>
                   )}
                   {r.what_good && (
-                    <p className="mt-1 text-xs text-zinc-400">
+                    <p className="mt-1 text-xs text-neutral-500">
                       <span className="text-emerald-400">+ </span>
                       {r.what_good}
                     </p>
@@ -194,7 +194,7 @@ export default function ProfileTab() {
                 return (
                   <span
                     key={a.id}
-                    className="rounded-full bg-zinc-800 px-3 py-1.5 text-sm"
+                    className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm"
                     title={def.description}
                   >
                     {def.icon} {def.label}
@@ -211,7 +211,7 @@ export default function ProfileTab() {
               {images.map((src, i) => (
                 <div
                   key={i}
-                  className="aspect-square overflow-hidden rounded-xl bg-zinc-800"
+                  className="aspect-square overflow-hidden rounded-xl bg-neutral-100"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="h-full w-full object-cover" />
@@ -235,7 +235,7 @@ function Section({
 }) {
   return (
     <div>
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
         {title}
       </h2>
       {children}

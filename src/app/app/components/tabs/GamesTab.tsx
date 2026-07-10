@@ -134,14 +134,14 @@ export default function GamesTab() {
 
   return (
     <div className="relative flex flex-col">
-      <div className="sticky top-0 z-20 flex shrink-0 gap-2 bg-black/80 p-3 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 flex shrink-0 gap-2 bg-white/80 p-3 backdrop-blur-xl">
         {(["mine", "open", "past"] as const).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => setMode(m)}
             className={`flex-1 rounded-full py-2 text-sm font-semibold ${
-              mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
+              mode === m ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-500"
             }`}
           >
             {m === "mine" ? t("games.mine") : m === "open" ? t("games.open") : t("games.past")}
@@ -186,28 +186,28 @@ export default function GamesTab() {
                     onClick={() =>
                       openSubView({ type: "game-detail", gameId: g.id })
                     }
-                    className="flex w-full items-start gap-3 rounded-2xl bg-zinc-900 p-4 text-left"
+                    className="flex w-full items-start gap-3 rounded-2xl bg-black/[0.035] p-4 text-left"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">
                         <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
                         {g.game_type === "singles" ? t("games.singles") : t("games.doubles")}
                       </p>
-                      <p className="mt-1 text-sm text-zinc-300">
+                      <p className="mt-1 text-sm text-neutral-600">
                         <CalendarIcon size={14} className="mr-1 inline-block align-[-2px]" />
                         {formatEventDate(g.date_time)}
                       </p>
-                      <p className="text-sm text-zinc-400">
+                      <p className="text-sm text-neutral-500">
                         <MapPinIcon size={14} className="mr-1 inline-block align-[-2px]" />
                         {g.location}
                         {g.court_number ? `, ${g.court_number}` : ""}
                       </p>
-                      <p className="mt-1 text-sm text-zinc-400">
+                      <p className="mt-1 text-sm text-neutral-500">
                         <UsersIcon size={14} className="mr-1 inline-block align-[-2px]" />
                         {t("games.participants", { count: `${accepted}/${cap}` })}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                        <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600">
                           {STATUS_KEY[g.status] ? t(STATUS_KEY[g.status]) : g.status}
                         </span>
                         {mode === "past" &&
@@ -229,7 +229,7 @@ export default function GamesTab() {
                             }
                             if (r.status === "disputed") {
                               return (
-                                <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+                                <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500">
                                   {t("games.resultDisputedTag")}
                                 </span>
                               );
@@ -242,7 +242,7 @@ export default function GamesTab() {
                                 {t("games.resultConfirmBtn")} →
                               </span>
                             ) : (
-                              <span className="inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-400">
+                              <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-500">
                                 {t("games.resultAwaitingConfirm")}
                               </span>
                             );
@@ -256,7 +256,7 @@ export default function GamesTab() {
                         return person ? (
                           <span
                             key={i}
-                            className="h-9 w-9 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10"
+                            className="h-9 w-9 overflow-hidden rounded-full bg-neutral-100 ring-1 ring-white/10"
                           >
                             {person.profile_image ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -266,7 +266,7 @@ export default function GamesTab() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <span className="flex h-full w-full items-center justify-center text-xs font-bold text-zinc-400">
+                              <span className="flex h-full w-full items-center justify-center text-xs font-bold text-neutral-500">
                                 {person.first_name?.[0] ?? "?"}
                               </span>
                             )}
@@ -274,7 +274,7 @@ export default function GamesTab() {
                         ) : (
                           <span
                             key={i}
-                            className="h-9 w-9 rounded-full border-2 border-dashed border-zinc-700"
+                            className="h-9 w-9 rounded-full border-2 border-dashed border-neutral-300"
                           />
                         );
                       })}

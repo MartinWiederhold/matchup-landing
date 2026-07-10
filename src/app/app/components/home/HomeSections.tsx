@@ -25,9 +25,9 @@ export function greeting(t: ReturnType<typeof useT>, name: string): string {
 function SectionHead({ label, action, onAction }: { label: string; action?: string; onAction?: () => void }) {
   return (
     <div className="mb-2.5 flex items-center justify-between px-0.5">
-      <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-zinc-500">{label}</span>
+      <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{label}</span>
       {action && (
-        <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+        <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider text-matchup">
           {action} <ChevronRightIcon size={13} />
         </button>
       )}
@@ -43,22 +43,22 @@ export function FormRing({ score, onOpen }: { score: number; onOpen: () => void 
   const pct = Math.max(4, Math.min(100, ((score - 800) / 800) * 100));
   const off = C * (1 - pct / 100);
   return (
-    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-left text-white shadow-lg">
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-4 rounded-2xl bg-black/[0.035] p-4 text-left">
       <div className="relative h-[92px] w-[92px] shrink-0">
         <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
-          <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="8.5" />
-          <circle cx="46" cy="46" r={R} fill="none" stroke="#ffffff" strokeWidth="8.5" strokeLinecap="round"
-            strokeDasharray={C} strokeDashoffset={off} style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,.5))" }} />
+          <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(0,0,0,.08)" strokeWidth="8.5" />
+          <circle cx="46" cy="46" r={R} fill="none" stroke="#4b3bf3" strokeWidth="8.5" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={off} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[22px] font-extrabold leading-none tracking-tight text-white">{score}</span>
-          <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-white/60">{t("discover.matchScore")}</span>
+          <span className="text-[22px] font-extrabold leading-none tracking-tight text-neutral-900">{score}</span>
+          <span className="mt-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("discover.matchScore")}</span>
         </div>
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/75">{t("discover.yourForm")}</div>
-        <h3 className="mt-1 text-base font-extrabold tracking-tight text-white">{t("discover.formSub")}</h3>
-        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-white/75">{t("discover.formTap")} <ChevronRightIcon size={13} /></p>
+        <div className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("discover.yourForm")}</div>
+        <h3 className="mt-1 text-base font-extrabold tracking-tight text-neutral-900">{t("discover.formSub")}</h3>
+        <p className="mt-1 flex items-center gap-1 text-[12.5px] text-neutral-500">{t("discover.formTap")} <ChevronRightIcon size={13} /></p>
       </div>
     </button>
   );
@@ -71,22 +71,24 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.newPeople")} />
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-3.5 shadow-lg">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-white/45 text-white/75"><PlusIcon size={22} /></span>
-          <span className="max-w-[60px] truncate text-[11px] text-white/75">{t("discover.find")}</span>
+          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-black/25 text-neutral-400"><PlusIcon size={22} /></span>
+          <span className="max-w-[60px] truncate text-[11px] text-neutral-400">{t("discover.find")}</span>
         </button>
         {people.map((p) => (
           <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-            <span className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full bg-white/15 text-sm font-bold text-white ring-2 ring-white/55">
-              {p.profile_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
-              ) : (
-                (p.first_name?.[0] ?? "?").toUpperCase()
-              )}
+            <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
+              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-sm font-bold text-neutral-500 ring-[2.5px] ring-white">
+                {p.profile_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  (p.first_name?.[0] ?? "?").toUpperCase()
+                )}
+              </span>
             </span>
-            <span className="max-w-[60px] truncate text-[11px] font-medium text-white/90">{p.first_name}</span>
+            <span className="max-w-[60px] truncate text-[11px] font-medium text-neutral-600">{p.first_name}</span>
           </button>
         ))}
       </div>
@@ -109,12 +111,12 @@ export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect:
         {SPORT_GROUPS.map((s) => {
           const members = people.filter((p) => (p.sports ?? []).includes(s.key));
           return (
-            <button key={s.key} type="button" onClick={() => onSelect(s.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] py-4">
+            <button key={s.key} type="button" onClick={() => onSelect(s.key)} className="flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] py-4">
               <div className="relative flex h-16 w-16 items-center justify-center rounded-full" style={{ background: `radial-gradient(circle at 32% 28%, ${s.color}55, ${s.color}14)` }}>
                 {members.length ? (
                   <div className="flex -space-x-2.5">
                     {members.slice(0, 3).map((p, i) => (
-                      <span key={i} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-[10px] font-bold text-white ring-2 ring-[#0c0c12]">
+                      <span key={i} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-500 ring-2 ring-white">
                         {p.profile_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
@@ -127,14 +129,14 @@ export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect:
                 ) : (
                   <div className="flex -space-x-2.5">
                     {[0, 1, 2].map((i) => (
-                      <span key={i} className="h-8 w-8 rounded-full bg-white/10 ring-2 ring-[#0c0c12]" />
+                      <span key={i} className="h-8 w-8 rounded-full bg-black/10 ring-2 ring-white" />
                     ))}
                   </div>
                 )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full ring-2 ring-black" style={{ background: s.color }} />
+                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full ring-2 ring-white" style={{ background: s.color }} />
               </div>
               <span className="text-xs font-extrabold">{sportLabel(s.key)}</span>
-              <span className="text-[10px] text-zinc-500">{members.length} {t("discover.players")}</span>
+              <span className="text-[10px] text-neutral-400">{members.length} {t("discover.players")}</span>
             </button>
           );
         })}
@@ -225,17 +227,17 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
   return (
     <section className="mt-6 px-4">
       <SectionHead label={t("discover.nextGame")} action={t("discover.openGamesAll")} onAction={onAll} />
-      <button type="button" onClick={() => onOpen(game.id)} className="flex w-full items-center gap-3.5 rounded-2xl border border-white/15 bg-white/[0.10] p-4 text-left">
+      <button type="button" onClick={() => onOpen(game.id)} className="flex w-full items-center gap-3.5 rounded-2xl bg-black/[0.035] p-4 text-left">
         <div className="w-14 shrink-0 text-center">
-          <div className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">{dd}</div>
+          <div className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">{dd}</div>
           <div className="mt-0.5 text-[19px] font-extrabold tracking-tight">{hh}</div>
         </div>
-        <div className="min-w-0 flex-1 border-l border-white/10 pl-3.5">
+        <div className="min-w-0 flex-1 border-l border-black/10 pl-3.5">
           <div className="flex items-center gap-1.5 text-sm font-extrabold"><SportIcon sport={game.sport} size={15} /> {sportLabel(game.sport)}</div>
-          <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-zinc-400"><MapPinIcon size={13} /> {game.location}{free > 0 ? ` · ${t("discover.openGamesSpots", { count: free })}` : ""}</div>
+          <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-neutral-500"><MapPinIcon size={13} /> {game.location}{free > 0 ? ` · ${t("discover.openGamesSpots", { count: free })}` : ""}</div>
           <div className="mt-2 flex items-center gap-2.5">
             {wx && (
-              <span className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2 py-1 text-[11px] font-bold ${wx.good ? "text-zinc-200" : "text-amber-300"}`}>
+              <span className={`inline-flex items-center gap-1.5 rounded-full bg-black/[0.05] px-2 py-1 text-[11px] font-bold ${wx.good ? "text-neutral-600" : "text-amber-600"}`}>
                 <WxIcon kind={wx.kind} /> {wx.temp}° · {wx.good ? t("discover.wxGood") : t("discover.wxMeh")}
               </span>
             )}
@@ -314,14 +316,14 @@ export function CommunityCard({ onOpen }: { onOpen: () => void }) {
   if (!loaded || !post) return null;
   return (
     <section className="mt-6 px-4">
-      <button type="button" onClick={onOpen} className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left">
+      <button type="button" onClick={onOpen} className="w-full rounded-2xl bg-black/[0.035] p-4 text-left">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-zinc-400"><UsersIcon size={14} /> {t("discover.community")}</span>
-          <ChevronRightIcon size={16} className="text-zinc-600" />
+          <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400"><UsersIcon size={14} /> {t("discover.community")}</span>
+          <ChevronRightIcon size={16} className="text-neutral-400" />
         </div>
         <div className="mt-3 flex items-start gap-2.5">
           <Avatar src={post.author?.profile_image} alt={post.author?.first_name ?? ""} size="sm" />
-          <p className="text-[12.5px] leading-snug text-zinc-400 line-clamp-2"><b className="text-white">{post.author?.first_name}</b> {post.content}</p>
+          <p className="text-[12.5px] leading-snug text-neutral-500 line-clamp-2"><b className="text-neutral-900">{post.author?.first_name}</b> {post.content}</p>
         </div>
       </button>
     </section>

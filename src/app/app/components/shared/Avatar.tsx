@@ -28,7 +28,7 @@ export default function Avatar({
           className="h-full w-full rounded-full object-cover"
         />
       ) : (
-        <span className="flex h-full w-full items-center justify-center rounded-full bg-zinc-700 text-zinc-300">
+        <span className="flex h-full w-full items-center justify-center rounded-full bg-neutral-200 text-neutral-500">
           {alt ? alt[0]?.toUpperCase() : "?"}
         </span>
       )}

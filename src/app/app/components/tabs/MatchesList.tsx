@@ -83,8 +83,8 @@ export default function MatchesList() {
   if (loading) return <FullLoading />;
 
   const RequestsStrip = requests.length > 0 && (
-    <div className="border-b border-zinc-800 px-4 py-3">
-      <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">
+    <div className="border-b border-black/10 px-4 py-3">
+      <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">
         {t("discover.requestsTitle", { count: requests.length })}
       </p>
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
@@ -99,7 +99,7 @@ export default function MatchesList() {
               className="flex w-[62px] shrink-0 flex-col items-center gap-1.5"
             >
               <span className="block h-[60px] w-[60px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
-                <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-zinc-700 text-sm font-bold text-white ring-[2.5px] ring-black">
+                <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-sm font-bold text-neutral-500 ring-[2.5px] ring-white">
                   {u.profile_image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={u.profile_image} alt="" className="h-full w-full object-cover" />
@@ -108,7 +108,7 @@ export default function MatchesList() {
                   )}
                 </span>
               </span>
-              <span className="max-w-[62px] truncate text-[11px] font-medium text-zinc-300">{u.first_name}</span>
+              <span className="max-w-[62px] truncate text-[11px] font-medium text-neutral-600">{u.first_name}</span>
             </button>
           );
         })}
@@ -133,7 +133,7 @@ export default function MatchesList() {
   return (
     <div>
       {RequestsStrip}
-      <ul className="divide-y divide-zinc-800">
+      <ul className="divide-y divide-black/[0.06]">
         {matches.map((m) => {
           const u = other(m);
           if (!u) return null;
@@ -156,13 +156,13 @@ export default function MatchesList() {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{u.first_name}</p>
-                  <p className="truncate text-sm text-zinc-400">
+                  <p className="truncate text-sm text-neutral-500">
                     {m.last_message?.content ?? t("matches.sayHello")}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   {m.last_message && (
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-neutral-400">
                       {timeAgo(m.last_message.created_at)}
                     </span>
                   )}

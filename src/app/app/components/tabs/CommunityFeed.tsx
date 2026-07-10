@@ -139,7 +139,7 @@ export default function CommunityFeed() {
               type="button"
               onClick={() => setMode(m)}
               className={`flex-1 rounded-full py-2 text-sm font-semibold ${
-                mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
+                mode === m ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-500"
               }`}
             >
               {m === "global" ? t("community.scopeGlobal") : t("community.scopeClub")}
@@ -156,7 +156,7 @@ export default function CommunityFeed() {
             message={t("community.emptyMessage")}
           />
         ) : (
-          <ul className="divide-y divide-zinc-800">
+          <ul className="divide-y divide-black/[0.06]">
             {posts.map((post) => {
               const mine = post.author_id === profile.id;
               const emojis = Object.keys(post.reactions ?? {});
@@ -167,7 +167,7 @@ export default function CommunityFeed() {
                     <span className="text-sm font-semibold">
                       {post.author?.first_name ?? t("community.unknownPlayer")}
                     </span>
-                    <span className="text-xs text-zinc-500">· {timeAgo(post.created_at)}</span>
+                    <span className="text-xs text-neutral-400">· {timeAgo(post.created_at)}</span>
 
                     {/* 3-Punkte-Menü */}
                     <div className="relative ml-auto">
@@ -175,7 +175,7 @@ export default function CommunityFeed() {
                         type="button"
                         onClick={() => setMenuFor((v) => (v === post.id ? null : post.id))}
                         aria-label={t("community.postMenu")}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800"
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-black/[0.05]"
                       >
                         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
                           <circle cx="12" cy="5" r="1.6" />
@@ -186,12 +186,12 @@ export default function CommunityFeed() {
                       {menuFor === post.id && (
                         <>
                           <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
-                          <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-xl bg-zinc-900 p-1 shadow-xl ring-1 ring-white/10">
+                          <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-xl bg-white p-1 shadow-xl ring-1 ring-black/10">
                             {mine ? (
                               <button
                                 type="button"
                                 onClick={() => deletePost(post)}
-                                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-amber-300 hover:bg-zinc-800"
+                                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-amber-600 hover:bg-neutral-50"
                               >
                                 {t("community.deletePost")}
                               </button>
@@ -199,7 +199,7 @@ export default function CommunityFeed() {
                               <button
                                 type="button"
                                 onClick={() => reportPost(post)}
-                                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-zinc-200 hover:bg-zinc-800"
+                                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-neutral-700 hover:bg-neutral-50"
                               >
                                 {t("community.reportPost")}
                               </button>
@@ -233,8 +233,8 @@ export default function CommunityFeed() {
                           onClick={() => react(post, e)}
                           className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
                             post.my_reaction === e
-                              ? "bg-matchup/20 text-white ring-1 ring-matchup/60"
-                              : "bg-zinc-800 text-zinc-300"
+                              ? "bg-matchup/10 text-matchup ring-1 ring-matchup/60"
+                              : "bg-neutral-100 text-neutral-600"
                           }`}
                         >
                           <span>{e}</span>
@@ -245,7 +245,7 @@ export default function CommunityFeed() {
                   )}
 
                   {/* Aktionen */}
-                  <div className="relative mt-3 flex items-center gap-4 text-sm text-zinc-400">
+                  <div className="relative mt-3 flex items-center gap-4 text-sm text-neutral-500">
                     <button
                       type="button"
                       onClick={() => setPickerFor((v) => (v === post.id ? null : post.id))}
@@ -266,7 +266,7 @@ export default function CommunityFeed() {
                     {pickerFor === post.id && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setPickerFor(null)} />
-                        <div className="absolute bottom-8 left-0 z-20 flex gap-1 rounded-full bg-zinc-900 p-1.5 shadow-xl ring-1 ring-white/10">
+                        <div className="absolute bottom-8 left-0 z-20 flex gap-1 rounded-full bg-white p-1.5 shadow-xl ring-1 ring-black/10">
                           {REACTIONS.map((e) => (
                             <button
                               key={e}

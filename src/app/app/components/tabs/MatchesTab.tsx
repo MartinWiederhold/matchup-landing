@@ -20,7 +20,7 @@ export default function MatchesTab() {
 
   return (
     <div className="flex flex-col">
-      <div className="sticky top-0 z-20 flex shrink-0 border-b border-zinc-800 bg-black/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 flex shrink-0 border-b border-black/10 bg-white/80 backdrop-blur-xl">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -28,8 +28,8 @@ export default function MatchesTab() {
             onClick={() => setSub(t.key)}
             className={`flex-1 border-b-2 py-3.5 text-sm font-semibold transition-colors ${
               sub === t.key
-                ? "border-matchup text-white"
-                : "border-transparent text-zinc-500"
+                ? "border-matchup text-neutral-900"
+                : "border-transparent text-neutral-400"
             }`}
           >
             {t.label}

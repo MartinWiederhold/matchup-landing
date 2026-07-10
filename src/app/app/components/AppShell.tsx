@@ -45,13 +45,13 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const current = stack[stack.length - 1] ?? null;
   const inSubview = !!current;
 
-  // Body immer schwarz (kein weisses Durchblitzen).
+  // Body-Hintergrund passend zum aktiven Rahmen: Tabs = hell, Subviews (noch dunkel) = schwarz.
   useEffect(() => {
     const body = document.body;
     const prevBg = body.style.background;
-    body.style.background = "#000";
+    body.style.background = inSubview ? "#000" : "#fff";
     return () => { body.style.background = prevBg; };
-  }, []);
+  }, [inSubview]);
 
   // Harten Scroll-Lock (position:fixed) NUR in Subviews mit Texteingabe
   // (Chat, Formulare), wo die Tastatur-Logik den fixen Rahmen braucht. In der
@@ -217,7 +217,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
       ) : (
         // Tab-Ansicht: das DOKUMENT scrollt (kein fixer Rahmen) → iOS-Safari
         // klappt seine untere Leiste ein, die fixe Tab-Bar rutscht mit.
-        <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+        <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col bg-white pt-[env(safe-area-inset-top)] text-neutral-900">
           {!online && (
             <div className="bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
               {t("app.offline")}

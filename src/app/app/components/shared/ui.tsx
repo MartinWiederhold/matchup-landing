@@ -12,7 +12,7 @@ export function LoadingSpinner({
   const dim = size === "sm" ? "h-5 w-5" : size === "lg" ? "h-10 w-10" : "h-7 w-7";
   return (
     <div
-      className={`${dim} animate-spin rounded-full border-2 border-zinc-700 border-t-matchup`}
+      className={`${dim} animate-spin rounded-full border-2 border-neutral-200 border-t-matchup`}
     />
   );
 }
@@ -40,11 +40,11 @@ export function EmptyState({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-      <div className="text-zinc-600" aria-hidden="true">
+      <div className="text-neutral-300" aria-hidden="true">
         {icon}
       </div>
       <h3 className="mt-4 text-lg font-bold">{title}</h3>
-      <p className="mt-2 max-w-xs text-sm text-zinc-400">{message}</p>
+      <p className="mt-2 max-w-xs text-sm text-neutral-500">{message}</p>
       {actionLabel && onAction && (
         <button
           type="button"

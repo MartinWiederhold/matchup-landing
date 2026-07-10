@@ -70,7 +70,7 @@ export default function GroupsList() {
               type="button"
               onClick={() => setMode(m)}
               className={`flex-1 rounded-full py-2 text-sm font-semibold ${
-                mode === m ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
+                mode === m ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-500"
               }`}
             >
               {m === "all" ? t("groups.all") : t("groups.mine")}
@@ -83,7 +83,7 @@ export default function GroupsList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("groups.searchPlaceholder")}
-              className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
+              className="w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-sm text-neutral-800 outline-none placeholder:text-neutral-400"
             />
             <div className="flex gap-2">
               {[null, "tennis", "padel", "pickleball"].map((s) => (
@@ -93,8 +93,8 @@ export default function GroupsList() {
                   onClick={() => setSport(s as Sport | null)}
                   className={`rounded-full px-3 py-1.5 text-xs capitalize ${
                     sport === s
-                      ? "bg-matchup/20 text-white ring-1 ring-matchup"
-                      : "bg-zinc-800 text-zinc-400"
+                      ? "bg-matchup/10 text-matchup ring-1 ring-matchup"
+                      : "bg-neutral-100 text-neutral-500"
                   }`}
                 >
                   {s ? sportLabel(s) : t("groups.sportAll")}
@@ -119,7 +119,7 @@ export default function GroupsList() {
             {groups.map((g) => (
               <li
                 key={g.id}
-                className="overflow-hidden rounded-2xl bg-zinc-900"
+                className="overflow-hidden rounded-2xl bg-black/[0.035]"
               >
                 <button
                   type="button"
@@ -129,12 +129,12 @@ export default function GroupsList() {
                   className="block w-full p-4 text-left"
                 >
                   <p className="font-semibold">{g.name}</p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-neutral-500">
                     <SportIcon sport={g.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(g.sport)} ·{" "}
                     {t("groups.maxMembers", { count: g.max_members })}
                   </p>
                   {g.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-zinc-500">
+                    <p className="mt-1 line-clamp-2 text-sm text-neutral-500">
                       {g.description}
                     </p>
                   )}

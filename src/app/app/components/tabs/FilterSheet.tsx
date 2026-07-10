@@ -42,7 +42,7 @@ export default function FilterSheet({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative max-h-[85vh] overflow-y-auto rounded-t-3xl bg-zinc-900 p-5">
+      <div className="relative max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">{t("discover.filterTitle")}</h2>
           <button type="button" onClick={onClose} aria-label={t("common.close")}>
@@ -85,7 +85,7 @@ export default function FilterSheet({
         <Section label={t("discover.age", { min: draft.ageMin, max: draft.ageMax })}>
           <div className="flex items-stretch gap-3">
             <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-zinc-500">
+              <p className="mb-1 text-center text-xs text-neutral-400">
                 {t("discover.ageFrom")}
               </p>
               <WheelPicker
@@ -101,7 +101,7 @@ export default function FilterSheet({
               />
             </div>
             <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-zinc-500">
+              <p className="mb-1 text-center text-xs text-neutral-400">
                 {t("discover.ageTo")}
               </p>
               <WheelPicker
@@ -158,7 +158,7 @@ export default function FilterSheet({
             value={clubQuery}
             onChange={(e) => searchClubs(e.target.value)}
             placeholder={t("discover.clubSearchPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-2.5 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-sm text-neutral-800 outline-none placeholder:text-neutral-400"
           />
           {clubResults.map((c) => (
             <button
@@ -169,11 +169,11 @@ export default function FilterSheet({
                 setClubQuery(c.name);
                 setClubResults([]);
               }}
-              className="mt-1 block w-full rounded-lg bg-zinc-800 px-3 py-2 text-left text-sm"
+              className="mt-1 block w-full rounded-lg bg-neutral-100 px-3 py-2 text-left text-sm"
             >
               <span className="block">{c.name}</span>
               {(c.address || c.city) && (
-                <span className="mt-0.5 block text-xs text-zinc-400">
+                <span className="mt-0.5 block text-xs text-neutral-500">
                   {c.address || c.city}
                 </span>
               )}
@@ -186,7 +186,7 @@ export default function FilterSheet({
                 setDraft({ ...draft, clubId: null, clubName: null });
                 setClubQuery("");
               }}
-              className="mt-2 text-xs text-zinc-400 underline"
+              className="mt-2 text-xs text-neutral-500 underline"
             >
               {t("discover.removeClubFilter")}
             </button>
@@ -197,7 +197,7 @@ export default function FilterSheet({
           <button
             type="button"
             onClick={() => setDraft(defaultFilters)}
-            className="flex-1 rounded-full border border-zinc-700 py-3 text-sm font-semibold"
+            className="flex-1 rounded-full border border-neutral-300 py-3 text-sm font-semibold"
           >
             {t("discover.reset")}
           </button>
@@ -223,7 +223,7 @@ function Section({
 }) {
   return (
     <div className="mb-5">
-      <p className="mb-2 text-sm font-semibold text-zinc-300">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-neutral-600">{label}</p>
       {children}
     </div>
   );
@@ -244,8 +244,8 @@ function FilterChip({
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm capitalize ${
         active
-          ? "bg-matchup/20 text-white ring-2 ring-matchup"
-          : "bg-zinc-800 text-zinc-300 ring-1 ring-zinc-700"
+          ? "bg-matchup/10 text-matchup ring-2 ring-matchup"
+          : "bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200"
       }`}
     >
       {children}

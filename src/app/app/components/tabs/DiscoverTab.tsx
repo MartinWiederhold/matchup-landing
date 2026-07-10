@@ -272,9 +272,9 @@ export default function DiscoverTab() {
   return (
     <div className="relative flex flex-col">
       {/* Home-Header: Begrüßung + Filter + Avatar (sticky, damit er beim Fenster-Scroll bleibt) */}
-      <header className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 bg-black/80 px-4 pt-3 pb-2 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 bg-white/80 px-4 pt-3 pb-2 backdrop-blur-xl">
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">{dateLabel}</div>
+          <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-neutral-400">{dateLabel}</div>
           <h1 className="mt-1 truncate text-[22px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
@@ -282,7 +282,7 @@ export default function DiscoverTab() {
             type="button"
             onClick={() => setShowFilter(true)}
             aria-label={t("discover.filter")}
-            className="relative flex h-[42px] w-[42px] items-center justify-center rounded-[13px] border border-white/10 bg-white/[0.04] text-white"
+            className="relative flex h-[42px] w-[42px] items-center justify-center rounded-[13px] border border-black/10 bg-black/[0.04] text-neutral-700"
           >
             <FilterIcon size={20} />
             {activeChips.length > 0 && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-matchup" />}
@@ -318,8 +318,8 @@ export default function DiscoverTab() {
         {/* Für dich empfohlen */}
         <section className="mt-6 px-4">
           <div className="mb-2.5 flex items-center justify-between px-0.5">
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-zinc-500">{t("discover.forYou")}</span>
-            <span className="text-[11px] font-bold text-zinc-600">{candidates.length}</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("discover.forYou")}</span>
+            <span className="text-[11px] font-bold text-neutral-400">{candidates.length}</span>
           </div>
           {candidates.length === 0 ? (
             <EmptyState
@@ -420,7 +420,7 @@ function FeedCard({
 }) {
   const dist = distanceLabel(myLat, myLng, player);
   return (
-    <div className="overflow-hidden rounded-xl bg-zinc-900">
+    <div className="overflow-hidden rounded-xl bg-black/[0.04]">
       <button
         type="button"
         onClick={onOpen}
@@ -462,7 +462,7 @@ function FeedCard({
           disabled={requested}
           className={`flex w-full items-center justify-center gap-1 rounded-full py-1.5 text-[11px] font-bold transition-colors ${
             requested
-              ? "bg-zinc-800 text-zinc-400"
+              ? "bg-black/[0.06] text-neutral-400"
               : "bg-matchup text-white hover:bg-matchup-hover"
           }`}
         >
