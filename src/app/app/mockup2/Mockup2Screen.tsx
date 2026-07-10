@@ -92,10 +92,28 @@ const FEED_INIT: FeedItem[] = [
   { id: 3, name: "Sofia", img: "https://i.pravatar.cc/120?img=1", time: "Gestern", text: "Turniersieg am Wochenende 🏆 Danke an alle, die dabei waren!", likes: 28, comments: 9 },
 ];
 
+type GameItem = { id: number; sport: string; type: string; date: string; loc: string; players: string[]; cap: number; bucket: "mine" | "open" | "past"; result?: string };
+const GAMES_INIT: GameItem[] = [
+  { id: 1, sport: "Padel", type: "Doppel", date: "Morgen · 18:00", loc: "TC Seefeld, Zürich", players: ["https://i.pravatar.cc/120?img=12", "https://i.pravatar.cc/120?img=16", "https://i.pravatar.cc/120?img=5"], cap: 4, bucket: "mine" },
+  { id: 2, sport: "Tennis", type: "Einzel", date: "Do · 19:30", loc: "TC Zürich Lengg", players: ["https://i.pravatar.cc/120?img=47"], cap: 2, bucket: "mine" },
+  { id: 3, sport: "Tennis", type: "Einzel", date: "Sa · 10:00", loc: "Lengg, Zürich", players: ["https://i.pravatar.cc/120?img=33"], cap: 2, bucket: "open" },
+  { id: 4, sport: "Pickleball", type: "Doppel", date: "So · 14:00", loc: "Sportpark Heerenschürli", players: ["https://i.pravatar.cc/120?img=9", "https://i.pravatar.cc/120?img=13"], cap: 4, bucket: "open" },
+  { id: 5, sport: "Padel", type: "Doppel", date: "Letzten Fr · 20:00", loc: "Padel City", players: ["https://i.pravatar.cc/120?img=5", "https://i.pravatar.cc/120?img=12", "https://i.pravatar.cc/120?img=7", "https://i.pravatar.cc/120?img=45"], cap: 4, bucket: "past", result: "6:3 · 4:6 · 10:7" },
+];
+
+const PROFILE_STATS = [
+  { label: "Spiele", value: "42" },
+  { label: "Siege", value: "27" },
+  { label: "Winrate", value: "64%" },
+  { label: "Serie", value: "4" },
+];
+const PROFILE_ACHIEVEMENTS = ["Erster Sieg", "10 Spiele", "5er-Serie", "Clubheld"];
+
 type Post = { id: number; text: string; image: string | null; time: string };
 type Msg = { id: number; me: boolean; text: string; time: string };
 type Tab = "home" | "chat" | "earth" | "stats" | "people";
 type ChatSub = "chats" | "groups" | "feed";
+type GamesMode = "mine" | "open" | "past";
 
 const TABS: { key: Tab; path: string }[] = [
   { key: "home", path: "M3 11l9-8 9 8M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" },
@@ -108,6 +126,7 @@ const TABS: { key: Tab; path: string }[] = [
 export default function Mockup2Screen() {
   const [tab, setTab] = useState<Tab>("home");
   const [chatSub, setChatSub] = useState<ChatSub>("chats");
+  const [gamesMode, setGamesMode] = useState<GamesMode>("mine");
   const [reqList, setReqList] = useState<ReqPerson[]>(REQUESTS_INIT);
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
@@ -195,6 +214,106 @@ export default function Mockup2Screen() {
         {tab === "earth" ? (
           // Erde-Tab → echte /map (mit Discover/Season-Toggle wie auf der Map-Seite)
           <iframe title="Matchup Map" src="/map" className="h-[100dvh] w-full border-0" />
+        ) : tab === "stats" ? (
+          /* Spiele (wie /app Games) */
+          <div className="pb-32 pt-[max(20px,env(safe-area-inset-top))]">
+            <header className="flex items-center justify-between px-5 pb-1 pt-2">
+              <h1 className="text-[26px] font-extrabold tracking-tight text-neutral-900">Spiele</h1>
+              <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-matchup text-white shadow-lg">
+                <Icon path="M12 5v14M5 12h14" size={20} />
+              </button>
+            </header>
+            <div className="flex gap-2 px-5 py-3">
+              {([["mine", "Meine"], ["open", "Offen"], ["past", "Gespielt"]] as const).map(([k, label]) => (
+                <button key={k} type="button" onClick={() => setGamesMode(k)} className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${gamesMode === k ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-500"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-3 px-5">
+              {GAMES_INIT.filter((g) => g.bucket === gamesMode).map((g) => (
+                <div key={g.id} className="rounded-2xl bg-black/[0.035] p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="flex items-center gap-1.5 font-semibold text-neutral-900">
+                      <Icon path="M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" size={15} className="text-matchup" /> {g.sport} · {g.type}
+                    </p>
+                    {g.result ? (
+                      <span className="rounded-full bg-matchup/10 px-2.5 py-1 text-[11px] font-bold text-matchup">{g.result}</span>
+                    ) : g.bucket === "open" ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600">{g.cap - g.players.length} frei</span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-sm text-neutral-600"><Icon path="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" size={14} /> {g.date}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-sm text-neutral-500"><Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={14} /> {g.loc}</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex -space-x-2.5">
+                      {g.players.map((src, i) => (
+                        <img key={i} src={src} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-white" />
+                      ))}
+                      {g.players.length < g.cap && (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[0.06] text-neutral-400 ring-2 ring-white"><Icon path="M12 5v14M5 12h14" size={14} /></span>
+                      )}
+                    </div>
+                    {g.bucket === "open" && (
+                      <button type="button" className="rounded-full bg-matchup px-4 py-1.5 text-xs font-bold text-white">Beitreten</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : tab === "people" ? (
+          /* Profil (wie /app Profile) */
+          <div className="px-5 pb-32 pt-[max(20px,env(safe-area-inset-top))]">
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" size={17} /></button>
+              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" size={17} /></button>
+            </div>
+            <div className="flex flex-col items-center pt-1 text-center">
+              <img src={ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
+              <h1 className="mt-3 text-2xl font-extrabold text-neutral-900">Martin, 29</h1>
+              <p className="flex items-center gap-1 text-sm text-neutral-500"><Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={14} /> Zürich</p>
+              <button type="button" className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/10 px-4 py-1.5 ring-1 ring-matchup/30">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-matchup/80">MatchScore</span>
+                <span className="text-sm font-extrabold text-matchup">1080</span>
+                <Icon path="M9 6l6 6-6 6" size={13} className="text-matchup/70" />
+              </button>
+            </div>
+
+            <div className="mt-6 grid grid-cols-4 gap-2.5">
+              {PROFILE_STATS.map((s) => (
+                <div key={s.label} className="rounded-2xl bg-black/[0.035] py-3 text-center">
+                  <div className="text-lg font-extrabold text-neutral-900">{s.value}</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Sportarten</p>
+              <div className="flex flex-wrap gap-2">
+                {["Tennis", "Padel"].map((s) => (
+                  <span key={s} className="rounded-full bg-black/[0.05] px-4 py-1.5 text-sm font-medium text-neutral-700">{s}</span>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Über mich</p>
+              <p className="rounded-2xl bg-black/[0.035] p-4 text-sm leading-relaxed text-neutral-600">Spiele seit 10 Jahren Tennis, neu auch Padel. Suche regelmässige Partner in Zürich für Feierabend-Matches. 🎾</p>
+            </section>
+
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Erfolge</p>
+              <div className="flex flex-wrap gap-2">
+                {PROFILE_ACHIEVEMENTS.map((a) => (
+                  <span key={a} className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3 py-1.5 text-xs font-semibold text-matchup">
+                    <Icon path="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" size={13} fill="currentColor" /> {a}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </div>
         ) : tab === "chat" ? (
           <div className="pb-32 pt-[max(20px,env(safe-area-inset-top))]">
             <header className="flex items-center justify-between px-5 pb-2 pt-2">
