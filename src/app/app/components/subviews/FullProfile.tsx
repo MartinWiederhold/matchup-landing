@@ -133,12 +133,12 @@ export default function FullProfile({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <header className="flex shrink-0 items-center justify-between border-b border-black/10 px-4 py-3">
         <button type="button" onClick={closeSubView} className="text-xl" aria-label={t("profile.back")}>
           ←
         </button>
-        <div className="flex gap-4 text-zinc-300">
+        <div className="flex gap-4 text-neutral-600">
           <button type="button" onClick={report} aria-label={t("profile.report")}>
             <FlagIcon size={20} />
           </button>
@@ -150,7 +150,7 @@ export default function FullProfile({
 
       <div className="flex-1 overflow-y-auto">
         <div
-          className="relative aspect-[3/4] w-full select-none overflow-hidden bg-zinc-800"
+          className="relative aspect-[3/4] w-full select-none overflow-hidden bg-neutral-200"
           onTouchStart={(e) => {
             touchX.current = e.touches[0]?.clientX ?? null;
           }}
@@ -218,7 +218,7 @@ export default function FullProfile({
               {p.first_name}, {p.age}
             </h1>
             {p.city && (
-              <p className="flex items-center gap-1 text-sm text-zinc-400">
+              <p className="flex items-center gap-1 text-sm text-neutral-500">
                 <MapPinIcon size={14} /> {p.city}
               </p>
             )}
@@ -231,24 +231,24 @@ export default function FullProfile({
 
           {p.bio && (
             <div>
-              <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
+              <h2 className="mb-1 text-xs font-bold uppercase text-neutral-400">
                 {t("profile.aboutMe")}
               </h2>
-              <p className="text-sm text-zinc-300">{p.bio}</p>
+              <p className="text-sm text-neutral-600">{p.bio}</p>
             </div>
           )}
 
           <div>
-            <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
+            <h2 className="mb-1 text-xs font-bold uppercase text-neutral-400">
               {t("profile.details")}
             </h2>
-            <ul className="space-y-1 text-sm text-zinc-300">
+            <ul className="space-y-1 text-sm text-neutral-700">
               <li>
                 <SportIcon sport={p.sports[0]} size={14} className="mr-0.5 inline-block align-[-2px]" /> {p.sports.map(sportLabel).join(", ")}
               </li>
               <li className="flex items-center gap-2">
                 <StatsIcon size={15} /> {skillLabel(p.skill_level)}
-                <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">{t("profile.selfRated")}</span>
+                <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-400">{t("profile.selfRated")}</span>
               </li>
               {p.official_rating && (
                 <li className="flex items-center gap-2">
@@ -270,10 +270,10 @@ export default function FullProfile({
 
           {stats && (
             <div>
-              <h2 className="mb-1 text-xs font-bold uppercase text-zinc-500">
+              <h2 className="mb-1 text-xs font-bold uppercase text-neutral-400">
                 {t("profile.stats")}
               </h2>
-              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-zinc-300">
+              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-700">
                 <TrophyIcon size={14} /> {t("profile.matchesCount", { count: stats.total_matches })} ·{" "}
                 <FlameIcon size={14} /> {t("profile.streakDays", { count: stats.current_streak })} ·{" "}
                 <StarIcon size={14} /> {t("profile.levelValue", { level: stats.level })}
@@ -284,14 +284,14 @@ export default function FullProfile({
       </div>
 
       {!viewOnly && (
-        <div className="shrink-0 border-t border-zinc-800 p-4">
+        <div className="shrink-0 border-t border-black/10 p-4">
           <button
             type="button"
             onClick={connect}
             disabled={sent}
             className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold transition-colors ${
               sent
-                ? "bg-zinc-800 text-zinc-400"
+                ? "bg-neutral-100 text-neutral-400"
                 : "bg-matchup text-white hover:bg-matchup-hover"
             }`}
           >

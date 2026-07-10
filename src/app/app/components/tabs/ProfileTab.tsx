@@ -133,6 +133,28 @@ export default function ProfileTab() {
       </div>
 
       <div className="space-y-6 px-5 pt-8">
+        {/* Stats-Grid (mockup2-Look) */}
+        <div className="grid grid-cols-4 gap-2.5">
+          {(() => {
+            const games = stats?.total_matches ?? 0;
+            const wins = stats?.wins ?? 0;
+            const winrate = games ? Math.round((wins / games) * 100) : 0;
+            const streak = stats?.current_streak ?? 0;
+            const tiles = [
+              { label: t("profile.statMatches"), value: `${games}` },
+              { label: t("profile.statWins"), value: `${wins}` },
+              { label: t("profile.statWinrate"), value: `${winrate}%` },
+              { label: t("profile.statStreak"), value: `${streak}` },
+            ];
+            return tiles.map((s) => (
+              <div key={s.label} className="rounded-2xl bg-black/[0.035] py-3 text-center">
+                <div className="text-lg font-extrabold text-neutral-900">{s.value}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{s.label}</div>
+              </div>
+            ));
+          })()}
+        </div>
+
         <InviteFriends />
 
         {profile.bio && (
@@ -194,7 +216,7 @@ export default function ProfileTab() {
                 return (
                   <span
                     key={a.id}
-                    className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm"
+                    className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3 py-1.5 text-xs font-semibold text-matchup"
                     title={def.description}
                   >
                     {def.icon} {def.label}
