@@ -313,7 +313,16 @@ export default function DiscoverTab() {
         />
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
-        <SportGroups people={candidates} onSelect={(sport) => setFilters((f) => ({ ...f, sports: [sport] }))} />
+        <SportGroups
+          people={candidates}
+          onSelect={(sport) => {
+            const next = { ...filters, sports: [sport] };
+            // Filter synchron persistieren, damit die Uebersicht ihn beim Mounten liest.
+            try { window.localStorage.setItem("mu_discover_filters", JSON.stringify(next)); } catch { /* ignore */ }
+            setFilters(next);
+            openSubView({ type: "people-browse" });
+          }}
+        />
 
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />
