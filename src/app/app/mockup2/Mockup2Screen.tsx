@@ -78,9 +78,24 @@ const CHATS_INIT: ChatItem[] = [
   { id: 105, name: "Feera", img: "https://i.pravatar.cc/160?img=9", last: "Danke fürs Spiel 🙌", time: "Gestern", unread: 0 },
 ];
 
+type GroupItem = { id: number; name: string; sport: string; color: string; members: number; imgs: string[] };
+const GROUPS_INIT: GroupItem[] = [
+  { id: 1, name: "Padel Zürich Nord", sport: "Padel", color: "#7b6cff", members: 24, imgs: ["https://i.pravatar.cc/120?img=12", "https://i.pravatar.cc/120?img=5", "https://i.pravatar.cc/120?img=32"] },
+  { id: 2, name: "Tennis Ladder Zürich", sport: "Tennis", color: "#10b981", members: 58, imgs: ["https://i.pravatar.cc/120?img=16", "https://i.pravatar.cc/120?img=45", "https://i.pravatar.cc/120?img=7"] },
+  { id: 3, name: "Pickleball Beginners", sport: "Pickleball", color: "#f59e0b", members: 12, imgs: ["https://i.pravatar.cc/120?img=9", "https://i.pravatar.cc/120?img=13", "https://i.pravatar.cc/120?img=25"] },
+];
+
+type FeedItem = { id: number; name: string; img: string; time: string; text: string; likes: number; comments: number };
+const FEED_INIT: FeedItem[] = [
+  { id: 1, name: "Kevin", img: "https://i.pravatar.cc/120?img=12", time: "2 Std.", text: "Suche noch einen 4. für Padel morgen 18 Uhr in Zürich 🎾 Wer ist dabei?", likes: 6, comments: 3 },
+  { id: 2, name: "Laila", img: "https://i.pravatar.cc/120?img=16", time: "5 Std.", text: "Die neuen Courts im TC Seefeld sind mega! Wer testet mit mir?", likes: 12, comments: 5 },
+  { id: 3, name: "Sofia", img: "https://i.pravatar.cc/120?img=1", time: "Gestern", text: "Turniersieg am Wochenende 🏆 Danke an alle, die dabei waren!", likes: 28, comments: 9 },
+];
+
 type Post = { id: number; text: string; image: string | null; time: string };
 type Msg = { id: number; me: boolean; text: string; time: string };
 type Tab = "home" | "chat" | "earth" | "stats" | "people";
+type ChatSub = "chats" | "groups" | "feed";
 
 const TABS: { key: Tab; path: string }[] = [
   { key: "home", path: "M3 11l9-8 9 8M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" },
@@ -92,6 +107,7 @@ const TABS: { key: Tab; path: string }[] = [
 
 export default function Mockup2Screen() {
   const [tab, setTab] = useState<Tab>("home");
+  const [chatSub, setChatSub] = useState<ChatSub>("chats");
   const [reqList, setReqList] = useState<ReqPerson[]>(REQUESTS_INIT);
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
@@ -188,45 +204,106 @@ export default function Mockup2Screen() {
               </button>
             </header>
 
-            {/* Anfragen ganz oben */}
-            {reqList.length > 0 && (
-              <section className="px-5 pt-2">
-                <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Anfragen · {reqList.length}</p>
-                <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
-                  {reqList.map((r) => (
-                    <button key={r.id} type="button" onClick={() => setProfileView(r)} className="flex w-[64px] shrink-0 flex-col items-center gap-1.5">
-                      <span className="relative block h-[64px] w-[64px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2.5px]">
-                        <img src={r.img} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
-                        <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-matchup ring-2 ring-white">
-                          <Icon path="M12 5v14M5 12h14" size={12} className="text-white" />
-                        </span>
-                      </span>
-                      <span className="max-w-[64px] truncate text-[11px] font-medium text-neutral-600">{r.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Chat-Liste */}
-            <div className="mt-3">
-              {chatList.map((c) => (
-                <button key={c.id} type="button" onClick={() => openConversation(c)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-black/[0.03]">
-                  <span className="relative shrink-0">
-                    <img src={c.img} alt="" className="h-14 w-14 rounded-full object-cover" />
-                    {c.online && <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-neutral-900">{c.name}</p>
-                    <p className={`truncate text-sm ${c.unread ? "font-medium text-neutral-800" : "text-neutral-400"}`}>{c.last}</p>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[11px] text-neutral-400">{c.time}</span>
-                    {c.unread > 0 && <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-matchup px-1.5 text-[11px] font-bold text-white">{c.unread}</span>}
-                  </div>
+            {/* Reiter: Chats / Gruppen / Community */}
+            <div className="flex border-b border-black/10 px-2">
+              {([["chats", "Chats"], ["groups", "Gruppen"], ["feed", "Community"]] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setChatSub(k)}
+                  className={`flex-1 border-b-2 py-3 text-sm font-semibold transition-colors ${
+                    chatSub === k ? "border-matchup text-neutral-900" : "border-transparent text-neutral-400"
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
             </div>
+
+            {/* Chats */}
+            {chatSub === "chats" && (
+              <>
+                {reqList.length > 0 && (
+                  <section className="px-5 pt-4">
+                    <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Anfragen · {reqList.length}</p>
+                    <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+                      {reqList.map((r) => (
+                        <button key={r.id} type="button" onClick={() => setProfileView(r)} className="flex w-[64px] shrink-0 flex-col items-center gap-1.5">
+                          <span className="relative block h-[64px] w-[64px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2.5px]">
+                            <img src={r.img} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
+                            <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-matchup ring-2 ring-white">
+                              <Icon path="M12 5v14M5 12h14" size={12} className="text-white" />
+                            </span>
+                          </span>
+                          <span className="max-w-[64px] truncate text-[11px] font-medium text-neutral-600">{r.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+                <div className="mt-3">
+                  {chatList.map((c) => (
+                    <button key={c.id} type="button" onClick={() => openConversation(c)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-black/[0.03]">
+                      <span className="relative shrink-0">
+                        <img src={c.img} alt="" className="h-14 w-14 rounded-full object-cover" />
+                        {c.online && <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-neutral-900">{c.name}</p>
+                        <p className={`truncate text-sm ${c.unread ? "font-medium text-neutral-800" : "text-neutral-400"}`}>{c.last}</p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="text-[11px] text-neutral-400">{c.time}</span>
+                        {c.unread > 0 && <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-matchup px-1.5 text-[11px] font-bold text-white">{c.unread}</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Gruppen */}
+            {chatSub === "groups" && (
+              <div className="space-y-3 px-5 pt-4">
+                {GROUPS_INIT.map((g) => (
+                  <div key={g.id} className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
+                    <div className="flex -space-x-2.5">
+                      {g.imgs.map((src, i) => (
+                        <img key={i} src={src} alt="" className="h-10 w-10 rounded-full object-cover ring-2 ring-white" />
+                      ))}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-neutral-900">{g.name}</p>
+                      <p className="text-xs text-neutral-500">{g.sport} · {g.members} Mitglieder</p>
+                    </div>
+                    <button type="button" className="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold text-white" style={{ background: g.color }}>Beitreten</button>
+                  </div>
+                ))}
+                <button type="button" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-black/15 py-3.5 text-sm font-semibold text-matchup">
+                  <Icon path="M12 5v14M5 12h14" size={16} /> Gruppe erstellen
+                </button>
+              </div>
+            )}
+
+            {/* Community-Feed */}
+            {chatSub === "feed" && (
+              <div className="divide-y divide-black/[0.06]">
+                {FEED_INIT.map((p) => (
+                  <article key={p.id} className="px-5 py-4">
+                    <div className="flex items-center gap-2.5">
+                      <img src={p.img} alt="" className="h-9 w-9 rounded-full object-cover" />
+                      <span className="text-sm font-semibold text-neutral-900">{p.name}</span>
+                      <span className="text-xs text-neutral-400">· {p.time}</span>
+                    </div>
+                    <p className="mt-2 text-[15px] leading-snug text-neutral-700">{p.text}</p>
+                    <div className="mt-3 flex items-center gap-5 text-neutral-500">
+                      <span className="flex items-center gap-1.5 text-sm"><Icon path="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z" size={18} /> {p.likes}</span>
+                      <span className="flex items-center gap-1.5 text-sm"><Icon path="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z" size={18} /> {p.comments}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="px-5 pb-32 pt-[max(20px,env(safe-area-inset-top))]">
