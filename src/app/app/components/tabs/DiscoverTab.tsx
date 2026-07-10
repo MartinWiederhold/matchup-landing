@@ -310,6 +310,7 @@ export default function DiscoverTab() {
           people={candidates.slice(0, 10)}
           onOpen={(id) => openSubView({ type: "full-profile", userId: id })}
           onFind={() => setShowFilter(true)}
+          onViewAll={() => openSubView({ type: "people-browse" })}
         />
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}

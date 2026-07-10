@@ -65,11 +65,12 @@ export function FormRing({ score, onOpen }: { score: number; onOpen: () => void 
 }
 
 /* ── Story-Reihe „Neue Leute" ─────────────────────────────── */
-export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen: (id: string) => void; onFind: () => void }) {
+export function StoryRow({ people, onOpen, onFind, onViewAll }: { people: Profile[]; onOpen: (id: string) => void; onFind: () => void; onViewAll?: () => void }) {
   const t = useT();
   if (!people.length) return null;
   return (
     <section className="mt-6 px-4">
+      <SectionHead label={t("discover.newPeople")} action={onViewAll ? t("discover.viewAll") : undefined} onAction={onViewAll} />
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
           <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-black text-white"><PlusIcon size={22} /></span>

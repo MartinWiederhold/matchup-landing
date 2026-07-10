@@ -13,6 +13,7 @@ import GameReview from "./subviews/GameReview";
 import TennisLive from "./subviews/TennisLive";
 import GameResult from "./subviews/GameResult";
 import Leaderboard from "./subviews/Leaderboard";
+import BrowsePeople from "./subviews/BrowsePeople";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -56,6 +57,8 @@ export default function SubViewRenderer({
       return <GameResult gameId={subView.gameId} />;
     case "leaderboard":
       return <Leaderboard />;
+    case "people-browse":
+      return <BrowsePeople />;
     case "game-requests":
       return <GameRequests gameId={subView.gameId} />;
     case "comments":
