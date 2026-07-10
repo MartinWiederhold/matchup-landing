@@ -108,6 +108,17 @@ const PROFILE_STATS = [
   { label: "Serie", value: "4" },
 ];
 const PROFILE_ACHIEVEMENTS = ["Erster Sieg", "10 Spiele", "5er-Serie", "Clubheld"];
+const PROFILE_PHOTOS = [
+  "https://picsum.photos/seed/mu1/300/300",
+  "https://picsum.photos/seed/mu2/300/300",
+  "https://picsum.photos/seed/mu3/300/300",
+  "https://picsum.photos/seed/mu4/300/300",
+];
+const PROFILE_NOTES = [
+  { workOn: "Aufschlag-Konstanz — zweiter Aufschlag mutiger", good: "Rückhand cross sehr stabil" },
+  { workOn: "Kondition im dritten Satz", good: "Starkes Netzspiel im Doppel" },
+];
+const RATING_TREND = [1000, 1012, 1005, 1030, 1044, 1038, 1060, 1080];
 
 type Post = { id: number; text: string; image: string | null; time: string };
 type Msg = { id: number; me: boolean; text: string; time: string };
@@ -311,6 +322,71 @@ export default function Mockup2Screen() {
                     <Icon path="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" size={13} fill="currentColor" /> {a}
                   </span>
                 ))}
+              </div>
+            </section>
+
+            {/* Rating-Verlauf */}
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">MatchScore-Verlauf</p>
+              <div className="rounded-2xl bg-black/[0.035] p-4">
+                {(() => {
+                  const min = Math.min(...RATING_TREND), max = Math.max(...RATING_TREND);
+                  const W = 300, H = 70;
+                  const pts = RATING_TREND.map((v, i) => {
+                    const x = (i / (RATING_TREND.length - 1)) * W;
+                    const y = H - ((v - min) / (max - min || 1)) * H;
+                    return `${x.toFixed(1)},${y.toFixed(1)}`;
+                  });
+                  return (
+                    <svg viewBox={`0 0 ${W} ${H}`} className="h-[70px] w-full" preserveAspectRatio="none">
+                      <polyline points={pts.join(" ")} fill="none" stroke="#4b3bf3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx={W} cy={H - ((RATING_TREND[RATING_TREND.length - 1] - min) / (max - min || 1)) * H} r="3.5" fill="#4b3bf3" />
+                    </svg>
+                  );
+                })()}
+                <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-400">
+                  <span>Start {RATING_TREND[0]}</span>
+                  <span className="font-bold text-matchup">Aktuell {RATING_TREND[RATING_TREND.length - 1]}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Fortschritts-Notizen (aus Spielen) */}
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Fortschritt</p>
+              <div className="space-y-2">
+                {PROFILE_NOTES.map((n, i) => (
+                  <div key={i} className="rounded-2xl bg-black/[0.035] p-4">
+                    <p className="text-sm text-neutral-900"><span className="font-semibold text-matchup">→ </span>{n.workOn}</p>
+                    <p className="mt-1 text-xs text-neutral-500"><span className="font-semibold text-emerald-600">✓ </span>{n.good}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Fotos */}
+            <section className="mt-6">
+              <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Fotos</p>
+              <div className="grid grid-cols-4 gap-2">
+                {PROFILE_PHOTOS.map((src, i) => (
+                  <div key={i} className="aspect-square overflow-hidden rounded-xl bg-black/[0.05]">
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Freunde einladen */}
+            <section className="mt-6">
+              <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Icon path="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6" size={20} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold">Freunde einladen</p>
+                  <p className="text-[12px] text-white/80">Hol deine Spielpartner zu Matchup.</p>
+                </div>
+                <button type="button" className="shrink-0 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-matchup">Teilen</button>
               </div>
             </section>
           </div>
