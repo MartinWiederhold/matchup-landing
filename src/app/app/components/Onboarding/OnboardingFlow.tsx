@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useRef, useState, type ComponentType } from "react";
+import { useEffect, useReducer, useRef, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
@@ -81,12 +81,37 @@ type NominatimResult = {
 export default function OnboardingFlow() {
   const { user, refreshProfile } = useAuth();
   const t = useT();
+  // Fortschritt aus sessionStorage wiederherstellen → ein (versehentlicher) Remount
+  // wirft den Nutzer nicht mehr auf Schritt 1 zurück. Fotos (File[]) sind nicht
+  // serialisierbar und werden bewusst nicht persistiert.
   const [state, dispatch] = useReducer(
     onboardingReducer,
     initialOnboardingState,
+    (init) => {
+      if (typeof window === "undefined") return init;
+      try {
+        const raw = window.sessionStorage.getItem("mu_onboarding");
+        if (raw) return { ...init, ...JSON.parse(raw), photos: [] };
+      } catch {
+        /* ignore */
+      }
+      return init;
+    },
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Fortschritt bei jeder Änderung sichern (ohne File-Objekte).
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(
+        "mu_onboarding",
+        JSON.stringify({ ...state, photos: [] }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [state]);
 
   // Location
   const [locQuery, setLocQuery] = useState("");
@@ -280,6 +305,9 @@ export default function OnboardingFlow() {
         search_radius_km: 25,
       });
       if (insertError) throw insertError;
+
+      // Onboarding abgeschlossen → gespeicherten Fortschritt verwerfen.
+      try { window.sessionStorage.removeItem("mu_onboarding"); } catch { /* ignore */ }
 
       // Willkommens-Mail (fire-and-forget — blockiert das Onboarding nie).
       try {

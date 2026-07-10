@@ -45,7 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Auth-State-Listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // TOKEN_REFRESHED feuert u. a. beim Tab-Fokus / Tastatur-Öffnen. Dabei nur
+      // die Session aktualisieren — NICHT user/profile neu setzen. Sonst rendert
+      // AppGuard kurz einen anderen Branch und mountet z. B. das Onboarding neu
+      // (Fortschritt springt auf Schritt 1 zurück).
+      if (event === "TOKEN_REFRESHED") {
+        setSession(session);
+        return;
+      }
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user.id);
