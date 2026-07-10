@@ -79,6 +79,7 @@ const CHATS_INIT: ChatItem[] = [
 ];
 
 type Post = { id: number; text: string; image: string | null; time: string };
+type Msg = { id: number; me: boolean; text: string; time: string };
 type Tab = "home" | "chat" | "earth" | "stats" | "people";
 
 const TABS: { key: Tab; path: string }[] = [
@@ -95,6 +96,29 @@ export default function Mockup2Screen() {
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+
+  // Chat-Detailansicht
+  const [activeChat, setActiveChat] = useState<ChatItem | null>(null);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [msgInput, setMsgInput] = useState("");
+  const msgId = useRef(1);
+
+  function openConversation(c: ChatItem) {
+    setActiveChat(c);
+    setMsgs([
+      { id: msgId.current++, me: false, text: c.last, time: "09:24" },
+      { id: msgId.current++, me: true, text: "Klar, passt bei mir! 🎾", time: "09:26" },
+      { id: msgId.current++, me: false, text: "Perfekt, ich buche den Court.", time: "09:27" },
+      { id: msgId.current++, me: true, text: "Top 💪 bis dann!", time: "09:28" },
+    ]);
+    setChatList((cs) => cs.map((x) => (x.id === c.id ? { ...x, unread: 0 } : x)));
+  }
+  function sendMsg() {
+    const text = msgInput.trim();
+    if (!text) return;
+    setMsgs((m) => [...m, { id: msgId.current++, me: true, text, time: "jetzt" }]);
+    setMsgInput("");
+  }
 
   function connectRequest(r: ReqPerson) {
     setReqList((l) => l.filter((x) => x.id !== r.id));
@@ -166,7 +190,7 @@ export default function Mockup2Screen() {
             {/* Chat-Liste */}
             <div className="mt-3">
               {chatList.map((c) => (
-                <button key={c.id} type="button" className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-black/[0.03]">
+                <button key={c.id} type="button" onClick={() => openConversation(c)} className="flex w-full items-center gap-3 px-5 py-3 text-left active:bg-black/[0.03]">
                   <span className="relative shrink-0">
                     <img src={c.img} alt="" className="h-14 w-14 rounded-full object-cover" />
                     {c.online && <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />}
@@ -427,7 +451,55 @@ export default function Mockup2Screen() {
           </div>
         )}
 
-        {/* Tab-Bar (schwebend) */}
+        {/* Chat-Detailansicht (Gespräch) */}
+        {activeChat && (
+          <div className="absolute inset-0 z-40 flex flex-col bg-white">
+            <header className="flex items-center gap-2.5 border-b border-black/10 px-2 pt-[max(12px,env(safe-area-inset-top))] pb-3">
+              <button type="button" onClick={() => setActiveChat(null)} className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 active:bg-black/5">
+                <Icon path="M15 18l-6-6 6-6" size={22} />
+              </button>
+              <span className="relative shrink-0">
+                <img src={activeChat.img} alt="" className="h-10 w-10 rounded-full object-cover" />
+                {activeChat.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold text-neutral-900">{activeChat.name}</p>
+                <p className="text-[11px] font-medium text-emerald-600">{activeChat.online ? "Online" : "Zuletzt aktiv vor 2 Std."}</p>
+              </div>
+              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-500 active:bg-black/5">
+                <Icon path="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.2a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z" size={19} />
+              </button>
+            </header>
+
+            <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
+              <p className="mb-2 text-center text-[11px] text-neutral-400">Heute</p>
+              {msgs.map((m) => (
+                <div key={m.id} className={`flex ${m.me ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[76%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug ${m.me ? "rounded-br-md bg-matchup text-white" : "rounded-bl-md bg-black/[0.05] text-neutral-800"}`}>
+                    {m.text}
+                    <span className={`mt-0.5 block text-right text-[9px] ${m.me ? "text-white/70" : "text-neutral-400"}`}>{m.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 border-t border-black/10 px-3 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))]">
+              <input
+                value={msgInput}
+                onChange={(e) => setMsgInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
+                placeholder="Nachricht…"
+                className="flex-1 rounded-full bg-black/[0.05] px-4 py-2.5 text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400"
+              />
+              <button type="button" onClick={sendMsg} disabled={!msgInput.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-matchup text-white disabled:opacity-40">
+                <Icon path="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" size={19} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab-Bar (schwebend) — im Gespräch ausgeblendet */}
+        {!activeChat && (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-[430px] justify-center px-5 pb-[max(16px,env(safe-area-inset-bottom))]">
           <nav className="pointer-events-auto flex w-full items-center justify-between rounded-full bg-white px-3 py-2.5 shadow-[0_10px_40px_-8px_rgba(0,0,0,0.25)] ring-1 ring-black/10">
             {TABS.map((tb) => {
@@ -444,6 +516,7 @@ export default function Mockup2Screen() {
             })}
           </nav>
         </div>
+        )}
 
         {/* Profil-Overlay (grösser) mit Verbinden */}
         {profileView && (
