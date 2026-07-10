@@ -70,11 +70,10 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
   if (!people.length) return null;
   return (
     <section className="mt-6 px-4">
-      <SectionHead label={t("discover.newPeople")} />
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
-          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-black/25 text-neutral-400"><PlusIcon size={22} /></span>
-          <span className="max-w-[60px] truncate text-[11px] text-neutral-400">{t("discover.find")}</span>
+          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-black text-white"><PlusIcon size={22} /></span>
+          <span className="max-w-[60px] truncate text-[11px] text-neutral-500">{t("discover.find")}</span>
         </button>
         {people.map((p) => (
           <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
