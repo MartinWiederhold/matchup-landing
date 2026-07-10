@@ -6,11 +6,11 @@ import { defaultFilters } from "@/lib/types";
 import { searchClubs as searchClubsApi } from "@/lib/clubs";
 import { skillLabel } from "@/lib/utils/formatters";
 import { useT } from "@/lib/i18n";
-import WheelPicker from "../shared/WheelPicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 const SKILLS: SkillLevel[] = ["beginner", "intermediate", "advanced", "competitive"];
-const AGES = Array.from({ length: 99 - 18 + 1 }, (_, i) => 18 + i);
+const AGE_MIN = 18;
+const AGE_MAX = 99;
 
 export default function FilterSheet({
   filters,
@@ -83,37 +83,39 @@ export default function FilterSheet({
         </Section>
 
         <Section label={t("discover.age", { min: draft.ageMin, max: draft.ageMax })}>
-          <div className="flex items-stretch gap-3">
-            <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-neutral-400">
-                {t("discover.ageFrom")}
-              </p>
-              <WheelPicker
-                values={AGES}
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1 flex items-center justify-between text-xs text-neutral-400">
+                <span>{t("discover.ageFrom")}</span>
+                <span className="text-sm font-bold text-matchup">{draft.ageMin}</span>
+              </div>
+              <input
+                type="range"
+                min={AGE_MIN}
+                max={AGE_MAX}
                 value={draft.ageMin}
-                onChange={(v) =>
-                  setDraft((d) => ({
-                    ...d,
-                    ageMin: v,
-                    ageMax: Math.max(d.ageMax, v),
-                  }))
-                }
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setDraft((d) => ({ ...d, ageMin: v, ageMax: Math.max(d.ageMax, v) }));
+                }}
+                className="w-full accent-matchup"
               />
             </div>
-            <div className="flex-1">
-              <p className="mb-1 text-center text-xs text-neutral-400">
-                {t("discover.ageTo")}
-              </p>
-              <WheelPicker
-                values={AGES}
+            <div>
+              <div className="mb-1 flex items-center justify-between text-xs text-neutral-400">
+                <span>{t("discover.ageTo")}</span>
+                <span className="text-sm font-bold text-matchup">{draft.ageMax}</span>
+              </div>
+              <input
+                type="range"
+                min={AGE_MIN}
+                max={AGE_MAX}
                 value={draft.ageMax}
-                onChange={(v) =>
-                  setDraft((d) => ({
-                    ...d,
-                    ageMax: v,
-                    ageMin: Math.min(d.ageMin, v),
-                  }))
-                }
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setDraft((d) => ({ ...d, ageMax: v, ageMin: Math.min(d.ageMin, v) }));
+                }}
+                className="w-full accent-matchup"
               />
             </div>
           </div>
