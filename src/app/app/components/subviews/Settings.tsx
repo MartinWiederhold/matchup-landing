@@ -66,8 +66,8 @@ export default function Settings() {
   ];
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("profile.settingsTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("profile.settingsTitle")} />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
         <Group title={t("profile.language")}>
           <div className="flex gap-2 p-3">
@@ -80,7 +80,7 @@ export default function Settings() {
                 type="button"
                 onClick={() => setLocale(o.v)}
                 className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors ${
-                  locale === o.v ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-400"
+                  locale === o.v ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"
                 }`}
               >
                 {o.label}
@@ -99,7 +99,7 @@ export default function Settings() {
 
         <Group title={t("profile.account")}>
           <Row label={t("profile.blockedUsers")} onClick={() => openSubView({ type: "blocked-users" })}>
-            <span className="text-zinc-500">›</span>
+            <span className="text-neutral-400">›</span>
           </Row>
         </Group>
 
@@ -110,7 +110,7 @@ export default function Settings() {
 
         <Group title={t("profile.support")}>
           <Row label={t("profile.helpSupport")} onClick={() => openSubView({ type: "support" })}>
-            <span className="text-zinc-500">›</span>
+            <span className="text-neutral-400">›</span>
           </Row>
         </Group>
 
@@ -125,18 +125,18 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => signOut()}
-            className="w-full rounded-full border border-zinc-700 py-3 text-sm font-semibold"
+            className="w-full rounded-full border border-neutral-300 py-3 text-sm font-semibold"
           >
             {t("profile.logout")}
           </button>
           <button
             type="button"
             onClick={deleteAccount}
-            className="w-full rounded-full bg-zinc-700 py-3 text-sm font-bold text-white"
+            className="w-full rounded-full py-3 text-sm font-bold text-red-600"
           >
             {t("profile.deleteAccount")}
           </button>
-          <p className="text-center text-xs text-zinc-500">
+          <p className="text-center text-xs text-neutral-400">
             {t("profile.deleteNote")}
           </p>
         </div>
@@ -148,10 +148,10 @@ export default function Settings() {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+      <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-2xl bg-zinc-900">{children}</div>
+      <div className="overflow-hidden rounded-2xl bg-black/[0.035]">{children}</div>
     </div>
   );
 }
@@ -169,7 +169,7 @@ function Row({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between border-b border-zinc-800 px-4 py-3.5 text-sm last:border-0"
+      className="flex w-full items-center justify-between border-b border-black/[0.06] px-4 py-3.5 text-sm last:border-0"
     >
       <span>{label}</span>
       {children}
@@ -181,10 +181,10 @@ function LinkRow({ label, href }: { label: string; href: string }) {
   return (
     <a
       href={href}
-      className="flex items-center justify-between border-b border-zinc-800 px-4 py-3.5 text-sm last:border-0"
+      className="flex items-center justify-between border-b border-black/[0.06] px-4 py-3.5 text-sm last:border-0"
     >
       <span>{label}</span>
-      <span className="text-zinc-500">›</span>
+      <span className="text-neutral-400">›</span>
     </a>
   );
 }
@@ -193,7 +193,7 @@ function Switch({ value, onChange }: { value: boolean; onChange: () => void }) {
   return (
     <span
       onClick={onChange}
-      className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors ${value ? "bg-matchup" : "bg-zinc-600"}`}
+      className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors ${value ? "bg-matchup" : "bg-black/15"}`}
     >
       <span
         className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${value ? "left-[22px]" : "left-0.5"}`}

@@ -77,19 +77,21 @@ export function ErrorState({ onRetry }: { onRetry: () => void }) {
 export function SubViewHeader({
   title,
   rightActions,
+  light = false,
 }: {
   title: string;
   rightActions?: React.ReactNode;
+  light?: boolean;
 }) {
   const { closeSubView } = useAppNav();
   const t = useT();
   return (
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+    <header className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 ${light ? "border-black/10 bg-white text-neutral-900" : "border-zinc-800"}`}>
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={closeSubView}
-          className="text-xl text-zinc-300 hover:text-white"
+          className={`text-xl ${light ? "text-neutral-700" : "text-zinc-300 hover:text-white"}`}
           aria-label={t("app.back")}
         >
           ←

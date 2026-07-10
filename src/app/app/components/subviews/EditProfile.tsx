@@ -117,8 +117,8 @@ export default function EditProfile() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("profile.editTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("profile.editTitle")} />
       <input
         ref={fileInput}
         type="file"
@@ -132,7 +132,7 @@ export default function EditProfile() {
             {photos.map((url, i) => (
               <div
                 key={url + i}
-                className="relative aspect-square overflow-hidden rounded-xl bg-zinc-800"
+                className="relative aspect-square overflow-hidden rounded-xl bg-neutral-200"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt={t("profile.photoAlt", { index: i + 1 })} className="h-full w-full object-cover" />
@@ -162,7 +162,7 @@ export default function EditProfile() {
                   <button
                     type="button"
                     onClick={() => removePhoto(i)}
-                    className="flex-1 py-1.5 text-zinc-300"
+                    className="flex-1 py-1.5 text-neutral-700"
                   >
                     {t("profile.deletePhoto")}
                   </button>
@@ -174,7 +174,7 @@ export default function EditProfile() {
                 type="button"
                 onClick={() => openPicker(photos.length)}
                 disabled={uploadingIdx !== null}
-                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-zinc-600 text-zinc-400 disabled:opacity-50"
+                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-black/15 text-neutral-400 disabled:opacity-50"
               >
                 {uploadingIdx === photos.length ? (
                   <span className="text-xs">{t("profile.photosUploading")}</span>
@@ -187,7 +187,7 @@ export default function EditProfile() {
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-neutral-400">
             {t("profile.photosHint", { max: MAX_PHOTOS })}
           </p>
         </Field>
@@ -198,7 +198,7 @@ export default function EditProfile() {
             maxLength={300}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none"
           />
         </Field>
 
@@ -237,7 +237,7 @@ export default function EditProfile() {
             value={rating}
             onChange={(e) => setRating(e.target.value)}
             placeholder={t("profile.ratingPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none"
           />
         </Field>
 
@@ -262,7 +262,7 @@ export default function EditProfile() {
 
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={save}
@@ -279,7 +279,7 @@ export default function EditProfile() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-zinc-300">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-neutral-600">{label}</p>
       {children}
     </div>
   );
@@ -303,8 +303,8 @@ function Chips({
           onClick={() => onToggle(o.value)}
           className={`rounded-full px-4 py-2 text-sm capitalize ${
             selected.includes(o.value)
-              ? "bg-matchup/20 text-white ring-2 ring-matchup"
-              : "bg-zinc-800 text-zinc-300 ring-1 ring-zinc-700"
+              ? "bg-matchup text-white"
+              : "bg-black/[0.05] text-neutral-600"
           }`}
         >
           {o.label}

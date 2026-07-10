@@ -83,42 +83,13 @@ export default function FilterSheet({
         </Section>
 
         <Section label={t("discover.age", { min: draft.ageMin, max: draft.ageMax })}>
-          <div className="space-y-4">
-            <div>
-              <div className="mb-1 flex items-center justify-between text-xs text-neutral-400">
-                <span>{t("discover.ageFrom")}</span>
-                <span className="text-sm font-bold text-matchup">{draft.ageMin}</span>
-              </div>
-              <input
-                type="range"
-                min={AGE_MIN}
-                max={AGE_MAX}
-                value={draft.ageMin}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setDraft((d) => ({ ...d, ageMin: v, ageMax: Math.max(d.ageMax, v) }));
-                }}
-                className="w-full accent-matchup"
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between text-xs text-neutral-400">
-                <span>{t("discover.ageTo")}</span>
-                <span className="text-sm font-bold text-matchup">{draft.ageMax}</span>
-              </div>
-              <input
-                type="range"
-                min={AGE_MIN}
-                max={AGE_MAX}
-                value={draft.ageMax}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setDraft((d) => ({ ...d, ageMax: v, ageMin: Math.min(d.ageMin, v) }));
-                }}
-                className="w-full accent-matchup"
-              />
-            </div>
-          </div>
+          <AgeRange
+            min={AGE_MIN}
+            max={AGE_MAX}
+            lo={draft.ageMin}
+            hi={draft.ageMax}
+            onChange={(lo, hi) => setDraft((d) => ({ ...d, ageMin: lo, ageMax: hi }))}
+          />
         </Section>
 
         <Section
@@ -211,6 +182,37 @@ export default function FilterSheet({
             {t("discover.apply")}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Ein Slider mit zwei Griffen (Von/Bis) — gefüllter Balken in Matchup-Lila. */
+function AgeRange({ min, max, lo, hi, onChange }: { min: number; max: number; lo: number; hi: number; onChange: (lo: number, hi: number) => void }) {
+  const pct = (v: number) => ((v - min) / (max - min)) * 100;
+  const thumb =
+    "pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent " +
+    "[&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-matchup [&::-webkit-slider-thumb]:shadow " +
+    "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-matchup";
+  return (
+    <div className="pt-1">
+      <div className="relative h-6">
+        <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-black/10" />
+        <div className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-matchup" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
+        <input
+          type="range" min={min} max={max} value={lo}
+          onChange={(e) => onChange(Math.min(Number(e.target.value), hi), hi)}
+          className={`${thumb} z-30`}
+        />
+        <input
+          type="range" min={min} max={max} value={hi}
+          onChange={(e) => onChange(lo, Math.max(Number(e.target.value), lo))}
+          className={`${thumb} z-20`}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-xs font-bold text-matchup">
+        <span>{lo}</span>
+        <span>{hi}</span>
       </div>
     </div>
   );
