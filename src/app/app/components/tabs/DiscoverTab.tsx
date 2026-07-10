@@ -427,13 +427,15 @@ function FeedCard({
       <button
         type="button"
         onClick={onOpen}
-        className="relative block aspect-[3/4] w-full bg-zinc-800 text-left"
+        className="relative block aspect-[3/4] w-full bg-neutral-200 text-left"
       >
         {player.profile_image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={player.profile_image}
             alt={player.first_name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         )}

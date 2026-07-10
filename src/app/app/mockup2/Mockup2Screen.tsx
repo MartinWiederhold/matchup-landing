@@ -545,9 +545,9 @@ export default function Mockup2Screen() {
 
             {/* Headline */}
             <h1 className="mt-6 text-[30px] font-medium leading-[1.15] tracking-tight text-black">
-              Your <span className="font-extrabold">Fitness Journey</span>
+              Your <span className="font-extrabold">Tennis Journey</span>
               <br />
-              With Friends
+              With Matchup
             </h1>
 
             {/* Story-Reihe */}
