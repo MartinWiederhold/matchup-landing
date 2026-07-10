@@ -19,7 +19,8 @@ import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
 import Avatar from "../shared/Avatar";
-import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, LiveTennisCard, CommunityCard } from "../home/HomeSections";
+import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, CommunityCard } from "../home/HomeSections";
+import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
@@ -299,8 +300,10 @@ export default function DiscoverTab() {
           <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />
         </section>
 
-        {/* Live im Profitennis (aktueller Grand Slam) */}
-        <LiveTennisCard onOpen={() => openSubView({ type: "tennis-live" })} />
+        {/* Live im Profitennis — Google-Style-Widget (wie mockup2) */}
+        <div className="mt-4 px-4">
+          <WimbledonWidget theme="light" />
+        </div>
 
         {/* Neue Leute (Stories) */}
         <StoryRow
