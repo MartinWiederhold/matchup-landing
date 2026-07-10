@@ -25,7 +25,7 @@ export const initialOnboardingState: OnboardingState = {
   visibility_age_max: 99,
 };
 
-export const TOTAL_STEPS = 12;
+export const TOTAL_STEPS = 10;
 
 export type Action =
   | { type: "SET_LANGUAGE"; payload: "de" | "en" }
@@ -135,18 +135,19 @@ export function isStepValid(state: OnboardingState): boolean {
     case 5:
       return true; // Club optional
     case 6:
-      return state.first_name.trim().length >= 2;
+      // Name + Alter + Geschlecht auf einer Seite
+      return (
+        state.first_name.trim().length >= 2 &&
+        state.age !== null && state.age >= 18 && state.age <= 100 &&
+        state.gender !== null
+      );
     case 7:
-      return state.age !== null && state.age >= 18 && state.age <= 100;
-    case 8:
-      return state.gender !== null;
-    case 9:
       return state.skill_level !== null;
-    case 10:
+    case 8:
       return true; // Grösse optional
-    case 11:
+    case 9:
       return state.goals.length >= 1;
-    case 12:
+    case 10:
       return state.photos.length >= 1;
     default:
       return false;

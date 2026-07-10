@@ -627,67 +627,52 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 6 — Name */}
+        {/* Step 6 — Name + Alter + Geschlecht */}
         {state.step === 6 && (
-          <Step
-            title={t("onboarding.nameTitle")}
-            subtitle={t("onboarding.nameSubtitle")}
-          >
+          <Step title={t("onboarding.aboutYouTitle")} subtitle={t("onboarding.aboutYouSubtitle")}>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldName")}</label>
             <input
-              autoFocus
               value={state.first_name}
-              onChange={(e) =>
-                dispatch({ type: "SET_NAME", payload: e.target.value })
-              }
+              onChange={(e) => dispatch({ type: "SET_NAME", payload: e.target.value })}
               placeholder={t("onboarding.namePlaceholder")}
               className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.first_name.length > 0 && state.first_name.trim().length < 2 && (
-              <p className="text-sm text-amber-600">{t("onboarding.nameTooShort")}</p>
+              <p className="mt-1 text-sm text-amber-600">{t("onboarding.nameTooShort")}</p>
             )}
+
+            <div className="mt-6">
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldAge")}</label>
+                <span className="text-lg font-extrabold text-matchup">{state.age ?? 25}</span>
+              </div>
+              <LilaSlider min={18} max={100} value={state.age ?? 25} onChange={(v) => dispatch({ type: "SET_AGE", payload: v })} />
+              <div className="mt-1 flex justify-between text-xs text-neutral-400"><span>18</span><span>100</span></div>
+            </div>
+
+            <div className="mt-6">
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldGender")}</label>
+              <div className="flex gap-2">
+                {[
+                  { v: "male" as const, label: t("onboarding.genderMale") },
+                  { v: "female" as const, label: t("onboarding.genderFemale") },
+                ].map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_GENDER", payload: o.v })}
+                    className={`flex-1 rounded-full py-3 text-sm font-semibold transition-colors ${state.gender === o.v ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </Step>
         )}
 
-        {/* Step 7 — Age */}
+        {/* Step 7 — Skill + Rating */}
         {state.step === 7 && (
-          <Step title={t("onboarding.ageTitle")}>
-            <div className="mb-5 text-center text-5xl font-extrabold tracking-tight text-neutral-900">
-              {state.age ?? 25}
-            </div>
-            <input
-              type="range"
-              min={18}
-              max={100}
-              value={state.age ?? 25}
-              onChange={(e) => dispatch({ type: "SET_AGE", payload: Number(e.target.value) })}
-              className="w-full accent-matchup"
-            />
-            <div className="mt-1 flex justify-between text-xs text-neutral-400">
-              <span>18</span>
-              <span>100</span>
-            </div>
-          </Step>
-        )}
-
-        {/* Step 8 — Gender */}
-        {state.step === 8 && (
-          <Step title={t("onboarding.genderTitle")}>
-            {[
-              { v: "male" as const, label: t("onboarding.genderMale") },
-              { v: "female" as const, label: t("onboarding.genderFemale") },
-            ].map((o) => (
-              <SelectRow
-                key={o.v}
-                selected={state.gender === o.v}
-                onClick={() => dispatch({ type: "SET_GENDER", payload: o.v })}
-              >
-                {o.label}
-              </SelectRow>
-            ))}
-          </Step>
-        )}
-
-        {/* Step 9 — Skill + Rating */}
-        {state.step === 9 && (
           <Step title={t("onboarding.skillTitle")}>
             {SKILLS.map((s) => (
               <SelectRow
@@ -737,8 +722,8 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
-        {/* Step 10 — Height */}
-        {state.step === 10 && (
+        {/* Step 8 — Height */}
+        {state.step === 8 && (
           <Step
             title={t("onboarding.heightTitle")}
             subtitle={t("onboarding.heightSubtitle")}
@@ -766,8 +751,8 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
-        {/* Step 11 — Goals */}
-        {state.step === 11 && (
+        {/* Step 9 — Goals */}
+        {state.step === 9 && (
           <Step
             title={t("onboarding.goalsTitle")}
             subtitle={t("onboarding.goalsSubtitle")}
@@ -792,8 +777,8 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
-        {/* Step 12 — Photos + Bio + Visibility */}
-        {state.step === 12 && (
+        {/* Step 10 — Photos + Bio + Visibility */}
+        {state.step === 10 && (
           <Step title={t("onboarding.profileTitle")} subtitle={t("onboarding.profileSubtitle")}>
             {/* Photos */}
             <p className="text-sm font-semibold">{t("onboarding.yourPhotos")}</p>
@@ -980,6 +965,23 @@ function SelectRow({
     >
       {children}
     </button>
+  );
+}
+
+const SLIDER_THUMB =
+  "pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent " +
+  "[&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-matchup [&::-webkit-slider-thumb]:shadow " +
+  "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-matchup";
+
+/** Einzel-Slider mit gefülltem Lila-Balken. */
+function LilaSlider({ min, max, value, onChange }: { min: number; max: number; value: number; onChange: (v: number) => void }) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <div className="relative h-6">
+      <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-black/10" />
+      <div className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-matchup" style={{ width: `${pct}%` }} />
+      <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className={SLIDER_THUMB} />
+    </div>
   );
 }
 

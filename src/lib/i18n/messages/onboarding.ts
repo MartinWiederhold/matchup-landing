@@ -48,6 +48,11 @@ export const onboarding = {
     // Step 6 — Name
     nameTitle: "Wie heisst du?",
     nameSubtitle: "Dein Vorname wird anderen Spielern angezeigt.",
+    aboutYouTitle: "Über dich",
+    aboutYouSubtitle: "Name, Alter und Geschlecht.",
+    fieldName: "Name",
+    fieldAge: "Alter",
+    fieldGender: "Geschlecht",
     namePlaceholder: "Vorname",
     nameTooShort: "Mindestens 2 Zeichen",
     // Step 7 — Age
@@ -153,6 +158,11 @@ export const onboarding = {
     // Step 6 — Name
     nameTitle: "What's your name?",
     nameSubtitle: "Your first name is shown to other players.",
+    aboutYouTitle: "About you",
+    aboutYouSubtitle: "Name, age and gender.",
+    fieldName: "Name",
+    fieldAge: "Age",
+    fieldGender: "Gender",
     namePlaceholder: "First name",
     nameTooShort: "At least 2 characters",
     // Step 7 — Age
