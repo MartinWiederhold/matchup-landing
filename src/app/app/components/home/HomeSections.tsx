@@ -24,8 +24,8 @@ export function greeting(t: ReturnType<typeof useT>, name: string): string {
 
 function SectionHead({ label, action, onAction }: { label: string; action?: string; onAction?: () => void }) {
   return (
-    <div className="mb-2.5 flex items-center justify-between px-0.5">
-      <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{label}</span>
+    <div className="mb-3 flex items-center justify-between px-1">
+      <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{label}</span>
       {action && (
         <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider text-matchup">
           {action} <ChevronRightIcon size={13} />
@@ -79,14 +79,14 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
         {people.map((p) => (
           <button key={p.id} type="button" onClick={() => onOpen(p.id)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
             <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
-              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-sm font-bold text-neutral-500 ring-[2.5px] ring-white">
-                {p.profile_image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (p.first_name?.[0] ?? "?").toUpperCase()
-                )}
-              </span>
+              {p.profile_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.profile_image} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-neutral-500 ring-[2.5px] ring-white">
+                  {(p.first_name?.[0] ?? "?").toUpperCase()}
+                </span>
+              )}
             </span>
             <span className="max-w-[60px] truncate text-[11px] font-medium text-neutral-600">{p.first_name}</span>
           </button>
