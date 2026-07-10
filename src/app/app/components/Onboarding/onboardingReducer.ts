@@ -12,9 +12,14 @@ export const initialOnboardingState: OnboardingState = {
   club_name: null,
   first_name: "",
   age: null,
+  birthdate: "",
   gender: null,
   skill_level: null,
   official_rating: "",
+  atp: null,
+  wta: null,
+  itf: null,
+  utr: null,
   height_cm: null,
   goals: [],
   photos: [],
@@ -27,6 +32,18 @@ export const initialOnboardingState: OnboardingState = {
 
 export const TOTAL_STEPS = 10;
 
+/** Alter aus ISO-Geburtsdatum (yyyy-mm-dd). null wenn ungültig. */
+export function ageFromBirthdate(iso: string): number | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
+  return a;
+}
+
 export type Action =
   | { type: "SET_LANGUAGE"; payload: "de" | "en" }
   | { type: "SET_SPORTS"; payload: Sport[] }
@@ -37,6 +54,8 @@ export type Action =
   | { type: "SET_CLUB"; payload: { id: string | null; name: string | null } }
   | { type: "SET_NAME"; payload: string }
   | { type: "SET_AGE"; payload: number }
+  | { type: "SET_BIRTHDATE"; payload: string }
+  | { type: "SET_RANKINGS"; payload: Partial<Pick<OnboardingState, "atp" | "wta" | "itf" | "utr">> }
   | { type: "SET_GENDER"; payload: "male" | "female" }
   | { type: "SET_SKILL"; payload: SkillLevel }
   | { type: "SET_RATING"; payload: string }
@@ -80,6 +99,10 @@ export function onboardingReducer(
       return { ...state, first_name: action.payload };
     case "SET_AGE":
       return { ...state, age: action.payload };
+    case "SET_BIRTHDATE":
+      return { ...state, birthdate: action.payload, age: ageFromBirthdate(action.payload) };
+    case "SET_RANKINGS":
+      return { ...state, ...action.payload };
     case "SET_GENDER":
       return { ...state, gender: action.payload };
     case "SET_SKILL":

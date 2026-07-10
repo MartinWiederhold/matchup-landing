@@ -403,9 +403,15 @@ export interface OnboardingState {
   club_name: string | null;
   first_name: string;
   age: number | null;
+  birthdate: string; // ISO yyyy-mm-dd (für /map-Übernahme)
   gender: "male" | "female" | null;
   skill_level: SkillLevel | null;
   official_rating: string;
+  // Weltweite Tennis-Rankings (optional) — werden ins /map-Profil übernommen.
+  atp: number | null;
+  wta: number | null;
+  itf: number | null; // ITF World Tennis Number (WTN)
+  utr: number | null;
   height_cm: number | null;
   goals: string[];
   photos: File[]; // lokale File-Objekte vor Upload

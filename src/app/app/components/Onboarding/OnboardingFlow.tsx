@@ -65,8 +65,35 @@ const GOALS: {
   { value: "regular", labelKey: "onboarding.goalRegular", Icon: CalendarIcon },
 ];
 
-const RATINGS_CH = ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "N1", "N2", "N3", "N4"];
 const RATINGS_DE = Array.from({ length: 23 }, (_, i) => `LK ${i + 1}`);
+
+// Länder-Auswahl für das nationale Tennis-Ranking.
+const RANK_COUNTRIES: { code: string; name: string }[] = [
+  { code: "CH", name: "Schweiz" },
+  { code: "DE", name: "Deutschland" },
+  { code: "AT", name: "Österreich" },
+  { code: "US", name: "USA" },
+  { code: "FR", name: "Frankreich" },
+  { code: "GB", name: "Grossbritannien" },
+  { code: "ES", name: "Spanien" },
+  { code: "IT", name: "Italien" },
+  { code: "OTHER", name: "Anderes / International" },
+];
+
+// Nationales Ranking-System je Land (Richtwerte). options = Auswahl, sonst Freitext.
+function nationalRankSystem(code: string): { label: string; options?: string[]; placeholder?: string } {
+  switch (code) {
+    case "DE": return { label: "LK (Leistungsklasse)", options: RATINGS_DE };
+    case "CH": return { label: "Swiss Tennis (R/N)", options: ["R9", "R8", "R7", "R6", "R5", "R4", "R3", "R2", "R1", "N4", "N3", "N2", "N1"] };
+    case "AT": return { label: "ITN (Österreich)", options: Array.from({ length: 10 }, (_, i) => `ITN ${10 - i}`) };
+    case "US": return { label: "NTRP", options: ["1.0", "1.5", "2.0", "2.5", "3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"] };
+    case "FR": return { label: "Classement FFT", placeholder: "z. B. 30/1, 15, 5/6, -30" };
+    case "ES": return { label: "RFET", placeholder: "z. B. 1.ª categoría" };
+    case "IT": return { label: "FIT", placeholder: "z. B. 2.6, 3.1, 4.NC" };
+    case "GB": return { label: "LTA", placeholder: "z. B. WTN 12" };
+    default: return { label: "Nationales Ranking", placeholder: "Frei eintragen" };
+  }
+}
 
 type NominatimResult = {
   display_name: string;
@@ -127,6 +154,12 @@ export default function OnboardingFlow() {
   const [addCity, setAddCity] = useState("");
   const [addingClub, setAddingClub] = useState(false);
   const [clubMsg, setClubMsg] = useState<string | null>(null);
+
+  // Ranking-Schritt
+  const [rankCountry, setRankCountry] = useState(state.country);
+  const [ratingNote, setRatingNote] = useState("");
+  const [rankInfo, setRankInfo] = useState(false);
+  const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
 
   async function searchLocation(q: string) {
     setLocQuery(q);
@@ -283,7 +316,7 @@ export default function OnboardingFlow() {
         gender: state.gender!,
         sports: state.sports,
         skill_level: state.skill_level!,
-        official_rating: state.official_rating || null,
+        official_rating: [state.official_rating, ratingNote.trim()].filter(Boolean).join(" · ") || null,
         height_cm: state.height_cm,
         city: state.city,
         country: state.country,
@@ -305,6 +338,31 @@ export default function OnboardingFlow() {
 
       // Onboarding abgeschlossen → gespeicherten Fortschritt verwerfen.
       try { window.sessionStorage.removeItem("mu_onboarding"); } catch { /* ignore */ }
+
+      // /map-Profil (player_profiles) vorbefüllen: Geburtsdatum + Rankings werden
+      // dort für die Turniersuche wiederverwendet → nicht erneut eingeben.
+      try {
+        await supabase.from("player_profiles").upsert(
+          {
+            user_id: user.id,
+            data: {
+              firstName: state.first_name,
+              nationality: state.country,
+              homeCity: state.city,
+              birthdate: state.birthdate,
+              gender: state.gender === "female" ? "w" : "m",
+              atp: state.atp,
+              wta: state.wta,
+              itf: state.itf,
+              utr: state.utr,
+            },
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      } catch {
+        /* /map-Vorbefüllung ist best-effort */
+      }
 
       // Willkommens-Mail (fire-and-forget — blockiert das Onboarding nie).
       try {
@@ -344,13 +402,6 @@ export default function OnboardingFlow() {
     if (isLast) completeOnboarding();
     else dispatch({ type: "NEXT_STEP" });
   }
-
-  const ratingOptions =
-    state.country === "CH"
-      ? RATINGS_CH
-      : state.country === "DE"
-        ? RATINGS_DE
-        : null;
 
   return (
     <div className="flex min-h-dvh flex-col bg-white text-neutral-900">
@@ -643,11 +694,20 @@ export default function OnboardingFlow() {
 
             <div className="mt-6">
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldAge")}</label>
-                <span className="text-lg font-extrabold text-matchup">{state.age ?? 25}</span>
+                <label className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldBirthdate")}</label>
+                {state.age != null && <span className="text-sm font-bold text-matchup">{t("onboarding.ageYears", { age: state.age })}</span>}
               </div>
-              <LilaSlider min={18} max={100} value={state.age ?? 25} onChange={(v) => dispatch({ type: "SET_AGE", payload: v })} />
-              <div className="mt-1 flex justify-between text-xs text-neutral-400"><span>18</span><span>100</span></div>
+              <input
+                type="date"
+                value={state.birthdate}
+                max={new Date(Date.now() - 18 * 365.25 * 86400000).toISOString().slice(0, 10)}
+                min="1930-01-01"
+                onChange={(e) => dispatch({ type: "SET_BIRTHDATE", payload: e.target.value })}
+                className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup"
+              />
+              {state.birthdate && state.age != null && state.age < 18 && (
+                <p className="mt-1 text-sm text-amber-600">{t("onboarding.ageMin")}</p>
+              )}
             </div>
 
             <div className="mt-6">
@@ -687,38 +747,67 @@ export default function OnboardingFlow() {
                 <span className="block text-xs text-neutral-500">{t(s.descKey)}</span>
               </SelectRow>
             ))}
-            {state.skill_level && (
-              <div className="pt-4">
-                <p className="mb-2 text-sm text-neutral-500">
-                  {t("onboarding.ratingQuestion")}
-                </p>
-                {ratingOptions ? (
-                  <select
-                    value={state.official_rating}
-                    onChange={(e) =>
-                      dispatch({ type: "SET_RATING", payload: e.target.value })
-                    }
-                    className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
-                  >
-                    <option value="">{t("onboarding.noRating")}</option>
-                    {ratingOptions.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
+            {state.skill_level && (() => {
+              const nat = nationalRankSystem(rankCountry);
+              return (
+              <div className="space-y-4 pt-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-neutral-900">{t("onboarding.rankingTitle")}</p>
+                  <button type="button" onClick={() => setRankInfo(true)} className="flex items-center gap-1 text-xs font-semibold text-matchup">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+                    {t("onboarding.rankingInfo")}
+                  </button>
+                </div>
+                <p className="text-xs text-neutral-500">{t("onboarding.rankingSub")}</p>
+
+                {/* Land */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingCountry")}</label>
+                  <select value={rankCountry} onChange={(e) => setRankCountry(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
+                    {RANK_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </select>
-                ) : (
-                  <input
-                    value={state.official_rating}
-                    onChange={(e) =>
-                      dispatch({ type: "SET_RATING", payload: e.target.value })
-                    }
-                    placeholder={t("onboarding.ratingPlaceholder")}
-                    className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
-                  />
-                )}
+                </div>
+
+                {/* Nationales System */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{nat.label}</label>
+                  {nat.options ? (
+                    <select value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
+                      <option value="">{t("onboarding.noRating")}</option>
+                      {nat.options.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  ) : (
+                    <input value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} placeholder={nat.placeholder} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-400" />
+                  )}
+                </div>
+
+                {/* Weltweite Rankings */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingWorld")}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([["atp", "ATP"], ["wta", "WTA"], ["itf", "ITF WTN"], ["utr", "UTR"]] as const).map(([k, label]) => (
+                      <div key={k} className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-neutral-400">{label}</span>
+                        <input
+                          inputMode="decimal"
+                          value={state[k] ?? ""}
+                          onChange={(e) => dispatch({ type: "SET_RANKINGS", payload: { [k]: numOrNull(e.target.value) } })}
+                          placeholder="–"
+                          className="w-full rounded-xl bg-black/[0.04] py-3 pl-[64px] pr-3 text-right text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-300"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Freitext */}
+                <div>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingNote")}</label>
+                  <input value={ratingNote} onChange={(e) => setRatingNote(e.target.value)} placeholder={t("onboarding.rankingNotePlaceholder")} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-400" />
+                </div>
               </div>
-            )}
+              );
+            })()}
           </Step>
         )}
 
@@ -920,6 +1009,34 @@ export default function OnboardingFlow() {
               : t("onboarding.next")}
         </button>
       </div>
+
+      {/* Ranking-Übersicht (Info) */}
+      {rankInfo && (
+        <div className="fixed inset-0 z-50 mx-auto flex max-w-[430px] items-end justify-center bg-black/40 backdrop-blur-sm" onClick={() => setRankInfo(false)}>
+          <div className="w-full rounded-t-[28px] bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-base font-bold text-neutral-900">{t("onboarding.rankingInfoTitle")}</span>
+              <button type="button" onClick={() => setRankInfo(false)} className="text-sm font-medium text-neutral-500">{t("onboarding.close")}</button>
+            </div>
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto text-sm text-neutral-600">
+              {[
+                ["ATP / WTA", t("onboarding.infoAtp")],
+                ["ITF WTN", t("onboarding.infoWtn")],
+                ["UTR", t("onboarding.infoUtr")],
+                ["LK (DE)", t("onboarding.infoLk")],
+                ["R/N (CH)", t("onboarding.infoRn")],
+                ["NTRP (US)", t("onboarding.infoNtrp")],
+              ].map(([k, v]) => (
+                <div key={k} className="rounded-xl bg-black/[0.035] p-3">
+                  <p className="text-[13px] font-bold text-neutral-900">{k}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-neutral-500">{v}</p>
+                </div>
+              ))}
+              <p className="pt-1 text-[11px] leading-relaxed text-neutral-400">{t("onboarding.rankingMapHint")}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
