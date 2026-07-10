@@ -14,9 +14,6 @@ import {
   type ClubCandidate,
 } from "@/lib/clubs";
 import type { Sport, SkillLevel } from "@/lib/types";
-import WheelPicker from "../shared/WheelPicker";
-
-const AGES = Array.from({ length: 99 - 18 + 1 }, (_, i) => 18 + i);
 import {
   SportIcon,
   TennisIcon,
@@ -356,10 +353,10 @@ export default function OnboardingFlow() {
         : null;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-black text-white">
+    <div className="flex min-h-dvh flex-col bg-white text-neutral-900">
       {/* Progress + Header */}
       <div className="px-5 pt-5">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/[0.04]">
           <div
             className="h-full rounded-full bg-matchup transition-all duration-300"
             style={{ width: `${(state.step / TOTAL_STEPS) * 100}%` }}
@@ -370,14 +367,14 @@ export default function OnboardingFlow() {
             <button
               type="button"
               onClick={() => dispatch({ type: "PREV_STEP" })}
-              className="text-zinc-400 hover:text-white"
+              className="text-neutral-500"
             >
               ← {t("onboarding.back")}
             </button>
           ) : (
             <span />
           )}
-          <span className="text-zinc-500">
+          <span className="text-neutral-400">
             {t("onboarding.stepOf", { current: state.step, total: TOTAL_STEPS })}
           </span>
         </div>
@@ -388,10 +385,10 @@ export default function OnboardingFlow() {
         {/* Step 1 — Welcome */}
         {state.step === 1 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <span className="matchup-wordmark text-4xl font-bold tracking-[0.2em]">
+            <span className="text-4xl font-extrabold tracking-[0.2em] text-matchup">
               MATCHUP
             </span>
-            <div className="mt-4 flex justify-center gap-4 text-white/80">
+            <div className="mt-4 flex justify-center gap-4 text-neutral-500">
               <TennisIcon size={30} />
               <PadelIcon size={30} />
               <PickleballIcon size={30} />
@@ -399,7 +396,7 @@ export default function OnboardingFlow() {
             <h1 className="mt-8 text-3xl font-bold">
               {t("onboarding.welcomeTitle")}
             </h1>
-            <p className="mt-4 max-w-xs text-zinc-400">
+            <p className="mt-4 max-w-xs text-neutral-500">
               {t("onboarding.welcomeSubtitle")}
             </p>
           </div>
@@ -459,17 +456,17 @@ export default function OnboardingFlow() {
               value={locQuery}
               onChange={(e) => searchLocation(e.target.value)}
               placeholder={t("onboarding.locationPlaceholder")}
-              className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             <button
               type="button"
               onClick={useCurrentLocation}
-              className="w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-zinc-300"
+              className="w-full rounded-xl border border-neutral-300 px-4 py-3 text-sm text-neutral-600"
             >
               <MapPinIcon size={16} className="mr-1.5 inline-block align-[-3px]" />
               {t("onboarding.useCurrentLocation")}
             </button>
-            {locLoading && <p className="text-sm text-zinc-500">{t("onboarding.searching")}</p>}
+            {locLoading && <p className="text-sm text-neutral-400">{t("onboarding.searching")}</p>}
             {locResults.map((r, i) => (
               <button
                 key={i}
@@ -487,7 +484,7 @@ export default function OnboardingFlow() {
                   setLocResults([]);
                   setLocQuery(r.display_name.split(",")[0]);
                 }}
-                className="block w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-left text-sm text-zinc-300"
+                className="block w-full rounded-lg bg-black/[0.035] px-4 py-2.5 text-left text-sm text-neutral-600"
               >
                 {r.display_name}
               </button>
@@ -507,7 +504,7 @@ export default function OnboardingFlow() {
             title={t("onboarding.clubTitle")}
             subtitle={t("onboarding.clubSubtitle")}
           >
-            <p className="-mt-1 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-zinc-400">
+            <p className="-mt-1 rounded-lg bg-black/[0.035] px-3 py-2 text-xs text-neutral-500">
               {t("onboarding.clubHint")}
             </p>
 
@@ -517,7 +514,7 @@ export default function OnboardingFlow() {
                   value={clubQuery}
                   onChange={(e) => handleClubSearch(e.target.value)}
                   placeholder={t("onboarding.searchClubOrCity")}
-                  className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                  className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 {clubResults.map((c, i) => (
                   <SelectRow
@@ -528,20 +525,20 @@ export default function OnboardingFlow() {
                     <span className="flex items-center gap-2">
                       <span className="block font-medium">{c.name}</span>
                       {c._osm && (
-                        <span className="rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                        <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600">
                           {t("onboarding.mapBadge")}
                         </span>
                       )}
                     </span>
                     {(c.address || c.city) && (
-                      <span className="mt-0.5 block text-xs text-zinc-400">
+                      <span className="mt-0.5 block text-xs text-neutral-500">
                         {c.address || c.city}
                       </span>
                     )}
                   </SelectRow>
                 ))}
                 {clubSearching && (
-                  <p className="text-sm text-zinc-500">{t("onboarding.searchingWorldwide")}</p>
+                  <p className="text-sm text-neutral-400">{t("onboarding.searchingWorldwide")}</p>
                 )}
                 {savingClub && (
                   <p className="text-sm text-matchup">{t("onboarding.clubBeingAdded")}</p>
@@ -549,7 +546,7 @@ export default function OnboardingFlow() {
                 {!clubSearching &&
                   clubQuery.trim().length >= 2 &&
                   clubResults.length === 0 && (
-                    <p className="text-sm text-zinc-500">{t("onboarding.noClubFound")}</p>
+                    <p className="text-sm text-neutral-400">{t("onboarding.noClubFound")}</p>
                   )}
                 <button
                   type="button"
@@ -566,22 +563,22 @@ export default function OnboardingFlow() {
               </>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-neutral-500">
                   {t("onboarding.addClubHint")}
                 </p>
                 <input
                   value={addName}
                   onChange={(e) => setAddName(e.target.value)}
                   placeholder={t("onboarding.clubNamePlaceholder")}
-                  className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                  className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
                 <input
                   value={addCity}
                   onChange={(e) => setAddCity(e.target.value)}
                   placeholder={t("onboarding.cityPlaceholder")}
-                  className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                  className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                 />
-                {clubMsg && <p className="text-sm text-amber-400">{clubMsg}</p>}
+                {clubMsg && <p className="text-sm text-amber-600">{clubMsg}</p>}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -589,7 +586,7 @@ export default function OnboardingFlow() {
                       setShowAddClub(false);
                       setClubMsg(null);
                     }}
-                    className="flex-1 rounded-full border border-zinc-700 py-3 text-sm"
+                    className="flex-1 rounded-full border border-neutral-300 py-3 text-sm"
                   >
                     {t("onboarding.back")}
                   </button>
@@ -622,7 +619,7 @@ export default function OnboardingFlow() {
                 dispatch({ type: "SET_CLUB", payload: { id: null, name: null } });
                 dispatch({ type: "NEXT_STEP" });
               }}
-              className="text-sm text-zinc-500 underline"
+              className="text-sm text-neutral-400 underline"
             >
               {t("onboarding.skip")}
             </button>
@@ -642,10 +639,10 @@ export default function OnboardingFlow() {
                 dispatch({ type: "SET_NAME", payload: e.target.value })
               }
               placeholder={t("onboarding.namePlaceholder")}
-              className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
             {state.first_name.length > 0 && state.first_name.trim().length < 2 && (
-              <p className="text-sm text-amber-400">{t("onboarding.nameTooShort")}</p>
+              <p className="text-sm text-amber-600">{t("onboarding.nameTooShort")}</p>
             )}
           </Step>
         )}
@@ -653,22 +650,21 @@ export default function OnboardingFlow() {
         {/* Step 7 — Age */}
         {state.step === 7 && (
           <Step title={t("onboarding.ageTitle")}>
+            <div className="mb-5 text-center text-5xl font-extrabold tracking-tight text-neutral-900">
+              {state.age ?? 25}
+            </div>
             <input
-              type="number"
+              type="range"
               min={18}
               max={100}
-              value={state.age ?? ""}
-              onChange={(e) =>
-                dispatch({ type: "SET_AGE", payload: Number(e.target.value) })
-              }
-              placeholder={t("onboarding.agePlaceholder")}
-              className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-center text-2xl font-bold outline-none focus:ring-1 focus:ring-matchup"
+              value={state.age ?? 25}
+              onChange={(e) => dispatch({ type: "SET_AGE", payload: Number(e.target.value) })}
+              className="w-full accent-matchup"
             />
-            {state.age !== null && (state.age < 18 || state.age > 100) && (
-              <p className="text-sm text-amber-400">
-                {t("onboarding.ageMin")}
-              </p>
-            )}
+            <div className="mt-1 flex justify-between text-xs text-neutral-400">
+              <span>18</span>
+              <span>100</span>
+            </div>
           </Step>
         )}
 
@@ -703,12 +699,12 @@ export default function OnboardingFlow() {
                   <span className={`mr-2 inline-block h-2.5 w-2.5 rounded-full ${s.dot}`} />
                   {t(s.labelKey)}
                 </span>
-                <span className="block text-xs text-zinc-400">{t(s.descKey)}</span>
+                <span className="block text-xs text-neutral-500">{t(s.descKey)}</span>
               </SelectRow>
             ))}
             {state.skill_level && (
               <div className="pt-4">
-                <p className="mb-2 text-sm text-zinc-400">
+                <p className="mb-2 text-sm text-neutral-500">
                   {t("onboarding.ratingQuestion")}
                 </p>
                 {ratingOptions ? (
@@ -717,7 +713,7 @@ export default function OnboardingFlow() {
                     onChange={(e) =>
                       dispatch({ type: "SET_RATING", payload: e.target.value })
                     }
-                    className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                    className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                   >
                     <option value="">{t("onboarding.noRating")}</option>
                     {ratingOptions.map((r) => (
@@ -733,7 +729,7 @@ export default function OnboardingFlow() {
                       dispatch({ type: "SET_RATING", payload: e.target.value })
                     }
                     placeholder={t("onboarding.ratingPlaceholder")}
-                    className="w-full rounded-xl bg-zinc-800 px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                    className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
                   />
                 )}
               </div>
@@ -763,7 +759,7 @@ export default function OnboardingFlow() {
             <button
               type="button"
               onClick={() => dispatch({ type: "NEXT_STEP" })}
-              className="text-sm text-zinc-500 underline"
+              className="text-sm text-neutral-400 underline"
             >
               {t("onboarding.skip")}
             </button>
@@ -801,7 +797,7 @@ export default function OnboardingFlow() {
           <Step title={t("onboarding.profileTitle")} subtitle={t("onboarding.profileSubtitle")}>
             {/* Photos */}
             <p className="text-sm font-semibold">{t("onboarding.yourPhotos")}</p>
-            <p className="-mt-2 text-xs text-zinc-500">
+            <p className="-mt-2 text-xs text-neutral-400">
               {t("onboarding.photosHint")}
             </p>
             <div className="grid grid-cols-4 gap-2">
@@ -810,7 +806,7 @@ export default function OnboardingFlow() {
                 return (
                   <div
                     key={i}
-                    className="relative aspect-square overflow-hidden rounded-xl bg-zinc-800"
+                    className="relative aspect-square overflow-hidden rounded-xl bg-black/[0.04]"
                   >
                     {photo ? (
                       <>
@@ -831,7 +827,7 @@ export default function OnboardingFlow() {
                         </button>
                       </>
                     ) : (
-                      <label className="flex h-full w-full cursor-pointer items-center justify-center text-2xl text-zinc-500">
+                      <label className="flex h-full w-full cursor-pointer items-center justify-center text-2xl text-neutral-400">
                         +
                         <input
                           type="file"
@@ -859,9 +855,9 @@ export default function OnboardingFlow() {
                 dispatch({ type: "SET_BIO", payload: e.target.value })
               }
               placeholder={t("onboarding.bioPlaceholder")}
-              className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
-            <p className="-mt-2 text-right text-xs text-zinc-500">
+            <p className="-mt-2 text-right text-xs text-neutral-400">
               {state.bio.length}/300
             </p>
 
@@ -897,48 +893,22 @@ export default function OnboardingFlow() {
                   max: state.visibility_age_max,
                 })}
               </p>
-              <div className="mt-2 flex items-stretch gap-3">
-                <div className="flex-1">
-                  <p className="mb-1 text-center text-xs text-zinc-500">{t("onboarding.from")}</p>
-                  <WheelPicker
-                    fade="rgb(0 0 0)"
-                    values={AGES}
-                    value={state.visibility_age_min}
-                    onChange={(v) =>
-                      dispatch({
-                        type: "SET_VISIBILITY",
-                        payload: {
-                          gender: state.visibility_gender,
-                          ageMin: v,
-                          ageMax: Math.max(state.visibility_age_max, v),
-                        },
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex-1">
-                  <p className="mb-1 text-center text-xs text-zinc-500">{t("onboarding.to")}</p>
-                  <WheelPicker
-                    fade="rgb(0 0 0)"
-                    values={AGES}
-                    value={state.visibility_age_max}
-                    onChange={(v) =>
-                      dispatch({
-                        type: "SET_VISIBILITY",
-                        payload: {
-                          gender: state.visibility_gender,
-                          ageMin: Math.min(state.visibility_age_min, v),
-                          ageMax: v,
-                        },
-                      })
-                    }
-                  />
-                </div>
+              <div className="mt-3">
+                <AgeRangeSlider
+                  lo={state.visibility_age_min}
+                  hi={state.visibility_age_max}
+                  onChange={(lo, hi) =>
+                    dispatch({
+                      type: "SET_VISIBILITY",
+                      payload: { gender: state.visibility_gender, ageMin: lo, ageMax: hi },
+                    })
+                  }
+                />
               </div>
             </div>
 
             {submitError && (
-              <div className="rounded-xl bg-amber-500/15 px-4 py-3 text-sm text-amber-300">
+              <div className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-600">
                 {submitError}
               </div>
             )}
@@ -947,7 +917,7 @@ export default function OnboardingFlow() {
       </div>
 
       {/* Bottom button */}
-      <div className="border-t border-zinc-800 p-5">
+      <div className="border-t border-black/10 p-5">
         <button
           type="button"
           onClick={handleNext}
@@ -955,7 +925,7 @@ export default function OnboardingFlow() {
           className={`w-full rounded-full py-3.5 text-sm font-bold tracking-wide transition-colors ${
             valid && !submitting
               ? "bg-matchup text-white hover:bg-matchup-hover"
-              : "cursor-not-allowed bg-zinc-800 text-zinc-500"
+              : "cursor-not-allowed bg-black/[0.06] text-neutral-400"
           }`}
         >
           {submitting
@@ -983,7 +953,7 @@ function Step({
   return (
     <div className="mx-auto max-w-md space-y-4">
       <h2 className="text-2xl font-bold">{title}</h2>
-      {subtitle && <p className="-mt-2 text-sm text-zinc-400">{subtitle}</p>}
+      {subtitle && <p className="-mt-2 text-sm text-neutral-500">{subtitle}</p>}
       <div className="space-y-3 pt-2">{children}</div>
     </div>
   );
@@ -1004,12 +974,36 @@ function SelectRow({
       onClick={onClick}
       className={`block w-full rounded-xl px-4 py-3.5 text-left text-sm transition-colors ${
         selected
-          ? "bg-zinc-800 ring-2 ring-matchup"
-          : "bg-zinc-800 ring-1 ring-zinc-700 hover:ring-zinc-600"
+          ? "bg-black/[0.04] ring-2 ring-matchup"
+          : "bg-black/[0.04] ring-1 ring-black/10 hover:ring-black/20"
       }`}
     >
       {children}
     </button>
+  );
+}
+
+/** Ein Slider mit zwei Griffen (Von/Bis) — gefüllter Balken in Matchup-Lila. */
+function AgeRangeSlider({ lo, hi, onChange }: { lo: number; hi: number; onChange: (lo: number, hi: number) => void }) {
+  const MIN = 18, MAX = 99;
+  const pct = (v: number) => ((v - MIN) / (MAX - MIN)) * 100;
+  const thumb =
+    "pointer-events-none absolute inset-x-0 top-0 h-6 w-full appearance-none bg-transparent " +
+    "[&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-matchup [&::-webkit-slider-thumb]:shadow " +
+    "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-matchup";
+  return (
+    <div>
+      <div className="relative h-6">
+        <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-black/10" />
+        <div className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-matchup" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
+        <input type="range" min={MIN} max={MAX} value={lo} onChange={(e) => onChange(Math.min(Number(e.target.value), hi), hi)} className={`${thumb} z-30`} />
+        <input type="range" min={MIN} max={MAX} value={hi} onChange={(e) => onChange(lo, Math.max(Number(e.target.value), lo))} className={`${thumb} z-20`} />
+      </div>
+      <div className="mt-1 flex justify-between text-xs font-bold text-matchup">
+        <span>{lo}</span>
+        <span>{hi}</span>
+      </div>
+    </div>
   );
 }
 
@@ -1028,8 +1022,8 @@ function Chip({
       onClick={onClick}
       className={`rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
         selected
-          ? "bg-matchup/20 text-white ring-2 ring-matchup"
-          : "bg-zinc-800 text-zinc-300 ring-1 ring-zinc-700"
+          ? "bg-matchup text-white"
+          : "bg-black/[0.05] text-neutral-600 ring-1 ring-black/10"
       }`}
     >
       {children}
