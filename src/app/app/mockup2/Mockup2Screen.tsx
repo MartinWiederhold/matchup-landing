@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, useState } from "react";
 import WimbledonWidget from "../mockup/WimbledonWidget";
+import Mockup2Onboarding from "./Mockup2Onboarding";
 
 function Icon({ path, className = "", size = 22, fill = "none" }: { path: string; className?: string; size?: number; fill?: string }) {
   return (
@@ -149,6 +150,7 @@ export default function Mockup2Screen() {
   const [gamesMode, setGamesMode] = useState<GamesMode>("mine");
   // Profil bearbeiten / Einstellungen
   const [profileScreen, setProfileScreen] = useState<null | "edit" | "settings">(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [pName, setPName] = useState("Martin");
   const [pCity, setPCity] = useState("Zürich");
   const [pBio, setPBio] = useState("Spiele seit 10 Jahren Tennis, neu auch Padel. Suche regelmässige Partner in Zürich für Feierabend-Matches. 🎾");
@@ -928,6 +930,7 @@ export default function Mockup2Screen() {
             <div className="flex-1 overflow-y-auto pb-10">
               <p className="px-5 pb-1.5 pt-4 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Konto</p>
               <SettingRow label="Konto-Infos" onClick={() => {}} />
+              <SettingRow label="Onboarding ansehen" onClick={() => { setProfileScreen(null); setShowOnboarding(true); }} />
               <SettingRow label="Konto pausieren" onClick={() => {}} />
 
               <p className="px-5 pb-1.5 pt-5 text-[11px] font-bold uppercase tracking-wide text-neutral-400">Benachrichtigungen</p>
@@ -960,6 +963,9 @@ export default function Mockup2Screen() {
             </div>
           </div>
         )}
+
+        {/* Onboarding (12 Schritte, mockup2-Design) */}
+        {showOnboarding && <Mockup2Onboarding onClose={() => setShowOnboarding(false)} />}
 
         {/* Tab-Bar (schwebend) — im Gespräch/Overlay ausgeblendet */}
         {!activeChat && !profileScreen && (
