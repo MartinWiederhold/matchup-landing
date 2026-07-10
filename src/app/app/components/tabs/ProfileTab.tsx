@@ -9,9 +9,7 @@ import { ACHIEVEMENT_DEFS } from "@/lib/types";
 import type { PlayerStats, Achievement } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
-import ProfileStats from "../ProfileStats";
 import RatingHistory from "../RatingHistory";
-import InviteFriends from "../InviteFriends";
 
 function PencilIcon({ size = 18 }: { size?: number }) {
   return (
@@ -109,20 +107,20 @@ export default function ProfileTab() {
         <button
           type="button"
           onClick={() => openSubView({ type: "leaderboard" })}
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup/15 px-4 py-1.5 ring-1 ring-matchup/40 transition-colors hover:bg-matchup/25"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup px-4 py-1.5 text-white shadow-sm transition-colors hover:bg-matchup-hover"
         >
-          <span className="text-[11px] font-bold uppercase tracking-wide text-matchup/80">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-white/80">
             {t("profile.matchScore")}
           </span>
-          <span className="text-sm font-bold text-matchup">
+          <span className="text-sm font-bold text-white">
             {profile.match_score ?? 1000}
           </span>
           {(profile.matches_rated ?? 0) < 5 && (
-            <span className="text-[10px] font-medium text-matchup/60">
+            <span className="text-[10px] font-medium text-white/70">
               · {t("profile.matchScoreProvisional")}
             </span>
           )}
-          <svg className="h-3.5 w-3.5 text-matchup/70" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg className="h-3.5 w-3.5 text-white/80" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
@@ -155,20 +153,12 @@ export default function ProfileTab() {
           })()}
         </div>
 
-        <InviteFriends />
-
-        {profile.bio && (
-          <Section title={t("profile.aboutMe")}>
-            <p className="text-sm text-neutral-600">{profile.bio}</p>
-          </Section>
-        )}
-
         <Section title={t("profile.sports")}>
           <div className="flex flex-wrap gap-2">
             {profile.sports.map((s) => (
               <span
                 key={s}
-                className="rounded-full bg-neutral-100 px-4 py-1.5 text-sm"
+                className="rounded-full bg-black/[0.05] px-4 py-1.5 text-sm font-medium text-neutral-700"
               >
                 <SportIcon sport={s} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(s)}
               </span>
@@ -176,34 +166,9 @@ export default function ProfileTab() {
           </div>
         </Section>
 
-        <Section title={t("profile.ratingHistoryTitle")}>
-          <RatingHistory userId={profile.id} />
-        </Section>
-
-        <Section title={t("profile.stats")}>
-          <ProfileStats profile={profile} stats={stats} />
-        </Section>
-
-        {reviews.length > 0 && (
-          <Section title={t("profile.progressNotes")}>
-            <div className="space-y-2">
-              {reviews.map((r) => (
-                <div key={r.id} className="rounded-xl bg-black/[0.035] p-3">
-                  {r.work_on && (
-                    <p className="text-sm text-neutral-900">
-                      <span className="font-semibold text-sky-400">→ </span>
-                      {r.work_on}
-                    </p>
-                  )}
-                  {r.what_good && (
-                    <p className="mt-1 text-xs text-neutral-500">
-                      <span className="text-emerald-400">+ </span>
-                      {r.what_good}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
+        {profile.bio && (
+          <Section title={t("profile.aboutMe")}>
+            <p className="rounded-2xl bg-black/[0.035] p-4 text-sm leading-relaxed text-neutral-600">{profile.bio}</p>
           </Section>
         )}
 
@@ -216,7 +181,7 @@ export default function ProfileTab() {
                 return (
                   <span
                     key={a.id}
-                    className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3 py-1.5 text-xs font-semibold text-matchup"
+                    className="flex items-center gap-1.5 rounded-full bg-matchup px-3 py-1.5 text-xs font-semibold text-white"
                     title={def.description}
                   >
                     {def.icon} {def.label}
@@ -227,13 +192,42 @@ export default function ProfileTab() {
           </Section>
         )}
 
+        <Section title={t("profile.ratingHistoryTitle")}>
+          <div className="rounded-2xl bg-black/[0.035] p-4">
+            <RatingHistory userId={profile.id} />
+          </div>
+        </Section>
+
+        {reviews.length > 0 && (
+          <Section title={t("profile.progressNotes")}>
+            <div className="space-y-2">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-2xl bg-black/[0.035] p-4">
+                  {r.work_on && (
+                    <p className="text-sm text-neutral-900">
+                      <span className="font-semibold text-matchup">→ </span>
+                      {r.work_on}
+                    </p>
+                  )}
+                  {r.what_good && (
+                    <p className="mt-1 text-xs text-neutral-500">
+                      <span className="font-semibold text-emerald-600">✓ </span>
+                      {r.what_good}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {images.length > 0 && (
           <Section title={t("profile.photos")}>
             <div className="grid grid-cols-4 gap-2">
               {images.map((src, i) => (
                 <div
                   key={i}
-                  className="aspect-square overflow-hidden rounded-xl bg-neutral-100"
+                  className="aspect-square overflow-hidden rounded-xl bg-black/[0.05]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="h-full w-full object-cover" />
@@ -243,6 +237,27 @@ export default function ProfileTab() {
           </Section>
         )}
 
+        {/* Freunde einladen — Matchup-Lila-Karte */}
+        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6" /></svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">{t("profile.inviteTitle")}</p>
+            <p className="line-clamp-2 text-[12px] text-white/80">{t("profile.inviteText")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const url = typeof window !== "undefined" ? window.location.origin : "https://matchup-app.com";
+              if (typeof navigator !== "undefined" && navigator.share) navigator.share({ title: "Matchup", url }).catch(() => {});
+              else if (typeof navigator !== "undefined" && navigator.clipboard) navigator.clipboard.writeText(url);
+            }}
+            className="shrink-0 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-matchup"
+          >
+            {t("profile.inviteShare")}
+          </button>
+        </div>
       </div>
     </div>
   );

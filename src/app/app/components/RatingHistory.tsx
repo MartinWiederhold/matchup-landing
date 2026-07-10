@@ -38,7 +38,7 @@ export default function RatingHistory({ userId }: { userId: string }) {
 
   if (series === null) return null; // lädt
   if (series.length < 2) {
-    return <p className="text-sm text-zinc-500">{t("profile.ratingHistoryEmpty")}</p>;
+    return <p className="text-sm text-neutral-400">{t("profile.ratingHistoryEmpty")}</p>;
   }
 
   const W = 100;
@@ -61,10 +61,10 @@ export default function RatingHistory({ userId }: { userId: string }) {
   return (
     <div>
       <div className="flex items-end justify-between">
-        <div className="text-3xl font-bold tabular-nums text-white">{current}</div>
+        <div className="text-3xl font-bold tabular-nums text-neutral-900">{current}</div>
         <div
           className={`text-sm font-bold ${
-            total > 0 ? "text-emerald-400" : total < 0 ? "text-zinc-400" : "text-zinc-500"
+            total > 0 ? "text-emerald-600" : total < 0 ? "text-neutral-500" : "text-neutral-400"
           }`}
         >
           {total > 0 ? `+${total}` : total}
@@ -96,7 +96,7 @@ export default function RatingHistory({ userId }: { userId: string }) {
         <circle cx={last[0]} cy={last[1]} r="2.5" fill="var(--matchup-blue)" vectorEffect="non-scaling-stroke" />
       </svg>
 
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-xs text-neutral-400">
         {t("profile.ratingHistoryCaption", { n: games })}
       </p>
     </div>
