@@ -102,6 +102,27 @@ export default function Mockup2Screen() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [msgInput, setMsgInput] = useState("");
   const msgId = useRef(1);
+  const [chatMenu, setChatMenu] = useState(false);
+  const [reportFor, setReportFor] = useState<ChatItem | null>(null);
+
+  const REPORT_REASONS = [
+    "Belästigung / Beleidigung",
+    "Spam / Werbung",
+    "Unangemessene Inhalte",
+    "Fake-Profil",
+    "Sonstiges",
+  ];
+  function blockChat(c: ChatItem) {
+    setChatMenu(false);
+    setChatList((cs) => cs.filter((x) => x.id !== c.id));
+    setActiveChat(null);
+    window.alert(`${c.name} wurde blockiert.`);
+  }
+  function submitReport(c: ChatItem, reason: string) {
+    setReportFor(null);
+    setActiveChat(null);
+    window.alert(`Danke — deine Meldung („${reason}") wurde an unser Team übermittelt.`);
+  }
 
   function openConversation(c: ChatItem) {
     setActiveChat(c);
@@ -466,9 +487,26 @@ export default function Mockup2Screen() {
                 <p className="truncate font-bold text-neutral-900">{activeChat.name}</p>
                 <p className="text-[11px] font-medium text-emerald-600">{activeChat.online ? "Online" : "Zuletzt aktiv vor 2 Std."}</p>
               </div>
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-500 active:bg-black/5">
-                <Icon path="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.2a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z" size={19} />
-              </button>
+              <div className="relative">
+                <button type="button" onClick={() => setChatMenu((v) => !v)} aria-label="Mehr" className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-600 active:bg-black/5">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="5" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="12" cy="19" r="1.7" />
+                  </svg>
+                </button>
+                {chatMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setChatMenu(false)} />
+                    <div className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl bg-white p-1 shadow-xl ring-1 ring-black/10">
+                      <button type="button" onClick={() => { setChatMenu(false); setReportFor(activeChat); }} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                        Melden
+                      </button>
+                      <button type="button" onClick={() => blockChat(activeChat)} className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50">
+                        Blockieren
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </header>
 
             <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
@@ -516,6 +554,28 @@ export default function Mockup2Screen() {
             })}
           </nav>
         </div>
+        )}
+
+        {/* Melde-Grund auswählen */}
+        {reportFor && (
+          <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={() => setReportFor(null)}>
+            <div className="mx-auto w-full max-w-[430px]" onClick={(e) => e.stopPropagation()}>
+              <div className="rounded-t-[28px] bg-white p-5 pb-8">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-sm font-bold text-neutral-900">{reportFor.name} melden</span>
+                  <button type="button" onClick={() => setReportFor(null)} className="text-sm font-medium text-neutral-500">Abbrechen</button>
+                </div>
+                <p className="mb-3 text-[13px] text-neutral-500">Wähle einen Grund. Die Meldung geht an unser Team.</p>
+                <div className="space-y-1.5">
+                  {REPORT_REASONS.map((r) => (
+                    <button key={r} type="button" onClick={() => submitReport(reportFor, r)} className="flex w-full items-center justify-between rounded-xl bg-black/[0.04] px-4 py-3 text-left text-sm font-medium text-neutral-800 hover:bg-black/[0.06]">
+                      {r} <Icon path="M9 6l6 6-6 6" size={15} className="text-neutral-400" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Profil-Overlay (grösser) mit Verbinden */}
