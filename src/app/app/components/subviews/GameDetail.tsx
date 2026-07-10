@@ -121,20 +121,20 @@ export default function GameDetail({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("games.detailTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("games.detailTitle")} />
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <div>
           <h1 className="text-xl font-bold">
             <SportIcon sport={game.sport} size={14} className="mr-0.5 inline-block align-[-2px]" /> {sportLabel(game.sport)} ·{" "}
             {game.game_type === "singles" ? t("games.singles") : t("games.doubles")}
           </h1>
-          <span className="mt-2 inline-block rounded-full bg-zinc-800 px-3 py-1 text-xs">
+          <span className="mt-2 inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs">
             {STATUS_KEY[game.status] ? t(STATUS_KEY[game.status]) : game.status}
           </span>
         </div>
 
-        <ul className="space-y-1.5 text-sm text-zinc-300">
+        <ul className="space-y-1.5 text-sm text-neutral-700">
           <li className="flex items-center gap-2">
             <CalendarIcon size={15} className="shrink-0" />
             {formatEventDate(game.date_time)}
@@ -153,7 +153,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
         </ul>
 
         <div>
-          <h2 className="mb-2 text-xs font-bold uppercase text-zinc-500">
+          <h2 className="mb-2 text-xs font-bold uppercase text-neutral-400">
             {t("games.participantsHeading", {
               current: accepted.length + 1,
               max:
@@ -189,14 +189,14 @@ export default function GameDetail({ gameId }: { gameId: string }) {
           <button
             type="button"
             onClick={() => openSubView({ type: "game-requests", gameId })}
-            className="w-full rounded-full border border-zinc-700 py-3 text-sm font-semibold"
+            className="w-full rounded-full border border-neutral-300 py-3 text-sm font-semibold"
           >
             {t("games.manageRequests", { count: requests.length })}
           </button>
         )}
       </div>
 
-      <div className="shrink-0 space-y-3 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 space-y-3 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         {/* Ergebnis-Status */}
         {result?.status === "confirmed" && (
           <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
@@ -205,18 +205,18 @@ export default function GameDetail({ gameId }: { gameId: string }) {
           </div>
         )}
         {result?.status === "disputed" && (
-          <div className="rounded-xl bg-zinc-800 px-4 py-3 text-center text-sm text-zinc-400">
+          <div className="rounded-xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-500">
             {t("games.resultDisputedNote")}
           </div>
         )}
         {result?.status === "pending" && amOpponent && (
-          <div className="space-y-3 rounded-2xl bg-zinc-900 p-4 ring-1 ring-matchup/30">
-            <p className="text-sm font-semibold text-white">{t("games.resultConfirmTitle")}</p>
+          <div className="space-y-3 rounded-2xl bg-black/[0.035] p-4 ring-1 ring-matchup/30">
+            <p className="text-sm font-semibold text-neutral-900">{t("games.resultConfirmTitle")}</p>
             {result.score && (
-              <p className="text-2xl font-bold tabular-nums text-white">{result.score}</p>
+              <p className="text-2xl font-bold tabular-nums text-neutral-900">{result.score}</p>
             )}
             {reporterName && (
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-neutral-400">
                 {t("games.resultReportedBy", { name: reporterName })}
               </p>
             )}
@@ -225,7 +225,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
                 type="button"
                 disabled={working}
                 onClick={() => confirmResult("dispute")}
-                className="flex-1 rounded-full border border-zinc-700 py-3 text-sm font-semibold text-zinc-300 disabled:opacity-50"
+                className="flex-1 rounded-full border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 disabled:opacity-50"
               >
                 {t("games.resultDisputeBtn")}
               </button>
@@ -241,7 +241,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
           </div>
         )}
         {result?.status === "pending" && !amOpponent && (
-          <p className="text-center text-sm text-zinc-400">
+          <p className="text-center text-sm text-neutral-500">
             {t("games.resultAwaitingConfirm")}
           </p>
         )}
@@ -260,7 +260,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             <button
               type="button"
               onClick={() => openSubView({ type: "game-review", gameId })}
-              className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold text-white hover:bg-zinc-800"
+              className="w-full rounded-full border border-neutral-300 py-3.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-100"
             >
               {t("games.reviewButton")}
             </button>
@@ -278,7 +278,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
             <button
               type="button"
               onClick={cancelGame}
-              className="w-full rounded-full bg-zinc-800 py-3.5 text-sm font-semibold text-zinc-300"
+              className="w-full rounded-full bg-neutral-100 py-3.5 text-sm font-semibold text-neutral-700"
             >
               {t("games.cancelGame")}
             </button>
@@ -287,7 +287,7 @@ export default function GameDetail({ gameId }: { gameId: string }) {
           <button
             type="button"
             onClick={leave}
-            className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold"
+            className="w-full rounded-full border border-neutral-300 py-3.5 text-sm font-semibold"
           >
             {myPart.status === "requested"
               ? t("games.withdrawRequest")

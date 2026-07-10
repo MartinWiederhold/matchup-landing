@@ -172,17 +172,17 @@ export default function GameResult({ gameId }: { gameId: string }) {
   // Erfolg → Score-Card + Teilen
   if (saved) {
     return (
-      <div className="flex h-full flex-col">
-        <SubViewHeader title={t("games.resultSavedTitle")} />
+      <div className="flex h-full flex-col bg-white text-neutral-900">
+        <SubViewHeader light title={t("games.resultSavedTitle")} />
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl} alt="Score-Card" className="w-full rounded-2xl ring-1 ring-white/10" />
-          <p className="rounded-xl bg-zinc-900 p-3 text-center text-xs text-zinc-400">
+          <p className="rounded-xl bg-black/[0.035] p-3 text-center text-xs text-neutral-500">
             {t("games.resultPendingNote")}
           </p>
-          <p className="text-center text-sm text-zinc-400">{t("games.resultSavedText")}</p>
+          <p className="text-center text-sm text-neutral-500">{t("games.resultSavedText")}</p>
         </div>
-        <div className="shrink-0 space-y-3 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 space-y-3 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={share}
@@ -194,7 +194,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
           <button
             type="button"
             onClick={closeSubView}
-            className="w-full rounded-full border border-zinc-700 py-3.5 text-sm font-semibold text-zinc-300"
+            className="w-full rounded-full border border-neutral-300 py-3.5 text-sm font-semibold text-neutral-700"
           >
             {t("games.resultDone")}
           </button>
@@ -204,29 +204,29 @@ export default function GameResult({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("games.resultTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("games.resultTitle")} />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
-        <p className="text-sm text-zinc-400">{t("games.resultIntro")}</p>
+        <p className="text-sm text-neutral-500">{t("games.resultIntro")}</p>
 
         {/* Teams */}
         <div>
-          <p className="text-sm font-semibold text-zinc-300">{t("games.resultTeams")}</p>
-          <p className="mb-3 text-xs text-zinc-500">{t("games.resultTeamsHint")}</p>
+          <p className="text-sm font-semibold text-neutral-700">{t("games.resultTeams")}</p>
+          <p className="mb-3 text-xs text-neutral-400">{t("games.resultTeamsHint")}</p>
           <div className="space-y-2">
             {players.map((p) => {
               const s = sides[p.id];
               return (
                 <div
                   key={p.id}
-                  className="flex items-center gap-3 rounded-xl bg-zinc-900 p-2.5"
+                  className="flex items-center gap-3 rounded-xl bg-black/[0.035] p-2.5"
                 >
-                  <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10">
+                  <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-neutral-100 ring-1 ring-white/10">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="flex h-full w-full items-center justify-center text-xs font-bold text-zinc-400">
+                      <span className="flex h-full w-full items-center justify-center text-xs font-bold text-neutral-500">
                         {p.name[0]}
                       </span>
                     )}
@@ -240,7 +240,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
                         ? "bg-matchup text-white"
                         : s === "b"
                           ? "bg-sky-500 text-white"
-                          : "bg-zinc-800 text-zinc-500"
+                          : "bg-neutral-100 text-neutral-400"
                     }`}
                   >
                     {s === "a" ? t("games.resultTeamA") : s === "b" ? t("games.resultTeamB") : "—"}
@@ -253,7 +253,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
 
         {/* Score — satzweise per Scrollrad */}
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("games.resultScore")}</p>
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("games.resultScore")}</p>
           <SetScore
             sport={game.sport}
             teamA={teamAName}
@@ -264,15 +264,15 @@ export default function GameResult({ gameId }: { gameId: string }) {
 
         {/* Gewinner */}
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("games.resultWinner")}</p>
-          <div className="flex rounded-full bg-zinc-800 p-1">
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("games.resultWinner")}</p>
+          <div className="flex rounded-full bg-neutral-100 p-1">
             {(["a", "b"] as const).map((w) => (
               <button
                 key={w}
                 type="button"
                 onClick={() => setWinner(w)}
                 className={`flex-1 truncate rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
-                  winner === w ? "bg-matchup text-white" : "text-zinc-400"
+                  winner === w ? "bg-matchup text-white" : "text-neutral-500"
                 }`}
               >
                 {w === "a" ? teamAName : teamBName}
@@ -284,7 +284,7 @@ export default function GameResult({ gameId }: { gameId: string }) {
         {error && <p className="text-sm text-amber-400">{error}</p>}
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={save}

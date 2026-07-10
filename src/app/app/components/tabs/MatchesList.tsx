@@ -10,12 +10,13 @@ import Avatar from "../shared/Avatar";
 import { MessageIcon } from "../shared/icons";
 import { FullLoading, EmptyState } from "../shared/ui";
 
-export default function MatchesList() {
+export default function MatchesList({ search = "" }: { search?: string }) {
   const t = useT();
   const { profile, setActiveTab, openSubView } = useAppNav();
   const [matches, setMatches] = useState<AppMatch[]>([]);
   const [requests, setRequests] = useState<Like[]>([]);
   const [loading, setLoading] = useState(true);
+  const q = search.trim().toLowerCase();
 
   const other = useCallback(
     (m: AppMatch): Profile | undefined =>
@@ -134,7 +135,13 @@ export default function MatchesList() {
     <div>
       {RequestsStrip}
       <ul className="divide-y divide-black/[0.06]">
-        {matches.map((m) => {
+        {matches
+          .filter((m) => {
+            if (!q) return true;
+            const u = other(m);
+            return (u?.first_name ?? "").toLowerCase().includes(q);
+          })
+          .map((m) => {
           const u = other(m);
           if (!u) return null;
           const unread =

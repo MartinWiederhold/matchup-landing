@@ -192,8 +192,8 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t(isEdit ? "games.editTitle" : "games.createTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t(isEdit ? "games.editTitle" : "games.createTitle")} />
       {loading ? (
         <FullLoading />
       ) : (
@@ -258,7 +258,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
             value={court}
             onChange={(e) => setCourt(e.target.value)}
             placeholder={t("games.courtPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-sm outline-none"
           />
         </Field>
         <Field label={t("games.descriptionLabel")}>
@@ -267,7 +267,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("games.descriptionPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-sm outline-none"
           />
         </Field>
         <Field label={t("games.maxParticipantsLabel")}>
@@ -275,7 +275,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
             <button
               type="button"
               onClick={() => setMaxP((n) => Math.max(2, n - 1))}
-              className="h-9 w-9 rounded-full bg-zinc-800"
+              className="h-9 w-9 rounded-full bg-neutral-100"
             >
               −
             </button>
@@ -283,7 +283,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
             <button
               type="button"
               onClick={() => setMaxP((n) => Math.min(8, n + 1))}
-              className="h-9 w-9 rounded-full bg-zinc-800"
+              className="h-9 w-9 rounded-full bg-neutral-100"
             >
               +
             </button>
@@ -294,7 +294,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
         <Toggle label={t("games.courtBooked")} value={booked} onChange={setBooked} />
 
         <Field label={t("games.inviteLabel")}>
-          <p className="-mt-1 mb-2 text-xs text-zinc-500">{t("games.inviteHint")}</p>
+          <p className="-mt-1 mb-2 text-xs text-neutral-400">{t("games.inviteHint")}</p>
           <GameContactPicker
             meId={profile.id}
             selected={contacts}
@@ -303,7 +303,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
         </Field>
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         {error && <p className="mb-3 text-center text-sm text-amber-400">{error}</p>}
         <button
           type="button"
@@ -325,7 +325,7 @@ export default function CreateGame({ gameId, invite }: { gameId?: string; invite
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-zinc-300">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-neutral-700">{label}</p>
       {children}
     </div>
   );
@@ -345,7 +345,7 @@ function Pick({
       type="button"
       onClick={onClick}
       className={`flex-1 rounded-xl py-2.5 text-sm ${
-        active ? "bg-matchup/20 ring-2 ring-matchup" : "bg-zinc-800 ring-1 ring-zinc-700"
+        active ? "bg-matchup/20 ring-2 ring-matchup" : "bg-neutral-100 ring-1 ring-black/10"
       }`}
     >
       {children}
@@ -366,11 +366,11 @@ function Toggle({
     <button
       type="button"
       onClick={() => onChange(!value)}
-      className="flex w-full items-center justify-between rounded-xl bg-zinc-800 px-4 py-3 text-sm"
+      className="flex w-full items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-sm"
     >
       <span>{label}</span>
       <span
-        className={`relative h-6 w-11 rounded-full transition-colors ${value ? "bg-matchup" : "bg-zinc-600"}`}
+        className={`relative h-6 w-11 rounded-full transition-colors ${value ? "bg-matchup" : "bg-neutral-300"}`}
       >
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${value ? "left-[22px]" : "left-0.5"}`}

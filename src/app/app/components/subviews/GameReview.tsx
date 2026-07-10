@@ -89,28 +89,28 @@ export default function GameReview({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("games.reviewTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("games.reviewTitle")} />
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
         {/* Partner-Feedback (privat) */}
         {partners.length > 0 && (
           <div>
-            <p className="text-sm font-semibold text-zinc-300">{t("games.fbHeading")}</p>
-            <p className="mb-3 text-xs text-zinc-500">{t("games.fbIntro")}</p>
+            <p className="text-sm font-semibold text-neutral-700">{t("games.fbHeading")}</p>
+            <p className="mb-3 text-xs text-neutral-400">{t("games.fbIntro")}</p>
             <div className="space-y-3">
               {partners.map((p) => {
                 const cur = fb[p.id] ?? { again: null, tags: [] };
                 const name = p.display_name || p.first_name || "Spieler";
                 return (
-                  <div key={p.id} className="rounded-2xl bg-zinc-800/60 p-3">
+                  <div key={p.id} className="rounded-2xl bg-neutral-100/60 p-3">
                     <div className="flex items-center gap-2.5">
                       <Avatar src={p.profile_image} alt={name} size="sm" />
-                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-100">{name}</span>
-                      <span className="text-xs text-zinc-400">{t("games.fbAgain")}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">{name}</span>
+                      <span className="text-xs text-neutral-500">{t("games.fbAgain")}</span>
                       <button
                         type="button"
                         onClick={() => setAgain(p.id, true)}
-                        className={`h-9 w-9 rounded-full text-base transition-colors ${cur.again === true ? "bg-emerald-500 text-white" : "bg-zinc-700 text-zinc-300"}`}
+                        className={`h-9 w-9 rounded-full text-base transition-colors ${cur.again === true ? "bg-emerald-500 text-white" : "bg-neutral-200 text-neutral-700"}`}
                         aria-label={t("games.fbYes")}
                       >
                         👍
@@ -118,7 +118,7 @@ export default function GameReview({ gameId }: { gameId: string }) {
                       <button
                         type="button"
                         onClick={() => setAgain(p.id, false)}
-                        className={`h-9 w-9 rounded-full text-base transition-colors ${cur.again === false ? "bg-zinc-500 text-white" : "bg-zinc-700 text-zinc-300"}`}
+                        className={`h-9 w-9 rounded-full text-base transition-colors ${cur.again === false ? "bg-neutral-400 text-white" : "bg-neutral-200 text-neutral-700"}`}
                         aria-label={t("games.fbNo")}
                       >
                         👎
@@ -133,7 +133,7 @@ export default function GameReview({ gameId }: { gameId: string }) {
                             key={k}
                             type="button"
                             onClick={() => toggleTag(p.id, label)}
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${on ? "bg-matchup text-white" : "bg-zinc-700 text-zinc-300"}`}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${on ? "bg-matchup text-white" : "bg-neutral-200 text-neutral-700"}`}
                           >
                             {on ? "✓ " : ""}{label}
                           </button>
@@ -148,9 +148,9 @@ export default function GameReview({ gameId }: { gameId: string }) {
         )}
 
         {/* Selbst-Notiz (privat, unverändert) */}
-        <p className="text-sm text-zinc-400">{t("games.reviewIntro")}</p>
+        <p className="text-sm text-neutral-500">{t("games.reviewIntro")}</p>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("games.reviewRating")}</p>
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("games.reviewRating")}</p>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -158,7 +158,7 @@ export default function GameReview({ gameId }: { gameId: string }) {
                 type="button"
                 onClick={() => setRating(n)}
                 aria-label={`${n}`}
-                className={`flex h-11 w-11 items-center justify-center rounded-full text-lg transition-colors ${n <= rating ? "bg-matchup text-white" : "bg-zinc-800 text-zinc-500"}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-full text-lg transition-colors ${n <= rating ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-400"}`}
               >
                 ★
               </button>
@@ -171,7 +171,7 @@ export default function GameReview({ gameId }: { gameId: string }) {
         <ReviewField label={t("games.reviewWorkOn")} placeholder={t("games.reviewWorkOnPlaceholder")} value={workOn} onChange={setWorkOn} accent="border-l-sky-400" />
       </div>
 
-      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           disabled={!valid || saving}
@@ -200,13 +200,13 @@ function ReviewField({
 }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-zinc-300">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-neutral-700">{label}</p>
       <textarea
         rows={2}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-xl border-l-2 bg-zinc-800 px-4 py-3 text-sm outline-none ${accent}`}
+        className={`w-full rounded-xl border-l-2 bg-neutral-100 px-4 py-3 text-sm outline-none ${accent}`}
       />
     </div>
   );

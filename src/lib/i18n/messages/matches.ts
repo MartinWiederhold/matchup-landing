@@ -4,6 +4,7 @@ export const matches = {
     tabMatches: "Matches",
     tabGroups: "Gruppen",
     tabFeed: "Feed",
+    searchPlaceholder: "Chats durchsuchen…",
     // MatchesList
     emptyTitle: "Noch keine Matches",
     emptyMessage: "Like Spieler im Discover-Tab!",
@@ -43,6 +44,7 @@ export const matches = {
     tabMatches: "Matches",
     tabGroups: "Groups",
     tabFeed: "Feed",
+    searchPlaceholder: "Search chats…",
     // MatchesList
     emptyTitle: "No matches yet",
     emptyMessage: "Like players in the Discover tab!",

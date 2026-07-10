@@ -41,15 +41,15 @@ export default function GameRequests({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("games.requestsTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("games.requestsTitle")} />
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <FullLoading />
         ) : requests.length === 0 ? (
           <EmptyState icon={<InboxIcon size={44} />} title={t("games.requestsEmptyTitle")} message={t("games.requestsEmptyMessage")} />
         ) : (
-          <ul className="divide-y divide-zinc-800">
+          <ul className="divide-y divide-black/[0.06]">
             {requests.map((r) => (
               <li key={r.id} className="flex items-center gap-3 p-4">
                 <Avatar
@@ -59,7 +59,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                 />
                 <div className="flex-1">
                   <p className="font-semibold">{r.profile?.first_name}</p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-neutral-500">
                     {r.profile && skillLabel(r.profile.skill_level)}
                   </p>
                 </div>
@@ -74,7 +74,7 @@ export default function GameRequests({ gameId }: { gameId: string }) {
                 <button
                   type="button"
                   onClick={() => respond(r.id, "declined")}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100"
                   aria-label={t("games.decline")}
                 >
                   <XIcon size={18} />
