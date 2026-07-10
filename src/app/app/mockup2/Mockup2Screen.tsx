@@ -276,7 +276,7 @@ export default function Mockup2Screen() {
                       <p className="truncate font-semibold text-neutral-900">{g.name}</p>
                       <p className="text-xs text-neutral-500">{g.sport} · {g.members} Mitglieder</p>
                     </div>
-                    <button type="button" className="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold text-white" style={{ background: g.color }}>Beitreten</button>
+                    <button type="button" className="shrink-0 rounded-full bg-matchup px-3.5 py-1.5 text-xs font-bold text-white">Beitreten</button>
                   </div>
                 ))}
                 <button type="button" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-black/15 py-3.5 text-sm font-semibold text-matchup">
