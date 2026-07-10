@@ -154,6 +154,16 @@ export default function Mockup2Screen() {
   const [pBio, setPBio] = useState("Spiele seit 10 Jahren Tennis, neu auch Padel. Suche regelmässige Partner in Zürich für Feierabend-Matches. 🎾");
   const [pSports, setPSports] = useState<string[]>(["Tennis", "Padel"]);
   const [pSkill, setPSkill] = useState("Fortgeschritten");
+  const [pPhotos, setPPhotos] = useState<string[]>([ME.img, ...PROFILE_PHOTOS]);
+  const [pClub, setPClub] = useState("TC Seefeld");
+  const [pHeight, setPHeight] = useState("183");
+  const [pRating, setPRating] = useState("");
+  const [pGoals, setPGoals] = useState<string[]>(["Regelmässig spielen", "Neue Leute"]);
+  const photoSeed = useRef(100);
+  function addPhoto() { setPPhotos((p) => [...p, `https://picsum.photos/seed/mu${photoSeed.current++}/300/300`]); }
+  function removePhoto(i: number) { setPPhotos((p) => p.filter((_, idx) => idx !== i)); }
+  function makeMain(i: number) { setPPhotos((p) => { const c = [...p]; const [x] = c.splice(i, 1); return [x, ...c]; }); }
+  function toggleGoal(g: string) { setPGoals((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g])); }
   const [notif, setNotif] = useState({ matches: true, messages: true, community: false, reminders: true });
   const [lang, setLang] = useState<"de" | "en">("de");
   function toggleSport(s: string) {
@@ -302,7 +312,7 @@ export default function Mockup2Screen() {
               <button type="button" onClick={() => setProfileScreen("settings")} aria-label="Einstellungen" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.05] text-neutral-700"><Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" size={17} /></button>
             </div>
             <div className="flex flex-col items-center pt-1 text-center">
-              <img src={ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
+              <img src={pPhotos[0] ?? ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
               <h1 className="mt-3 text-2xl font-extrabold text-neutral-900">{pName}, 29</h1>
               <p className="flex items-center gap-1 text-sm text-neutral-500"><Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={14} /> {pCity}</p>
               <button type="button" className="mt-3 inline-flex items-center gap-2 rounded-full bg-matchup px-4 py-1.5 text-white shadow-sm">
@@ -389,7 +399,7 @@ export default function Mockup2Screen() {
             <section className="mt-6">
               <p className="mb-2.5 px-0.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Fotos</p>
               <div className="grid grid-cols-4 gap-2">
-                {PROFILE_PHOTOS.map((src, i) => (
+                {pPhotos.map((src, i) => (
                   <div key={i} className="aspect-square overflow-hidden rounded-xl bg-black/[0.05]">
                     <img src={src} alt="" className="h-full w-full object-cover" />
                   </div>
@@ -838,11 +848,21 @@ export default function Mockup2Screen() {
               <button type="button" onClick={() => setProfileScreen(null)} className="text-sm font-bold text-matchup">Speichern</button>
             </header>
             <div className="flex-1 space-y-5 overflow-y-auto p-5 pb-10">
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  <img src={ME.img} alt="" className="h-24 w-24 rounded-full object-cover" />
-                  <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-matchup text-white ring-2 ring-white"><Icon path="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" size={15} /></span>
+              {/* Fotos-Galerie */}
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Fotos</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {pPhotos.map((src, i) => (
+                    <div key={i} className="relative aspect-square overflow-hidden rounded-xl bg-black/[0.05]">
+                      <img src={src} alt="" className="h-full w-full object-cover" />
+                      {i === 0 && <span className="absolute left-1 top-1 rounded-full bg-matchup px-1.5 py-0.5 text-[9px] font-bold text-white">Haupt</span>}
+                      <button type="button" onClick={() => removePhoto(i)} className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white"><Icon path="M18 6 6 18M6 6l12 12" size={12} /></button>
+                      {i !== 0 && <button type="button" onClick={() => makeMain(i)} className="absolute bottom-1 left-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-700">Als Haupt</button>}
+                    </div>
+                  ))}
+                  <button type="button" onClick={addPhoto} className="flex aspect-square items-center justify-center rounded-xl border-2 border-dashed border-black/15 text-neutral-400"><Icon path="M12 5v14M5 12h14" size={24} /></button>
                 </div>
+                <p className="mt-1.5 text-[11px] text-neutral-400">Das erste Bild ist dein Hauptfoto.</p>
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Name</label>
@@ -870,6 +890,28 @@ export default function Mockup2Screen() {
                   {["Anfänger", "Mittel", "Fortgeschritten", "Profi"].map((s) => (
                     <button key={s} type="button" onClick={() => setPSkill(s)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${pSkill === s ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}>{s}</button>
                   ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Ziele</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Regelmässig spielen", "Turniere", "Fitness", "Neue Leute", "Verbessern"].map((g) => (
+                    <button key={g} type="button" onClick={() => toggleGoal(g)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${pGoals.includes(g) ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-600"}`}>{g}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Club</label>
+                <input value={pClub} onChange={(e) => setPClub(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none" />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Größe (cm)</label>
+                  <input value={pHeight} onChange={(e) => setPHeight(e.target.value)} inputMode="numeric" className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none" />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">Offizielles Rating</label>
+                  <input value={pRating} onChange={(e) => setPRating(e.target.value)} placeholder="z. B. R4 / NTRP 4.0" className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400" />
                 </div>
               </div>
             </div>
