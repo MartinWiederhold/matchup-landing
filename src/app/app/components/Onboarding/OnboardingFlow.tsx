@@ -27,6 +27,7 @@ import {
   ActivityIcon,
   CalendarIcon,
 } from "../shared/icons";
+import AvatarCropper from "../shared/AvatarCropper";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -124,6 +125,8 @@ export default function OnboardingFlow() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Foto, das gerade im Kreis-Cropper justiert wird (vor ADD_PHOTO).
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   // Fortschritt bei jeder Änderung sichern (ohne File-Objekte).
   useEffect(() => {
@@ -909,7 +912,8 @@ export default function OnboardingFlow() {
                           className="hidden"
                           onChange={(e) => {
                             const f = e.target.files?.[0];
-                            if (f) dispatch({ type: "ADD_PHOTO", payload: f });
+                            e.target.value = "";
+                            if (f) setCropFile(f);
                           }}
                         />
                       </label>
@@ -1036,6 +1040,18 @@ export default function OnboardingFlow() {
             </div>
           </div>
         </div>
+      )}
+
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onConfirm={(blob) => {
+            const f = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+            dispatch({ type: "ADD_PHOTO", payload: f });
+            setCropFile(null);
+          }}
+        />
       )}
     </div>
   );

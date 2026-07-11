@@ -4,12 +4,12 @@ import { useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
-import { compressImage } from "@/lib/utils/imageCompress";
 import { skillLabel, sportLabel } from "@/lib/utils/formatters";
 import type { Sport, SkillLevel } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 import ClubPicker from "../shared/ClubPicker";
+import AvatarCropper from "../shared/AvatarCropper";
 
 const MAX_PHOTOS = 4;
 
@@ -27,6 +27,7 @@ export default function EditProfile() {
     ),
   );
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const pickIdx = useRef<number | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [bio, setBio] = useState(profile.bio ?? "");
@@ -52,18 +53,24 @@ export default function EditProfile() {
     fileInput.current?.click();
   }
 
-  async function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // erlaubt erneutes Wählen derselben Datei
+    if (!file || pickIdx.current === null) return;
+    // Erst im Kreis-Cropper justieren, dann hochladen.
+    setCropFile(file);
+  }
+
+  async function uploadCropped(blob: Blob) {
     const idx = pickIdx.current;
-    if (!file || idx === null) return;
+    setCropFile(null);
+    if (idx === null) return;
     setUploadingIdx(idx);
     try {
-      const compressed = await compressImage(file);
       const path = `${profile.id}/avatar_${Date.now()}_${idx}.jpg`;
       const { error } = await supabase.storage
         .from("web-avatars")
-        .upload(path, compressed, { contentType: "image/jpeg" });
+        .upload(path, blob, { contentType: "image/jpeg" });
       if (error) throw error;
       const {
         data: { publicUrl },
@@ -126,6 +133,9 @@ export default function EditProfile() {
         onChange={onFilePicked}
         className="hidden"
       />
+      {cropFile && (
+        <AvatarCropper file={cropFile} onCancel={() => setCropFile(null)} onConfirm={uploadCropped} />
+      )}
       <div className="flex-1 space-y-6 overflow-y-auto p-5">
         <Field label={t("profile.photos")}>
           <div className="grid grid-cols-3 gap-3">
