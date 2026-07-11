@@ -79,6 +79,7 @@ export default function ExpensesView() {
   const { profile } = useAppNav();
   const [rows, setRows] = useState<Expense[]>([]);
   const [plan, setPlan] = useState<Tourn[]>([]);
+  const [prizes, setPrizes] = useState<Record<string, { amount: string; currency: string }>>({});
   const [draft, setDraft] = useState<Draft | null>(null);
   const [scanning, setScanning] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -99,6 +100,20 @@ export default function ExpensesView() {
       const { data: ts } = await supabase.from("tournaments").select("id,name").in("id", ids);
       setPlan((ts as Tourn[]) ?? []);
     }
+    const { data: pz } = await supabase.from("tour_prize").select("tournament_id,amount,currency").eq("user_id", profile.id);
+    const pmap: Record<string, { amount: string; currency: string }> = {};
+    for (const p of (pz as { tournament_id: string; amount: number | null; currency: string | null }[]) ?? []) {
+      pmap[p.tournament_id] = { amount: p.amount != null ? String(p.amount) : "", currency: p.currency ?? "EUR" };
+    }
+    setPrizes(pmap);
+  }
+
+  async function savePrize(tid: string, amount: string, currency: string) {
+    const val = amount.trim() === "" ? null : Number(amount.replace(",", "."));
+    await supabase.from("tour_prize").upsert(
+      { user_id: profile.id, tournament_id: tid, amount: val, currency: currency.toUpperCase().slice(0, 3), updated_at: new Date().toISOString() },
+      { onConflict: "user_id,tournament_id" },
+    );
   }
   useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -168,6 +183,30 @@ export default function ExpensesView() {
     URL.revokeObjectURL(url);
   }
 
+  // DATEV-tauglicher Export: Buchungsstapel-CSV mit Standard-Sachkonten (SKR03,
+  // Vorschlag — mit Steuerberater abstimmen). Belegdatum DD.MM.JJJJ, Betrag mit Komma.
+  const DATEV_ACCT: Record<string, string> = {
+    hotel: "4670", flight: "4670", travel: "4670", taxi: "4673", food: "4674",
+    coach: "4900", physio: "4900", stringing: "4980", entry_fee: "4900", other: "4900",
+  };
+  function exportDatev() {
+    const head = ["Belegdatum", "Betrag", "WKZ", "Konto", "Gegenkonto", "Buchungstext"];
+    const lines = rows.map((r) => {
+      const d = r.spent_on ? r.spent_on.split("-").reverse().join(".") : "";
+      const amt = r.amount != null ? String(r.amount).replace(".", ",") : "";
+      const text = `${catLabel(r.category ?? "other")}: ${(r.merchant ?? "").replace(/;/g, ",")}`;
+      return [d, amt, r.currency ?? "EUR", DATEV_ACCT[r.category ?? "other"] ?? "4900", "1200", text].join(";");
+    });
+    const csv = [head.join(";"), ...lines].join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `matchup-datev-${todayISO()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   // Summen je Währung
   const totals = new Map<string, number>();
   for (const r of rows) {
@@ -184,7 +223,10 @@ export default function ExpensesView() {
         title={t("mode.financeTitle")}
         rightActions={
           rows.length > 0 ? (
-            <button type="button" onClick={exportCsv} className="text-[13px] font-bold text-matchup">CSV</button>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={exportCsv} className="text-[13px] font-bold text-matchup">CSV</button>
+              <button type="button" onClick={exportDatev} className="text-[13px] font-bold text-matchup">DATEV</button>
+            </div>
           ) : undefined
         }
       />
@@ -201,6 +243,68 @@ export default function ExpensesView() {
                   {v.toLocaleString(locale, { maximumFractionDigits: 0 })} {c}
                 </span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pro Turnier: Preisgeld vs. Kosten */}
+        {plan.length > 0 && (
+          <div>
+            <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("mode.perTournament")}</p>
+            <div className="space-y-2">
+              {plan.map((p) => {
+                const cost = new Map<string, number>();
+                for (const r of rows) {
+                  if (r.tournament_id !== p.id || r.amount == null) continue;
+                  const c = r.currency ?? "?";
+                  cost.set(c, (cost.get(c) ?? 0) + Number(r.amount));
+                }
+                const pr = prizes[p.id] ?? { amount: "", currency: "EUR" };
+                return (
+                  <div key={p.id} className="rounded-2xl bg-black/[0.035] p-3.5">
+                    <p className="truncate text-[13.5px] font-bold text-neutral-900">{p.name}</p>
+                    <div className="mt-2 flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.prizeMoney")}</label>
+                        <div className="mt-1 flex gap-1.5">
+                          <input
+                            value={pr.amount}
+                            onChange={(e) => setPrizes({ ...prizes, [p.id]: { ...pr, amount: e.target.value } })}
+                            onBlur={() => savePrize(p.id, pr.amount, pr.currency)}
+                            inputMode="decimal"
+                            placeholder="0"
+                            className="w-full rounded-lg bg-white px-2.5 py-2 text-[13px] outline-none ring-1 ring-black/[0.06]"
+                          />
+                          <input
+                            value={pr.currency}
+                            onChange={(e) => setPrizes({ ...prizes, [p.id]: { ...pr, currency: e.target.value } })}
+                            onBlur={() => savePrize(p.id, pr.amount, pr.currency)}
+                            className="w-16 rounded-lg bg-white px-2 py-2 text-center text-[13px] uppercase outline-none ring-1 ring-black/[0.06]"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.financeExpenses")}</p>
+                        <p className="mt-1 py-2 text-[14px] font-bold text-neutral-900">
+                          {cost.size ? [...cost.entries()].map(([c, v]) => `${v.toLocaleString(locale, { maximumFractionDigits: 0 })} ${c}`).join(" · ") : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    {(() => {
+                      const cur = pr.currency.toUpperCase().slice(0, 3);
+                      const costSame = cost.get(cur) ?? 0;
+                      const prizeNum = Number((pr.amount || "0").replace(",", ".")) || 0;
+                      if (!prizeNum && !costSame) return null;
+                      const net = prizeNum - costSame;
+                      return (
+                        <p className={`mt-1.5 text-right text-[12px] font-bold ${net >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          {t("mode.net")}: {net.toLocaleString(locale, { maximumFractionDigits: 0 })} {cur}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

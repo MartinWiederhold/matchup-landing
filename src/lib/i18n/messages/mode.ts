@@ -54,6 +54,8 @@ export const mode = {
     briefingEmpty: "Plane dein erstes Turnier, dann füllt sich dein Tour-Dashboard.",
     // Belege / Ausgaben
     expensesTotal: "Ausgaben gesamt",
+    perTournament: "Preisgeld vs. Kosten pro Turnier",
+    net: "Netto",
     scanning: "Scanne …",
     scanNotConfigured: "KI-Scan noch nicht aktiviert — bitte manuell erfassen.",
     scanFailed: "Beleg konnte nicht gelesen werden — bitte manuell erfassen.",
@@ -143,6 +145,8 @@ export const mode = {
     financeSoon: "Prize money & expenses per tournament — coming soon.",
     briefingEmpty: "Plan your first tournament and your Tour dashboard fills up.",
     expensesTotal: "Total expenses",
+    perTournament: "Prize money vs. costs per tournament",
+    net: "Net",
     scanning: "Scanning …",
     scanNotConfigured: "AI scan not enabled yet — please enter manually.",
     scanFailed: "Couldn't read the receipt — please enter manually.",
