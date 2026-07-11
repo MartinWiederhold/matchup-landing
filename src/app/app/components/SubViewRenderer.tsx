@@ -15,6 +15,7 @@ import GameResult from "./subviews/GameResult";
 import Leaderboard from "./subviews/Leaderboard";
 import BrowsePeople from "./subviews/BrowsePeople";
 import ExpensesView from "./subviews/ExpensesView";
+import ScheduleView from "./subviews/ScheduleView";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -76,6 +77,8 @@ export default function SubViewRenderer({
       return <BlockedUsers />;
     case "tour-expenses":
       return <ExpensesView />;
+    case "tour-schedule":
+      return <ScheduleView addKind={subView.addKind} />;
     default:
       return null;
   }

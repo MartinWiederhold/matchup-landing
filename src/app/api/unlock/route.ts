@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const GATE_CODE = process.env.SITE_GATE_CODE || "5080";
+const GATE_CODE = process.env.SITE_GATE_CODE || "50805080";
 const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
 
 export async function POST(request: Request) {

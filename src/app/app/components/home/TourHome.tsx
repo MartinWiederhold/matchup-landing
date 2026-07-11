@@ -34,6 +34,7 @@ export default function TourHome() {
   const [tournaments, setTournaments] = useState<Tourn[]>([]);
   const [inPlan, setInPlan] = useState(false);
   const [expTotals, setExpTotals] = useState<[string, number][]>([]);
+  const [todayEv, setTodayEv] = useState<{ id: string; kind: string; title: string; event_time: string | null }[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -46,7 +47,14 @@ export default function TourHome() {
         ? await q.in("id", planIds).order("start_date")
         : await q.gte("end_date", today).order("start_date").limit(3);
       const { data: exp } = await supabase.from("tour_expenses").select("amount,currency").eq("user_id", profile.id);
+      const { data: ev } = await supabase
+        .from("tour_events")
+        .select("id,kind,title,event_time")
+        .eq("user_id", profile.id)
+        .eq("event_date", today)
+        .order("event_time", { nullsFirst: true });
       if (!alive) return;
+      setTodayEv((ev as { id: string; kind: string; title: string; event_time: string | null }[]) ?? []);
       setTour(tp);
       setInPlan(planIds.length > 0);
       setTournaments(((data as Tourn[]) ?? []).filter((tr) => tr.end_date >= today));
@@ -151,18 +159,45 @@ export default function TourHome() {
         </>
       )}
 
+      {/* Heute (Termine) */}
+      {todayEv.length > 0 && (
+        <>
+          <div className="mt-6 mb-2.5 flex items-center justify-between px-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("mode.todaySchedule")}</span>
+            <button type="button" onClick={() => openSubView({ type: "tour-schedule" })} className="text-[11px] font-bold uppercase tracking-wider text-matchup">{t("mode.openSchedule")}</button>
+          </div>
+          <div className="rounded-2xl bg-black/[0.035] p-2">
+            {todayEv.map((e, i) => {
+              const dot: Record<string, string> = { training: "bg-emerald-500", match: "bg-red-500", physio: "bg-matchup", travel: "bg-blue-500", gym: "bg-amber-500", other: "bg-neutral-400" };
+              return (
+                <div key={e.id} className={`flex items-center gap-3 px-2.5 py-2.5 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
+                  <span className="w-11 shrink-0 text-[12px] font-bold text-neutral-500">{e.event_time ? e.event_time.slice(0, 5) : "—"}</span>
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${dot[e.kind] ?? dot.other}`} />
+                  <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-neutral-900">{e.title}</span>
+                  <span className="shrink-0 text-[11px] text-neutral-400">{t(`mode.ekind_${e.kind}`)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
       {/* Schnellaktionen */}
       <SecLabel>{t("mode.quickActions")}</SecLabel>
       <div className="grid grid-cols-3 gap-3">
         {[
           { l: t("mode.scanReceipt"), p: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16", active: true },
-          { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3", active: false },
+          { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3", active: true, to: "schedule" as const },
           { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", active: false },
         ].map((a) => (
           <button
             key={a.l}
             type="button"
-            onClick={() => { if (a.active) openSubView({ type: "tour-expenses" }); }}
+            onClick={() => {
+              if (!a.active) return;
+              if ("to" in a && a.to === "schedule") openSubView({ type: "tour-schedule", addKind: "training" });
+              else openSubView({ type: "tour-expenses" });
+            }}
             className="relative flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] px-2 py-4 text-center"
           >
             <svg viewBox="0 0 24 24" className="h-6 w-6 text-matchup" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={a.p} /></svg>

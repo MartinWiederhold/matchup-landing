@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
-import { compressImage } from "@/lib/utils/imageCompress";
 import { loadTourPlan } from "@/lib/tour";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
@@ -30,13 +29,48 @@ function todayISO() {
 }
 const emptyDraft = (): Draft => ({ merchant: "", amount: "", currency: "EUR", category: "other", spent_on: todayISO(), tournament_id: "" });
 
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
-    r.onerror = reject;
-    r.readAsDataURL(blob);
-  });
+/** Zahl aus Beleg-String (unterstützt 1.234,56 / 12,50 / 12.50). */
+function toNumber(s: string): number {
+  const clean = s.replace(/\s/g, "");
+  const dec = Math.max(clean.lastIndexOf(","), clean.lastIndexOf("."));
+  if (dec < 0) return parseFloat(clean);
+  const intPart = clean.slice(0, dec).replace(/[.,]/g, "");
+  return parseFloat(`${intPart}.${clean.slice(dec + 1)}`);
+}
+
+/** Heuristische Beleg-Erkennung aus OCR-Text (kostenlos, im Browser). */
+function parseReceipt(text: string): { merchant: string; amount: string; currency: string; date: string | null } {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  let currency = "EUR";
+  if (/chf|sfr|fr\./i.test(text)) currency = "CHF";
+  else if (/\$|usd/i.test(text)) currency = "USD";
+  else if (/£|gbp/i.test(text)) currency = "GBP";
+  else if (/€|eur/i.test(text)) currency = "EUR";
+
+  const amtRe = /\d{1,3}(?:[.\s]\d{3})*[.,]\d{2}/g;
+  const all: number[] = [];
+  let totalVal: number | null = null;
+  for (const l of lines) {
+    const ms = l.match(amtRe);
+    if (!ms) continue;
+    const vals = ms.map(toNumber).filter((v) => !isNaN(v));
+    all.push(...vals);
+    if (/total|summe|betrag|gesamt|amount|zu zahlen|balance|to pay/i.test(l) && vals.length) {
+      totalVal = Math.max(...vals, totalVal ?? 0);
+    }
+  }
+  const amount = totalVal ?? (all.length ? Math.max(...all) : null);
+
+  let date: string | null = null;
+  const dm = text.match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/);
+  if (dm) {
+    let [, d, m, y] = dm;
+    if (y.length === 2) y = "20" + y;
+    const iso = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    if (!isNaN(Date.parse(iso))) date = iso;
+  }
+  const merchant = lines.find((l) => (l.match(/[A-Za-zÀ-ÿ]/g)?.length ?? 0) >= 3) ?? "";
+  return { merchant, amount: amount != null ? String(Math.round(amount * 100) / 100) : "", currency, date };
 }
 
 export default function ExpensesView() {
@@ -75,26 +109,12 @@ export default function ExpensesView() {
     setScanning(true);
     setMsg(null);
     try {
-      const blob = await compressImage(file);
-      const b64 = await blobToBase64(blob);
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      const res = await fetch("/api/tour/scan-receipt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ image: b64, media_type: "image/jpeg" }),
-      });
-      if (res.status === 503) { setMsg(t("mode.scanNotConfigured")); setDraft(emptyDraft()); return; }
-      if (!res.ok) { setMsg(t("mode.scanFailed")); setDraft(emptyDraft()); return; }
-      const d = await res.json();
-      setDraft({
-        merchant: d.merchant ?? "",
-        amount: d.amount != null ? String(d.amount) : "",
-        currency: d.currency ?? "EUR",
-        category: (CATS as readonly string[]).includes(d.category) ? d.category : "other",
-        spent_on: d.date ?? todayISO(),
-        tournament_id: "",
-      });
+      // Kostenloser Scan direkt im Browser (Tesseract.js) — keine API, keine Kosten.
+      const Tesseract = (await import("tesseract.js")).default;
+      const { data } = await Tesseract.recognize(file, "eng");
+      const p = parseReceipt(data.text || "");
+      setDraft({ merchant: p.merchant, amount: p.amount, currency: p.currency, category: "other", spent_on: p.date ?? todayISO(), tournament_id: "" });
+      if (!p.amount) setMsg(t("mode.scanHint"));
     } catch {
       setMsg(t("mode.scanFailed"));
       setDraft(emptyDraft());

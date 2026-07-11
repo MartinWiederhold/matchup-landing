@@ -28,7 +28,8 @@ export type SubViewState =
   | { type: "ticket-chat"; ticketId: string }
   | { type: "create-ticket" }
   | { type: "blocked-users" }
-  | { type: "tour-expenses" };
+  | { type: "tour-expenses" }
+  | { type: "tour-schedule"; addKind?: string };
 
 interface AppNavContextType {
   profile: Profile;
