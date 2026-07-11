@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useT, useLocale } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
@@ -117,6 +117,13 @@ export function SportGroups({
   const t = useT();
   const { locale } = useLocale();
   const [active, setActive] = useState(0);
+  const touchX = useRef(0);
+  const swiped = useRef(false);
+  function onTouchStart(e: React.TouchEvent) { touchX.current = e.touches[0].clientX; swiped.current = false; }
+  function onTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (Math.abs(dx) > 40) { swiped.current = true; setActive((a) => (dx < 0 ? Math.min(a + 1, SPORT_GROUPS.length - 1) : Math.max(a - 1, 0))); }
+  }
 
   const CHALLENGE_GOAL = 3;
   const pct = Math.min(100, Math.round((weekMatches / CHALLENGE_GOAL) * 100));
@@ -128,11 +135,11 @@ export function SportGroups({
   return (
     <section className="mt-6 px-4">
       <div className="grid grid-cols-2 gap-4">
-        {/* Links: manuell wechselbare Sport-Karte (Padel-Champs-Stil), Punkte IN der Karte */}
-        <div className="row-span-2 flex flex-col overflow-hidden rounded-[24px] bg-black/[0.035] p-5">
+        {/* Links: wisch- & tippbare Sport-Karte (Padel-Champs-Stil), Punkte IN der Karte */}
+        <div className="row-span-2 flex flex-col overflow-hidden rounded-[24px] bg-black/[0.035] p-5" style={{ touchAction: "pan-y" }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           <button
             type="button"
-            onClick={() => onSelect(s.key)}
+            onClick={() => { if (swiped.current) { swiped.current = false; return; } onSelect(s.key); }}
             className="flex flex-1 flex-col justify-between text-left"
           >
             <div className="flex items-start justify-between">
@@ -219,7 +226,7 @@ export function SportGroups({
                   type="button"
                   aria-label={t("discover.createGameSport", { sport: sportLabel(g.key) })}
                   onClick={() => onCreateGame?.(g.key)}
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.06] text-neutral-600 ring-2 ring-white"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-neutral-900 ring-2 ring-white"
                 >
                   <SportIcon sport={g.key} size={18} />
                 </button>
@@ -471,6 +478,8 @@ export function NewsSection() {
   const [sport, setSport] = useState<Sport | "all">("all");
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
+  const touchX = useRef(0);
+  const swiped = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -508,8 +517,13 @@ export function NewsSection() {
     .slice(0, 8);
   const i = Math.min(index, slides.length - 1);
   const cur = slides[i];
-  const openLink = () => window.open(cur.link, "_blank", "noopener,noreferrer");
+  const openLink = () => { if (swiped.current) { swiped.current = false; return; } window.open(cur.link, "_blank", "noopener,noreferrer"); };
   const go = (n: number) => { setIndex(n); setOpen(false); };
+  const onTouchStart = (e: React.TouchEvent) => { touchX.current = e.touches[0].clientX; swiped.current = false; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (Math.abs(dx) > 40) { swiped.current = true; go(dx < 0 ? Math.min(i + 1, slides.length - 1) : Math.max(i - 1, 0)); }
+  };
 
   return (
     <section className="mt-6 px-4">
@@ -529,8 +543,8 @@ export function NewsSection() {
         ))}
       </div>
 
-      {/* Karte im Wimbledon-Stil, aufklappbar */}
-      <div className="overflow-hidden rounded-[24px] bg-white shadow-lg ring-1 ring-black/10">
+      {/* Karte im Wimbledon-Stil, aufklappbar & wischbar */}
+      <div className="overflow-hidden rounded-[24px] bg-white shadow-lg ring-1 ring-black/10" style={{ touchAction: "pan-y" }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         {cur.image_url && (
           <button type="button" onClick={openLink} className="block w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -551,7 +565,7 @@ export function NewsSection() {
             </button>
             <button
               type="button"
-              onClick={() => setOpen((o) => !o)}
+              onClick={() => { if (swiped.current) { swiped.current = false; return; } setOpen((o) => !o); }}
               aria-label={t("discover.newsMore")}
               className="shrink-0 text-neutral-500"
             >
