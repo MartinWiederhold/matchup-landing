@@ -46,6 +46,20 @@ export async function setMode(userId: string, mode: "play" | "tour"): Promise<vo
   await supabase.from("profiles").update({ mode }).eq("id", userId);
 }
 
+/* ── Kalender-Feed (iCal-Abo) ─────────────────────────────── */
+export async function ensureCalendarToken(userId: string): Promise<string> {
+  const { data } = await supabase.from("tour_calendar").select("token").eq("user_id", userId).maybeSingle();
+  const existing = data?.token as string | undefined;
+  if (existing) return existing;
+  const token = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}${Math.round(Math.random() * 1e9)}`).replace(/-/g, "");
+  await supabase.from("tour_calendar").upsert({ user_id: userId, token }, { onConflict: "user_id" });
+  return token;
+}
+export function calendarFeedUrl(token: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://matchup-app.com";
+  return `${origin}/api/tour/calendar/${token}.ics`;
+}
+
 /* ── Team-Einladungen ─────────────────────────────────────── */
 export type TeamInvite = { id: string; role: string; member_name: string | null; status: string; invite_token: string };
 

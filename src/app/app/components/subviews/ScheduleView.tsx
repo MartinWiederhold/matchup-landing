@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
-import { loadTourPlan } from "@/lib/tour";
+import { loadTourPlan, ensureCalendarToken, calendarFeedUrl } from "@/lib/tour";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -31,8 +31,24 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
     addKind && (KINDS as readonly string[]).includes(addKind) ? emptyDraft(addKind as Kind) : null,
   );
   const [saving, setSaving] = useState(false);
+  const [feed, setFeed] = useState<string | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const kindLabel = (k: string) => t(`mode.ekind_${k}`);
+
+  async function openSync() {
+    const token = await ensureCalendarToken(profile.id);
+    setFeed(calendarFeedUrl(token));
+    setSyncOpen(true);
+    setCopied(false);
+  }
+  async function copyFeed() {
+    if (!feed) return;
+    try { await navigator.clipboard.writeText(feed); } catch { /* ignore */ }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }
 
   async function load() {
     const { data } = await supabase
@@ -89,7 +105,10 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
         light
         title={t("mode.scheduleTitle")}
         rightActions={
-          <button type="button" onClick={() => setDraft(emptyDraft())} className="text-[13px] font-bold text-matchup">+ {t("mode.addEvent")}</button>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={openSync} className="text-[13px] font-bold text-matchup">{t("mode.sync")}</button>
+            <button type="button" onClick={() => setDraft(emptyDraft())} className="text-[13px] font-bold text-matchup">+ {t("mode.addEvent")}</button>
+          </div>
         }
       />
 
@@ -122,6 +141,31 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
           ))
         )}
       </div>
+
+      {syncOpen && feed && (
+        <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] items-end bg-black/40 backdrop-blur-sm" onClick={() => setSyncOpen(false)}>
+          <div className="w-full rounded-t-[28px] bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-base font-bold text-neutral-900">{t("mode.syncTitle")}</span>
+              <button type="button" onClick={() => setSyncOpen(false)} className="text-sm font-medium text-neutral-500">{t("common.close")}</button>
+            </div>
+            <p className="mb-4 text-[13px] leading-relaxed text-neutral-500">{t("mode.syncBody")}</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <a href={feed.replace(/^https?:/, "webcal:")} className="flex items-center justify-center gap-2 rounded-xl bg-black py-3 text-[13px] font-bold text-white">
+                 Apple
+              </a>
+              <a href={`https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(feed)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-xl bg-black/[0.05] py-3 text-[13px] font-bold text-neutral-800">
+                Google
+              </a>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/[0.04] p-2">
+              <span className="min-w-0 flex-1 truncate px-2 text-[12px] text-neutral-500">{feed}</span>
+              <button type="button" onClick={copyFeed} className="shrink-0 rounded-lg bg-matchup px-3 py-2 text-[12px] font-bold text-white">{copied ? t("mode.copied") : t("mode.copyLink")}</button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("mode.syncHint")}</p>
+          </div>
+        </div>
+      )}
 
       {draft && (
         <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] items-end bg-black/40 backdrop-blur-sm" onClick={() => setDraft(null)}>
