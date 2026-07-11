@@ -8,6 +8,7 @@ import { useAppNav } from "../appNav";
 import { loadTourProfile, loadTourPlan } from "@/lib/tour";
 import { planAlerts, kindShort, type Urgency } from "@/lib/deadlines";
 import { schengenProjection } from "@/lib/schengen";
+import { flagEmoji } from "@/lib/flags";
 import type { TourProfile } from "@/lib/types";
 
 const MS_DAY = 86_400_000;
@@ -34,6 +35,7 @@ export default function TourHome() {
   const [tournaments, setTournaments] = useState<Tourn[]>([]);
   const [inPlan, setInPlan] = useState(false);
   const [expTotals, setExpTotals] = useState<[string, number][]>([]);
+  const [season, setSeason] = useState({ prize: 0, cost: 0, cur: "EUR" });
   const [todayEv, setTodayEv] = useState<{ id: string; kind: string; title: string; event_time: string | null }[]>([]);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function TourHome() {
         ? await q.in("id", planIds).order("start_date")
         : await q.gte("end_date", today).order("start_date").limit(3);
       const { data: exp } = await supabase.from("tour_expenses").select("amount,currency").eq("user_id", profile.id);
+      const { data: prz } = await supabase.from("tour_prize").select("amount,currency").eq("user_id", profile.id);
       const { data: ev } = await supabase
         .from("tour_events")
         .select("id,kind,title,event_time")
@@ -65,6 +68,10 @@ export default function TourHome() {
         totals.set(c, (totals.get(c) ?? 0) + Number(r.amount));
       }
       setExpTotals([...totals.entries()]);
+      let pSum = 0, cSum = 0, cur = "";
+      for (const r of (prz as { amount: number | null; currency: string | null }[]) ?? []) { pSum += Number(r.amount) || 0; if (!cur && r.currency) cur = r.currency; }
+      for (const r of (exp as { amount: number | null; currency: string | null }[]) ?? []) { cSum += Number(r.amount) || 0; if (!cur && r.currency) cur = r.currency; }
+      setSeason({ prize: pSum, cost: cSum, cur: cur || "EUR" });
       setLoaded(true);
     })();
     return () => { alive = false; };
@@ -101,8 +108,48 @@ export default function TourHome() {
   const hasEsta = !!tour?.esta_status && tour.esta_status !== "None";
   const dateFmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const hour = new Date().getHours();
+  const greet = hour < 11 ? t("mode.greetMorning") : hour < 18 ? t("mode.greetDay") : t("mode.greetEvening");
+  const activeT = tournaments.find((tr) => tr.start_date <= todayStr && tr.end_date >= todayStr);
+  const loc = activeT ? `${activeT.city ?? activeT.name}${activeT.country ? `, ${activeT.country}` : ""}` : (tour?.tax_residence ?? "");
+  const money = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toLocaleString(locale, { maximumFractionDigits: 0 })} ${season.cur}`;
+  const seasonNet = season.prize - season.cost;
+
   return (
     <div className="px-4 pb-28">
+      {/* Begrüßung + Ort */}
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <p className="text-[14px] font-bold text-neutral-900">{greet}</p>
+          {loc && <p className="mt-0.5 flex items-center gap-1 text-[11px] text-neutral-500"><svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>{loc}</p>}
+        </div>
+      </div>
+
+      {/* Aktives Turnier / This week */}
+      {activeT && (
+        <div className="mt-3 flex items-center gap-2.5 rounded-2xl border-l-[3px] border-emerald-500 bg-black/[0.035] p-3.5">
+          <span className="text-[20px]">{flagEmoji(activeT.country)}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13.5px] font-bold text-neutral-900">{activeT.name}</p>
+            <p className="text-[11px] text-neutral-500">{activeT.tier} · {activeT.surface}</p>
+          </div>
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600">{t("mode.activeTournament")}</span>
+        </div>
+      )}
+
+      {/* Tour Planner Einstieg */}
+      <button type="button" onClick={() => openSubView({ type: "tour-planner" })} className="mt-3 flex w-full items-center gap-3 rounded-2xl bg-gradient-to-br from-matchup to-indigo-500 p-4 text-left text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15" /></svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-bold">{t("mode.plannerTitle")}</p>
+          <p className="text-[11.5px] text-white/85">{t("mode.plannerSub")}</p>
+        </div>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-white/70" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m9 6 6 6-6 6" /></svg>
+      </button>
+
       {/* Dringend: nächste Deadlines aus dem Saisonplan */}
       {alerts.length > 0 && (
         <>
@@ -157,6 +204,25 @@ export default function TourHome() {
               </div>
             </div>
           </button>
+        </>
+      )}
+
+      {/* Season 2026 */}
+      {(season.prize > 0 || season.cost > 0) && (
+        <>
+          <SecLabel>{t("mode.season", { year: new Date().getFullYear() })}</SecLabel>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { v: money(season.prize), l: t("mode.prizeMoney"), c: "text-neutral-900" },
+              { v: money(season.cost), l: t("mode.expenses"), c: "text-neutral-900" },
+              { v: money(seasonNet), l: t("mode.net"), c: seasonNet >= 0 ? "text-emerald-600" : "text-red-600" },
+            ].map((s, i) => (
+              <div key={i} className="rounded-2xl bg-black/[0.035] px-2 py-3.5 text-center">
+                <div className={`text-[15px] font-extrabold tracking-tight ${s.c}`}>{s.v}</div>
+                <div className="mt-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-neutral-400">{s.l}</div>
+              </div>
+            ))}
+          </div>
         </>
       )}
 
@@ -289,6 +355,7 @@ export default function TourHome() {
             const next = alerts.find((a) => a.tournament.id === tr.id);
             return (
               <a key={tr.id} href="/map" className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
+                <span className="text-[17px]">{flagEmoji(tr.country)}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
                   <p className="text-[11.5px] text-neutral-500">{tr.tier} · {tr.surface} · {fmt(tr.start_date)}–{fmt(tr.end_date)}</p>

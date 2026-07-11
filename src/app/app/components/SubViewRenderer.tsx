@@ -21,6 +21,7 @@ import TourPlayers from "./subviews/TourPlayers";
 import TourPlayerView from "./subviews/TourPlayerView";
 import TourDeadlines from "./subviews/TourDeadlines";
 import TourVisa from "./subviews/TourVisa";
+import TourPlanner from "./subviews/TourPlanner";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -94,6 +95,8 @@ export default function SubViewRenderer({
       return <TourDeadlines />;
     case "tour-visa":
       return <TourVisa />;
+    case "tour-planner":
+      return <TourPlanner />;
     default:
       return null;
   }
