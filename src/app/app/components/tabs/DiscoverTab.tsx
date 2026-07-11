@@ -348,6 +348,7 @@ export default function DiscoverTab() {
           people={candidates}
           weekMatches={weekGames}
           onFind={() => openSubView({ type: "people-browse" })}
+          onCreateGame={(sport) => openSubView({ type: "create-game", sport })}
           onSelect={(sport) => {
             const next = { ...filters, sports: [sport] };
             // Filter synchron persistieren, damit die Uebersicht ihn beim Mounten liest.

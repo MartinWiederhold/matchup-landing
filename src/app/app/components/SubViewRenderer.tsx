@@ -46,7 +46,7 @@ export default function SubViewRenderer({
     case "game-detail":
       return <GameDetail gameId={subView.gameId} />;
     case "create-game":
-      return <CreateGame invite={subView.invite} />;
+      return <CreateGame invite={subView.invite} sport={subView.sport} />;
     case "edit-game":
       return <CreateGame gameId={subView.gameId} />;
     case "game-review":

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { Profile } from "@/lib/types";
+import type { Profile, Sport } from "@/lib/types";
 
 export type TabKey = "discover" | "likes" | "matches" | "games" | "profile";
 
@@ -14,7 +14,7 @@ export type SubViewState =
   | { type: "group-chat"; groupId: string }
   | { type: "create-group" }
   | { type: "game-detail"; gameId: string }
-  | { type: "create-game"; invite?: string }
+  | { type: "create-game"; invite?: string; sport?: Sport }
   | { type: "edit-game"; gameId: string }
   | { type: "game-review"; gameId: string }
   | { type: "game-result"; gameId: string }

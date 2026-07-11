@@ -13,12 +13,12 @@ import { DateField, TimeField } from "../shared/DateTimePicker";
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 
-export default function CreateGame({ gameId, invite }: { gameId?: string; invite?: string }) {
+export default function CreateGame({ gameId, invite, sport: initialSport }: { gameId?: string; invite?: string; sport?: Sport }) {
   const t = useT();
   const { profile, closeSubView } = useAppNav();
   const isEdit = !!gameId;
   const [loading, setLoading] = useState(isEdit);
-  const [sport, setSport] = useState<Sport>("tennis");
+  const [sport, setSport] = useState<Sport>(initialSport ?? "tennis");
   const [gameType, setGameType] = useState<GameType>("singles");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");

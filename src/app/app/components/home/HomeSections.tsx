@@ -105,11 +105,13 @@ export function SportGroups({
   people,
   onSelect,
   onFind,
+  onCreateGame,
   weekMatches = 0,
 }: {
   people: Profile[];
   onSelect: (sport: Sport) => void;
   onFind?: () => void;
+  onCreateGame?: (sport?: Sport) => void;
   weekMatches?: number;
 }) {
   const t = useT();
@@ -208,28 +210,33 @@ export function SportGroups({
         </button>
 
         {/* Rechts unten: Sport-Icons + „+" (führt zur Übersicht) */}
-        <div className="flex items-center justify-between rounded-[24px] bg-black/[0.035] p-5">
-          <div className="flex -space-x-3">
-            {SPORT_GROUPS.map((g) => (
-              <button
-                key={g.key}
-                type="button"
-                aria-label={sportLabel(g.key)}
-                onClick={() => onSelect(g.key)}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.06] text-neutral-500 ring-2 ring-white"
-              >
-                <SportIcon sport={g.key} size={18} />
-              </button>
-            ))}
+        <div className="flex flex-col justify-center rounded-[24px] bg-black/[0.035] p-5">
+          <span className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">
+            {t("discover.quickGame")}
+          </span>
+          <div className="flex items-center justify-between">
+            <div className="flex -space-x-3">
+              {SPORT_GROUPS.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  aria-label={t("discover.createGameSport", { sport: sportLabel(g.key) })}
+                  onClick={() => onCreateGame?.(g.key)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.06] text-neutral-600 ring-2 ring-white"
+                >
+                  <SportIcon sport={g.key} size={18} />
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => onCreateGame?.()}
+              aria-label={t("discover.quickGame")}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white"
+            >
+              <PlusIcon size={20} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onFind}
-            aria-label={t("discover.find")}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white"
-          >
-            <PlusIcon size={20} />
-          </button>
         </div>
       </div>
     </section>
