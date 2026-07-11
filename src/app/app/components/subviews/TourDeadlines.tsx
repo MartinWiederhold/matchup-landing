@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { loadTourPlan } from "@/lib/tour";
-import { planAlerts, kindShort, type Urgency, type Alert } from "@/lib/deadlines";
+import { planAlerts, kindShort, deadlineClock, type Urgency, type Alert } from "@/lib/deadlines";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -51,7 +51,7 @@ export default function TourDeadlines() {
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${URG_DOT[a.urgency]}`} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-bold text-neutral-900">{kindShort(a.kind, locale)} · {a.tournament.city ?? a.tournament.name}</p>
-                  <p className="text-[11.5px] text-neutral-500">{a.tournament.name} · {a.tournament.tier} · {dateFmt(a.date)}</p>
+                  <p className="text-[11.5px] text-neutral-500">{a.tournament.name} · {a.tournament.tier} · {dateFmt(a.date)}{deadlineClock(a) ? ` · ${deadlineClock(a)}` : ""}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-bold ${URG_BG[a.urgency]}`}>{daysLabel(a.daysLeft)}</span>
               </a>
