@@ -29,7 +29,8 @@ export type SubViewState =
   | { type: "create-ticket" }
   | { type: "blocked-users" }
   | { type: "tour-expenses" }
-  | { type: "tour-schedule"; addKind?: string };
+  | { type: "tour-schedule"; addKind?: string }
+  | { type: "tour-profile-edit" };
 
 interface AppNavContextType {
   profile: Profile;

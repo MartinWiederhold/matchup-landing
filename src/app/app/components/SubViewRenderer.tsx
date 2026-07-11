@@ -16,6 +16,7 @@ import Leaderboard from "./subviews/Leaderboard";
 import BrowsePeople from "./subviews/BrowsePeople";
 import ExpensesView from "./subviews/ExpensesView";
 import ScheduleView from "./subviews/ScheduleView";
+import TourProfileEdit from "./subviews/TourProfileEdit";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -79,6 +80,8 @@ export default function SubViewRenderer({
       return <ExpensesView />;
     case "tour-schedule":
       return <ScheduleView addKind={subView.addKind} />;
+    case "tour-profile-edit":
+      return <TourProfileEdit />;
     default:
       return null;
   }

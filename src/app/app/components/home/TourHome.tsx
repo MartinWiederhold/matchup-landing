@@ -131,9 +131,9 @@ export default function TourHome() {
           </div>
           <h3 className="text-[19px] font-bold leading-tight tracking-tight">{t("mode.setupTitle")}</h3>
           <p className="mt-1.5 text-[13px] leading-relaxed text-white/85">{t("mode.setupSub")}</p>
-          <a href="/map" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-matchup">
+          <button type="button" onClick={() => openSubView({ type: "tour-profile-edit" })} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-matchup">
             {t("mode.setupCta")}
-          </a>
+          </button>
         </div>
       )}
 
@@ -141,9 +141,10 @@ export default function TourHome() {
       {hasTour && (
         <>
           <SecLabel>{t("mode.rankingSection")}</SecLabel>
-          <div className="rounded-[24px] bg-black/[0.035] p-5">
-            <div className="text-[13px] font-semibold text-neutral-500">
-              {tour?.circuit ? CIRCUIT_LABEL[tour.circuit] : "—"}
+          <button type="button" onClick={() => openSubView({ type: "tour-profile-edit" })} className="block w-full rounded-[24px] bg-black/[0.035] p-5 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] font-semibold text-neutral-500">{tour?.circuit ? CIRCUIT_LABEL[tour.circuit] : "—"}</span>
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-white px-3 py-4 text-center ring-1 ring-black/[0.06]">
@@ -155,7 +156,7 @@ export default function TourHome() {
                 <div className="mt-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("mode.points")}</div>
               </div>
             </div>
-          </div>
+          </button>
         </>
       )}
 
@@ -222,9 +223,10 @@ export default function TourHome() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl bg-black/[0.035] px-4 py-3.5 text-[13px] font-medium text-neutral-500">
-          {t("mode.inviteTeam")} · {t("mode.comingSoon")}
-        </div>
+        <button type="button" onClick={() => openSubView({ type: "tour-profile-edit" })} className="flex w-full items-center gap-1.5 rounded-2xl bg-black/[0.035] px-4 py-3.5 text-left text-[13px] font-semibold text-matchup">
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          {t("mode.inviteTeam")}
+        </button>
       )}
 
       {/* Visa / Compliance */}
