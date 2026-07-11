@@ -14,12 +14,12 @@ const DOT: Record<Kind, string> = {
   travel: "bg-blue-500", gym: "bg-amber-500", other: "bg-neutral-400",
 };
 
-type Ev = { id: string; kind: string; title: string; event_date: string; event_time: string | null; note: string | null; tournament_id: string | null };
+type Ev = { id: string; kind: string; title: string; event_date: string; event_time: string | null; note: string | null; tournament_id: string | null; won: boolean | null; score: string | null; round: string | null; opponent: string | null };
 type Tourn = { id: string; name: string };
-type Draft = { id?: string; kind: Kind; title: string; event_date: string; event_time: string; tournament_id: string };
+type Draft = { id?: string; kind: Kind; title: string; event_date: string; event_time: string; tournament_id: string; opponent: string; round: string; score: string; won: boolean | null };
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
-const emptyDraft = (kind: Kind = "training"): Draft => ({ kind, title: "", event_date: todayISO(), event_time: "", tournament_id: "" });
+const emptyDraft = (kind: Kind = "training"): Draft => ({ kind, title: "", event_date: todayISO(), event_time: "", tournament_id: "", opponent: "", round: "", score: "", won: null });
 
 export default function ScheduleView({ addKind }: { addKind?: string }) {
   const t = useT();
@@ -53,7 +53,7 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
   async function load() {
     const { data } = await supabase
       .from("tour_events")
-      .select("id,kind,title,event_date,event_time,note,tournament_id")
+      .select("id,kind,title,event_date,event_time,note,tournament_id,won,score,round,opponent")
       .eq("user_id", profile.id)
       .gte("event_date", todayISO())
       .order("event_date")
@@ -70,12 +70,17 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
   async function save() {
     if (!draft || !draft.title.trim()) return;
     setSaving(true);
+    const isMatch = draft.kind === "match";
     const payload = {
       kind: draft.kind,
       title: draft.title.trim(),
       event_date: draft.event_date,
       event_time: draft.event_time || null,
       tournament_id: draft.tournament_id || null,
+      opponent: isMatch ? (draft.opponent.trim() || null) : null,
+      round: isMatch ? (draft.round.trim() || null) : null,
+      score: isMatch ? (draft.score.trim() || null) : null,
+      won: isMatch ? draft.won : null,
     };
     if (draft.id) {
       await supabase.from("tour_events").update(payload).eq("id", draft.id);
@@ -94,6 +99,10 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
       event_date: e.event_date,
       event_time: e.event_time ? e.event_time.slice(0, 5) : "",
       tournament_id: e.tournament_id ?? "",
+      opponent: e.opponent ?? "",
+      round: e.round ?? "",
+      score: e.score ?? "",
+      won: e.won,
     });
   }
   async function remove(id: string) {
@@ -208,6 +217,23 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
                   <option value="">{t("mode.noTournament")}</option>
                   {plan.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
+              )}
+              {draft.kind === "match" && (
+                <div className="space-y-2.5 rounded-xl bg-black/[0.025] p-2.5">
+                  <div className="flex gap-2">
+                    <input value={draft.round} onChange={(e) => setDraft({ ...draft, round: e.target.value })} placeholder={t("mode.roundPlaceholder")} className="w-1/3 rounded-xl bg-white px-3 py-2.5 text-sm outline-none ring-1 ring-black/[0.06]" />
+                    <input value={draft.opponent} onChange={(e) => setDraft({ ...draft, opponent: e.target.value })} placeholder={t("mode.opponentPlaceholder")} className="flex-1 rounded-xl bg-white px-3 py-2.5 text-sm outline-none ring-1 ring-black/[0.06]" />
+                  </div>
+                  <input value={draft.score} onChange={(e) => setDraft({ ...draft, score: e.target.value })} placeholder={t("mode.scorePlaceholder")} className="w-full rounded-xl bg-white px-3 py-2.5 text-sm outline-none ring-1 ring-black/[0.06]" />
+                  <div className="flex gap-2">
+                    {([["won", true], ["lost", false]] as const).map(([k, val]) => (
+                      <button key={k} type="button" onClick={() => setDraft({ ...draft, won: draft.won === val ? null : val })}
+                        className={`flex-1 rounded-xl py-2.5 text-[13px] font-bold ${draft.won === val ? (val ? "bg-emerald-500 text-white" : "bg-red-500 text-white") : "bg-white text-neutral-500 ring-1 ring-black/[0.06]"}`}>
+                        {t(`mode.${k}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
               <button type="button" onClick={save} disabled={saving || !draft.title.trim()} className="mt-1 w-full rounded-full bg-matchup py-3.5 text-sm font-bold text-white disabled:opacity-50">
                 {saving ? t("mode.saving") : t("common.save")}

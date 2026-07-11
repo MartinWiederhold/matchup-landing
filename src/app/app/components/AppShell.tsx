@@ -11,6 +11,7 @@ import MatchesTab from "./tabs/MatchesTab";
 import GamesTab from "./tabs/GamesTab";
 import ProfileTab from "./tabs/ProfileTab";
 import TourProfileTab from "./tabs/TourProfileTab";
+import TourMatchesTab from "./tabs/TourMatchesTab";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
 
@@ -226,7 +227,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
           )}
           <div className="pb-28">
             {activeTab === "discover" && <DiscoverTab />}
-            {activeTab === "matches" && <MatchesTab />}
+            {activeTab === "matches" && (profile.mode === "tour" ? <TourMatchesTab /> : <MatchesTab />)}
             {activeTab === "games" && <GamesTab />}
             {activeTab === "profile" && (profile.mode === "tour" ? <TourProfileTab /> : <ProfileTab />)}
           </div>
