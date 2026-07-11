@@ -85,6 +85,7 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
   const [day, setDay] = useState<string | null>(null);
   const [open, setOpen] = useState(false); // eingeklappt starten
   const touched = useRef(false); // hat der Nutzer eine Kategorie gewählt?
+  const activeDayRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -114,25 +115,41 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
     if (liveCat && liveCat.key !== catKey) { setCatKey(liveCat.key); setDay(null); }
   }, [cats, catKey]);
 
+  // Tage aus den Matches — plus IMMER „heute", damit der aktuelle Tag markiert & sichtbar ist.
   const days = useMemo(() => {
     const s = new Set<string>();
     (cat?.matches ?? []).forEach((m) => { if (m.date) s.add(dayKey(m.date)); });
+    s.add(todayKey());
     return Array.from(s).sort();
   }, [cat]);
 
-  // Standard-Tag: heute, sonst Tag mit Live-Match, sonst letzter Tag
+  // Standard-Tag: heute (wenn dort Partien), sonst der nächste kommende Spieltag
+  // (z. B. das morgige Finale), sonst der jüngste vergangene Spieltag.
   useEffect(() => {
     if (!cat) return;
     if (day && days.includes(day)) return;
     const tk = todayKey();
+    const matchDays = Array.from(new Set(cat.matches.map((m) => (m.date ? dayKey(m.date) : "")).filter(Boolean))).sort();
     const liveDay = cat.matches.find((m) => m.state === "in" && m.date)?.date;
-    setDay(days.includes(tk) ? tk : liveDay ? dayKey(liveDay) : days[days.length - 1] ?? null);
+    let target: string | null;
+    if (liveDay) target = dayKey(liveDay);
+    else if (matchDays.includes(tk)) target = tk;
+    else target = matchDays.find((d) => d >= tk) ?? matchDays[matchDays.length - 1] ?? tk;
+    setDay(target);
   }, [cat, days, day]);
 
   const shown = useMemo(() => {
     if (!cat) return [];
     return cat.matches.filter((m) => (m.date ? dayKey(m.date) === day : day === todayKey()));
   }, [cat, day]);
+
+  // Aktiven Tag automatisch in die Sicht scrollen (horizontal, kein Seiten-Scroll),
+  // damit „heute" nicht erst nach rechts gescrollt werden muss.
+  useEffect(() => {
+    if (open && activeDayRef.current) {
+      activeDayRef.current.scrollIntoView({ inline: "center", block: "nearest" });
+    }
+  }, [day, open, catKey]);
 
   const t = data?.tournament;
   const logo = t?.name ? slamLogo(t.name) : null;
@@ -195,6 +212,7 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
               return (
                 <button
                   key={k}
+                  ref={active ? activeDayRef : undefined}
                   type="button"
                   onClick={() => setDay(k)}
                   className="flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5"
