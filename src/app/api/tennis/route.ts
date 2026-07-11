@@ -106,11 +106,6 @@ async function fetchBoard(league: "atp" | "wta", date?: string): Promise<EspnEve
     return [];
   }
 }
-/** YYYYMMDD (UTC) mit Tages-Offset — für ESPNs ?dates=-Parameter. */
-function ymd(offsetDays: number): string {
-  const d = new Date(Date.now() + offsetDays * 86_400_000);
-  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
-}
 /** Grösstes/aktuelles Turnier: bevorzugt Grand Slam (major). */
 function pickMajor(events: EspnEvent[]): EspnEvent | null {
   const withMatches = events
@@ -129,26 +124,15 @@ const CATS: { key: string; label: string; dn: string }[] = [
 ];
 
 export async function GET() {
-  // Heute + die nächsten Tage laden, damit bereits angesetzte Partien (z. B. das
-  // morgige Finale) sichtbar sind — ESPNs Standard-Board zeigt sonst nur den aktuellen Tag.
-  const dates = [ymd(0), ymd(1), ymd(2), ymd(3)];
-  const [atpBoards, wtaBoards] = await Promise.all([
-    Promise.all(dates.map((d) => fetchBoard("atp", d))),
-    Promise.all(dates.map((d) => fetchBoard("wta", d))),
-  ]);
-  const atpEvents = atpBoards.flat();
-  const wtaEvents = wtaBoards.flat();
-  const evAtp = pickMajor(atpEvents);
-  const evWta = pickMajor(wtaEvents);
+  const [atp, wta] = await Promise.all([fetchBoard("atp"), fetchBoard("wta")]);
+  const evAtp = pickMajor(atp);
+  const evWta = pickMajor(wta);
   const meta = evAtp || evWta;
-
-  // Nur Events des aktuell gewählten Turniers (über mehrere Tage) zusammenführen.
-  const names = new Set([evAtp?.name, evWta?.name].filter(Boolean) as string[]);
-  const allEvents = [...atpEvents, ...wtaEvents].filter((ev) => !names.size || (ev.name && names.has(ev.name)));
 
   const categories = CATS.map((cat) => {
     const merged = new Map<string, Match>();
-    for (const ev of allEvents) {
+    for (const ev of [evAtp, evWta]) {
+      if (!ev) continue;
       for (const m of groupingMatches(ev, cat.dn)) {
         const k = keyOf(m);
         const prev = merged.get(k);
@@ -156,7 +140,12 @@ export async function GET() {
         if (!prev || rank(m) < rank(prev)) merged.set(k, m);
       }
     }
-    const matches = Array.from(merged.values()).sort(sortMatches).slice(0, 80);
+    // Anstehende Partien (live/angesetzt) NIE wegschneiden — sie sind das Relevanteste
+    // (z. B. das morgige Finale). Danach beendete nach Datum absteigend auffüllen.
+    const all = Array.from(merged.values());
+    const upcoming = all.filter((m) => m.state !== "post");
+    const done = all.filter((m) => m.state === "post").sort(sortMatches);
+    const matches = [...upcoming, ...done].slice(0, 140);
     return { key: cat.key, label: cat.label, matches };
   }).filter((c) => c.matches.length > 0);
 
