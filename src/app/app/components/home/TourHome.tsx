@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
-import { loadTourProfile } from "@/lib/tour";
+import { loadTourProfile, loadTourPlan } from "@/lib/tour";
+import { planAlerts, kindShort, type Urgency } from "@/lib/deadlines";
 import type { TourProfile } from "@/lib/types";
 
 const CIRCUIT_LABEL: Record<string, string> = {
@@ -15,7 +16,7 @@ const CIRCUIT_LABEL: Record<string, string> = {
   wta: "WTA Tour",
 };
 
-type Tourn = { id: string; name: string; tier: string; surface: string; start_date: string; end_date: string; country: string | null };
+type Tourn = { id: string; name: string; city: string | null; tier: string; surface: string; start_date: string; end_date: string; country: string | null };
 
 function SecLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-2.5 mt-6 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400 first:mt-0">{children}</p>;
@@ -28,21 +29,22 @@ export default function TourHome() {
   const [tour, setTour] = useState<TourProfile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tournaments, setTournaments] = useState<Tourn[]>([]);
+  const [inPlan, setInPlan] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const tp = await loadTourProfile(profile.id);
+      const [tp, planIds] = await Promise.all([loadTourProfile(profile.id), loadTourPlan(profile.id)]);
       const today = new Date().toISOString().slice(0, 10);
-      const { data } = await supabase
-        .from("tournaments")
-        .select("id,name,tier,surface,start_date,end_date,country")
-        .gte("end_date", today)
-        .order("start_date")
-        .limit(3);
+      // Turniere: bevorzugt aus dem Saisonplan; sonst die nächsten drei als Anregung.
+      const q = supabase.from("tournaments").select("id,name,city,tier,surface,start_date,end_date,country");
+      const { data } = planIds.length
+        ? await q.in("id", planIds).order("start_date")
+        : await q.gte("end_date", today).order("start_date").limit(3);
       if (!alive) return;
       setTour(tp);
-      setTournaments((data as Tourn[]) ?? []);
+      setInPlan(planIds.length > 0);
+      setTournaments(((data as Tourn[]) ?? []).filter((tr) => tr.end_date >= today));
       setLoaded(true);
     })();
     return () => { alive = false; };
@@ -53,8 +55,40 @@ export default function TourHome() {
   const hasTour = !!tour && (tour.circuit || tour.ranking != null);
   const fmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
 
+  // Deadline-Alerts aus dem Saisonplan (nur wenn Turniere eingeplant sind).
+  const alerts = inPlan
+    ? planAlerts(tournaments.map((tr) => ({ ...tr, start: tr.start_date }))).slice(0, 6)
+    : [];
+  const URG_BG: Record<Urgency, string> = {
+    red: "bg-red-500/10 text-red-600",
+    amber: "bg-amber-500/10 text-amber-600",
+    none: "bg-black/[0.05] text-neutral-500",
+  };
+  const URG_DOT: Record<Urgency, string> = { red: "bg-red-500", amber: "bg-amber-500", none: "bg-neutral-400" };
+  const daysLabel = (n: number) => (n === 0 ? t("mode.today") : t("mode.inDays", { n }));
+
   return (
     <div className="px-4 pb-28">
+      {/* Dringend: nächste Deadlines aus dem Saisonplan */}
+      {alerts.length > 0 && (
+        <>
+          <SecLabel>{t("mode.urgent")}</SecLabel>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {alerts.map((a, i) => (
+              <a
+                key={i}
+                href="/map"
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold ${URG_BG[a.urgency]}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${URG_DOT[a.urgency]}`} />
+                {kindShort(a.kind, locale)} {a.tournament.city ?? a.tournament.name} · {daysLabel(a.daysLeft)}
+              </a>
+            ))}
+          </div>
+          <p className="mt-1 px-1 text-[10px] text-neutral-400">{t("mode.deadlineDisclaimer")}</p>
+        </>
+      )}
+
       {/* Setup-CTA, wenn noch kein Tour-Profil */}
       {!hasTour && (
         <div className="mt-4 rounded-[24px] bg-gradient-to-br from-matchup to-indigo-500 p-5 text-white">
@@ -141,23 +175,35 @@ export default function TourHome() {
         </div>
       </div>
 
-      {/* Nächste Turniere (echt aus web.tournaments) */}
+      {/* Turniere: Saisonplan (mit nächster Frist) oder Anregung */}
       <div className="mt-6 mb-2.5 flex items-center justify-between px-1">
-        <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("mode.upcoming")}</span>
+        <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">
+          {inPlan ? t("mode.yourTournaments") : t("mode.upcoming")}
+        </span>
         <a href="/map" className="text-[11px] font-bold uppercase tracking-wider text-matchup">{t("mode.planSeason")}</a>
       </div>
       <div className="rounded-2xl bg-black/[0.035] p-2">
         {tournaments.length === 0 ? (
-          <p className="px-3 py-4 text-center text-[13px] text-neutral-400">{t("mode.noData")}</p>
+          <p className="px-3 py-4 text-center text-[13px] text-neutral-400">
+            {inPlan ? t("mode.noData") : t("mode.briefingEmpty")}
+          </p>
         ) : (
-          tournaments.map((tr, i) => (
-            <div key={tr.id} className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
-                <p className="text-[11.5px] text-neutral-500">{tr.tier} · {tr.surface} · {fmt(tr.start_date)}–{fmt(tr.end_date)}</p>
-              </div>
-            </div>
-          ))
+          tournaments.map((tr, i) => {
+            const next = alerts.find((a) => a.tournament.id === tr.id);
+            return (
+              <a key={tr.id} href="/map" className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
+                  <p className="text-[11.5px] text-neutral-500">{tr.tier} · {tr.surface} · {fmt(tr.start_date)}–{fmt(tr.end_date)}</p>
+                </div>
+                {next && (
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-bold ${URG_BG[next.urgency]}`}>
+                    {kindShort(next.kind, locale)} · {daysLabel(next.daysLeft)}
+                  </span>
+                )}
+              </a>
+            );
+          })
         )}
       </div>
 
