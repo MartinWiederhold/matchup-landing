@@ -28,11 +28,12 @@ function SecLabel({ children }: { children: React.ReactNode }) {
 export default function TourHome() {
   const t = useT();
   const { locale } = useLocale();
-  const { profile } = useAppNav();
+  const { profile, openSubView } = useAppNav();
   const [tour, setTour] = useState<TourProfile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [tournaments, setTournaments] = useState<Tourn[]>([]);
   const [inPlan, setInPlan] = useState(false);
+  const [expTotals, setExpTotals] = useState<[string, number][]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -44,10 +45,18 @@ export default function TourHome() {
       const { data } = planIds.length
         ? await q.in("id", planIds).order("start_date")
         : await q.gte("end_date", today).order("start_date").limit(3);
+      const { data: exp } = await supabase.from("tour_expenses").select("amount,currency").eq("user_id", profile.id);
       if (!alive) return;
       setTour(tp);
       setInPlan(planIds.length > 0);
       setTournaments(((data as Tourn[]) ?? []).filter((tr) => tr.end_date >= today));
+      const totals = new Map<string, number>();
+      for (const r of (exp as { amount: number | null; currency: string | null }[]) ?? []) {
+        if (r.amount == null) continue;
+        const c = r.currency ?? "?";
+        totals.set(c, (totals.get(c) ?? 0) + Number(r.amount));
+      }
+      setExpTotals([...totals.entries()]);
       setLoaded(true);
     })();
     return () => { alive = false; };
@@ -142,19 +151,24 @@ export default function TourHome() {
         </>
       )}
 
-      {/* Schnellaktionen (Features folgen) */}
+      {/* Schnellaktionen */}
       <SecLabel>{t("mode.quickActions")}</SecLabel>
       <div className="grid grid-cols-3 gap-3">
         {[
-          { l: t("mode.scanReceipt"), p: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16" },
-          { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3" },
-          { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z" },
+          { l: t("mode.scanReceipt"), p: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16", active: true },
+          { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3", active: false },
+          { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", active: false },
         ].map((a) => (
-          <div key={a.l} className="relative flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] px-2 py-4 text-center opacity-90">
+          <button
+            key={a.l}
+            type="button"
+            onClick={() => { if (a.active) openSubView({ type: "tour-expenses" }); }}
+            className="relative flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] px-2 py-4 text-center"
+          >
             <svg viewBox="0 0 24 24" className="h-6 w-6 text-matchup" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={a.p} /></svg>
             <span className="text-[11px] font-semibold text-neutral-600">{a.l}</span>
-            <span className="absolute right-1.5 top-1.5 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.comingSoon")}</span>
-          </div>
+            {!a.active && <span className="absolute right-1.5 top-1.5 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.comingSoon")}</span>}
+          </button>
         ))}
       </div>
 
@@ -248,11 +262,22 @@ export default function TourHome() {
         )}
       </div>
 
-      {/* Finanzen (folgt) */}
+      {/* Finanzen */}
       <SecLabel>{t("mode.financeTitle")}</SecLabel>
-      <div className="rounded-2xl bg-black/[0.035] px-4 py-5 text-center">
-        <p className="text-[13px] font-medium text-neutral-500">{t("mode.financeSoon")}</p>
-      </div>
+      <button type="button" onClick={() => openSubView({ type: "tour-expenses" })} className="flex w-full items-center gap-3 rounded-2xl bg-black/[0.035] p-4 text-left">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-matchup">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" /><circle cx="12" cy="12" r="3" /></svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-bold text-neutral-900">{t("mode.openFinance")}</p>
+          <p className="truncate text-[12px] text-neutral-500">
+            {expTotals.length
+              ? `${t("mode.financeExpenses")}: ${expTotals.map(([c, v]) => `${v.toLocaleString(locale, { maximumFractionDigits: 0 })} ${c}`).join(" · ")}`
+              : t("mode.financeSoon")}
+          </p>
+        </div>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
     </div>
   );
 }

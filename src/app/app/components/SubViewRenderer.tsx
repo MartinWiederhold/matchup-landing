@@ -14,6 +14,7 @@ import TennisLive from "./subviews/TennisLive";
 import GameResult from "./subviews/GameResult";
 import Leaderboard from "./subviews/Leaderboard";
 import BrowsePeople from "./subviews/BrowsePeople";
+import ExpensesView from "./subviews/ExpensesView";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -73,6 +74,8 @@ export default function SubViewRenderer({
       return <CreateTicket />;
     case "blocked-users":
       return <BlockedUsers />;
+    case "tour-expenses":
+      return <ExpensesView />;
     default:
       return null;
   }
