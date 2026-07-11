@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
-import { loadTourProfile, saveTourProfile } from "@/lib/tour";
+import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, type TeamInvite } from "@/lib/tour";
 import type { Circuit, TeamMember } from "@/lib/types";
 
 const CIRCUITS: { value: Circuit; label: string }[] = [
@@ -33,10 +33,21 @@ export default function TourProfileEdit() {
   const [estaStatus, setEstaStatus] = useState<string | null>(null);
   const [estaExpiry, setEstaExpiry] = useState("");
   const [team, setTeam] = useState<TeamMember[]>([]);
+  const [invites, setInvites] = useState<TeamInvite[]>([]);
+  const [copied, setCopied] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  async function copyInvite(role: string) {
+    const token = await ensureInvite(profile.id, role);
+    try { await navigator.clipboard.writeText(inviteUrl(token)); } catch { /* ignore */ }
+    setCopied(role);
+    setInvites(await loadTeam(profile.id));
+    setTimeout(() => setCopied((c) => (c === role ? null : c)), 2500);
+  }
 
   useEffect(() => {
     (async () => {
+      loadTeam(profile.id).then(setInvites);
       const tp = await loadTourProfile(profile.id);
       if (tp) {
         setCircuit(tp.circuit);
@@ -136,14 +147,26 @@ export default function TourProfileEdit() {
         {/* Team */}
         <div>
           <p className="mb-2 text-sm font-semibold text-neutral-600">{t("onboarding.teamTitle")}</p>
-          <div className="space-y-2">
-            {ROLES.map((r) => (
-              <div key={r}>
-                <p className="mb-1 text-[12px] font-semibold text-neutral-500">{t(ROLE_KEY[r])}</p>
-                <input value={team.find((m) => m.role === r)?.name ?? ""} onChange={(e) => setRole(r, e.target.value)} placeholder={t("onboarding.teamNamePlaceholder")} className={inp} />
-              </div>
-            ))}
+          <div className="space-y-3">
+            {ROLES.map((r) => {
+              const inv = invites.find((i) => i.role === r);
+              return (
+                <div key={r}>
+                  <p className="mb-1 flex items-center gap-2 text-[12px] font-semibold text-neutral-500">
+                    {t(ROLE_KEY[r])}
+                    {inv?.status === "active" && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">{inv.member_name ? inv.member_name : t("mode.teamActive")}</span>}
+                  </p>
+                  <div className="flex gap-2">
+                    <input value={team.find((m) => m.role === r)?.name ?? ""} onChange={(e) => setRole(r, e.target.value)} placeholder={t("onboarding.teamNamePlaceholder")} className={`${inp} flex-1`} />
+                    <button type="button" onClick={() => copyInvite(r)} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-matchup">
+                      {copied === r ? t("mode.copied") : t("mode.invite")}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+          <p className="mt-2 text-[11px] text-neutral-400">{t("mode.teamInviteHint")}</p>
         </div>
       </div>
 

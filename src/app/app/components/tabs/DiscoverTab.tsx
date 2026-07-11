@@ -14,7 +14,7 @@ import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from 
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
-import { setMode as persistMode, tourUnlocked } from "@/lib/tour";
+import { setMode as persistMode, tourUnlocked, acceptInvite } from "@/lib/tour";
 import { useAuth } from "@/lib/auth";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
@@ -30,6 +30,20 @@ export default function DiscoverTab() {
     profile.mode === "tour" && typeof window !== "undefined" && tourUnlocked() ? "tour" : "play",
   );
   const [showTourGate, setShowTourGate] = useState(false);
+  const [invite, setInvite] = useState<{ role?: string; player?: string; done?: boolean; error?: string } | null>(null);
+
+  // Team-Einladung über ?team=<token> annehmen.
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("team");
+    if (!token) return;
+    (async () => {
+      const r = await acceptInvite(token);
+      setInvite(r.ok ? { role: r.role, player: r.player, done: true } : { error: r.error });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("team");
+      window.history.replaceState({}, "", url.toString());
+    })();
+  }, []);
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -319,6 +333,28 @@ export default function DiscoverTab() {
           onClose={() => setShowTourGate(false)}
           onUnlock={() => { setShowTourGate(false); applyMode("tour"); }}
         />
+      )}
+
+      {invite && (
+        <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] items-center justify-center bg-black/40 p-6 backdrop-blur-sm" onClick={() => setInvite(null)}>
+          <div className="w-full rounded-[24px] bg-white p-5 text-center" onClick={(e) => e.stopPropagation()}>
+            {invite.done ? (
+              <>
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </div>
+                <h3 className="text-[17px] font-bold text-neutral-900">{t("mode.teamJoinedTitle")}</h3>
+                <p className="mt-1 text-[13px] text-neutral-500">{t("mode.teamJoinedBody", { player: invite.player ?? "", role: invite.role ? t(`onboarding.role${invite.role === "hitting_partner" ? "Hitting" : invite.role.charAt(0).toUpperCase() + invite.role.slice(1)}`) : "" })}</p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-[17px] font-bold text-neutral-900">{t("mode.teamInviteError")}</h3>
+                <p className="mt-1 text-[13px] text-neutral-500">{invite.error}</p>
+              </>
+            )}
+            <button type="button" onClick={() => setInvite(null)} className="mt-4 w-full rounded-full bg-matchup py-3 text-sm font-bold text-white">{t("common.close")}</button>
+          </div>
+        </div>
       )}
     </div>
   );

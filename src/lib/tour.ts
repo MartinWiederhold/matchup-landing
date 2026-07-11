@@ -46,6 +46,53 @@ export async function setMode(userId: string, mode: "play" | "tour"): Promise<vo
   await supabase.from("profiles").update({ mode }).eq("id", userId);
 }
 
+/* ── Team-Einladungen ─────────────────────────────────────── */
+export type TeamInvite = { id: string; role: string; member_name: string | null; status: string; invite_token: string };
+
+export async function loadTeam(playerId: string): Promise<TeamInvite[]> {
+  const { data } = await supabase
+    .from("tour_team")
+    .select("id,role,member_name,status,invite_token")
+    .eq("player_id", playerId);
+  return (data as TeamInvite[]) ?? [];
+}
+
+/** Erzeugt (oder liefert) einen Einladungs-Token für eine Rolle. */
+export async function ensureInvite(playerId: string, role: string): Promise<string> {
+  const { data } = await supabase
+    .from("tour_team")
+    .select("invite_token")
+    .eq("player_id", playerId)
+    .eq("role", role)
+    .limit(1);
+  const existing = data?.[0]?.invite_token as string | undefined;
+  if (existing) return existing;
+  const token = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}${Math.round(Math.random() * 1e9)}`).replace(/-/g, "");
+  await supabase.from("tour_team").insert({ player_id: playerId, role, invite_token: token });
+  return token;
+}
+
+export async function removeInvite(id: string): Promise<void> {
+  await supabase.from("tour_team").delete().eq("id", id);
+}
+
+export function inviteUrl(token: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://matchup-app.com";
+  return `${origin}/app?team=${token}`;
+}
+
+/** Nimmt eine Einladung an (verknüpft den eingeloggten Nutzer mit dem Spieler). */
+export async function acceptInvite(token: string): Promise<{ ok?: boolean; role?: string; player?: string; error?: string }> {
+  const { data: sess } = await supabase.auth.getSession();
+  const bearer = sess.session?.access_token;
+  const res = await fetch("/api/tour/accept-invite", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) },
+    body: JSON.stringify({ invite: token }),
+  });
+  return res.json();
+}
+
 /** Lädt die eingeplanten Turnier-IDs (Saisonplan) des Users. */
 export async function loadTourPlan(userId: string): Promise<string[]> {
   const { data } = await supabase
