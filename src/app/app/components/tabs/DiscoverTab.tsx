@@ -11,6 +11,10 @@ import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import Avatar from "../shared/Avatar";
 import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
+import ModeToggle from "../home/ModeToggle";
+import TourHome from "../home/TourHome";
+import { setMode as persistMode } from "@/lib/tour";
+import { useAuth } from "@/lib/auth";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
 
@@ -19,6 +23,8 @@ const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
 export default function DiscoverTab() {
   const t = useT();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
+  const { refreshProfile } = useAuth();
+  const [mode, setModeState] = useState<"play" | "tour">(profile.mode ?? "play");
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -178,31 +184,45 @@ export default function DiscoverTab() {
     loadCandidates();
   }, [loadCandidates]);
 
+  function changeMode(m: "play" | "tour") {
+    if (m === mode) return;
+    setModeState(m);
+    void persistMode(profile.id, m).then(() => refreshProfile());
+  }
+
   if (isLoading) return <FullLoading />;
 
   return (
     <div className="relative flex flex-col">
-      <div className="pb-28">
-        {/* Kopf im mockup2-Stil: Avatar links, Suche rechts + Hero-Text */}
-        <div className="px-4 pt-[max(16px,env(safe-area-inset-top))]">
-          <header className="flex items-center justify-between pt-1">
+      {/* Kopf: Avatar + Play/Tour-Toggle links, Suche rechts */}
+      <div className="px-4 pt-[max(16px,env(safe-area-inset-top))]">
+        <header className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex min-w-0 items-center gap-3">
             <button type="button" onClick={() => openSubView({ type: "edit-profile" })} aria-label="Profil">
               <Avatar src={profile.profile_image} alt={profile.first_name} size="lg" />
             </button>
-            <button
-              type="button"
-              onClick={() => openSubView({ type: "people-browse" })}
-              aria-label={t("discover.find")}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.04] text-neutral-900 ring-1 ring-black/10"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
-              </svg>
-            </button>
-          </header>
+            <ModeToggle mode={mode} onChange={changeMode} />
+          </div>
+          <button
+            type="button"
+            onClick={() => openSubView({ type: "people-browse" })}
+            aria-label={t("discover.find")}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-neutral-900 ring-1 ring-black/10"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
+            </svg>
+          </button>
+        </header>
+      </div>
 
-          {/* Hero-Text */}
-          <h1 className="mt-6 text-[30px] font-medium leading-[1.15] tracking-tight text-black">
+      {mode === "tour" ? (
+        <TourHome />
+      ) : (
+      <div className="pb-28">
+        {/* Hero-Text */}
+        <div className="px-4">
+          <h1 className="mt-5 text-[30px] font-medium leading-[1.15] tracking-tight text-black">
             Your <span className="font-extrabold">Journey</span>
             <br />
             With Matchup
@@ -272,6 +292,7 @@ export default function DiscoverTab() {
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />
       </div>
+      )}
 
       {showFilter && (
         <FilterSheet

@@ -20,6 +20,7 @@ export interface Profile {
   search_radius_km: number; // default 25
   club_id: string | null; // FK → clubs.id
   club_name_manual: string | null;
+  mode: "play" | "tour"; // Dual-Mode: Hobby (play) vs. Wettkampf/Profi (tour), default 'play'
   sports: Sport[]; // PostgreSQL array, CHECK length >= 1
   skill_level: SkillLevel;
   official_rating: string | null;
@@ -468,3 +469,24 @@ export const defaultFilters: FilterState = {
   clubId: null,
   clubName: null,
 };
+
+/** Wettkampf-/Tour-Profil (1:1 zum User) — Tabelle web.tour_profiles. */
+export type Circuit = "atp" | "challenger" | "itf" | "wta";
+export interface TeamMember {
+  role: string; // coach | physio | agent | hitting_partner | sc
+  name: string;
+  email?: string | null;
+}
+export interface TourProfile {
+  user_id: string;
+  circuit: Circuit | null;
+  ranking: number | null;
+  points: number | null;
+  passports: string[];
+  tax_residence: string | null;
+  esta_status: string | null;
+  team: TeamMember[];
+  calendar_connected: boolean;
+  created_at?: string;
+  updated_at?: string;
+}

@@ -1,0 +1,171 @@
+"use client";
+
+/* eslint-disable @next/next/no-img-element */
+import { useEffect, useState } from "react";
+import { useT, useLocale } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
+import { useAppNav } from "../appNav";
+import { loadTourProfile } from "@/lib/tour";
+import type { TourProfile } from "@/lib/types";
+
+const CIRCUIT_LABEL: Record<string, string> = {
+  atp: "ATP Tour",
+  challenger: "ATP Challenger",
+  itf: "ITF World Tennis Tour",
+  wta: "WTA Tour",
+};
+
+type Tourn = { id: string; name: string; tier: string; surface: string; start_date: string; end_date: string; country: string | null };
+
+function SecLabel({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2.5 mt-6 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400 first:mt-0">{children}</p>;
+}
+
+export default function TourHome() {
+  const t = useT();
+  const { locale } = useLocale();
+  const { profile } = useAppNav();
+  const [tour, setTour] = useState<TourProfile | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [tournaments, setTournaments] = useState<Tourn[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const tp = await loadTourProfile(profile.id);
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("tournaments")
+        .select("id,name,tier,surface,start_date,end_date,country")
+        .gte("end_date", today)
+        .order("start_date")
+        .limit(3);
+      if (!alive) return;
+      setTour(tp);
+      setTournaments((data as Tourn[]) ?? []);
+      setLoaded(true);
+    })();
+    return () => { alive = false; };
+  }, [profile.id]);
+
+  if (!loaded) return null;
+
+  const hasTour = !!tour && (tour.circuit || tour.ranking != null);
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
+
+  return (
+    <div className="px-4 pb-28">
+      {/* Setup-CTA, wenn noch kein Tour-Profil */}
+      {!hasTour && (
+        <div className="mt-4 rounded-[24px] bg-gradient-to-br from-matchup to-indigo-500 p-5 text-white">
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/15">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor"><path d="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" /></svg>
+          </div>
+          <h3 className="text-[19px] font-bold leading-tight tracking-tight">{t("mode.setupTitle")}</h3>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-white/85">{t("mode.setupSub")}</p>
+          <a href="/map" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-matchup">
+            {t("mode.setupCta")}
+          </a>
+        </div>
+      )}
+
+      {/* Ranking-Karte */}
+      {hasTour && (
+        <>
+          <SecLabel>{t("mode.rankingSection")}</SecLabel>
+          <div className="rounded-[24px] bg-black/[0.035] p-5">
+            <div className="text-[13px] font-semibold text-neutral-500">
+              {tour?.circuit ? CIRCUIT_LABEL[tour.circuit] : "—"}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white px-3 py-4 text-center ring-1 ring-black/[0.06]">
+                <div className="text-[22px] font-extrabold tracking-tight text-neutral-900">{tour?.ranking ?? "—"}</div>
+                <div className="mt-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("mode.ranking")}</div>
+              </div>
+              <div className="rounded-2xl bg-white px-3 py-4 text-center ring-1 ring-black/[0.06]">
+                <div className="text-[22px] font-extrabold tracking-tight text-neutral-900">{tour?.points ?? "—"}</div>
+                <div className="mt-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("mode.points")}</div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Schnellaktionen (Features folgen) */}
+      <SecLabel>{t("mode.quickActions")}</SecLabel>
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { l: t("mode.scanReceipt"), p: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16" },
+          { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3" },
+          { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z" },
+        ].map((a) => (
+          <div key={a.l} className="relative flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] px-2 py-4 text-center opacity-90">
+            <svg viewBox="0 0 24 24" className="h-6 w-6 text-matchup" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={a.p} /></svg>
+            <span className="text-[11px] font-semibold text-neutral-600">{a.l}</span>
+            <span className="absolute right-1.5 top-1.5 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.comingSoon")}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Dein Team */}
+      <SecLabel>{t("mode.yourTeam")}</SecLabel>
+      {tour?.team && tour.team.length > 0 ? (
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+          {tour.team.map((m, i) => (
+            <div key={i} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-200 text-[15px] font-bold text-neutral-500">
+                {(m.name?.[0] ?? "?").toUpperCase()}
+              </span>
+              <span className="max-w-16 truncate text-[11px] font-semibold text-neutral-700">{m.name}</span>
+              <span className="text-[9px] text-neutral-400">{m.role}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-black/[0.035] px-4 py-3.5 text-[13px] font-medium text-neutral-500">
+          {t("mode.inviteTeam")} · {t("mode.comingSoon")}
+        </div>
+      )}
+
+      {/* Visa / ESTA */}
+      <SecLabel>{t("mode.visaStatus")}</SecLabel>
+      <div className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" strokeLinecap="round" /></svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-bold text-neutral-900">{t("mode.esta")}</p>
+          <p className="truncate text-[12px] text-neutral-500">
+            {tour?.esta_status ? tour.esta_status : t("mode.estaNone")}
+          </p>
+        </div>
+      </div>
+
+      {/* Nächste Turniere (echt aus web.tournaments) */}
+      <div className="mt-6 mb-2.5 flex items-center justify-between px-1">
+        <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("mode.upcoming")}</span>
+        <a href="/map" className="text-[11px] font-bold uppercase tracking-wider text-matchup">{t("mode.planSeason")}</a>
+      </div>
+      <div className="rounded-2xl bg-black/[0.035] p-2">
+        {tournaments.length === 0 ? (
+          <p className="px-3 py-4 text-center text-[13px] text-neutral-400">{t("mode.noData")}</p>
+        ) : (
+          tournaments.map((tr, i) => (
+            <div key={tr.id} className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
+                <p className="text-[11.5px] text-neutral-500">{tr.tier} · {tr.surface} · {fmt(tr.start_date)}–{fmt(tr.end_date)}</p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Finanzen (folgt) */}
+      <SecLabel>{t("mode.financeTitle")}</SecLabel>
+      <div className="rounded-2xl bg-black/[0.035] px-4 py-5 text-center">
+        <p className="text-[13px] font-medium text-neutral-500">{t("mode.financeSoon")}</p>
+      </div>
+    </div>
+  );
+}

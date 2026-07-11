@@ -13,6 +13,7 @@ import { auth } from "./auth";
 import { onboarding } from "./onboarding";
 import { app } from "./app";
 import { discover } from "./discover";
+import { mode } from "./mode";
 import { matches } from "./matches";
 import { games } from "./games";
 import { groups } from "./groups";
@@ -38,6 +39,7 @@ const namespaces: Record<string, Namespace> = {
   onboarding,
   app,
   discover,
+  mode,
   matches,
   games,
   groups,
