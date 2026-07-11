@@ -3,51 +3,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { haversineKm } from "@/lib/utils/haversine";
-import { skillLabel, sportLabel, formatDistance } from "@/lib/utils/formatters";
-import {
-  SportIcon,
-  FilterIcon,
-  CheckIcon,
-  UsersIcon,
-  MapPinIcon,
-} from "../shared/icons";
+import { CheckIcon, UsersIcon } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
-import { ensureMatch } from "@/lib/matchmaking";
-import { useT, useLocale, type TFunction } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
-import MatchAnimation from "../shared/MatchAnimation";
 import Avatar from "../shared/Avatar";
-import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
+import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
 
-function ConnectIcon({ size = 16 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M19 8v6M22 11h-6" />
-    </svg>
-  );
-}
-
 export default function DiscoverTab() {
   const t = useT();
-  const { locale } = useLocale();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -208,97 +178,39 @@ export default function DiscoverTab() {
     loadCandidates();
   }, [loadCandidates]);
 
-  // Aktive Filter als entfernbare Chips (Standardwerte werden nicht angezeigt).
-  const d = defaultFilters;
-  const activeChips: { key: string; label: string; clear: () => void }[] = [];
-  filters.sports.forEach((s) =>
-    activeChips.push({
-      key: `sport-${s}`,
-      label: sportLabel(s),
-      clear: () =>
-        setFilters((f) => ({ ...f, sports: f.sports.filter((x) => x !== s) })),
-    }),
-  );
-  if (filters.gender)
-    activeChips.push({
-      key: "gender",
-      label: filters.gender === "male" ? t("discover.genderMale") : t("discover.genderFemale"),
-      clear: () => setFilters((f) => ({ ...f, gender: null })),
-    });
-  if (filters.ageMin !== d.ageMin || filters.ageMax !== d.ageMax)
-    activeChips.push({
-      key: "age",
-      label: t("discover.ageChip", { min: filters.ageMin, max: filters.ageMax }),
-      clear: () =>
-        setFilters((f) => ({ ...f, ageMin: d.ageMin, ageMax: d.ageMax })),
-    });
-  if (filters.radius !== d.radius)
-    activeChips.push({
-      key: "radius",
-      label:
-        filters.radius > 200
-          ? t("discover.worldwide")
-          : t("discover.radiusChip", { km: filters.radius }),
-      clear: () => setFilters((f) => ({ ...f, radius: d.radius })),
-    });
-  filters.skillLevels.forEach((s) =>
-    activeChips.push({
-      key: `skill-${s}`,
-      label: skillLabel(s),
-      clear: () =>
-        setFilters((f) => ({
-          ...f,
-          skillLevels: f.skillLevels.filter((x) => x !== s),
-        })),
-    }),
-  );
-  if (filters.clubId && filters.clubId !== profile.club_id)
-    activeChips.push({
-      key: "club",
-      label: filters.clubName
-        ? t("discover.clubChip", { name: filters.clubName })
-        : t("discover.clubChipFallback"),
-      clear: () =>
-        setFilters((f) => ({ ...f, clubId: null, clubName: null })),
-    });
-
   if (isLoading) return <FullLoading />;
-
-  const dateLabel = new Date().toLocaleDateString(locale === "de" ? "de-CH" : "en-GB", { weekday: "long", day: "numeric", month: "long" });
-  const displayName = profile.display_name || profile.first_name;
 
   return (
     <div className="relative flex flex-col">
-      {/* Home-Header: Begrüßung + Filter + Avatar (sticky, damit er beim Fenster-Scroll bleibt) */}
-      <header className="sticky top-0 z-20 flex shrink-0 items-center justify-between gap-3 bg-white/80 px-4 pt-3 pb-2 backdrop-blur-xl">
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[10px] font-extrabold uppercase tracking-[0.18em] text-neutral-400">{dateLabel}</div>
-          <h1 className="mt-1 truncate text-[22px] font-extrabold tracking-tight">{greeting(t, displayName)}</h1>
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setShowFilter(true)}
-            aria-label={t("discover.filter")}
-            className="relative flex h-[42px] w-[42px] items-center justify-center rounded-[13px] border border-black/10 bg-black/[0.04] text-neutral-700"
-          >
-            <FilterIcon size={20} />
-            {activeChips.length > 0 && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-matchup" />}
-          </button>
-          <button type="button" onClick={() => openSubView({ type: "edit-profile" })} aria-label="Profil">
-            <Avatar src={profile.profile_image} alt={profile.first_name} size="md" />
-          </button>
-        </div>
-      </header>
-
       <div className="pb-28">
-        {/* Form-Ring */}
-        <section className="mt-4 px-4">
-          <FormRing score={profile.match_score ?? 1000} onOpen={() => openSubView({ type: "leaderboard" })} />
-        </section>
+        {/* Kopf im mockup2-Stil: Avatar links, Suche rechts + Hero-Text */}
+        <div className="px-4 pt-[max(16px,env(safe-area-inset-top))]">
+          <header className="flex items-center justify-between pt-1">
+            <button type="button" onClick={() => openSubView({ type: "edit-profile" })} aria-label="Profil">
+              <Avatar src={profile.profile_image} alt={profile.first_name} size="lg" />
+            </button>
+            <button
+              type="button"
+              onClick={() => openSubView({ type: "people-browse" })}
+              aria-label={t("discover.find")}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.04] text-neutral-900 ring-1 ring-black/10"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
+              </svg>
+            </button>
+          </header>
+
+          {/* Hero-Text */}
+          <h1 className="mt-6 text-[30px] font-medium leading-[1.15] tracking-tight text-black">
+            Your <span className="font-extrabold">Journey</span>
+            <br />
+            With Matchup
+          </h1>
+        </div>
 
         {/* Live im Profitennis — Google-Style-Widget (wie mockup2) */}
-        <div className="mt-4 px-4">
+        <div className="mt-6 px-4">
           <WimbledonWidget theme="light" />
         </div>
 
@@ -373,17 +285,6 @@ export default function DiscoverTab() {
       )}
     </div>
   );
-}
-
-function distanceLabel(
-  myLat: number | null,
-  myLng: number | null,
-  c: Profile,
-): string | null {
-  if (c._distance !== undefined) return formatDistance(c._distance);
-  if (myLat && myLng && c.latitude && c.longitude)
-    return formatDistance(haversineKm(myLat, myLng, c.latitude, c.longitude));
-  return null;
 }
 
 function FeedCard({
