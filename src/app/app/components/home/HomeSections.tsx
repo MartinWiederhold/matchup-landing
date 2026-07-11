@@ -203,8 +203,8 @@ export function SportGroups({
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
               <div className="h-full rounded-full bg-matchup" style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-1.5 text-[11px] font-semibold text-neutral-500">
-              {t("discover.challengeSub", { goal: CHALLENGE_GOAL })} · {weekMatches}/{CHALLENGE_GOAL}
+            <p className="mt-1.5 truncate whitespace-nowrap text-[11px] font-semibold text-neutral-500">
+              {t("discover.challengeProgress", { done: weekMatches, goal: CHALLENGE_GOAL })}
             </p>
           </div>
         </button>
