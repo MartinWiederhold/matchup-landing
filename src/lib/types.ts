@@ -496,6 +496,7 @@ export interface TourProfile {
   passports: string[];
   tax_residence: string | null;
   esta_status: string | null;
+  esta_expiry: string | null; // ISO yyyy-mm-dd
   team: TeamMember[];
   calendar_connected: boolean;
   created_at?: string;

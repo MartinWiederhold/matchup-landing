@@ -7,7 +7,10 @@ import { supabase } from "@/lib/supabase";
 import { useAppNav } from "../appNav";
 import { loadTourProfile, loadTourPlan } from "@/lib/tour";
 import { planAlerts, kindShort, type Urgency } from "@/lib/deadlines";
+import { schengenProjection } from "@/lib/schengen";
 import type { TourProfile } from "@/lib/types";
+
+const MS_DAY = 86_400_000;
 
 const CIRCUIT_LABEL: Record<string, string> = {
   atp: "ATP Tour",
@@ -66,6 +69,20 @@ export default function TourHome() {
   };
   const URG_DOT: Record<Urgency, string> = { red: "bg-red-500", amber: "bg-amber-500", none: "bg-neutral-400" };
   const daysLabel = (n: number) => (n === 0 ? t("mode.today") : t("mode.inDays", { n }));
+
+  // Schengen 90/180-Projektion aus den Plan-Turnieren.
+  const schengen = inPlan
+    ? schengenProjection(tournaments.map((tr) => ({ start: tr.start_date, end: tr.end_date, country: tr.country })))
+    : null;
+  const schengenPct = schengen ? Math.min(100, Math.round((schengen.used / 90) * 100)) : 0;
+  const schengenUrg: Urgency = schengen ? (schengen.left <= 7 ? "red" : schengen.left <= 21 ? "amber" : "none") : "none";
+
+  // ESTA/Visum-Ablauf.
+  const estaExpiry = tour?.esta_expiry ?? null;
+  const estaDays = estaExpiry ? Math.round((Date.parse(estaExpiry + "T00:00:00Z") - Date.now()) / MS_DAY) : null;
+  const estaUrg: Urgency = estaDays == null ? "none" : estaDays <= 30 ? "red" : estaDays <= 90 ? "amber" : "none";
+  const hasEsta = !!tour?.esta_status && tour.esta_status !== "None";
+  const dateFmt = (iso: string) => new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
 
   return (
     <div className="px-4 pb-28">
@@ -161,19 +178,43 @@ export default function TourHome() {
         </div>
       )}
 
-      {/* Visa / ESTA */}
+      {/* Visa / Compliance */}
       <SecLabel>{t("mode.visaStatus")}</SecLabel>
+
+      {/* Schengen 90/180 aus dem Plan */}
+      {schengen && (
+        <div className="mb-2 rounded-2xl bg-black/[0.035] p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] font-bold text-neutral-900">{t("mode.schengen")}</p>
+            <span className={`text-[12px] font-bold ${schengenUrg === "red" ? "text-red-600" : schengenUrg === "amber" ? "text-amber-600" : "text-neutral-500"}`}>
+              {t("mode.daysLeft", { n: schengen.left })}
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+            <div className={`h-full rounded-full ${schengenUrg === "red" ? "bg-red-500" : schengenUrg === "amber" ? "bg-amber-500" : "bg-matchup"}`} style={{ width: `${schengenPct}%` }} />
+          </div>
+          <p className="mt-1.5 text-[11px] text-neutral-500">{t("mode.schengenUsed", { used: schengen.used })}</p>
+        </div>
+      )}
+
+      {/* ESTA / US-Einreise */}
       <div className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${estaUrg === "red" ? "bg-red-500/10 text-red-600" : estaUrg === "amber" ? "bg-amber-500/10 text-amber-600" : "bg-black/[0.05] text-neutral-500"}`}>
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" strokeLinecap="round" /></svg>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold text-neutral-900">{t("mode.esta")}</p>
+          <p className="text-[13px] font-bold text-neutral-900">{hasEsta ? tour!.esta_status : t("mode.esta")}</p>
           <p className="truncate text-[12px] text-neutral-500">
-            {tour?.esta_status ? tour.esta_status : t("mode.estaNone")}
+            {hasEsta && estaExpiry
+              ? `${t("mode.estaUntil", { date: dateFmt(estaExpiry) })}${estaDays != null && estaDays >= 0 ? ` · ${daysLabel(estaDays)}` : ""}`
+              : t("mode.estaNone")}
           </p>
         </div>
       </div>
+
+      {(schengen || hasEsta) && (
+        <p className="mt-1 px-1 text-[10px] text-neutral-400">{t("mode.visaDisclaimer")}</p>
+      )}
 
       {/* Turniere: Saisonplan (mit nächster Frist) oder Anregung */}
       <div className="mt-6 mb-2.5 flex items-center justify-between px-1">

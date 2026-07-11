@@ -352,6 +352,7 @@ export default function OnboardingFlow() {
             passports: state.passports.filter((p) => p.trim()),
             tax_residence: state.tax_residence || null,
             esta_status: state.esta_status,
+            esta_expiry: state.esta_date || null,
             team: state.team,
             calendar_connected: state.calendar_connected,
           });
