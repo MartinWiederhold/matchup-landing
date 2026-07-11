@@ -105,128 +105,187 @@ export function SportGroups({
   people,
   onSelect,
   onFind,
+  onLeaderboard,
   weekMatches = 0,
 }: {
   people: Profile[];
   onSelect: (sport: Sport) => void;
   onFind?: () => void;
+  onLeaderboard?: () => void;
   weekMatches?: number;
 }) {
   const t = useT();
+  const { locale } = useLocale();
   const [active, setActive] = useState(0);
-  const CARD_COUNT = SPORT_GROUPS.length + 1; // Sport-Karten + Challenge
 
-  function onScroll(e: React.UIEvent<HTMLDivElement>) {
-    const el = e.currentTarget;
-    const card = el.scrollWidth / CARD_COUNT;
-    setActive(Math.round(el.scrollLeft / card));
-  }
+  // Automatisch alle 3 Sekunden zwischen den drei Sportarten wechseln.
+  useEffect(() => {
+    const id = setInterval(() => setActive((a) => (a + 1) % SPORT_GROUPS.length), 3000);
+    return () => clearInterval(id);
+  }, []);
 
   const CHALLENGE_GOAL = 3;
   const pct = Math.min(100, Math.round((weekMatches / CHALLENGE_GOAL) * 100));
+  const today = new Date().toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+
+  const s = SPORT_GROUPS[active];
+  const members = people.filter((p) => (p.sports ?? []).includes(s.key));
+  const topPlayer = [...people].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0))[0];
 
   return (
-    <section className="mt-6">
-      <div className="px-4">
-        <SectionHead label={t("discover.sportsSection")} />
-      </div>
-      <div
-        onScroll={onScroll}
-        className="no-scrollbar flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-1"
-      >
-        {SPORT_GROUPS.map((s) => {
-          const members = people.filter((p) => (p.sports ?? []).includes(s.key));
-          return (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => onSelect(s.key)}
-              className="relative flex aspect-[4/5] w-[168px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[24px] bg-black/[0.035] p-5 text-left"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[13px] font-medium text-neutral-500">
-                  {members.length} {t("discover.players")}
-                </span>
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-full"
-                  style={{ background: `radial-gradient(circle at 32% 28%, ${s.color}55, ${s.color}18)` }}
-                >
-                  <SportIcon sport={s.key} size={17} className="text-neutral-700" />
-                </span>
+    <section className="mt-6 px-4">
+      <div className="grid grid-cols-2 gap-4">
+        {/* Links: rotierende Sport-Karte (Padel-Champs-Stil) + Punkte darunter */}
+        <div className="row-span-2 flex flex-col">
+          <button
+            type="button"
+            onClick={() => onSelect(s.key)}
+            className="flex flex-1 flex-col justify-between overflow-hidden rounded-[24px] bg-black/[0.035] p-5 text-left"
+          >
+            <div className="flex items-start justify-between">
+              <span className="text-[15px] text-neutral-500">{today}</span>
+              <CalendarIcon />
+            </div>
+            <div className="mt-14">
+              <h3 className="text-[22px] font-bold leading-tight tracking-tight text-neutral-900">
+                {sportLabel(s.key)}
+                <br />
+                {t("discover.circle")}
+              </h3>
+              <div className="mt-4 flex -space-x-3">
+                {members.length ? (
+                  members.slice(0, 4).map((p, i) => (
+                    <span
+                      key={i}
+                      className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[12px] font-bold text-neutral-500 ring-2 ring-white"
+                    >
+                      {p.profile_image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        (p.first_name?.[0] ?? "?").toUpperCase()
+                      )}
+                    </span>
+                  ))
+                ) : (
+                  [0, 1, 2].map((i) => (
+                    <span key={i} className="h-10 w-10 rounded-full bg-black/[0.07] ring-2 ring-white" />
+                  ))
+                )}
               </div>
-              <div>
-                <h3 className="text-[19px] font-bold leading-tight tracking-tight text-neutral-900">
-                  {sportLabel(s.key)}
-                  <br />
-                  {t("discover.circle")}
-                </h3>
-                <div className="mt-3 flex -space-x-2.5">
-                  {members.length ? (
-                    members.slice(0, 4).map((p, i) => (
-                      <span
-                        key={i}
-                        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[11px] font-bold text-neutral-500 ring-2 ring-white"
-                      >
-                        {p.profile_image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          (p.first_name?.[0] ?? "?").toUpperCase()
-                        )}
-                      </span>
-                    ))
-                  ) : (
-                    [0, 1, 2].map((i) => (
-                      <span key={i} className="h-9 w-9 rounded-full bg-black/[0.07] ring-2 ring-white" />
-                    ))
-                  )}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+            </div>
+          </button>
+          {/* Punkte zum Wechseln */}
+          <div className="mt-3 flex gap-1.5 pl-1">
+            {SPORT_GROUPS.map((g, i) => (
+              <button
+                key={g.key}
+                type="button"
+                aria-label={sportLabel(g.key)}
+                onClick={() => setActive(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === active ? "w-5 bg-neutral-800" : "w-1.5 bg-black/15"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
 
-        {/* 7-Tage-Match-Challenge */}
+        {/* Rechts oben: 7-Tage-Match-Challenge (mockup2 „New Challenge"-Stil) */}
         <button
           type="button"
           onClick={onFind}
-          className="relative flex aspect-[4/5] w-[168px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[24px] bg-gradient-to-br from-matchup to-indigo-500 p-5 text-left text-white"
+          className="flex flex-col rounded-[24px] bg-black/[0.035] p-5 text-left"
         >
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold backdrop-blur-sm">
-            <SportIcon sport="tennis" size={13} className="text-white" />
-            {t("discover.challengeTag")}
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-matchup to-indigo-500 p-[1.5px]">
+            <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black">
+              <SparkleIcon />
+              {t("discover.challengeTag")}
+            </span>
           </span>
-          <div>
-            <h3 className="text-[18px] font-bold leading-tight tracking-tight">
-              {t("discover.challengeTitle")}
-            </h3>
-            <p className="mt-1 text-[12px] leading-snug text-white/85">
-              {t("discover.challengeSub", { goal: CHALLENGE_GOAL })}
-            </p>
-            <div className="mt-3">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
-                <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
-              </div>
-              <p className="mt-1.5 text-[11px] font-semibold text-white/90">
-                {weekMatches}/{CHALLENGE_GOAL}
-              </p>
+          <h3 className="mt-4 text-[19px] font-bold leading-tight tracking-tight text-neutral-900">
+            {t("discover.challengeTitle")}
+          </h3>
+          <div className="mt-3">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+              <div className="h-full rounded-full bg-matchup" style={{ width: `${pct}%` }} />
             </div>
+            <p className="mt-1.5 text-[11px] font-semibold text-neutral-500">
+              {t("discover.challengeSub", { goal: CHALLENGE_GOAL })} · {weekMatches}/{CHALLENGE_GOAL}
+            </p>
           </div>
         </button>
+
+        {/* Rechts unten: Sport-Icons + „+" (führt zur Übersicht) */}
+        <div className="flex items-center justify-between rounded-[24px] bg-black/[0.035] p-5">
+          <div className="flex -space-x-3">
+            {SPORT_GROUPS.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                aria-label={sportLabel(g.key)}
+                onClick={() => onSelect(g.key)}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-black/[0.06] text-neutral-500 ring-2 ring-white"
+              >
+                <SportIcon sport={g.key} size={18} />
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={onFind}
+            aria-label={t("discover.find")}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white"
+          >
+            <PlusIcon size={20} />
+          </button>
+        </div>
       </div>
 
-      {/* Punkte */}
-      <div className="mt-2.5 flex justify-center gap-1.5">
-        {Array.from({ length: CARD_COUNT }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-1.5 rounded-full transition-all ${
-              i === active ? "w-4 bg-neutral-800" : "w-1.5 bg-black/15"
-            }`}
-          />
-        ))}
-      </div>
+      {/* Leaderboard (mockup2-Stil) */}
+      <button
+        type="button"
+        onClick={onLeaderboard}
+        className="relative mt-4 block w-full rounded-[24px] bg-black/[0.035] px-5 pb-14 pt-5 text-left"
+      >
+        <p className="text-[17px] text-neutral-500">{t("discover.leaderboard")}</p>
+        <div className="mt-8 flex flex-col items-center">
+          <CrownIcon />
+          <span className="mt-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
+            {topPlayer?.profile_image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={topPlayer.profile_image} alt="" className="h-full w-full rounded-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-neutral-500">
+                {(topPlayer?.first_name?.[0] ?? "?").toUpperCase()}
+              </span>
+            )}
+          </span>
+        </div>
+      </button>
     </section>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="h-[19px] w-[19px] text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+    </svg>
+  );
+}
+function SparkleIcon() {
+  return (
+    <svg className="h-[13px] w-[13px] text-matchup" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z" />
+    </svg>
+  );
+}
+function CrownIcon() {
+  return (
+    <svg className="h-[26px] w-[26px] text-matchup" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" />
+    </svg>
   );
 }
 
