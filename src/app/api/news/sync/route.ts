@@ -27,10 +27,15 @@ type Feed = { sport: Sport; url: string; source?: string };
 // Zuverlässige, öffentliche Feeds. tennisnet liefert Bilder; Google-News-Suche
 // liefert frische Multi-Quellen-Headlines (mit Quellenname + Datum).
 const FEEDS: Feed[] = [
+  // Tennis: tennisnet (mit Bildern) + Google-News (frische Multi-Quellen-Headlines)
   { sport: "tennis", url: "https://www.tennisnet.com/rss.xml", source: "tennisnet" },
   { sport: "tennis", url: "https://news.google.com/rss/search?q=Tennis+ATP+WTA&hl=de&gl=DE&ceid=DE:de" },
+  // Padel: Google-News (DE) + padelmagazine (FR, mit Bildern – Padels Kernmarkt)
   { sport: "padel", url: "https://news.google.com/rss/search?q=Padel+Tennis&hl=de&gl=DE&ceid=DE:de" },
+  { sport: "padel", url: "https://www.padelmagazine.fr/feed/", source: "Padel Magazine" },
+  // Pickleball: Google-News (EN) + The Dink (mit Bildern)
   { sport: "pickleball", url: "https://news.google.com/rss/search?q=Pickleball&hl=en&gl=US&ceid=US:en" },
+  { sport: "pickleball", url: "https://www.thedinkpickleball.com/rss/", source: "The Dink" },
 ];
 
 const MAX_PER_FEED = 20;
