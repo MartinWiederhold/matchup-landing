@@ -58,15 +58,15 @@ const SPORTS = [
 type ForYouPerson = {
   name: string; age: number; city: string; dist: string; img: string;
   online: boolean; sports: string[]; level: string; rating: string; bio: string;
-  matches: number; winrate: string; score: number;
+  matches: number; winrate: string; score: number; gallery: string[];
 };
 const FORYOU: ForYouPerson[] = [
-  { name: "Elena", age: 27, city: "Zürich", dist: "1,2 km", img: "https://i.pravatar.cc/600?img=24", online: true, sports: ["Tennis", "Padel"], level: "Fortgeschritten", rating: "LK 9", bio: "Spiele seit 12 Jahren Tennis, seit einem Jahr auch Padel. Suche regelmässige Partner für Feierabend-Matches – am liebsten dienstags oder donnerstags.", matches: 38, winrate: "58 %", score: 1180 },
-  { name: "Marco", age: 34, city: "Winterthur", dist: "6,8 km", img: "https://i.pravatar.cc/600?img=18", online: false, sports: ["Tennis"], level: "Turnierspieler", rating: "LK 5", bio: "Ambitionierter Turnierspieler, suche starke Gegner für Trainingsmatches. Ernst, aber immer fair und mit Spass an langen Ballwechseln.", matches: 91, winrate: "67 %", score: 1420 },
-  { name: "Priya", age: 24, city: "Zürich", dist: "2,4 km", img: "https://i.pravatar.cc/600?img=45", online: true, sports: ["Padel", "Pickleball"], level: "Mittel", rating: "–", bio: "Neu in der Padel-Welt und total begeistert! Suche entspannte Leute zum gemeinsamen Lernen und für lockere Doppel am Wochenende.", matches: 14, winrate: "50 %", score: 1010 },
-  { name: "Tom", age: 31, city: "Zug", dist: "12 km", img: "https://i.pravatar.cc/600?img=53", online: false, sports: ["Tennis", "Pickleball"], level: "Fortgeschritten", rating: "LK 11", bio: "Feierabend-Spieler mit viel Herzblut. Tennis im Sommer, Pickleball im Winter. Immer für ein Match und danach ein kühles Getränk zu haben.", matches: 52, winrate: "55 %", score: 1150 },
-  { name: "Yuki", age: 29, city: "Luzern", dist: "9,1 km", img: "https://i.pravatar.cc/600?img=41", online: true, sports: ["Tennis"], level: "Mittel", rating: "LK 14", bio: "Spiele zum Ausgleich und um fit zu bleiben. Kein Leistungsdruck – Hauptsache Bewegung, gute Laune und nette Leute auf dem Platz.", matches: 23, winrate: "48 %", score: 1060 },
-  { name: "Ben", age: 36, city: "Basel", dist: "—", img: "https://i.pravatar.cc/600?img=57", online: false, sports: ["Padel"], level: "Fortgeschritten", rating: "–", bio: "Padel-Fan der ersten Stunde. Organisiere regelmässig Doppel-Runden und freue mich immer über neue Mitspieler:innen jeden Levels.", matches: 64, winrate: "60 %", score: 1240 },
+  { name: "Elena", age: 27, city: "Zürich", dist: "1,2 km", img: "https://i.pravatar.cc/600?img=24", online: true, sports: ["Tennis", "Padel"], level: "Fortgeschritten", rating: "LK 9", bio: "Spiele seit 12 Jahren Tennis, seit einem Jahr auch Padel. Suche regelmässige Partner für Feierabend-Matches – am liebsten dienstags oder donnerstags.", matches: 38, winrate: "58 %", score: 1180, gallery: ["https://i.pravatar.cc/600?img=24", "https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=600&q=70", "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=600&q=70", "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=70"] },
+  { name: "Marco", age: 34, city: "Winterthur", dist: "6,8 km", img: "https://i.pravatar.cc/600?img=18", online: false, sports: ["Tennis"], level: "Turnierspieler", rating: "LK 5", bio: "Ambitionierter Turnierspieler, suche starke Gegner für Trainingsmatches. Ernst, aber immer fair und mit Spass an langen Ballwechseln.", matches: 91, winrate: "67 %", score: 1420, gallery: ["https://i.pravatar.cc/600?img=18", "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=600&q=70", "https://images.unsplash.com/photo-1531315630201-bb15abeb1653?w=600&q=70", "https://images.unsplash.com/photo-1530915365347-e35b749a0381?w=600&q=70"] },
+  { name: "Priya", age: 24, city: "Zürich", dist: "2,4 km", img: "https://i.pravatar.cc/600?img=45", online: true, sports: ["Padel", "Pickleball"], level: "Mittel", rating: "–", bio: "Neu in der Padel-Welt und total begeistert! Suche entspannte Leute zum gemeinsamen Lernen und für lockere Doppel am Wochenende.", matches: 14, winrate: "50 %", score: 1010, gallery: ["https://i.pravatar.cc/600?img=45", "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=70", "https://images.unsplash.com/photo-1617083277624-4b7a2a1f7f0f?w=600&q=70", "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=600&q=70"] },
+  { name: "Tom", age: 31, city: "Zug", dist: "12 km", img: "https://i.pravatar.cc/600?img=53", online: false, sports: ["Tennis", "Pickleball"], level: "Fortgeschritten", rating: "LK 11", bio: "Feierabend-Spieler mit viel Herzblut. Tennis im Sommer, Pickleball im Winter. Immer für ein Match und danach ein kühles Getränk zu haben.", matches: 52, winrate: "55 %", score: 1150, gallery: ["https://i.pravatar.cc/600?img=53", "https://images.unsplash.com/photo-1530915365347-e35b749a0381?w=600&q=70", "https://images.unsplash.com/photo-1551773148-c9f6bbe02b12?w=600&q=70", "https://images.unsplash.com/photo-1595435742656-5272d0b3fa82?w=600&q=70"] },
+  { name: "Yuki", age: 29, city: "Luzern", dist: "9,1 km", img: "https://i.pravatar.cc/600?img=41", online: true, sports: ["Tennis"], level: "Mittel", rating: "LK 14", bio: "Spiele zum Ausgleich und um fit zu bleiben. Kein Leistungsdruck – Hauptsache Bewegung, gute Laune und nette Leute auf dem Platz.", matches: 23, winrate: "48 %", score: 1060, gallery: ["https://i.pravatar.cc/600?img=41", "https://images.unsplash.com/photo-1531315630201-bb15abeb1653?w=600&q=70", "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=600&q=70", "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=70"] },
+  { name: "Ben", age: 36, city: "Basel", dist: "—", img: "https://i.pravatar.cc/600?img=57", online: false, sports: ["Padel"], level: "Fortgeschritten", rating: "–", bio: "Padel-Fan der ersten Stunde. Organisiere regelmässig Doppel-Runden und freue mich immer über neue Mitspieler:innen jeden Levels.", matches: 64, winrate: "60 %", score: 1240, gallery: ["https://i.pravatar.cc/600?img=57", "https://images.unsplash.com/photo-1617083277624-4b7a2a1f7f0f?w=600&q=70", "https://images.unsplash.com/photo-1551773148-c9f6bbe02b12?w=600&q=70", "https://images.unsplash.com/photo-1530915365347-e35b749a0381?w=600&q=70"] },
 ];
 
 const CIRCLE = [
@@ -1051,8 +1051,8 @@ export default function Mockup2Screen() {
 
         {/* For-You-Detailansicht (Vollbild) */}
         {foryouView && (
-          <div className="absolute inset-0 z-50 flex flex-col bg-white">
-            <div className="flex-1 overflow-y-auto pb-32">
+          <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] flex-col bg-white">
+            <div className="flex-1 overflow-y-auto">
               {/* Foto-Header */}
               <div className="relative">
                 <img src={foryouView.img} alt="" className="h-[420px] w-full object-cover" />
@@ -1115,6 +1115,18 @@ export default function Mockup2Screen() {
                   <p className="text-[15px] leading-relaxed text-neutral-700">{foryouView.bio}</p>
                 </div>
 
+                {/* Galerie */}
+                <div>
+                  <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Galerie</p>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {foryouView.gallery.map((g, i) => (
+                      <div key={i} className="aspect-square overflow-hidden rounded-2xl bg-black/[0.05]">
+                        <img src={g} alt="" loading="lazy" className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Gemeinsam */}
                 <div className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-matchup">
@@ -1129,7 +1141,7 @@ export default function Mockup2Screen() {
             </div>
 
             {/* Aktionsleiste */}
-            <div className="absolute inset-x-0 bottom-0 flex gap-3 border-t border-black/10 bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
+            <div className="flex shrink-0 gap-3 border-t border-black/10 bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
               <button
                 type="button"
                 onClick={() => setForyouView(null)}
