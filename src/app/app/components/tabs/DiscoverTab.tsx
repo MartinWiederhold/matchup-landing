@@ -13,7 +13,8 @@ import Avatar from "../shared/Avatar";
 import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
-import { setMode as persistMode } from "@/lib/tour";
+import TourGate from "../home/TourGate";
+import { setMode as persistMode, tourUnlocked } from "@/lib/tour";
 import { useAuth } from "@/lib/auth";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
@@ -24,7 +25,11 @@ export default function DiscoverTab() {
   const t = useT();
   const { profile, setActiveTab, openSubView, refreshBadges } = useAppNav();
   const { refreshProfile } = useAuth();
-  const [mode, setModeState] = useState<"play" | "tour">(profile.mode ?? "play");
+  // Tour ist gesperrt (Early Access): nur mit lokalem Freischalt-Code aktiv.
+  const [mode, setModeState] = useState<"play" | "tour">(
+    profile.mode === "tour" && typeof window !== "undefined" && tourUnlocked() ? "tour" : "play",
+  );
+  const [showTourGate, setShowTourGate] = useState(false);
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -184,10 +189,14 @@ export default function DiscoverTab() {
     loadCandidates();
   }, [loadCandidates]);
 
-  function changeMode(m: "play" | "tour") {
-    if (m === mode) return;
+  function applyMode(m: "play" | "tour") {
     setModeState(m);
     void persistMode(profile.id, m).then(() => refreshProfile());
+  }
+  function changeMode(m: "play" | "tour") {
+    if (m === mode) return;
+    if (m === "tour" && !tourUnlocked()) { setShowTourGate(true); return; }
+    applyMode(m);
   }
 
   if (isLoading) return <FullLoading />;
@@ -302,6 +311,13 @@ export default function DiscoverTab() {
             setShowFilter(false);
           }}
           onClose={() => setShowFilter(false)}
+        />
+      )}
+
+      {showTourGate && (
+        <TourGate
+          onClose={() => setShowTourGate(false)}
+          onUnlock={() => { setShowTourGate(false); applyMode("tour"); }}
         />
       )}
     </div>

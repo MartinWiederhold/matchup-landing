@@ -35,7 +35,8 @@ import {
   currentStepId,
   totalSteps,
 } from "./onboardingReducer";
-import { saveTourProfile } from "@/lib/tour";
+import { saveTourProfile, tourUnlocked } from "@/lib/tour";
+import TourGate from "../home/TourGate";
 
 const SPORTS: { value: Sport; labelKey: string }[] = [
   { value: "tennis", labelKey: "onboarding.sportTennis" },
@@ -129,6 +130,9 @@ export default function OnboardingFlow() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Foto, das gerade im Kreis-Cropper justiert wird (vor ADD_PHOTO).
   const [cropFile, setCropFile] = useState<File | null>(null);
+  // Tour ist Early-Access-gesperrt: nur mit Freischalt-Code wählbar.
+  const [tourOk, setTourOk] = useState(() => (typeof window !== "undefined" ? tourUnlocked() : false));
+  const [tourGate, setTourGate] = useState(false);
 
   // Fortschritt bei jeder Änderung sichern (ohne File-Objekte).
   useEffect(() => {
@@ -421,7 +425,9 @@ export default function OnboardingFlow() {
 
   const cur = currentStepId(state);
   const total = totalSteps(state);
-  const valid = isStepValid(state);
+  // Tour im Fork erst nach Freischaltung erlaubt (Early Access).
+  const tourBlocked = cur === "fork" && state.onb_mode === "tour" && !tourOk;
+  const valid = isStepValid(state) && !tourBlocked;
   const isLast = state.step === total;
 
   function handleNext() {
@@ -765,8 +771,17 @@ export default function OnboardingFlow() {
               <span className="block font-semibold">{t("onboarding.forkPlay")}</span>
               <span className="block text-xs text-neutral-500">{t("onboarding.forkPlayDesc")}</span>
             </SelectRow>
-            <SelectRow selected={state.onb_mode === "tour"} onClick={() => dispatch({ type: "SET_MODE", payload: "tour" })}>
-              <span className="block font-semibold">{t("onboarding.forkTour")}</span>
+            <SelectRow
+              selected={state.onb_mode === "tour"}
+              onClick={() => {
+                dispatch({ type: "SET_MODE", payload: "tour" });
+                if (!tourOk) setTourGate(true);
+              }}
+            >
+              <span className="flex items-center gap-1.5 font-semibold">
+                {t("onboarding.forkTour")}
+                {!tourOk && <span className="rounded-full bg-black/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.soon")}</span>}
+              </span>
               <span className="block text-xs text-neutral-500">{t("onboarding.forkTourDesc")}</span>
             </SelectRow>
             <p className="mt-3 rounded-xl bg-black/[0.035] px-4 py-3 text-xs text-neutral-500">{t("onboarding.forkSwitchHint")}</p>
@@ -1226,6 +1241,13 @@ export default function OnboardingFlow() {
             dispatch({ type: "ADD_PHOTO", payload: f });
             setCropFile(null);
           }}
+        />
+      )}
+
+      {tourGate && (
+        <TourGate
+          onClose={() => { setTourGate(false); dispatch({ type: "SET_MODE", payload: "play" }); }}
+          onUnlock={() => { setTourOk(true); setTourGate(false); }}
         />
       )}
     </div>

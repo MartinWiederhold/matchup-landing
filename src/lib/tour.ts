@@ -1,6 +1,23 @@
 import { supabase } from "@/lib/supabase";
 import type { TourProfile } from "@/lib/types";
 
+/** Tour ist vorerst gesperrt (Early Access). Freischalt-Code für interne Tests. */
+export const TOUR_CODE = "5080";
+export function tourUnlocked(): boolean {
+  try {
+    return localStorage.getItem("mu_tour_unlocked") === "1";
+  } catch {
+    return false;
+  }
+}
+export function unlockTour(): void {
+  try {
+    localStorage.setItem("mu_tour_unlocked", "1");
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Lädt das Tour-Profil des Users (oder null, wenn noch keins existiert). */
 export async function loadTourProfile(userId: string): Promise<TourProfile | null> {
   const { data } = await supabase
