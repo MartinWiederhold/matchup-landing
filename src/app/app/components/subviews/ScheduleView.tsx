@@ -16,7 +16,7 @@ const DOT: Record<Kind, string> = {
 
 type Ev = { id: string; kind: string; title: string; event_date: string; event_time: string | null; note: string | null; tournament_id: string | null };
 type Tourn = { id: string; name: string };
-type Draft = { kind: Kind; title: string; event_date: string; event_time: string; tournament_id: string };
+type Draft = { id?: string; kind: Kind; title: string; event_date: string; event_time: string; tournament_id: string };
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 const emptyDraft = (kind: Kind = "training"): Draft => ({ kind, title: "", event_date: todayISO(), event_time: "", tournament_id: "" });
@@ -70,17 +70,31 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
   async function save() {
     if (!draft || !draft.title.trim()) return;
     setSaving(true);
-    await supabase.from("tour_events").insert({
-      user_id: profile.id,
+    const payload = {
       kind: draft.kind,
       title: draft.title.trim(),
       event_date: draft.event_date,
       event_time: draft.event_time || null,
       tournament_id: draft.tournament_id || null,
-    });
+    };
+    if (draft.id) {
+      await supabase.from("tour_events").update(payload).eq("id", draft.id);
+    } else {
+      await supabase.from("tour_events").insert({ user_id: profile.id, ...payload });
+    }
     setSaving(false);
     setDraft(null);
     void load();
+  }
+  function editEvent(e: Ev) {
+    setDraft({
+      id: e.id,
+      kind: (KINDS as readonly string[]).includes(e.kind) ? (e.kind as Kind) : "other",
+      title: e.title,
+      event_date: e.event_date,
+      event_time: e.event_time ? e.event_time.slice(0, 5) : "",
+      tournament_id: e.tournament_id ?? "",
+    });
   }
   async function remove(id: string) {
     await supabase.from("tour_events").delete().eq("id", id);
@@ -122,15 +136,17 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
               <div className="rounded-2xl bg-black/[0.035] p-2">
                 {evs.map((e, i) => (
                   <div key={e.id} className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
-                    <span className="w-11 shrink-0 text-[12px] font-bold text-neutral-500">{e.event_time ? e.event_time.slice(0, 5) : "—"}</span>
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[(e.kind as Kind)] ?? DOT.other}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-semibold text-neutral-900">{e.title}</p>
-                      <p className="text-[11.5px] text-neutral-500">
-                        {kindLabel(e.kind)}
-                        {e.tournament_id && plan.find((p) => p.id === e.tournament_id) ? ` · ${plan.find((p) => p.id === e.tournament_id)!.name}` : ""}
-                      </p>
-                    </div>
+                    <button type="button" onClick={() => editEvent(e)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                      <span className="w-11 shrink-0 text-[12px] font-bold text-neutral-500">{e.event_time ? e.event_time.slice(0, 5) : "—"}</span>
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${DOT[(e.kind as Kind)] ?? DOT.other}`} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-semibold text-neutral-900">{e.title}</span>
+                        <span className="block text-[11.5px] text-neutral-500">
+                          {kindLabel(e.kind)}
+                          {e.tournament_id && plan.find((p) => p.id === e.tournament_id) ? ` · ${plan.find((p) => p.id === e.tournament_id)!.name}` : ""}
+                        </span>
+                      </span>
+                    </button>
                     <button type="button" onClick={() => remove(e.id)} aria-label="×" className="shrink-0 text-neutral-300">
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
                     </button>
@@ -171,7 +187,7 @@ export default function ScheduleView({ addKind }: { addKind?: string }) {
         <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] items-end bg-black/40 backdrop-blur-sm" onClick={() => setDraft(null)}>
           <div className="w-full rounded-t-[28px] bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-base font-bold text-neutral-900">{t("mode.addEvent")}</span>
+              <span className="text-base font-bold text-neutral-900">{draft.id ? t("mode.editEvent") : t("mode.addEvent")}</span>
               <button type="button" onClick={() => setDraft(null)} className="text-sm font-medium text-neutral-500">{t("common.cancel")}</button>
             </div>
             <div className="space-y-2.5">

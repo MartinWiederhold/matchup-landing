@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
-import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, type TeamInvite } from "@/lib/tour";
+import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, removeInvite, type TeamInvite } from "@/lib/tour";
 import type { Circuit, TeamMember } from "@/lib/types";
 
 const CIRCUITS: { value: Circuit; label: string }[] = [
@@ -158,9 +158,15 @@ export default function TourProfileEdit() {
                   </p>
                   <div className="flex gap-2">
                     <input value={team.find((m) => m.role === r)?.name ?? ""} onChange={(e) => setRole(r, e.target.value)} placeholder={t("onboarding.teamNamePlaceholder")} className={`${inp} flex-1`} />
-                    <button type="button" onClick={() => copyInvite(r)} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-matchup">
-                      {copied === r ? t("mode.copied") : t("mode.invite")}
-                    </button>
+                    {inv ? (
+                      <button type="button" onClick={async () => { if (!window.confirm(t("mode.removeConfirm"))) return; await removeInvite(inv.id); setInvites(await loadTeam(profile.id)); }} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-red-500">
+                        {t("mode.remove")}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => copyInvite(r)} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-matchup">
+                        {copied === r ? t("mode.copied") : t("mode.invite")}
+                      </button>
+                    )}
                   </div>
                 </div>
               );

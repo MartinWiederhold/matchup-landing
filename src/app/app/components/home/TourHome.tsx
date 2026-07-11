@@ -189,7 +189,7 @@ export default function TourHome() {
         {[
           { l: t("mode.scanReceipt"), p: "M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16", active: true },
           { l: t("mode.logTraining"), p: "M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM12 14v3M10.5 15.5h3", active: true, to: "schedule" as const },
-          { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", active: false },
+          { l: t("mode.deadlines"), p: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z", active: true, to: "deadlines" as const },
         ].map((a) => (
           <button
             key={a.l}
@@ -197,6 +197,7 @@ export default function TourHome() {
             onClick={() => {
               if (!a.active) return;
               if ("to" in a && a.to === "schedule") openSubView({ type: "tour-schedule", addKind: "training" });
+              else if ("to" in a && a.to === "deadlines") openSubView({ type: "tour-deadlines" });
               else openSubView({ type: "tour-expenses" });
             }}
             className="relative flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] px-2 py-4 text-center"

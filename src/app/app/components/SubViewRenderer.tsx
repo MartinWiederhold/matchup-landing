@@ -19,6 +19,7 @@ import ScheduleView from "./subviews/ScheduleView";
 import TourProfileEdit from "./subviews/TourProfileEdit";
 import TourPlayers from "./subviews/TourPlayers";
 import TourPlayerView from "./subviews/TourPlayerView";
+import TourDeadlines from "./subviews/TourDeadlines";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -88,6 +89,8 @@ export default function SubViewRenderer({
       return <TourPlayers />;
     case "tour-player-view":
       return <TourPlayerView playerId={subView.playerId} role={subView.role} playerName={subView.playerName} />;
+    case "tour-deadlines":
+      return <TourDeadlines />;
     default:
       return null;
   }
