@@ -30,7 +30,9 @@ export type SubViewState =
   | { type: "blocked-users" }
   | { type: "tour-expenses" }
   | { type: "tour-schedule"; addKind?: string }
-  | { type: "tour-profile-edit" };
+  | { type: "tour-profile-edit" }
+  | { type: "tour-players" }
+  | { type: "tour-player-view"; playerId: string; role: string; playerName?: string };
 
 interface AppNavContextType {
   profile: Profile;

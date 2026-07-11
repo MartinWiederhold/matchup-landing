@@ -81,6 +81,22 @@ export function inviteUrl(token: string): string {
   return `${origin}/app?team=${token}`;
 }
 
+/** Spieler, die mich in ihr Team eingeladen haben (ich bin Coach/Physio/Agent…). */
+export type MyPlayer = { player_id: string; role: string; player_name: string | null };
+export async function loadMyPlayers(userId: string): Promise<MyPlayer[]> {
+  const { data } = await supabase
+    .from("tour_team")
+    .select("player_id, role")
+    .eq("member_user_id", userId)
+    .eq("status", "active");
+  const rows = (data ?? []) as { player_id: string; role: string }[];
+  if (!rows.length) return [];
+  const ids = [...new Set(rows.map((r) => r.player_id))];
+  const { data: profs } = await supabase.from("profiles").select("id, first_name").in("id", ids);
+  const nameMap = new Map((profs ?? []).map((p) => [p.id as string, p.first_name as string | null]));
+  return rows.map((r) => ({ player_id: r.player_id, role: r.role, player_name: nameMap.get(r.player_id) ?? null }));
+}
+
 /** Nimmt eine Einladung an (verknüpft den eingeloggten Nutzer mit dem Spieler). */
 export async function acceptInvite(token: string): Promise<{ ok?: boolean; role?: string; player?: string; error?: string }> {
   const { data: sess } = await supabase.auth.getSession();
