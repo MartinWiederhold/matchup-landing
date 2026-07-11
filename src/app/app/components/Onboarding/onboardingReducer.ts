@@ -1,4 +1,4 @@
-import type { OnboardingState, Sport, SkillLevel } from "@/lib/types";
+import type { OnboardingState, Sport, SkillLevel, Circuit, TeamMember } from "@/lib/types";
 
 export const initialOnboardingState: OnboardingState = {
   step: 1,
@@ -28,9 +28,43 @@ export const initialOnboardingState: OnboardingState = {
   visibility_gender: ["male", "female"],
   visibility_age_min: 18,
   visibility_age_max: 99,
+  onb_mode: null,
+  circuit: null,
+  tour_ranking: null,
+  tour_points: null,
+  passports: [],
+  tax_residence: "",
+  esta_status: null,
+  esta_date: "",
+  team: [],
+  calendar_connected: false,
 };
 
-export const TOTAL_STEPS = 10;
+/** Step-IDs in Reihenfolge. Gemeinsam bis zur Gabelung, dann je nach Modus. */
+export type StepId =
+  | "welcome" | "language" | "sports" | "location" | "club" | "identity" | "fork"
+  | "skill" | "height" | "goals" | "photos"
+  | "circuit" | "ranking" | "passport" | "team" | "calendar";
+
+const COMMON: StepId[] = ["welcome", "language", "sports", "location", "club", "identity", "fork"];
+const PLAY: StepId[] = ["skill", "height", "goals", "photos"];
+const TOUR: StepId[] = ["circuit", "ranking", "passport", "team", "calendar", "photos"];
+
+/** Sichtbare Schritte je nach gewähltem Modus. */
+export function visibleSteps(state: OnboardingState): StepId[] {
+  if (state.onb_mode === "play") return [...COMMON, ...PLAY];
+  if (state.onb_mode === "tour") return [...COMMON, ...TOUR];
+  return COMMON; // vor der Gabelung endet es beim Fork
+}
+
+export function currentStepId(state: OnboardingState): StepId {
+  const steps = visibleSteps(state);
+  return steps[Math.min(state.step, steps.length) - 1];
+}
+
+export function totalSteps(state: OnboardingState): number {
+  return visibleSteps(state).length;
+}
 
 /** Alter aus ISO-Geburtsdatum (yyyy-mm-dd). null wenn ungültig. */
 export function ageFromBirthdate(iso: string): number | null {
@@ -69,6 +103,15 @@ export type Action =
       type: "SET_VISIBILITY";
       payload: { gender: string[]; ageMin: number; ageMax: number };
     }
+  | { type: "SET_MODE"; payload: "play" | "tour" }
+  | { type: "SET_CIRCUIT"; payload: Circuit }
+  | { type: "SET_TOUR_RANKING"; payload: number | null }
+  | { type: "SET_TOUR_POINTS"; payload: number | null }
+  | { type: "SET_PASSPORTS"; payload: string[] }
+  | { type: "SET_TAX_RESIDENCE"; payload: string }
+  | { type: "SET_ESTA"; payload: { status?: string | null; date?: string } }
+  | { type: "SET_TEAM"; payload: TeamMember[] }
+  | { type: "SET_CALENDAR"; payload: boolean }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" };
 
@@ -131,8 +174,30 @@ export function onboardingReducer(
         visibility_age_min: action.payload.ageMin,
         visibility_age_max: action.payload.ageMax,
       };
+    case "SET_MODE":
+      return { ...state, onb_mode: action.payload };
+    case "SET_CIRCUIT":
+      return { ...state, circuit: action.payload };
+    case "SET_TOUR_RANKING":
+      return { ...state, tour_ranking: action.payload };
+    case "SET_TOUR_POINTS":
+      return { ...state, tour_points: action.payload };
+    case "SET_PASSPORTS":
+      return { ...state, passports: action.payload };
+    case "SET_TAX_RESIDENCE":
+      return { ...state, tax_residence: action.payload };
+    case "SET_ESTA":
+      return {
+        ...state,
+        esta_status: action.payload.status !== undefined ? action.payload.status : state.esta_status,
+        esta_date: action.payload.date !== undefined ? action.payload.date : state.esta_date,
+      };
+    case "SET_TEAM":
+      return { ...state, team: action.payload };
+    case "SET_CALENDAR":
+      return { ...state, calendar_connected: action.payload };
     case "NEXT_STEP":
-      return { ...state, step: Math.min(TOTAL_STEPS, state.step + 1) };
+      return { ...state, step: Math.min(totalSteps(state), state.step + 1) };
     case "PREV_STEP":
       return { ...state, step: Math.max(1, state.step - 1) };
     default:
@@ -142,35 +207,49 @@ export function onboardingReducer(
 
 /** Validierung pro Schritt — bestimmt, ob der Weiter-Button aktiv ist. */
 export function isStepValid(state: OnboardingState): boolean {
-  switch (state.step) {
-    case 1:
-      return true; // Willkommen
-    case 2:
+  switch (currentStepId(state)) {
+    case "welcome":
+      return true;
+    case "language":
       return state.language === "de" || state.language === "en";
-    case 3:
+    case "sports":
       return state.sports.length >= 1;
-    case 4:
+    case "location":
       return (
         state.latitude !== null &&
         state.longitude !== null &&
         state.city.trim().length > 0
       );
-    case 5:
-      return true; // Club optional
-    case 6:
-      // Name + Alter + Geschlecht auf einer Seite
+    case "club":
+      return true; // Club optional (bleibt im Play-Pfad erhalten)
+    case "identity":
       return (
         state.first_name.trim().length >= 2 &&
         state.age !== null && state.age >= 18 && state.age <= 100 &&
         state.gender !== null
       );
-    case 7:
+    case "fork":
+      return state.onb_mode !== null;
+    // Play
+    case "skill":
       return state.skill_level !== null;
-    case 8:
-      return true; // Grösse optional
-    case 9:
+    case "height":
+      return true; // optional
+    case "goals":
       return state.goals.length >= 1;
-    case 10:
+    // Tour
+    case "circuit":
+      return state.circuit !== null;
+    case "ranking":
+      return state.tour_ranking !== null && state.tour_ranking > 0;
+    case "passport":
+      return state.passports.filter((p) => p.trim()).length >= 1;
+    case "team":
+      return true; // optional
+    case "calendar":
+      return true; // optional (Skip erlaubt)
+    // Gemeinsam am Ende
+    case "photos":
       return state.photos.length >= 1;
     default:
       return false;

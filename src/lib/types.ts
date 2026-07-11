@@ -421,6 +421,17 @@ export interface OnboardingState {
   visibility_gender: string[];
   visibility_age_min: number;
   visibility_age_max: number;
+  // Dual-Mode Fork + Tour-Pfad
+  onb_mode: "play" | "tour" | null;
+  circuit: Circuit | null;
+  tour_ranking: number | null;
+  tour_points: number | null;
+  passports: string[]; // Nationalitäten (Pässe)
+  tax_residence: string;
+  esta_status: string | null; // 'ESTA' | 'B-1' | 'P-1' | 'None'
+  esta_date: string; // ISO yyyy-mm-dd (Ablauf)
+  team: TeamMember[];
+  calendar_connected: boolean;
 }
 
 // ============================================================

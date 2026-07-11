@@ -32,8 +32,10 @@ import {
   onboardingReducer,
   initialOnboardingState,
   isStepValid,
-  TOTAL_STEPS,
+  currentStepId,
+  totalSteps,
 } from "./onboardingReducer";
+import { saveTourProfile } from "@/lib/tour";
 
 const SPORTS: { value: Sport; labelKey: string }[] = [
   { value: "tennis", labelKey: "onboarding.sportTennis" },
@@ -317,8 +319,9 @@ export default function OnboardingFlow() {
         first_name: state.first_name,
         age: state.age!,
         gender: state.gender!,
-        sports: state.sports,
-        skill_level: state.skill_level!,
+        mode: state.onb_mode ?? "play",
+        sports: state.sports.length ? state.sports : ["tennis"],
+        skill_level: state.skill_level ?? "competitive",
         official_rating: [state.official_rating, ratingNote.trim()].filter(Boolean).join(" · ") || null,
         height_cm: state.height_cm,
         city: state.city,
@@ -338,6 +341,24 @@ export default function OnboardingFlow() {
         search_radius_km: 25,
       });
       if (insertError) throw insertError;
+
+      // Tour-Profil anlegen, wenn Tour-Pfad gewählt wurde (best effort).
+      if (state.onb_mode === "tour") {
+        try {
+          await saveTourProfile(user.id, {
+            circuit: state.circuit,
+            ranking: state.tour_ranking,
+            points: state.tour_points,
+            passports: state.passports.filter((p) => p.trim()),
+            tax_residence: state.tax_residence || null,
+            esta_status: state.esta_status,
+            team: state.team,
+            calendar_connected: state.calendar_connected,
+          });
+        } catch {
+          /* Tour-Profil ist best-effort */
+        }
+      }
 
       // Onboarding abgeschlossen → gespeicherten Fortschritt verwerfen.
       try { window.sessionStorage.removeItem("mu_onboarding"); } catch { /* ignore */ }
@@ -397,8 +418,10 @@ export default function OnboardingFlow() {
     }
   }
 
+  const cur = currentStepId(state);
+  const total = totalSteps(state);
   const valid = isStepValid(state);
-  const isLast = state.step === TOTAL_STEPS;
+  const isLast = state.step === total;
 
   function handleNext() {
     if (!valid) return;
@@ -413,7 +436,7 @@ export default function OnboardingFlow() {
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/[0.04]">
           <div
             className="h-full rounded-full bg-matchup transition-all duration-300"
-            style={{ width: `${(state.step / TOTAL_STEPS) * 100}%` }}
+            style={{ width: `${(state.step / total) * 100}%` }}
           />
         </div>
         <div className="mt-3 flex items-center justify-between text-sm">
@@ -429,7 +452,7 @@ export default function OnboardingFlow() {
             <span />
           )}
           <span className="text-neutral-400">
-            {t("onboarding.stepOf", { current: state.step, total: TOTAL_STEPS })}
+            {t("onboarding.stepOf", { current: state.step, total })}
           </span>
         </div>
       </div>
@@ -437,7 +460,7 @@ export default function OnboardingFlow() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-8">
         {/* Step 1 — Welcome */}
-        {state.step === 1 && (
+        {cur === "welcome" && (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <span className="text-4xl font-extrabold tracking-[0.2em] text-matchup">
               MATCHUP
@@ -457,7 +480,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 2 — Language */}
-        {state.step === 2 && (
+        {cur === "language" && (
           <Step title={t("onboarding.languageTitle")}>
             {[
               { v: "de" as const, label: t("onboarding.languageDe") },
@@ -475,7 +498,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 3 — Sports */}
-        {state.step === 3 && (
+        {cur === "sports" && (
           <Step
             title={t("onboarding.sportsTitle")}
             subtitle={t("onboarding.sportsSubtitle")}
@@ -501,7 +524,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 4 — Location */}
-        {state.step === 4 && (
+        {cur === "location" && (
           <Step
             title={t("onboarding.locationTitle")}
             subtitle={t("onboarding.locationSubtitle")}
@@ -553,7 +576,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 5 — Club */}
-        {state.step === 5 && (
+        {cur === "club" && (
           <Step
             title={t("onboarding.clubTitle")}
             subtitle={t("onboarding.clubSubtitle")}
@@ -682,7 +705,7 @@ export default function OnboardingFlow() {
 
         {/* Step 6 — Name */}
         {/* Step 6 — Name + Alter + Geschlecht */}
-        {state.step === 6 && (
+        {cur === "identity" && (
           <Step title={t("onboarding.aboutYouTitle")} subtitle={t("onboarding.aboutYouSubtitle")}>
             <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldName")}</label>
             <input
@@ -734,8 +757,159 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
+        {/* Fork — Play vs. Tour */}
+        {cur === "fork" && (
+          <Step title={t("onboarding.forkTitle")} subtitle={t("onboarding.forkSubtitle")}>
+            <SelectRow selected={state.onb_mode === "play"} onClick={() => dispatch({ type: "SET_MODE", payload: "play" })}>
+              <span className="block font-semibold">{t("onboarding.forkPlay")}</span>
+              <span className="block text-xs text-neutral-500">{t("onboarding.forkPlayDesc")}</span>
+            </SelectRow>
+            <SelectRow selected={state.onb_mode === "tour"} onClick={() => dispatch({ type: "SET_MODE", payload: "tour" })}>
+              <span className="block font-semibold">{t("onboarding.forkTour")}</span>
+              <span className="block text-xs text-neutral-500">{t("onboarding.forkTourDesc")}</span>
+            </SelectRow>
+            <p className="mt-3 rounded-xl bg-black/[0.035] px-4 py-3 text-xs text-neutral-500">{t("onboarding.forkSwitchHint")}</p>
+          </Step>
+        )}
+
+        {/* Tour — Circuit */}
+        {cur === "circuit" && (
+          <Step title={t("onboarding.circuitTitle")} subtitle={t("onboarding.circuitSubtitle")}>
+            {([
+              { value: "atp", label: "ATP Tour", desc: "Masters 1000, ATP 500, ATP 250" },
+              { value: "challenger", label: "ATP Challenger", desc: "Challenger 50, 75, 100, 125, 175" },
+              { value: "itf", label: "ITF World Tennis Tour", desc: "M15, M25 und höher" },
+              { value: "wta", label: "WTA Tour", desc: "WTA 1000, 500, 250, 125" },
+            ] as const).map((c) => (
+              <SelectRow key={c.value} selected={state.circuit === c.value} onClick={() => dispatch({ type: "SET_CIRCUIT", payload: c.value })}>
+                <span className="block font-semibold">{c.label}</span>
+                <span className="block text-xs text-neutral-500">{c.desc}</span>
+              </SelectRow>
+            ))}
+          </Step>
+        )}
+
+        {/* Tour — Ranking + Punkte */}
+        {cur === "ranking" && (
+          <Step title={t("onboarding.tourRankingTitle")} subtitle={t("onboarding.tourRankingSubtitle")}>
+            <p className="text-sm font-semibold">{t("onboarding.tourRankingLabel")}</p>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={state.tour_ranking ?? ""}
+              onChange={(e) => dispatch({ type: "SET_TOUR_RANKING", payload: numOrNull(e.target.value) })}
+              placeholder="127"
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+            />
+            <p className="pt-2 text-sm font-semibold">{t("onboarding.tourPointsLabel")}</p>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={state.tour_points ?? ""}
+              onChange={(e) => dispatch({ type: "SET_TOUR_POINTS", payload: numOrNull(e.target.value) })}
+              placeholder="485"
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+            />
+            <p className="mt-2 rounded-xl bg-matchup/10 px-4 py-3 text-xs text-matchup">{t("onboarding.tourRankingHint")}</p>
+          </Step>
+        )}
+
+        {/* Tour — Pässe + Steuerresidenz + ESTA */}
+        {cur === "passport" && (
+          <Step title={t("onboarding.passportTitle")} subtitle={t("onboarding.passportSubtitle")}>
+            <p className="text-sm font-semibold">{t("onboarding.passportPrimary")}</p>
+            <input
+              value={state.passports[0] ?? ""}
+              onChange={(e) => dispatch({ type: "SET_PASSPORTS", payload: [e.target.value, state.passports[1] ?? ""] })}
+              placeholder={t("onboarding.passportPlaceholder")}
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+            />
+            <p className="pt-2 text-sm font-semibold">{t("onboarding.passportSecond")}</p>
+            <input
+              value={state.passports[1] ?? ""}
+              onChange={(e) => dispatch({ type: "SET_PASSPORTS", payload: [state.passports[0] ?? "", e.target.value] })}
+              placeholder={t("onboarding.passportAdd")}
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+            />
+            <p className="pt-2 text-sm font-semibold">{t("onboarding.taxResidence")}</p>
+            <input
+              value={state.tax_residence}
+              onChange={(e) => dispatch({ type: "SET_TAX_RESIDENCE", payload: e.target.value })}
+              placeholder={t("onboarding.taxPlaceholder")}
+              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+            />
+            <p className="pt-2 text-sm font-semibold">{t("onboarding.usAuth")}</p>
+            <div className="flex flex-wrap gap-2">
+              {["ESTA", "B-1", "P-1", "None"].map((o) => (
+                <Chip key={o} selected={state.esta_status === o} onClick={() => dispatch({ type: "SET_ESTA", payload: { status: o } })}>
+                  {o === "None" ? t("onboarding.usNone") : o}
+                </Chip>
+              ))}
+            </div>
+            {state.esta_status && state.esta_status !== "None" && (
+              <>
+                <p className="pt-3 text-sm font-semibold">{t("onboarding.usExpiry")}</p>
+                <input
+                  type="date"
+                  value={state.esta_date}
+                  onChange={(e) => dispatch({ type: "SET_ESTA", payload: { date: e.target.value } })}
+                  className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                />
+              </>
+            )}
+          </Step>
+        )}
+
+        {/* Tour — Team */}
+        {cur === "team" && (
+          <Step title={t("onboarding.teamTitle")} subtitle={t("onboarding.teamSubtitle")}>
+            {([
+              { role: "coach", label: t("onboarding.roleCoach") },
+              { role: "physio", label: t("onboarding.rolePhysio") },
+              { role: "agent", label: t("onboarding.roleAgent") },
+              { role: "hitting_partner", label: t("onboarding.roleHitting") },
+            ] as const).map((r) => {
+              const val = state.team.find((m) => m.role === r.role)?.name ?? "";
+              return (
+                <div key={r.role} className="mb-2">
+                  <p className="mb-1 text-sm font-semibold">{r.label}</p>
+                  <input
+                    value={val}
+                    onChange={(e) => {
+                      const others = state.team.filter((m) => m.role !== r.role);
+                      const name = e.target.value;
+                      dispatch({ type: "SET_TEAM", payload: name.trim() ? [...others, { role: r.role, name }] : others });
+                    }}
+                    placeholder={t("onboarding.teamNamePlaceholder")}
+                    className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                  />
+                </div>
+              );
+            })}
+            <p className="mt-2 text-xs text-neutral-400">{t("onboarding.teamOptional")}</p>
+          </Step>
+        )}
+
+        {/* Tour — Kalender */}
+        {cur === "calendar" && (
+          <Step title={t("onboarding.calendarTitle")} subtitle={t("onboarding.calendarSubtitle")}>
+            <SelectRow selected={state.calendar_connected} onClick={() => dispatch({ type: "SET_CALENDAR", payload: true })}>
+              <span className="block font-semibold">Google Calendar</span>
+              <span className="block text-xs text-neutral-500">{t("onboarding.calendarGoogleDesc")}</span>
+            </SelectRow>
+            <SelectRow selected={false} onClick={() => dispatch({ type: "SET_CALENDAR", payload: true })}>
+              <span className="block font-semibold">Apple Calendar</span>
+              <span className="block text-xs text-neutral-500">{t("onboarding.calendarAppleDesc")}</span>
+            </SelectRow>
+            <SelectRow selected={!state.calendar_connected} onClick={() => dispatch({ type: "SET_CALENDAR", payload: false })}>
+              <span className="block font-semibold">{t("onboarding.calendarSkip")}</span>
+              <span className="block text-xs text-neutral-500">{t("onboarding.calendarSkipDesc")}</span>
+            </SelectRow>
+          </Step>
+        )}
+
         {/* Step 7 — Skill + Rating */}
-        {state.step === 7 && (
+        {cur === "skill" && (
           <Step title={t("onboarding.skillTitle")}>
             {SKILLS.map((s) => (
               <SelectRow
@@ -815,7 +989,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 8 — Height */}
-        {state.step === 8 && (
+        {cur === "height" && (
           <Step
             title={t("onboarding.heightTitle")}
             subtitle={t("onboarding.heightSubtitle")}
@@ -844,7 +1018,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 9 — Goals */}
-        {state.step === 9 && (
+        {cur === "goals" && (
           <Step
             title={t("onboarding.goalsTitle")}
             subtitle={t("onboarding.goalsSubtitle")}
@@ -870,7 +1044,7 @@ export default function OnboardingFlow() {
         )}
 
         {/* Step 10 — Photos + Bio + Visibility */}
-        {state.step === 10 && (
+        {cur === "photos" && (
           <Step title={t("onboarding.profileTitle")} subtitle={t("onboarding.profileSubtitle")}>
             {/* Photos */}
             <p className="text-sm font-semibold">{t("onboarding.yourPhotos")}</p>
