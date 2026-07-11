@@ -155,10 +155,27 @@ async function fetchFeed(feed: Feed): Promise<Item[]> {
   }
 }
 
+const THROTTLE_MIN = 20;
+
 export async function GET(req: Request) {
-  if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     const svc = getServiceClient();
+
+    // Öffentliche Aufrufe (Lazy-Refresh aus der App) sind erlaubt, aber
+    // serverseitig gedrosselt: höchstens alle 20 Min wird wirklich gesynct.
+    // Mit CRON_SECRET (Vercel-Cron oder ?secret=) wird die Drossel umgangen.
+    if (!authorized(req)) {
+      const { data: recent } = await svc
+        .from("news")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const last = recent?.[0]?.created_at ? Date.parse(recent[0].created_at as string) : 0;
+      if (Date.now() - last < THROTTLE_MIN * 60000) {
+        return NextResponse.json({ ok: true, skipped: "throttled" });
+      }
+    }
+
     const perFeed = await Promise.all(FEEDS.map(fetchFeed));
     // pro id nur einmal (letzter gewinnt) – identische Links aus mehreren Feeds mergen
     const byId = new Map<string, Item>();
