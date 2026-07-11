@@ -60,6 +60,23 @@ export function calendarFeedUrl(token: string): string {
   return `${origin}/api/tour/calendar/${token}.ics`;
 }
 
+/* ── Team-Chat ─────────────────────────────────────────────── */
+export type TourMessage = { id: string; sender_id: string; sender_name: string | null; body: string; created_at: string };
+
+export async function loadMessages(teamOwner: string): Promise<TourMessage[]> {
+  const { data } = await supabase
+    .from("tour_messages")
+    .select("id,sender_id,sender_name,body,created_at")
+    .eq("team_owner", teamOwner)
+    .order("created_at")
+    .limit(200);
+  return (data as TourMessage[]) ?? [];
+}
+
+export async function sendMessage(teamOwner: string, senderId: string, senderName: string, body: string): Promise<void> {
+  await supabase.from("tour_messages").insert({ team_owner: teamOwner, sender_id: senderId, sender_name: senderName, body });
+}
+
 /* ── Reise-Autorisierungen (Visa/ESTA/ETA) ────────────────── */
 export type TravelDoc = { id: string; kind: string; country: string | null; status: string; expiry: string | null; ref: string | null };
 

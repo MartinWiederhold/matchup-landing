@@ -12,6 +12,7 @@ import GamesTab from "./tabs/GamesTab";
 import ProfileTab from "./tabs/ProfileTab";
 import TourProfileTab from "./tabs/TourProfileTab";
 import TourMatchesTab from "./tabs/TourMatchesTab";
+import TourChatTab from "./tabs/TourChatTab";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
 
@@ -24,11 +25,12 @@ const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
 
 export default function AppShell({ profile }: { profile: Profile }) {
   const t = useT();
-  const tabs: TabDef[] = TAB_DEFS.map((tab) => ({
-    key: tab.key,
-    label: t(tab.labelKey),
-    icon: tab.icon,
-  }));
+  const isTour = profile.mode === "tour";
+  const tabs: TabDef[] = TAB_DEFS.map((tab) => {
+    // Im Tour-Modus wird der Games-Slot zum Team-Chat.
+    if (isTour && tab.key === "games") return { key: tab.key, label: t("mode.chatTab"), icon: "M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" };
+    return { key: tab.key, label: t(tab.labelKey), icon: tab.icon };
+  });
   const [activeTab, setActiveTab] = useState<TabKey>("discover");
   const [stack, setStack] = useState<SubViewState[]>([]);
   const [likeCount, setLikeCount] = useState(0);
@@ -228,7 +230,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
           <div className="pb-28">
             {activeTab === "discover" && <DiscoverTab />}
             {activeTab === "matches" && (profile.mode === "tour" ? <TourMatchesTab /> : <MatchesTab />)}
-            {activeTab === "games" && <GamesTab />}
+            {activeTab === "games" && (isTour ? <TourChatTab /> : <GamesTab />)}
             {activeTab === "profile" && (profile.mode === "tour" ? <TourProfileTab /> : <ProfileTab />)}
           </div>
 
