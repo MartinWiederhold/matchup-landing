@@ -240,6 +240,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
             onSelect={selectTab}
             badges={{ matches: unreadCount + likeCount }}
             hidden={navHidden}
+            center={isTour ? { icon: "M6 9a6 6 0 0 0 12 0V4H6zM6 6H3v1a3 3 0 0 0 3 3M18 6h3v1a3 3 0 0 1-3 3M9 21h6M12 15v6", label: t("mode.plannerTitle"), onClick: () => openSubView({ type: "tour-planner" }) } : undefined}
           />
         </div>
       )}

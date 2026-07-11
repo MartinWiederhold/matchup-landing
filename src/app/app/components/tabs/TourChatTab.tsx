@@ -78,7 +78,7 @@ export default function TourChatTab() {
       </div>
 
       {/* Eingabe */}
-      <div className="fixed inset-x-0 bottom-[76px] z-40 mx-auto flex max-w-[430px] items-center gap-2 border-t border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-[104px] z-40 mx-auto flex max-w-[430px] items-center gap-2 rounded-2xl border border-black/[0.06] bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
