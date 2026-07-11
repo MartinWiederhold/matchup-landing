@@ -38,6 +38,7 @@ import {
   EMPTY_PROFILE,
   type PlayerProfile,
 } from "@/lib/player";
+import { loadTourPlan, saveTourPlan } from "@/lib/tour";
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
@@ -404,6 +405,30 @@ export default function MapView() {
       localStorage.setItem("mu-season", JSON.stringify({ planIds, budget, startBase, region, seasonStart }));
     } catch {}
   }, [planIds, budget, startBase, region, seasonStart]);
+
+  // Saisonplan geräteübergreifend: beim Login aus DB laden; DB leer → lokalen Plan migrieren.
+  const planSynced = useRef(false);
+  useEffect(() => {
+    if (!profileUser) { planSynced.current = false; return; }
+    let alive = true;
+    (async () => {
+      const remote = await loadTourPlan(profileUser);
+      if (!alive) return;
+      if (remote.length) setPlanIds(remote);
+      else if (planIds.length) await saveTourPlan(profileUser, planIds);
+      planSynced.current = true;
+    })();
+    return () => { alive = false; };
+    // Nur beim Login/Logout – planIds bewusst nicht als Abhängigkeit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileUser]);
+
+  // Plan-Änderungen in die DB spiegeln (entprellt), sobald der DB-Sync initialisiert ist.
+  useEffect(() => {
+    if (!profileUser || !planSynced.current) return;
+    const id = setTimeout(() => void saveTourPlan(profileUser, planIds), 600);
+    return () => clearTimeout(id);
+  }, [planIds, profileUser]);
 
   const togglePlan = useCallback(
     (id: string) => setPlanIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])),
