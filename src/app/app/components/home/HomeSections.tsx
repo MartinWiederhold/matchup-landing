@@ -211,9 +211,6 @@ export function SportGroups({
 
         {/* Rechts unten: Sport-Icons + „+" (führt zur Übersicht) */}
         <div className="flex flex-col justify-center rounded-[24px] bg-black/[0.035] p-5">
-          <span className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">
-            {t("discover.quickGame")}
-          </span>
           <div className="flex items-center justify-between">
             <div className="flex -space-x-3">
               {SPORT_GROUPS.map((g) => (
@@ -355,7 +352,11 @@ export function NextGameCard({ onOpen, onAll }: { onOpen: (id: string) => void; 
               </span>
             )}
             <div className="flex -space-x-2">
-              {people.map((p, i) => <span key={i} className="rounded-full ring-2 ring-[#0d0d11]"><Avatar src={p!.profile_image} alt={p!.first_name} size="sm" /></span>)}
+              {people.map((p, i) => (
+                <span key={i} className="inline-flex overflow-hidden rounded-full ring-2 ring-white">
+                  <Avatar src={p!.profile_image} alt={p!.first_name} size="sm" />
+                </span>
+              ))}
             </div>
           </div>
         </div>
