@@ -64,8 +64,6 @@ export default function DiscoverTab() {
     }
     return defaultFilters;
   });
-  const [matchWith, setMatchWith] = useState<Profile | null>(null);
-  const [requested, setRequested] = useState<Set<string>>(new Set());
   const [weekGames, setWeekGames] = useState(0);
 
   // 7-Tage-Match-Challenge: gespielte Games der letzten 7 Tage (erstellt oder beigetreten).
@@ -109,16 +107,11 @@ export default function DiscoverTab() {
   const loadCandidates = useCallback(async () => {
     setIsLoading(true);
     const since = new Date(Date.now() - 14 * 86400000).toISOString();
-    const [blocksRes, likesRes, matchesRes, skipsRes] = await Promise.all([
+    const [blocksRes, matchesRes, skipsRes] = await Promise.all([
       supabase
         .from("blocks")
         .select("blocked_id, blocker_id")
         .or(`blocker_id.eq.${profile.id},blocked_id.eq.${profile.id}`),
-      supabase
-        .from("likes")
-        .select("to_user_id")
-        .eq("from_user_id", profile.id)
-        .gte("created_at", since),
       supabase
         .from("matches")
         .select("user1_id, user2_id")
@@ -140,11 +133,6 @@ export default function DiscoverTab() {
     // „Angefragt" markiert angezeigt. Geblockte & ältere Skips bleiben raus.
     (matchesRes.data ?? []).forEach((m) =>
       exclude.add(m.user1_id === profile.id ? m.user2_id : m.user1_id),
-    );
-    const alreadyRequested = new Set<string>(
-      (likesRes.data ?? [])
-        .map((l) => l.to_user_id)
-        .filter((id) => !exclude.has(id)),
     );
     (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
 
@@ -212,7 +200,6 @@ export default function DiscoverTab() {
       );
     });
 
-    setRequested(alreadyRequested);
     setCandidates(filtered.slice(0, 40));
     setIsLoading(false);
   }, [profile, filters]);
@@ -220,27 +207,6 @@ export default function DiscoverTab() {
   useEffect(() => {
     loadCandidates();
   }, [loadCandidates]);
-
-  async function connect(target: Profile) {
-    setRequested((prev) => new Set(prev).add(target.id));
-    await supabase
-      .from("likes")
-      .upsert(
-        { from_user_id: profile.id, to_user_id: target.id },
-        { onConflict: "from_user_id,to_user_id" },
-      );
-    const { data: reverse } = await supabase
-      .from("likes")
-      .select("id")
-      .eq("from_user_id", target.id)
-      .eq("to_user_id", profile.id)
-      .maybeSingle();
-    if (reverse) {
-      await ensureMatch(profile.id, target.id);
-      setMatchWith(target);
-    }
-    refreshBadges();
-  }
 
   // Aktive Filter als entfernbare Chips (Standardwerte werden nicht angezeigt).
   const d = defaultFilters;
@@ -379,17 +345,12 @@ export default function DiscoverTab() {
               onAction={() => setShowFilter(true)}
             />
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               {candidates.map((c) => (
                 <FeedCard
                   key={c.id}
-                  t={t}
                   player={c}
-                  requested={requested.has(c.id)}
-                  onConnect={() => connect(c)}
                   onOpen={() => openSubView({ type: "full-profile", userId: c.id })}
-                  myLat={profile.latitude}
-                  myLng={profile.longitude}
                 />
               ))}
             </div>
@@ -410,31 +371,6 @@ export default function DiscoverTab() {
           onClose={() => setShowFilter(false)}
         />
       )}
-
-      {matchWith && (
-        <MatchAnimation
-          me={profile}
-          other={matchWith}
-          onSuggestGame={() => {
-            const id = matchWith.id;
-            setMatchWith(null);
-            openSubView({ type: "create-game", invite: id });
-          }}
-          onMessage={async () => {
-            const [u1, u2] = [profile.id, matchWith.id].sort();
-            const { data } = await supabase
-              .from("matches")
-              .select("id")
-              .eq("user1_id", u1)
-              .eq("user2_id", u2)
-              .maybeSingle();
-            setMatchWith(null);
-            if (data) openSubView({ type: "chat", matchId: data.id });
-            else setActiveTab("matches");
-          }}
-          onContinue={() => setMatchWith(null)}
-        />
-      )}
     </div>
   );
 }
@@ -451,79 +387,36 @@ function distanceLabel(
 }
 
 function FeedCard({
-  t,
   player,
-  requested,
-  onConnect,
   onOpen,
-  myLat,
-  myLng,
 }: {
-  t: TFunction;
   player: Profile;
-  requested: boolean;
-  onConnect: () => void;
   onOpen: () => void;
-  myLat: number | null;
-  myLng: number | null;
 }) {
-  const dist = distanceLabel(myLat, myLng, player);
   return (
-    <div className="overflow-hidden rounded-xl bg-black/[0.04]">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="relative block aspect-[3/4] w-full bg-neutral-200 text-left"
-      >
-        {player.profile_image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={player.profile_image}
-            alt={player.first_name}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        )}
-        {player.is_verified && (
-          <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-matchup backdrop-blur-sm">
-            <CheckIcon size={11} /> {t("discover.verified")}
-          </span>
-        )}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-2 pt-8">
-          <h2 className="truncate text-[13px] font-bold leading-tight text-white">
-            {player.first_name}, {player.age}
-          </h2>
-          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-zinc-300">
-            <SportIcon sport={player.sports[0]} size={11} />
-            <span className="truncate">{skillLabel(player.skill_level)}</span>
-          </p>
-          {dist && (
-            <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-zinc-400">
-              <MapPinIcon size={10} /> <span className="truncate">{dist}</span>
-            </p>
-          )}
-        </div>
-      </button>
-
-      <div className="p-1.5">
-        <button
-          type="button"
-          onClick={onConnect}
-          disabled={requested}
-          className={`flex w-full items-center justify-center gap-1 rounded-full py-1.5 text-[11px] font-bold transition-colors ${
-            requested
-              ? "bg-black/[0.06] text-neutral-400"
-              : "bg-matchup text-white hover:bg-matchup-hover"
-          }`}
-        >
-          {requested ? (
-            <><CheckIcon size={13} /> {t("discover.requested")}</>
-          ) : (
-            <><ConnectIcon size={13} /> {t("discover.connect")}</>
-          )}
-        </button>
+    <button
+      type="button"
+      onClick={onOpen}
+      className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-200 text-left"
+    >
+      {player.profile_image && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={player.profile_image}
+          alt={player.first_name}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      )}
+      {player.is_verified && (
+        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-matchup backdrop-blur-sm">
+          <CheckIcon size={12} />
+        </span>
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2.5 pt-8">
+        <span className="text-[13px] font-bold text-white">{player.first_name}</span>
       </div>
-    </div>
+    </button>
   );
 }
