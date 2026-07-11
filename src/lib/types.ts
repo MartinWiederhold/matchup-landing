@@ -497,6 +497,8 @@ export interface TourProfile {
   tax_residence: string | null;
   esta_status: string | null;
   esta_expiry: string | null; // ISO yyyy-mm-dd
+  last_event_date: string | null; // ISO — letztes Turnier vor der Verletzung (für Protected Ranking)
+  injury_months: number | null; // Dauer der Verletzungspause in Monaten
   team: TeamMember[];
   calendar_connected: boolean;
   created_at?: string;

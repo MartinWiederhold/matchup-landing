@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
-import { loadTourPlan } from "@/lib/tour";
-import { planAlerts, kindShort, deadlineClock, type Urgency, type Alert } from "@/lib/deadlines";
+import { loadTourPlan, loadTourProfile } from "@/lib/tour";
+import { planAlerts, kindShort, deadlineClock, protectedRanking, type Urgency, type Alert, type ProtectedRanking } from "@/lib/deadlines";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -20,9 +20,11 @@ export default function TourDeadlines() {
   const { locale } = useLocale();
   const { profile } = useAppNav();
   const [alerts, setAlerts] = useState<Alert<Tourn & { start: string }>[] | null>(null);
+  const [pr, setPr] = useState<ProtectedRanking | null>(null);
 
   useEffect(() => {
     (async () => {
+      loadTourProfile(profile.id).then((tp) => setPr(tp ? protectedRanking(tp.last_event_date, tp.injury_months) : null));
       const ids = await loadTourPlan(profile.id);
       if (!ids.length) { setAlerts([]); return; }
       const today = new Date().toISOString().slice(0, 10);
@@ -42,6 +44,13 @@ export default function TourDeadlines() {
     <div className="flex h-full flex-col bg-white text-neutral-900">
       <SubViewHeader light title={t("mode.deadlines")} />
       <div className="flex-1 overflow-y-auto p-4 pb-28">
+        {pr && (
+          <div className="mb-3 rounded-2xl border border-matchup/20 bg-matchup/[0.06] p-3.5">
+            <p className="text-[13px] font-bold text-neutral-900">{t("mode.prTitle")}</p>
+            <p className="mt-0.5 text-[12px] text-neutral-600">{t("mode.prResult", { events: pr.events, months: pr.usageMonths })}</p>
+            <p className="mt-0.5 text-[11px] text-neutral-500">{t("mode.prExpires", { date: new Date(pr.expiresBy).toLocaleDateString(locale) })}</p>
+          </div>
+        )}
         {alerts === null ? null : alerts.length === 0 ? (
           <p className="pt-8 text-center text-[13px] text-neutral-400">{t("mode.briefingEmpty")}</p>
         ) : (

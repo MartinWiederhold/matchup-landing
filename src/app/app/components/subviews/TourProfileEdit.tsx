@@ -5,6 +5,7 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, removeInvite, type TeamInvite } from "@/lib/tour";
+import { protectedRanking } from "@/lib/deadlines";
 import type { Circuit, TeamMember } from "@/lib/types";
 
 const CIRCUITS: { value: Circuit; label: string }[] = [
@@ -32,6 +33,8 @@ export default function TourProfileEdit() {
   const [taxResidence, setTaxResidence] = useState("");
   const [estaStatus, setEstaStatus] = useState<string | null>(null);
   const [estaExpiry, setEstaExpiry] = useState("");
+  const [lastEventDate, setLastEventDate] = useState("");
+  const [injuryMonths, setInjuryMonths] = useState("");
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [invites, setInvites] = useState<TeamInvite[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
@@ -57,6 +60,8 @@ export default function TourProfileEdit() {
         setTaxResidence(tp.tax_residence ?? "");
         setEstaStatus(tp.esta_status);
         setEstaExpiry(tp.esta_expiry ?? "");
+        setLastEventDate(tp.last_event_date ?? "");
+        setInjuryMonths(tp.injury_months != null ? String(tp.injury_months) : "");
         setTeam(tp.team ?? []);
       }
       setLoaded(true);
@@ -75,6 +80,8 @@ export default function TourProfileEdit() {
       tax_residence: taxResidence || null,
       esta_status: estaStatus,
       esta_expiry: estaStatus && estaStatus !== "None" ? estaExpiry || null : null,
+      last_event_date: lastEventDate || null,
+      injury_months: injuryMonths.trim() === "" ? null : Number(injuryMonths),
       team,
     });
     setSaving(false);
@@ -142,6 +149,31 @@ export default function TourProfileEdit() {
               <input type="date" value={estaExpiry} onChange={(e) => setEstaExpiry(e.target.value)} className={inp} />
             </>
           )}
+        </div>
+
+        {/* Protected Ranking */}
+        <div>
+          <p className="mb-2 text-sm font-semibold text-neutral-600">{t("mode.prTitle")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="mb-1.5 text-[12px] text-neutral-500">{t("mode.prLastEvent")}</p>
+              <input type="date" value={lastEventDate} onChange={(e) => setLastEventDate(e.target.value)} className={inp} />
+            </div>
+            <div>
+              <p className="mb-1.5 text-[12px] text-neutral-500">{t("mode.prInjuryMonths")}</p>
+              <input value={injuryMonths} onChange={(e) => setInjuryMonths(e.target.value.replace(/[^0-9]/g, ""))} inputMode="numeric" placeholder="8" className={inp} />
+            </div>
+          </div>
+          {(() => {
+            const pr = protectedRanking(lastEventDate || null, injuryMonths.trim() === "" ? null : Number(injuryMonths));
+            if (!pr) return <p className="mt-2 text-[11px] text-neutral-400">{t("mode.prHint")}</p>;
+            return (
+              <div className="mt-2 rounded-xl bg-matchup/[0.07] p-3 text-[12px] text-neutral-700">
+                {t("mode.prResult", { events: pr.events, months: pr.usageMonths })}
+                <span className="mt-0.5 block text-[11px] text-neutral-500">{t("mode.prExpires", { date: new Date(pr.expiresBy).toLocaleDateString("de-DE") })}</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Team */}

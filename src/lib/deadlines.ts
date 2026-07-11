@@ -114,3 +114,31 @@ export function kindShort(kind: DeadlineKind, locale: string): string {
 export function deadlineClock(d: { time?: string; tz?: Tz }): string {
   return d.time && d.tz ? `${d.time} ${d.tz}` : "";
 }
+
+/**
+ * Protected Ranking / Entry Protection (ATP). Wer ≥6 und <12 Monate verletzt ausfällt,
+ * darf seine Protection für die ersten 9 Singles-/9 Doubles-Turniere oder max. 9 Monate
+ * nutzen; ab 12 Monaten sind es 12/12 bzw. max. 12 Monate. Die Protection verfällt, wenn
+ * sie nicht innerhalb von 3 Jahren ab dem letzten Event vor der Pause aktiviert wird.
+ * Regeln je Saison änderbar → „ohne Gewähr". Gibt null zurück, wenn (noch) nicht anspruchsberechtigt.
+ */
+export type ProtectedRanking = {
+  events: number; // Turniere je Disziplin (Singles/Doubles)
+  usageMonths: number; // alternatives Zeitfenster in Monaten
+  expiresBy: string; // ISO — Aktivierung muss bis dahin erfolgen
+  expiresDaysLeft: number;
+};
+
+export function protectedRanking(
+  lastEventDate: string | null | undefined,
+  injuryMonths: number | null | undefined,
+  today = new Date(),
+): ProtectedRanking | null {
+  if (!lastEventDate || injuryMonths == null || injuryMonths < 6) return null;
+  const events = injuryMonths >= 12 ? 12 : 9;
+  const expiry = new Date(lastEventDate + "T00:00:00Z");
+  expiry.setUTCFullYear(expiry.getUTCFullYear() + 3);
+  const t0 = Date.parse(today.toISOString().slice(0, 10) + "T00:00:00Z");
+  const expiresDaysLeft = Math.round((expiry.getTime() - t0) / MS_DAY);
+  return { events, usageMonths: events, expiresBy: expiry.toISOString().slice(0, 10), expiresDaysLeft };
+}
