@@ -55,13 +55,18 @@ const SPORTS = [
   { key: "Pickleball", color: "#f59e0b", imgs: ["https://i.pravatar.cc/120?img=27", "https://i.pravatar.cc/120?img=52", "https://i.pravatar.cc/120?img=14"] },
 ];
 
-const FORYOU = [
-  { name: "Elena", img: "https://i.pravatar.cc/300?img=24" },
-  { name: "Marco", img: "https://i.pravatar.cc/300?img=18" },
-  { name: "Priya", img: "https://i.pravatar.cc/300?img=45" },
-  { name: "Tom", img: "https://i.pravatar.cc/300?img=53" },
-  { name: "Yuki", img: "https://i.pravatar.cc/300?img=41" },
-  { name: "Ben", img: "https://i.pravatar.cc/300?img=57" },
+type ForYouPerson = {
+  name: string; age: number; city: string; dist: string; img: string;
+  online: boolean; sports: string[]; level: string; rating: string; bio: string;
+  matches: number; winrate: string; score: number;
+};
+const FORYOU: ForYouPerson[] = [
+  { name: "Elena", age: 27, city: "Zürich", dist: "1,2 km", img: "https://i.pravatar.cc/600?img=24", online: true, sports: ["Tennis", "Padel"], level: "Fortgeschritten", rating: "LK 9", bio: "Spiele seit 12 Jahren Tennis, seit einem Jahr auch Padel. Suche regelmässige Partner für Feierabend-Matches – am liebsten dienstags oder donnerstags.", matches: 38, winrate: "58 %", score: 1180 },
+  { name: "Marco", age: 34, city: "Winterthur", dist: "6,8 km", img: "https://i.pravatar.cc/600?img=18", online: false, sports: ["Tennis"], level: "Turnierspieler", rating: "LK 5", bio: "Ambitionierter Turnierspieler, suche starke Gegner für Trainingsmatches. Ernst, aber immer fair und mit Spass an langen Ballwechseln.", matches: 91, winrate: "67 %", score: 1420 },
+  { name: "Priya", age: 24, city: "Zürich", dist: "2,4 km", img: "https://i.pravatar.cc/600?img=45", online: true, sports: ["Padel", "Pickleball"], level: "Mittel", rating: "–", bio: "Neu in der Padel-Welt und total begeistert! Suche entspannte Leute zum gemeinsamen Lernen und für lockere Doppel am Wochenende.", matches: 14, winrate: "50 %", score: 1010 },
+  { name: "Tom", age: 31, city: "Zug", dist: "12 km", img: "https://i.pravatar.cc/600?img=53", online: false, sports: ["Tennis", "Pickleball"], level: "Fortgeschritten", rating: "LK 11", bio: "Feierabend-Spieler mit viel Herzblut. Tennis im Sommer, Pickleball im Winter. Immer für ein Match und danach ein kühles Getränk zu haben.", matches: 52, winrate: "55 %", score: 1150 },
+  { name: "Yuki", age: 29, city: "Luzern", dist: "9,1 km", img: "https://i.pravatar.cc/600?img=41", online: true, sports: ["Tennis"], level: "Mittel", rating: "LK 14", bio: "Spiele zum Ausgleich und um fit zu bleiben. Kein Leistungsdruck – Hauptsache Bewegung, gute Laune und nette Leute auf dem Platz.", matches: 23, winrate: "48 %", score: 1060 },
+  { name: "Ben", age: 36, city: "Basel", dist: "—", img: "https://i.pravatar.cc/600?img=57", online: false, sports: ["Padel"], level: "Fortgeschritten", rating: "–", bio: "Padel-Fan der ersten Stunde. Organisiere regelmässig Doppel-Runden und freue mich immer über neue Mitspieler:innen jeden Levels.", matches: 64, winrate: "60 %", score: 1240 },
 ];
 
 const CIRCLE = [
@@ -174,6 +179,7 @@ export default function Mockup2Screen() {
   const [reqList, setReqList] = useState<ReqPerson[]>(REQUESTS_INIT);
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
+  const [foryouView, setForyouView] = useState<ForYouPerson | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
   // Chat-Detailansicht
@@ -765,12 +771,12 @@ export default function Mockup2Screen() {
               <SectionHead label="For you" />
               <div className="grid grid-cols-3 gap-2.5">
                 {FORYOU.map((p) => (
-                  <div key={p.name} className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-black/[0.05]">
+                  <button key={p.name} type="button" onClick={() => setForyouView(p)} className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-black/[0.05] text-left">
                     <img src={p.img} alt="" className="h-full w-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                       <span className="text-[12px] font-bold text-white">{p.name}</span>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
@@ -1039,6 +1045,105 @@ export default function Mockup2Screen() {
                   <Icon path="M20 6 9 17l-5-5" size={18} /> Verbinden
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* For-You-Detailansicht (Vollbild) */}
+        {foryouView && (
+          <div className="absolute inset-0 z-50 flex flex-col bg-white">
+            <div className="flex-1 overflow-y-auto pb-32">
+              {/* Foto-Header */}
+              <div className="relative">
+                <img src={foryouView.img} alt="" className="h-[420px] w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+                <button
+                  type="button"
+                  onClick={() => setForyouView(null)}
+                  className="absolute left-4 top-[max(16px,env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur"
+                >
+                  <Icon path="M15 18l-6-6 6-6" size={22} />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-4 top-[max(16px,env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur"
+                  aria-label="Mehr"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="12" cy="19" r="1.7" /></svg>
+                </button>
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[28px] font-extrabold leading-none text-white">{foryouView.name}, {foryouView.age}</h2>
+                    {foryouView.online && <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white/60" />}
+                  </div>
+                  <p className="mt-2 flex items-center gap-1.5 text-[14px] font-medium text-white/85">
+                    <Icon path="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" size={15} />
+                    {foryouView.city} · {foryouView.dist}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6 p-5">
+                {/* Sportarten / Level / Rating */}
+                <div className="flex flex-wrap gap-2">
+                  {foryouView.sports.map((sp) => (
+                    <span key={sp} className="rounded-full bg-matchup/10 px-3.5 py-1.5 text-[13px] font-semibold text-matchup">{sp}</span>
+                  ))}
+                  <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{foryouView.level}</span>
+                  {foryouView.rating !== "–" && (
+                    <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{foryouView.rating}</span>
+                  )}
+                </div>
+
+                {/* Statistik */}
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { v: String(foryouView.matches), l: "Matches" },
+                    { v: foryouView.winrate, l: "Siegquote" },
+                    { v: String(foryouView.score), l: "MatchScore" },
+                  ].map((st) => (
+                    <div key={st.l} className="rounded-2xl bg-black/[0.035] px-3 py-4 text-center">
+                      <div className="text-[20px] font-extrabold tracking-tight text-neutral-900">{st.v}</div>
+                      <div className="mt-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{st.l}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Über */}
+                <div>
+                  <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Über {foryouView.name}</p>
+                  <p className="text-[15px] leading-relaxed text-neutral-700">{foryouView.bio}</p>
+                </div>
+
+                {/* Gemeinsam */}
+                <div className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-matchup">
+                    <Icon path="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" size={20} />
+                  </span>
+                  <div>
+                    <p className="text-[14px] font-bold text-neutral-900">3 gemeinsame Kontakte</p>
+                    <p className="text-[12.5px] text-neutral-500">Ihr kennt euch vielleicht schon vom Platz.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Aktionsleiste */}
+            <div className="absolute inset-x-0 bottom-0 flex gap-3 border-t border-black/10 bg-white px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
+              <button
+                type="button"
+                onClick={() => setForyouView(null)}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-black/10 text-sm font-bold text-neutral-700"
+              >
+                <Icon path="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z" size={18} /> Nachricht
+              </button>
+              <button
+                type="button"
+                onClick={() => setForyouView(null)}
+                className="flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-matchup text-sm font-bold text-white"
+              >
+                <Icon path="M20 6 9 17l-5-5" size={18} /> Verbinden
+              </button>
             </div>
           </div>
         )}
