@@ -105,13 +105,11 @@ export function SportGroups({
   people,
   onSelect,
   onFind,
-  onLeaderboard,
   weekMatches = 0,
 }: {
   people: Profile[];
   onSelect: (sport: Sport) => void;
   onFind?: () => void;
-  onLeaderboard?: () => void;
   weekMatches?: number;
 }) {
   const t = useT();
@@ -124,17 +122,16 @@ export function SportGroups({
 
   const s = SPORT_GROUPS[active];
   const members = people.filter((p) => (p.sports ?? []).includes(s.key));
-  const topPlayer = [...people].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0))[0];
 
   return (
     <section className="mt-6 px-4">
       <div className="grid grid-cols-2 gap-4">
-        {/* Links: rotierende Sport-Karte (Padel-Champs-Stil) + Punkte darunter */}
-        <div className="row-span-2 flex flex-col">
+        {/* Links: manuell wechselbare Sport-Karte (Padel-Champs-Stil), Punkte IN der Karte */}
+        <div className="row-span-2 flex flex-col overflow-hidden rounded-[24px] bg-black/[0.035] p-5">
           <button
             type="button"
             onClick={() => onSelect(s.key)}
-            className="flex flex-1 flex-col justify-between overflow-hidden rounded-[24px] bg-black/[0.035] p-5 text-left"
+            className="flex flex-1 flex-col justify-between text-left"
           >
             <div className="flex items-start justify-between">
               <span className="text-[15px] text-neutral-500">{today}</span>
@@ -169,8 +166,8 @@ export function SportGroups({
               </div>
             </div>
           </button>
-          {/* Punkte zum Wechseln */}
-          <div className="mt-3 flex gap-1.5 pl-1">
+          {/* Punkte zum Wechseln — direkt unter den Profilbildern, in der Karte */}
+          <div className="mt-3 flex gap-1.5">
             {SPORT_GROUPS.map((g, i) => (
               <button
                 key={g.key}
@@ -235,28 +232,6 @@ export function SportGroups({
           </button>
         </div>
       </div>
-
-      {/* Leaderboard (mockup2-Stil) */}
-      <button
-        type="button"
-        onClick={onLeaderboard}
-        className="relative mt-4 block w-full rounded-[24px] bg-black/[0.035] px-5 pb-14 pt-5 text-left"
-      >
-        <p className="text-[17px] text-neutral-500">{t("discover.leaderboard")}</p>
-        <div className="mt-8 flex flex-col items-center">
-          <CrownIcon />
-          <span className="mt-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
-            {topPlayer?.profile_image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={topPlayer.profile_image} alt="" className="h-full w-full rounded-full object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center rounded-full bg-neutral-200 text-sm font-bold text-neutral-500">
-                {(topPlayer?.first_name?.[0] ?? "?").toUpperCase()}
-              </span>
-            )}
-          </span>
-        </div>
-      </button>
     </section>
   );
 }
@@ -272,13 +247,6 @@ function SparkleIcon() {
   return (
     <svg className="h-[13px] w-[13px] text-matchup" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z" />
-    </svg>
-  );
-}
-function CrownIcon() {
-  return (
-    <svg className="h-[26px] w-[26px] text-matchup" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" />
     </svg>
   );
 }
