@@ -361,6 +361,9 @@ export default function DiscoverTab() {
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />
 
+        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) — über „Für dich" */}
+        <NewsSection />
+
         {/* Für dich empfohlen */}
         <section className="mt-6 px-4">
           <div className="mb-2.5 flex items-center justify-between px-0.5">
@@ -392,9 +395,6 @@ export default function DiscoverTab() {
             </div>
           )}
         </section>
-
-        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) */}
-        <NewsSection />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />

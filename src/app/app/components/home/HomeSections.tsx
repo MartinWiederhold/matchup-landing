@@ -118,12 +118,6 @@ export function SportGroups({
   const { locale } = useLocale();
   const [active, setActive] = useState(0);
 
-  // Automatisch alle 3 Sekunden zwischen den drei Sportarten wechseln.
-  useEffect(() => {
-    const id = setInterval(() => setActive((a) => (a + 1) % SPORT_GROUPS.length), 3000);
-    return () => clearInterval(id);
-  }, []);
-
   const CHALLENGE_GOAL = 3;
   const pct = Math.min(100, Math.round((weekMatches / CHALLENGE_GOAL) * 100));
   const today = new Date().toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
@@ -482,6 +476,7 @@ type NewsRow = {
   link: string;
   source: string | null;
   image_url: string | null;
+  summary: string | null;
   published_at: string;
 };
 const NEWS_SPORTS: (Sport | "all")[] = ["all", "tennis", "padel", "pickleball"];
@@ -498,13 +493,15 @@ export function NewsSection() {
   const t = useT();
   const [rows, setRows] = useState<NewsRow[] | null>(null);
   const [sport, setSport] = useState<Sport | "all">("all");
+  const [index, setIndex] = useState(0);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const { data } = await supabase
         .from("news")
-        .select("id, sport, title, link, source, image_url, published_at")
+        .select("id, sport, title, link, source, image_url, summary, published_at")
         .order("published_at", { ascending: false })
         .limit(40);
       if (alive) setRows((data as NewsRow[]) ?? []);
@@ -529,23 +526,25 @@ export function NewsSection() {
   const filtered = sport === "all" ? rows : rows.filter((r) => r.sport === sport);
   if (filtered.length === 0) return null;
 
-  const lead = filtered.find((r) => r.image_url) ?? filtered[0];
-  const list = filtered.filter((r) => r.id !== lead.id).slice(0, 6);
-
-  const open = (link: string) => window.open(link, "_blank", "noopener,noreferrer");
+  // Karussell: bevorzugt Beiträge mit Bild zuerst, max. 8 Slides
+  const slides = [...filtered]
+    .sort((a, b) => (a.image_url ? 0 : 1) - (b.image_url ? 0 : 1))
+    .slice(0, 8);
+  const i = Math.min(index, slides.length - 1);
+  const cur = slides[i];
+  const openLink = () => window.open(cur.link, "_blank", "noopener,noreferrer");
+  const go = (n: number) => { setIndex(n); setOpen(false); };
 
   return (
     <section className="mt-6 px-4">
+      {/* Sport-Filter (keine Überschrift) */}
       <div className="mb-3 flex items-center gap-2 overflow-x-auto no-scrollbar px-1">
-        <span className="mr-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">
-          {t("discover.headlines")}
-        </span>
         {NEWS_SPORTS.map((s) => (
           <button
             key={s}
             type="button"
-            onClick={() => setSport(s)}
-            className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            onClick={() => { setSport(s); go(0); }}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold ${
               sport === s ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-500"
             }`}
           >
@@ -554,53 +553,65 @@ export function NewsSection() {
         ))}
       </div>
 
-      {/* Lead */}
-      <button
-        type="button"
-        onClick={() => open(lead.link)}
-        className="block w-full overflow-hidden rounded-[20px] bg-black/[0.035] text-left"
-      >
-        {lead.image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={lead.image_url} alt="" loading="lazy" className="h-44 w-full object-cover" />
-        )}
-        <div className="p-4">
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400">
-            <span className="text-matchup">{lead.source}</span>
-            <span>·</span>
-            <span>{relTime(t, lead.published_at)}</span>
-          </div>
-          <h3 className="mt-1.5 text-[15px] font-bold leading-snug tracking-tight text-neutral-900 line-clamp-3">
-            {lead.title}
-          </h3>
-        </div>
-      </button>
-
-      {/* Liste */}
-      <div className="mt-2 divide-y divide-black/[0.06]">
-        {list.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => open(r.link)}
-            className="flex w-full items-start gap-3 py-3 text-left"
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-neutral-400">
-                <span className="text-matchup">{r.source}</span>
-                <span>·</span>
-                <span>{relTime(t, r.published_at)}</span>
-              </div>
-              <p className="mt-0.5 text-[13px] font-semibold leading-snug text-neutral-800 line-clamp-2">
-                {r.title}
-              </p>
-            </div>
-            {r.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={r.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
-            )}
+      {/* Karte im Wimbledon-Stil, aufklappbar */}
+      <div className="overflow-hidden rounded-[24px] bg-white shadow-lg ring-1 ring-black/10">
+        {cur.image_url && (
+          <button type="button" onClick={openLink} className="block w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cur.image_url} alt="" loading="lazy" className="h-48 w-full object-cover" />
           </button>
-        ))}
+        )}
+        <div className="px-4 pt-4">
+          <div className="flex items-start gap-3">
+            <button type="button" onClick={openLink} className="min-w-0 flex-1 text-left">
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400">
+                <span className="text-matchup">{cur.source}</span>
+                <span>·</span>
+                <span>{relTime(t, cur.published_at)}</span>
+              </div>
+              <h3 className={`mt-1.5 text-[16px] font-bold leading-snug tracking-tight text-neutral-900 ${open ? "" : "line-clamp-3"}`}>
+                {cur.title}
+              </h3>
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              aria-label={t("discover.newsMore")}
+              className="shrink-0 text-neutral-500"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${open ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          </div>
+
+          {open && (
+            <div className="mt-3 border-t border-black/[0.06] pt-3">
+              {cur.summary && (
+                <p className="text-[13.5px] leading-relaxed text-neutral-600">{cur.summary}</p>
+              )}
+              <button type="button" onClick={openLink} className="mt-2 flex items-center gap-1 text-[12.5px] font-bold text-matchup">
+                {t("discover.newsMore")}
+                <ChevronRightIcon size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Punkte zum Wechseln */}
+        <div className="flex justify-center gap-1.5 px-4 pb-4 pt-4">
+          {slides.map((s, n) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-label={`${n + 1}`}
+              onClick={() => go(n)}
+              className={`h-1.5 rounded-full transition-all ${
+                n === i ? "w-5 bg-neutral-800" : "w-1.5 bg-black/15"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
