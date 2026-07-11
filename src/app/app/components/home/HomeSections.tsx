@@ -101,21 +101,72 @@ const SPORT_GROUPS: { key: Sport; color: string }[] = [
   { key: "padel", color: "#7b6cff" },
   { key: "pickleball", color: "#f59e0b" },
 ];
-export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect: (sport: Sport) => void }) {
+export function SportGroups({
+  people,
+  onSelect,
+  onFind,
+  weekMatches = 0,
+}: {
+  people: Profile[];
+  onSelect: (sport: Sport) => void;
+  onFind?: () => void;
+  weekMatches?: number;
+}) {
   const t = useT();
+  const [active, setActive] = useState(0);
+  const CARD_COUNT = SPORT_GROUPS.length + 1; // Sport-Karten + Challenge
+
+  function onScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    const card = el.scrollWidth / CARD_COUNT;
+    setActive(Math.round(el.scrollLeft / card));
+  }
+
+  const CHALLENGE_GOAL = 3;
+  const pct = Math.min(100, Math.round((weekMatches / CHALLENGE_GOAL) * 100));
+
   return (
-    <section className="mt-6 px-4">
-      <SectionHead label={t("discover.sportsSection")} />
-      <div className="grid grid-cols-3 gap-3">
+    <section className="mt-6">
+      <div className="px-4">
+        <SectionHead label={t("discover.sportsSection")} />
+      </div>
+      <div
+        onScroll={onScroll}
+        className="no-scrollbar flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-1"
+      >
         {SPORT_GROUPS.map((s) => {
           const members = people.filter((p) => (p.sports ?? []).includes(s.key));
           return (
-            <button key={s.key} type="button" onClick={() => onSelect(s.key)} className="flex flex-col items-center gap-2 rounded-2xl bg-black/[0.035] py-4">
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full" style={{ background: `radial-gradient(circle at 32% 28%, ${s.color}55, ${s.color}14)` }}>
-                {members.length ? (
-                  <div className="flex -space-x-2.5">
-                    {members.slice(0, 3).map((p, i) => (
-                      <span key={i} className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-500 ring-2 ring-white">
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => onSelect(s.key)}
+              className="relative flex aspect-[4/5] w-[168px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[24px] bg-black/[0.035] p-5 text-left"
+            >
+              <div className="flex items-start justify-between">
+                <span className="text-[13px] font-medium text-neutral-500">
+                  {members.length} {t("discover.players")}
+                </span>
+                <span
+                  className="flex h-9 w-9 items-center justify-center rounded-full"
+                  style={{ background: `radial-gradient(circle at 32% 28%, ${s.color}55, ${s.color}18)` }}
+                >
+                  <SportIcon sport={s.key} size={17} className="text-neutral-700" />
+                </span>
+              </div>
+              <div>
+                <h3 className="text-[19px] font-bold leading-tight tracking-tight text-neutral-900">
+                  {sportLabel(s.key)}
+                  <br />
+                  {t("discover.circle")}
+                </h3>
+                <div className="mt-3 flex -space-x-2.5">
+                  {members.length ? (
+                    members.slice(0, 4).map((p, i) => (
+                      <span
+                        key={i}
+                        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[11px] font-bold text-neutral-500 ring-2 ring-white"
+                      >
                         {p.profile_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
@@ -123,22 +174,57 @@ export function SportGroups({ people, onSelect }: { people: Profile[]; onSelect:
                           (p.first_name?.[0] ?? "?").toUpperCase()
                         )}
                       </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex -space-x-2.5">
-                    {[0, 1, 2].map((i) => (
-                      <span key={i} className="h-8 w-8 rounded-full bg-black/10 ring-2 ring-white" />
-                    ))}
-                  </div>
-                )}
-                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full ring-2 ring-white" style={{ background: s.color }} />
+                    ))
+                  ) : (
+                    [0, 1, 2].map((i) => (
+                      <span key={i} className="h-9 w-9 rounded-full bg-black/[0.07] ring-2 ring-white" />
+                    ))
+                  )}
+                </div>
               </div>
-              <span className="text-xs font-extrabold">{sportLabel(s.key)}</span>
-              <span className="text-[10px] text-neutral-400">{members.length} {t("discover.players")}</span>
             </button>
           );
         })}
+
+        {/* 7-Tage-Match-Challenge */}
+        <button
+          type="button"
+          onClick={onFind}
+          className="relative flex aspect-[4/5] w-[168px] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-[24px] bg-gradient-to-br from-matchup to-indigo-500 p-5 text-left text-white"
+        >
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold backdrop-blur-sm">
+            <SportIcon sport="tennis" size={13} className="text-white" />
+            {t("discover.challengeTag")}
+          </span>
+          <div>
+            <h3 className="text-[18px] font-bold leading-tight tracking-tight">
+              {t("discover.challengeTitle")}
+            </h3>
+            <p className="mt-1 text-[12px] leading-snug text-white/85">
+              {t("discover.challengeSub", { goal: CHALLENGE_GOAL })}
+            </p>
+            <div className="mt-3">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+                <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
+              </div>
+              <p className="mt-1.5 text-[11px] font-semibold text-white/90">
+                {weekMatches}/{CHALLENGE_GOAL}
+              </p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Punkte */}
+      <div className="mt-2.5 flex justify-center gap-1.5">
+        {Array.from({ length: CARD_COUNT }).map((_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 rounded-full transition-all ${
+              i === active ? "w-4 bg-neutral-800" : "w-1.5 bg-black/15"
+            }`}
+          />
+        ))}
       </div>
     </section>
   );
@@ -325,6 +411,138 @@ export function CommunityCard({ onOpen }: { onOpen: () => void }) {
           <p className="text-[12.5px] leading-snug text-neutral-500 line-clamp-2"><b className="text-neutral-900">{post.author?.first_name}</b> {post.content}</p>
         </div>
       </button>
+    </section>
+  );
+}
+
+/* ── Schlagzeilen (Tennis/Padel/Pickleball-News, RSS, 7-Tage) ── */
+type NewsRow = {
+  id: string;
+  sport: Sport;
+  title: string;
+  link: string;
+  source: string | null;
+  image_url: string | null;
+  published_at: string;
+};
+const NEWS_SPORTS: (Sport | "all")[] = ["all", "tennis", "padel", "pickleball"];
+
+function relTime(t: ReturnType<typeof useT>, iso: string): string {
+  const diff = Date.now() - Date.parse(iso);
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return t("discover.newsNow");
+  if (h < 24) return t("discover.newsHours", { h });
+  return t("discover.newsDays", { d: Math.floor(h / 24) });
+}
+
+export function NewsSection() {
+  const t = useT();
+  const [rows, setRows] = useState<NewsRow[] | null>(null);
+  const [sport, setSport] = useState<Sport | "all">("all");
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("news")
+        .select("id, sport, title, link, source, image_url, published_at")
+        .order("published_at", { ascending: false })
+        .limit(40);
+      if (alive) setRows((data as NewsRow[]) ?? []);
+
+      // Lazy-Refresh: höchstens alle 90 Min die Sync-Route anstoßen (best effort),
+      // damit aktive Nutzer auch zwischen den Cron-Läufen frische News sehen.
+      try {
+        const newest = data?.[0]?.published_at ? Date.parse(data[0].published_at) : 0;
+        const last = Number(window.localStorage.getItem("mu_news_sync") || 0);
+        const stale = Date.now() - newest > 90 * 60000;
+        const throttled = Date.now() - last < 90 * 60000;
+        if (stale && !throttled) {
+          window.localStorage.setItem("mu_news_sync", String(Date.now()));
+          void fetch("/api/news/sync").catch(() => {});
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  if (rows === null) return null;
+  const filtered = sport === "all" ? rows : rows.filter((r) => r.sport === sport);
+  if (filtered.length === 0) return null;
+
+  const lead = filtered.find((r) => r.image_url) ?? filtered[0];
+  const list = filtered.filter((r) => r.id !== lead.id).slice(0, 6);
+
+  const open = (link: string) => window.open(link, "_blank", "noopener,noreferrer");
+
+  return (
+    <section className="mt-6 px-4">
+      <div className="mb-3 flex items-center gap-2 overflow-x-auto no-scrollbar px-1">
+        <span className="mr-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">
+          {t("discover.headlines")}
+        </span>
+        {NEWS_SPORTS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setSport(s)}
+            className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+              sport === s ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-500"
+            }`}
+          >
+            {s === "all" ? t("discover.newsAll") : sportLabel(s)}
+          </button>
+        ))}
+      </div>
+
+      {/* Lead */}
+      <button
+        type="button"
+        onClick={() => open(lead.link)}
+        className="block w-full overflow-hidden rounded-[20px] bg-black/[0.035] text-left"
+      >
+        {lead.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={lead.image_url} alt="" loading="lazy" className="h-44 w-full object-cover" />
+        )}
+        <div className="p-4">
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400">
+            <span className="text-matchup">{lead.source}</span>
+            <span>·</span>
+            <span>{relTime(t, lead.published_at)}</span>
+          </div>
+          <h3 className="mt-1.5 text-[15px] font-bold leading-snug tracking-tight text-neutral-900 line-clamp-3">
+            {lead.title}
+          </h3>
+        </div>
+      </button>
+
+      {/* Liste */}
+      <div className="mt-2 divide-y divide-black/[0.06]">
+        {list.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            onClick={() => open(r.link)}
+            className="flex w-full items-start gap-3 py-3 text-left"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-neutral-400">
+                <span className="text-matchup">{r.source}</span>
+                <span>·</span>
+                <span>{relTime(t, r.published_at)}</span>
+              </div>
+              <p className="mt-0.5 text-[13px] font-semibold leading-snug text-neutral-800 line-clamp-2">
+                {r.title}
+              </p>
+            </div>
+            {r.image_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={r.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+            )}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

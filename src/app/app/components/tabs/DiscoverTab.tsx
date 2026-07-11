@@ -19,7 +19,7 @@ import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState } from "../shared/ui";
 import MatchAnimation from "../shared/MatchAnimation";
 import Avatar from "../shared/Avatar";
-import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, CommunityCard } from "../home/HomeSections";
+import { greeting, FormRing, StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import FilterSheet from "./FilterSheet";
 
@@ -66,6 +66,37 @@ export default function DiscoverTab() {
   });
   const [matchWith, setMatchWith] = useState<Profile | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set());
+  const [weekGames, setWeekGames] = useState(0);
+
+  // 7-Tage-Match-Challenge: gespielte Games der letzten 7 Tage (erstellt oder beigetreten).
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const since = new Date(Date.now() - 7 * 86400000).toISOString();
+      const nowIso = new Date().toISOString();
+      const [mine, joined] = await Promise.all([
+        supabase
+          .from("game_events")
+          .select("id")
+          .eq("created_by", profile.id)
+          .gte("date_time", since)
+          .lte("date_time", nowIso),
+        supabase
+          .from("game_participants")
+          .select("game:game_events(id, date_time)")
+          .eq("user_id", profile.id)
+          .eq("status", "accepted"),
+      ]);
+      const ids = new Set<string>((mine.data ?? []).map((g) => g.id as string));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (joined.data ?? []).forEach((r: any) => {
+        const g = Array.isArray(r.game) ? r.game[0] : r.game;
+        if (g?.id && g.date_time >= since && g.date_time <= nowIso) ids.add(g.id);
+      });
+      if (alive) setWeekGames(ids.size);
+    })();
+    return () => { alive = false; };
+  }, [profile.id]);
 
   useEffect(() => {
     try {
@@ -315,6 +346,8 @@ export default function DiscoverTab() {
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
         <SportGroups
           people={candidates}
+          weekMatches={weekGames}
+          onFind={() => openSubView({ type: "people-browse" })}
           onSelect={(sport) => {
             const next = { ...filters, sports: [sport] };
             // Filter synchron persistieren, damit die Uebersicht ihn beim Mounten liest.
@@ -358,6 +391,9 @@ export default function DiscoverTab() {
             </div>
           )}
         </section>
+
+        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) */}
+        <NewsSection />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />
