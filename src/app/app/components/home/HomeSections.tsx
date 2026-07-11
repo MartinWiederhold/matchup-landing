@@ -142,8 +142,8 @@ export function SportGroups({
             onClick={() => { if (swiped.current) { swiped.current = false; return; } onSelect(s.key); }}
             className="flex flex-1 flex-col justify-between text-left"
           >
-            <div className="flex items-start justify-between">
-              <span className="text-[15px] text-neutral-500">{today}</span>
+            <div className="flex items-start justify-between gap-3">
+              <span className="whitespace-nowrap text-[15px] text-neutral-500">{today}</span>
               <CalendarIcon />
             </div>
             <div className="mt-14">
@@ -249,7 +249,7 @@ export function SportGroups({
 
 function CalendarIcon() {
   return (
-    <svg className="h-[19px] w-[19px] text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="h-[19px] w-[19px] shrink-0 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
     </svg>
   );
