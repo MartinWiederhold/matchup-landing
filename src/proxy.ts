@@ -21,6 +21,7 @@ function isProtected(pathname: string): boolean {
     pathname.startsWith("/api/unlock") ||
     pathname.startsWith("/api/qr/scan") || // QR-Scan-Zähler muss auch ohne Code erreichbar sein
     pathname.startsWith("/api/sync") || // Cron/Sync-Endpoint muss ohne Gate erreichbar sein
+    pathname.startsWith("/api/news") || // News-Sync (Cron + Lazy-Refresh) muss ohne Gate erreichbar sein
     pathname.startsWith("/api/prices") || // Preis-Proxy (Travelpayouts) für /map darf nicht geblockt werden
     pathname.startsWith("/api/pois") || // POI-Proxy (OpenStreetMap) für /map darf nicht geblockt werden
     pathname.startsWith("/api/tennis") || // Live-Tennis-Proxy (ESPN) für /app-Home darf nicht geblockt werden
