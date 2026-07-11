@@ -60,6 +60,34 @@ export function calendarFeedUrl(token: string): string {
   return `${origin}/api/tour/calendar/${token}.ics`;
 }
 
+/* ── Reise-Autorisierungen (Visa/ESTA/ETA) ────────────────── */
+export type TravelDoc = { id: string; kind: string; country: string | null; status: string; expiry: string | null; ref: string | null };
+
+export async function loadTravelDocs(userId: string): Promise<TravelDoc[]> {
+  const { data } = await supabase
+    .from("tour_visa")
+    .select("id,kind,country,status,expiry,ref")
+    .eq("user_id", userId)
+    .order("expiry", { nullsFirst: false });
+  return (data as TravelDoc[]) ?? [];
+}
+
+export async function saveTravelDoc(
+  userId: string,
+  doc: { id?: string; kind: string; country: string | null; status: string; expiry: string | null; ref: string | null },
+): Promise<void> {
+  const payload = { kind: doc.kind, country: doc.country, status: doc.status, expiry: doc.expiry, ref: doc.ref, updated_at: new Date().toISOString() };
+  if (doc.id) {
+    await supabase.from("tour_visa").update(payload).eq("id", doc.id);
+  } else {
+    await supabase.from("tour_visa").insert({ user_id: userId, ...payload });
+  }
+}
+
+export async function removeTravelDoc(id: string): Promise<void> {
+  await supabase.from("tour_visa").delete().eq("id", id);
+}
+
 /* ── Team-Einladungen ─────────────────────────────────────── */
 export type TeamInvite = { id: string; role: string; member_name: string | null; status: string; invite_token: string };
 

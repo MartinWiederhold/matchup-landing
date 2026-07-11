@@ -231,7 +231,10 @@ export default function TourHome() {
       )}
 
       {/* Visa / Compliance */}
-      <SecLabel>{t("mode.visaStatus")}</SecLabel>
+      <div className="mt-6 mb-2.5 flex items-center justify-between px-1">
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("mode.visaStatus")}</span>
+        <button type="button" onClick={() => openSubView({ type: "tour-visa" })} className="text-[11px] font-bold uppercase tracking-wider text-matchup">{t("mode.visaTitle")}</button>
+      </div>
 
       {/* Schengen 90/180 aus dem Plan */}
       {schengen && (
@@ -250,7 +253,7 @@ export default function TourHome() {
       )}
 
       {/* ESTA / US-Einreise */}
-      <div className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-4">
+      <button type="button" onClick={() => openSubView({ type: "tour-visa" })} className="flex w-full items-center gap-3 rounded-2xl bg-black/[0.035] p-4 text-left">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${estaUrg === "red" ? "bg-red-500/10 text-red-600" : estaUrg === "amber" ? "bg-amber-500/10 text-amber-600" : "bg-black/[0.05] text-neutral-500"}`}>
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" strokeLinecap="round" /></svg>
         </span>
@@ -262,7 +265,8 @@ export default function TourHome() {
               : t("mode.estaNone")}
           </p>
         </div>
-      </div>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m9 6 6 6-6 6" /></svg>
+      </button>
 
       {(schengen || hasEsta) && (
         <p className="mt-1 px-1 text-[10px] text-neutral-400">{t("mode.visaDisclaimer")}</p>

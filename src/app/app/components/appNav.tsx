@@ -33,7 +33,8 @@ export type SubViewState =
   | { type: "tour-profile-edit" }
   | { type: "tour-players" }
   | { type: "tour-player-view"; playerId: string; role: string; playerName?: string }
-  | { type: "tour-deadlines" };
+  | { type: "tour-deadlines" }
+  | { type: "tour-visa" };
 
 interface AppNavContextType {
   profile: Profile;
