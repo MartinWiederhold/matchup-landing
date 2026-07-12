@@ -764,26 +764,40 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
-        {/* Fork — Play vs. Tour */}
+        {/* Fork — Play vs. Tour (Foto-Kacheln) */}
         {cur === "fork" && (
           <Step title={t("onboarding.forkTitle")} subtitle={t("onboarding.forkSubtitle")}>
-            <SelectRow selected={state.onb_mode === "play"} onClick={() => dispatch({ type: "SET_MODE", payload: "play" })}>
-              <span className="block font-semibold">{t("onboarding.forkPlay")}</span>
-              <span className="block text-xs text-neutral-500">{t("onboarding.forkPlayDesc")}</span>
-            </SelectRow>
-            <SelectRow
-              selected={state.onb_mode === "tour"}
-              onClick={() => {
-                dispatch({ type: "SET_MODE", payload: "tour" });
-                if (!tourOk) setTourGate(true);
-              }}
-            >
-              <span className="flex items-center gap-1.5 font-semibold">
-                {t("onboarding.forkTour")}
-                {!tourOk && <span className="rounded-full bg-black/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.soon")}</span>}
-              </span>
-              <span className="block text-xs text-neutral-500">{t("onboarding.forkTourDesc")}</span>
-            </SelectRow>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "SET_MODE", payload: "play" })}
+                className={`flex w-full items-center gap-4 rounded-2xl border p-3 text-left transition-colors ${state.onb_mode === "play" ? "border-2 border-matchup bg-matchup/[0.06]" : "border-black/10 bg-black/[0.015]"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/onboarding/play.jpg" alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold text-neutral-900">{t("onboarding.forkPlay")}</span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-neutral-500">{t("onboarding.forkPlayDesc")}</span>
+                </span>
+                {state.onb_mode === "play" && <ForkCheck />}
+              </button>
+              <button
+                type="button"
+                onClick={() => { dispatch({ type: "SET_MODE", payload: "tour" }); if (!tourOk) setTourGate(true); }}
+                className={`flex w-full items-center gap-4 rounded-2xl border p-3 text-left transition-colors ${state.onb_mode === "tour" ? "border-2 border-matchup bg-matchup/[0.06]" : "border-black/10 bg-black/[0.015]"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/onboarding/tour.jpg" alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 text-[15px] font-bold text-neutral-900">
+                    {t("onboarding.forkTour")}
+                    {!tourOk && <span className="rounded-full bg-black/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.soon")}</span>}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-neutral-500">{t("onboarding.forkTourDesc")}</span>
+                </span>
+                {state.onb_mode === "tour" && <ForkCheck />}
+              </button>
+            </div>
             <p className="mt-3 rounded-xl bg-black/[0.035] px-4 py-3 text-xs text-neutral-500">{t("onboarding.forkSwitchHint")}</p>
           </Step>
         )}
@@ -1258,6 +1272,13 @@ export default function OnboardingFlow() {
 }
 
 /* ---------- kleine UI-Helfer ---------- */
+function ForkCheck() {
+  return (
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-white">
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+    </span>
+  );
+}
 
 function Step({
   title,
