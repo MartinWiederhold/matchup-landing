@@ -46,15 +46,18 @@ export type StepId =
   | "skill" | "height" | "goals" | "photos"
   | "circuit" | "ranking" | "passport" | "team" | "calendar";
 
-const COMMON: StepId[] = ["welcome", "language", "sports", "location", "club", "identity", "fork"];
-const PLAY: StepId[] = ["skill", "height", "goals", "photos"];
-const TOUR: StepId[] = ["circuit", "ranking", "passport", "team", "calendar", "photos"];
+// Fork (Play/Tour) kommt FRÜH — direkt nach Welcome + Sprache. Danach sammeln
+// beide Pfade die für das Profil nötigen Daten (Sport/Ort/Club/Identität, DB-Pflicht)
+// plus ihre modus-spezifischen Schritte.
+const PRE: StepId[] = ["welcome", "language", "fork"];
+const PLAY: StepId[] = ["sports", "location", "club", "identity", "skill", "height", "goals", "photos"];
+const TOUR: StepId[] = ["sports", "location", "club", "identity", "circuit", "ranking", "passport", "team", "calendar", "photos"];
 
 /** Sichtbare Schritte je nach gewähltem Modus. */
 export function visibleSteps(state: OnboardingState): StepId[] {
-  if (state.onb_mode === "play") return [...COMMON, ...PLAY];
-  if (state.onb_mode === "tour") return [...COMMON, ...TOUR];
-  return COMMON; // vor der Gabelung endet es beim Fork
+  if (state.onb_mode === "play") return [...PRE, ...PLAY];
+  if (state.onb_mode === "tour") return [...PRE, ...TOUR];
+  return PRE; // vor der Gabelung endet es beim Fork
 }
 
 export function currentStepId(state: OnboardingState): StepId {
