@@ -403,6 +403,7 @@ export interface OnboardingState {
   club_id: string | null;
   club_name: string | null;
   first_name: string;
+  last_name: string; // Pflicht im Tour-Modus (Nachname)
   age: number | null;
   birthdate: string; // ISO yyyy-mm-dd (für /map-Übernahme)
   gender: "male" | "female" | null;

@@ -11,6 +11,7 @@ export const initialOnboardingState: OnboardingState = {
   club_id: null,
   club_name: null,
   first_name: "",
+  last_name: "",
   age: null,
   birthdate: "",
   gender: null,
@@ -90,6 +91,7 @@ export type Action =
     }
   | { type: "SET_CLUB"; payload: { id: string | null; name: string | null } }
   | { type: "SET_NAME"; payload: string }
+  | { type: "SET_LASTNAME"; payload: string }
   | { type: "SET_AGE"; payload: number }
   | { type: "SET_BIRTHDATE"; payload: string }
   | { type: "SET_RANKINGS"; payload: Partial<Pick<OnboardingState, "atp" | "wta" | "itf" | "utr">> }
@@ -143,6 +145,8 @@ export function onboardingReducer(
       };
     case "SET_NAME":
       return { ...state, first_name: action.payload };
+    case "SET_LASTNAME":
+      return { ...state, last_name: action.payload };
     case "SET_AGE":
       return { ...state, age: action.payload };
     case "SET_BIRTHDATE":
@@ -229,7 +233,9 @@ export function isStepValid(state: OnboardingState): boolean {
       return (
         state.first_name.trim().length >= 2 &&
         state.age !== null && state.age >= 18 && state.age <= 100 &&
-        state.gender !== null
+        state.gender !== null &&
+        // Tour: Nachname Pflicht.
+        (state.onb_mode !== "tour" || state.last_name.trim().length >= 2)
       );
     case "fork":
       return state.onb_mode !== null;

@@ -133,6 +133,7 @@ export default function OnboardingFlow() {
   // Tour ist Early-Access-gesperrt: nur mit Freischalt-Code wählbar.
   const [tourOk, setTourOk] = useState(() => (typeof window !== "undefined" ? tourUnlocked() : false));
   const [tourGate, setTourGate] = useState(false);
+  const [openInfo, setOpenInfo] = useState<string | null>(null); // Info-Popover im Passport-Screen
 
   // Fortschritt bei jeder Änderung sichern (ohne File-Objekte).
   useEffect(() => {
@@ -319,7 +320,7 @@ export default function OnboardingFlow() {
 
       const { error: insertError } = await supabase.from("profiles").insert({
         id: user.id,
-        display_name: state.first_name,
+        display_name: state.onb_mode === "tour" && state.last_name.trim() ? `${state.first_name.trim()} ${state.last_name.trim()}` : state.first_name,
         first_name: state.first_name,
         age: state.age!,
         gender: state.gender!,
@@ -468,21 +469,26 @@ export default function OnboardingFlow() {
       <div className="flex-1 overflow-y-auto px-5 py-8">
         {/* Step 1 — Welcome */}
         {cur === "welcome" && (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <span className="text-4xl font-extrabold tracking-[0.2em] text-matchup">
-              MATCHUP
-            </span>
-            <div className="mt-4 flex justify-center gap-4 text-neutral-500">
-              <TennisIcon size={30} />
-              <PadelIcon size={30} />
-              <PickleballIcon size={30} />
+          <div className="relative flex h-full min-h-[68vh] flex-col items-center justify-center overflow-hidden rounded-[28px] text-center">
+            {/* Titelvideo im Hintergrund */}
+            <video className="pointer-events-none absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline poster="/hero-poster.jpg" aria-hidden="true">
+              <source src="/hero.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-black/55" />
+            <div className="relative z-10 px-6 text-white">
+              <span className="text-4xl font-extrabold tracking-[0.2em] text-white">MATCHUP</span>
+              <div className="mt-4 flex justify-center gap-4 text-white/85">
+                <TennisIcon size={30} />
+                <PadelIcon size={30} />
+                <PickleballIcon size={30} />
+              </div>
+              <h1 className="mt-8 text-3xl font-bold text-white">
+                {t("onboarding.welcomeTitle")}
+              </h1>
+              <p className="mx-auto mt-4 max-w-xs text-white/80">
+                {t("onboarding.welcomeSubtitle")}
+              </p>
             </div>
-            <h1 className="mt-8 text-3xl font-bold">
-              {t("onboarding.welcomeTitle")}
-            </h1>
-            <p className="mt-4 max-w-xs text-neutral-500">
-              {t("onboarding.welcomeSubtitle")}
-            </p>
           </div>
         )}
 
@@ -714,7 +720,7 @@ export default function OnboardingFlow() {
         {/* Step 6 — Name + Alter + Geschlecht */}
         {cur === "identity" && (
           <Step title={t("onboarding.aboutYouTitle")} subtitle={t("onboarding.aboutYouSubtitle")}>
-            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldName")}</label>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{state.onb_mode === "tour" ? t("onboarding.fieldFirstName") : t("onboarding.fieldName")}</label>
             <input
               value={state.first_name}
               onChange={(e) => dispatch({ type: "SET_NAME", payload: e.target.value })}
@@ -723,6 +729,17 @@ export default function OnboardingFlow() {
             />
             {state.first_name.length > 0 && state.first_name.trim().length < 2 && (
               <p className="mt-1 text-sm text-amber-600">{t("onboarding.nameTooShort")}</p>
+            )}
+            {state.onb_mode === "tour" && (
+              <>
+                <label className="mb-1.5 mt-4 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldLastName")}</label>
+                <input
+                  value={state.last_name}
+                  onChange={(e) => dispatch({ type: "SET_LASTNAME", payload: e.target.value })}
+                  placeholder={t("onboarding.lastNamePlaceholder")}
+                  className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm outline-none focus:ring-1 focus:ring-matchup"
+                />
+              </>
             )}
 
             <div className="mt-6">
@@ -847,7 +864,7 @@ export default function OnboardingFlow() {
         {/* Tour — Pässe + Steuerresidenz + ESTA */}
         {cur === "passport" && (
           <Step title={t("onboarding.passportTitle")} subtitle={t("onboarding.passportSubtitle")}>
-            <p className="text-sm font-semibold">{t("onboarding.passportPrimary")}</p>
+            <InfoLabel text={t("onboarding.passportPrimary")} info={t("onboarding.passportPrimaryInfo")} id="pp" openInfo={openInfo} setOpenInfo={setOpenInfo} />
             <input
               value={state.passports[0] ?? ""}
               onChange={(e) => dispatch({ type: "SET_PASSPORTS", payload: [e.target.value, state.passports[1] ?? ""] })}
@@ -861,14 +878,14 @@ export default function OnboardingFlow() {
               placeholder={t("onboarding.passportAdd")}
               className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
-            <p className="pt-2 text-sm font-semibold">{t("onboarding.taxResidence")}</p>
+            <InfoLabel text={t("onboarding.taxResidence")} info={t("onboarding.taxResidenceInfo")} id="tax" openInfo={openInfo} setOpenInfo={setOpenInfo} className="pt-2" />
             <input
               value={state.tax_residence}
               onChange={(e) => dispatch({ type: "SET_TAX_RESIDENCE", payload: e.target.value })}
               placeholder={t("onboarding.taxPlaceholder")}
               className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
             />
-            <p className="pt-2 text-sm font-semibold">{t("onboarding.usAuth")}</p>
+            <InfoLabel text={t("onboarding.usAuth")} info={t("onboarding.usAuthInfo")} id="us" openInfo={openInfo} setOpenInfo={setOpenInfo} className="pt-2" />
             <div className="flex flex-wrap gap-2">
               {["ESTA", "B-1", "P-1", "None"].map((o) => (
                 <Chip key={o} selected={state.esta_status === o} onClick={() => dispatch({ type: "SET_ESTA", payload: { status: o } })}>
@@ -1277,6 +1294,20 @@ function ForkCheck() {
     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-white">
       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
     </span>
+  );
+}
+
+/** Feld-Label mit (i)-Info-Button, das eine kurze Erklärung ein-/ausklappt. */
+function InfoLabel({ text, info, id, openInfo, setOpenInfo, className = "" }: { text: string; info: string; id: string; openInfo: string | null; setOpenInfo: (v: string | null) => void; className?: string }) {
+  const open = openInfo === id;
+  return (
+    <div className={className}>
+      <div className="flex items-center gap-1.5">
+        <p className="text-sm font-semibold">{text}</p>
+        <button type="button" onClick={() => setOpenInfo(open ? null : id)} aria-label="Info" className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-black/[0.1] text-[11px] font-bold italic text-neutral-500">i</button>
+      </div>
+      {open && <p className="mt-1.5 rounded-lg bg-matchup/[0.06] px-3 py-2 text-[11.5px] leading-relaxed text-neutral-600">{info}</p>}
+    </div>
   );
 }
 
