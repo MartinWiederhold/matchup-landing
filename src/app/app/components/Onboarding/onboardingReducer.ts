@@ -51,7 +51,7 @@ export type StepId =
 // beide Pfade die für das Profil nötigen Daten (Sport/Ort/Club/Identität, DB-Pflicht)
 // plus ihre modus-spezifischen Schritte.
 const PRE: StepId[] = ["welcome", "language", "fork"];
-const PLAY: StepId[] = ["sports", "location", "services", "club", "identity", "skill", "height", "goals", "photos"];
+const PLAY: StepId[] = ["sports", "location", "club", "identity", "skill", "height", "goals", "photos"];
 const TOUR: StepId[] = ["sports", "location", "services", "club", "identity", "circuit", "ranking", "passport", "team", "calendar", "photos"];
 
 /** Sichtbare Schritte je nach gewähltem Modus. */
