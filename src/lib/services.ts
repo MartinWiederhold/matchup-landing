@@ -107,3 +107,42 @@ export async function submitReview(providerId: string, userId: string, rating: n
 export async function deleteReview(providerId: string, userId: string): Promise<void> {
   await supabase.from("provider_reviews").delete().eq("provider_id", providerId).eq("user_id", userId);
 }
+
+/* ── Anfragen (Buchungswunsch, ohne Zahlung) ──────────────── */
+export type ServiceRequest = {
+  id: string;
+  provider_id: string;
+  status: string; // open | confirmed | declined | done
+  note: string | null;
+  created_at: string;
+  provider: ServiceProvider | null;
+};
+
+/** IDs der Anbieter, an die der Nutzer bereits eine Anfrage gestellt hat. */
+export async function loadRequestedIds(userId: string): Promise<Set<string>> {
+  const { data } = await supabase.from("service_requests").select("provider_id").eq("user_id", userId);
+  return new Set((data as { provider_id: string }[] ?? []).map((r) => r.provider_id));
+}
+
+/** Anfrage anlegen (idempotent — bestehende bleibt bestehen). */
+export async function createRequest(userId: string, providerId: string, note?: string): Promise<void> {
+  await supabase.from("service_requests").upsert(
+    { user_id: userId, provider_id: providerId, note: note?.trim() || null },
+    { onConflict: "user_id,provider_id", ignoreDuplicates: true },
+  );
+}
+
+export async function cancelRequest(userId: string, providerId: string): Promise<void> {
+  await supabase.from("service_requests").delete().eq("user_id", userId).eq("provider_id", providerId);
+}
+
+/** Alle Anfragen des Nutzers inkl. Anbieter-Daten (neueste zuerst). */
+export async function loadRequests(userId: string): Promise<ServiceRequest[]> {
+  const { data } = await supabase
+    .from("service_requests")
+    .select("id,provider_id,status,note,created_at, provider:service_providers!service_requests_provider_id_fkey(*)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((data as any[]) ?? []).map((r) => ({ ...r, provider: Array.isArray(r.provider) ? r.provider[0] ?? null : r.provider ?? null }));
+}

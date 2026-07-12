@@ -10,9 +10,9 @@ const UNIT_KEY: Record<string, string> = {
   week: "services.perWeek", year: "services.perYear",
 };
 
-export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen }: { p: ServiceProvider; favorited?: boolean; onToggleFav?: () => void; onOpen?: () => void }) {
+export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen, onRequest, requested: requestedInit }: { p: ServiceProvider; favorited?: boolean; onToggleFav?: () => void; onOpen?: () => void; onRequest?: () => void | Promise<void>; requested?: boolean }) {
   const t = useT();
-  const [requested, setRequested] = useState(false);
+  const [requested, setRequested] = useState(!!requestedInit);
 
   return (
     <div className="relative rounded-2xl border border-black/[0.07] p-3">
@@ -55,7 +55,7 @@ export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen 
         </span>
         <button
           type="button"
-          onClick={() => setRequested(true)}
+          onClick={() => { setRequested(true); void onRequest?.(); }}
           disabled={requested}
           className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}
         >

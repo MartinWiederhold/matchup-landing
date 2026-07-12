@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
-import { loadProvider, loadReviews, submitReview, deleteReview, loadFavoriteIds, toggleFavorite, type ServiceProvider, type ProviderReview } from "@/lib/services";
+import { loadProvider, loadReviews, submitReview, deleteReview, loadFavoriteIds, toggleFavorite, loadRequestedIds, createRequest, type ServiceProvider, type ProviderReview } from "@/lib/services";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -43,6 +43,7 @@ export default function ServiceProviderDetail({ providerId }: { providerId: stri
       setP(await loadProvider(providerId));
       await reload();
       setFav((await loadFavoriteIds(profile.id)).has(providerId));
+      setRequested((await loadRequestedIds(profile.id)).has(providerId));
       setLoaded(true);
     })();
   }, [providerId, profile.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,7 +107,7 @@ export default function ServiceProviderDetail({ providerId }: { providerId: stri
           <span className="text-[15px] font-extrabold">
             {p.price_from != null && <><span className="text-neutral-400 text-[12px] font-medium">{t("services.from")} </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? t(UNIT[p.price_unit] ?? "services.perHour") : ""}</span></>}
           </span>
-          <button type="button" onClick={() => setRequested(true)} disabled={requested} className={`rounded-full px-5 py-2 text-[13px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>{requested ? t("services.requested") : t("services.request")}</button>
+          <button type="button" onClick={() => { setRequested(true); void createRequest(profile.id, providerId); }} disabled={requested} className={`rounded-full px-5 py-2 text-[13px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>{requested ? t("services.requested") : t("services.request")}</button>
         </div>
         {requested && <p className="mt-1.5 px-1 text-[11px] text-neutral-400">{t("services.requestSent")}</p>}
 

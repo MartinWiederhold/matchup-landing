@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { loadProviders, loadFavoriteProviders, loadFavoriteIds, toggleFavorite, type ServiceProvider, type ServiceCategory } from "@/lib/services";
+import { loadProviders, loadFavoriteProviders, loadFavoriteIds, toggleFavorite, loadRequestedIds, createRequest, type ServiceProvider, type ServiceCategory } from "@/lib/services";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 import ServiceProviderCard from "../shared/ServiceProviderCard";
@@ -17,8 +17,14 @@ export default function ServicesHub() {
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<ServiceProvider[] | null>(null);
   const [favs, setFavs] = useState<Set<string>>(new Set());
+  const [reqs, setReqs] = useState<Set<string>>(new Set());
 
-  useEffect(() => { loadFavoriteIds(profile.id).then(setFavs); }, [profile.id]);
+  useEffect(() => { loadFavoriteIds(profile.id).then(setFavs); loadRequestedIds(profile.id).then(setReqs); }, [profile.id]);
+
+  async function request(p: ServiceProvider) {
+    setReqs((s) => new Set(s).add(p.id));
+    await createRequest(profile.id, p.id);
+  }
 
   useEffect(() => {
     let alive = true;
@@ -49,7 +55,9 @@ export default function ServicesHub() {
 
   return (
     <div className="flex h-full flex-col bg-white text-neutral-900">
-      <SubViewHeader light title={t("services.title")} />
+      <SubViewHeader light title={t("services.title")} rightActions={
+        <button type="button" onClick={() => openSubView({ type: "my-team" })} className="rounded-full bg-black/[0.05] px-3 py-1.5 text-[12px] font-bold text-matchup">{t("services.myTeam")}</button>
+      } />
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         <div className="mb-3 flex gap-2">
           {(["browse", "favorites"] as const).map((v) => (
@@ -71,7 +79,7 @@ export default function ServicesHub() {
           <p className="pt-8 text-center text-[13px] text-neutral-400">{view === "favorites" ? t("services.noFavorites") : t("services.empty")}</p>
         ) : (
           <div className="space-y-2.5">
-            {shown.map((p) => <ServiceProviderCard key={p.id} p={p} favorited={favs.has(p.id)} onToggleFav={() => toggle(p)} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} />)}
+            {shown.map((p) => <ServiceProviderCard key={p.id} p={p} favorited={favs.has(p.id)} onToggleFav={() => toggle(p)} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} requested={reqs.has(p.id)} onRequest={() => request(p)} />)}
           </div>
         )}
       </div>

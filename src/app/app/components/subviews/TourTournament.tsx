@@ -5,7 +5,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { tournamentDeadlines, kindShort, deadlineClock } from "@/lib/deadlines";
 import { flagEmoji } from "@/lib/flags";
-import { loadProvidersNear, type ServiceProvider, type ServiceCategory } from "@/lib/services";
+import { loadProvidersNear, loadRequestedIds, createRequest, type ServiceProvider, type ServiceCategory } from "@/lib/services";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 import ServiceProviderCard from "../shared/ServiceProviderCard";
@@ -28,6 +28,7 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
   const [cost, setCost] = useState(0);
   const [cur, setCur] = useState("EUR");
   const [added, setAdded] = useState<Record<string, boolean>>({});
+  const [reqs, setReqs] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
       for (const r of (ex as { amount: number | null; currency: string | null }[]) ?? []) { c += Number(r.amount) || 0; if (!cc && r.currency) cc = r.currency; }
       setPrize(p); setCost(c); setCur(cc || "EUR");
       if (tr?.city) { const r = await loadProvidersNear(tr.city, 12); setProviders(r.rows); } else setProviders([]);
+      setReqs(await loadRequestedIds(profile.id));
       setLoaded(true);
     })();
   }, [tournamentId, profile.id]);
@@ -118,7 +120,7 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
           <div className="space-y-2.5">
             {providers.map((p) => (
               <div key={p.id}>
-                <ServiceProviderCard p={p} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} />
+                <ServiceProviderCard p={p} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} requested={reqs.has(p.id)} onRequest={() => { setReqs((s) => new Set(s).add(p.id)); return createRequest(profile.id, p.id); }} />
                 <button
                   type="button"
                   onClick={() => addExpense(p)}
