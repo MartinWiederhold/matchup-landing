@@ -109,13 +109,13 @@ export default function ClubPicker({
 
   if (selName && !editing) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-zinc-800 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.05] px-4 py-3 text-neutral-900">
         <span className="truncate text-sm">{selName}</span>
         <div className="flex shrink-0 gap-3 text-xs font-semibold">
           <button type="button" onClick={() => setEditing(true)} className="text-matchup">
             {t("app.change")}
           </button>
-          <button type="button" onClick={remove} className="text-zinc-400">
+          <button type="button" onClick={remove} className="text-neutral-500">
             {t("app.remove")}
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function ClubPicker({
         value={query}
         onChange={(e) => search(e.target.value)}
         placeholder={t("app.searchClubOrCity")}
-        className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+        className="w-full rounded-xl bg-black/[0.05] px-4 py-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400"
       />
       <div className="mt-1 space-y-1">
         {results.map((c, i) => (
@@ -137,31 +137,31 @@ export default function ClubPicker({
             key={c.id || `osm-${c.latitude}-${c.longitude}-${i}`}
             type="button"
             onClick={() => pick(c)}
-            className="block w-full rounded-lg bg-zinc-800 px-3 py-2 text-left"
+            className="block w-full rounded-lg bg-black/[0.05] px-3 py-2 text-left"
           >
             <span className="flex items-center gap-2 text-sm">
               {c.name}
               {c._osm && (
-                <span className="rounded-full bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                <span className="rounded-full bg-black/10 px-1.5 py-0.5 text-[10px] text-neutral-500">
                   {t("app.mapBadge")}
                 </span>
               )}
             </span>
             {(c.address || c.city) && (
-              <span className="mt-0.5 block text-xs text-zinc-400">
+              <span className="mt-0.5 block text-xs text-neutral-500">
                 {c.address || c.city}
               </span>
             )}
           </button>
         ))}
       </div>
-      {searching && <p className="mt-1 text-xs text-zinc-500">{t("app.searchingWorldwide")}</p>}
+      {searching && <p className="mt-1 text-xs text-neutral-400">{t("app.searchingWorldwide")}</p>}
       {saving && <p className="mt-1 text-xs text-matchup">{t("app.clubBeingAdded")}</p>}
       {selName && (
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="mt-2 text-xs text-zinc-400 underline"
+          className="mt-2 text-xs text-neutral-500 underline"
         >
           {t("app.cancel")}
         </button>

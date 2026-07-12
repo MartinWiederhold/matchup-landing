@@ -10,6 +10,7 @@ import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 import ClubPicker from "../shared/ClubPicker";
 import AvatarCropper from "../shared/AvatarCropper";
+import { compressImage } from "@/lib/utils/imageCompress";
 
 const MAX_PHOTOS = 4;
 
@@ -57,16 +58,23 @@ export default function EditProfile() {
     const file = e.target.files?.[0];
     e.target.value = ""; // erlaubt erneutes Wählen derselben Datei
     if (!file || pickIdx.current === null) return;
-    // Erst im Kreis-Cropper justieren, dann hochladen.
-    setCropFile(file);
+    // Nur das Profilbild (Index 0) im Kreis-Cropper justieren; Galeriebilder direkt.
+    if (pickIdx.current === 0) setCropFile(file);
+    else void uploadBlob(file, true);
   }
 
   async function uploadCropped(blob: Blob) {
-    const idx = pickIdx.current;
     setCropFile(null);
+    await uploadBlob(blob, false);
+  }
+
+  /** Lädt einen Blob/File hoch (compress=true → vorher komprimieren, für Galerie). */
+  async function uploadBlob(input: Blob, compress: boolean) {
+    const idx = pickIdx.current;
     if (idx === null) return;
     setUploadingIdx(idx);
     try {
+      const blob = compress ? await compressImage(input as File) : input;
       const path = `${profile.id}/avatar_${Date.now()}_${idx}.jpg`;
       const { error } = await supabase.storage
         .from("web-avatars")

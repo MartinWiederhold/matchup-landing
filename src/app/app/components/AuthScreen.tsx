@@ -69,8 +69,22 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-black px-6 py-12 text-white">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-black px-6 py-12 text-white">
+      {/* Titelvideo im Hintergrund (wie auf der Startseite) */}
+      <video
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster="/hero-poster.jpg"
+        aria-hidden="true"
+      >
+        <source src="/hero.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute inset-0 bg-black/65" />
+
+      <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
           <span className="matchup-wordmark text-3xl font-bold tracking-[0.2em]">

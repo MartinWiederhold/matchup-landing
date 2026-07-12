@@ -1103,7 +1103,10 @@ export default function OnboardingFlow() {
                           onChange={(e) => {
                             const f = e.target.files?.[0];
                             e.target.value = "";
-                            if (f) setCropFile(f);
+                            if (!f) return;
+                            // Nur das Profilbild (erster Slot) durch den Kreis-Cropper; Galerie direkt.
+                            if (i === 0) setCropFile(f);
+                            else dispatch({ type: "ADD_PHOTO", payload: f });
                           }}
                         />
                       </label>
