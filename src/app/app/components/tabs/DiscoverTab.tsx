@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 import Avatar from "../shared/Avatar";
-import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow } from "../home/HomeSections";
+import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, PostComposerCard } from "../home/HomeSections";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
@@ -250,6 +250,9 @@ export default function DiscoverTab() {
             With Matchup
           </h1>
         </div>
+
+        {/* Beitrag verfassen (wie mockup2 Home) */}
+        <PostComposerCard onCompose={() => openSubView({ type: "create-post" })} />
 
         {/* Live im Profitennis — Google-Style-Widget (wie mockup2) */}
         <div className="mt-6 px-4">

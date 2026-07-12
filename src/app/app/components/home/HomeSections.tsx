@@ -155,12 +155,45 @@ export function SeedStoryRow({ onFind }: { onFind: () => void }) {
   );
 }
 
+/* ── „Start a post"-Composer (wie /app/mockup2 Home) ──────────────── */
+export function PostComposerCard({ onCompose }: { onCompose: () => void }) {
+  const t = useT();
+  return (
+    <div className="mt-6 px-4">
+      <div className="rounded-[24px] bg-black/[0.035] p-5">
+        <button type="button" onClick={onCompose} className="block w-full text-left text-[17px] text-neutral-400">
+          {t("discover.startPost")}
+        </button>
+        <div className="mt-6 flex items-center justify-between">
+          <button type="button" onClick={onCompose} className="flex items-center gap-2 rounded-full bg-black/[0.05] py-2.5 pl-3 pr-4 text-sm font-semibold text-neutral-900">
+            <SparkleIcon /> {t("discover.format")}
+          </button>
+          <div className="flex gap-2.5">
+            <button type="button" onClick={onCompose} aria-label={t("discover.addImage")} className="flex h-11 w-11 items-center justify-center rounded-full bg-black/[0.05] text-neutral-900">
+              <svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6" /></svg>
+            </button>
+            <button type="button" onClick={onCompose} aria-label={t("discover.addPhoto")} className="flex h-11 w-11 items-center justify-center rounded-full bg-black/[0.05] text-neutral-900">
+              <svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Sport-Gruppen (Tennis/Padel/Pickleball) mit Mitglieder-Avataren ── */
 const SPORT_GROUPS: { key: Sport; color: string }[] = [
   { key: "tennis", color: "#10e6a0" },
   { key: "padel", color: "#7b6cff" },
   { key: "pickleball", color: "#f59e0b" },
 ];
+// Seed-Avatare je Sport für die Übersicht (Anzeige) — echte Mitglieder gehen vor.
+const SPORT_SEED: Record<Sport, string[]> = {
+  tennis: ["/seed/tt1.jpg", "/seed/tt5.jpg", "https://i.pravatar.cc/120?img=15", "https://i.pravatar.cc/120?img=33"],
+  padel: ["/seed/tt3.jpg", "/seed/tt4.jpg", "https://i.pravatar.cc/120?img=22", "https://i.pravatar.cc/120?img=44"],
+  pickleball: ["https://i.pravatar.cc/120?img=27", "https://i.pravatar.cc/120?img=52", "https://i.pravatar.cc/120?img=14", "https://i.pravatar.cc/120?img=6"],
+};
 export function SportGroups({
   people,
   onSelect,
@@ -213,25 +246,24 @@ export function SportGroups({
                 {t("discover.circle")}
               </h3>
               <div className="mt-4 flex -space-x-3">
-                {members.length ? (
-                  members.slice(0, 4).map((p, i) => (
+                {[
+                  ...members.map((p) => ({ img: p.profile_image as string | null, initial: (p.first_name?.[0] ?? "?").toUpperCase() })),
+                  ...(SPORT_SEED[s.key] ?? []).map((img) => ({ img, initial: "" })),
+                ]
+                  .slice(0, 4)
+                  .map((a, i) => (
                     <span
                       key={i}
                       className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[12px] font-bold text-neutral-500 ring-2 ring-white"
                     >
-                      {p.profile_image ? (
+                      {a.img ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.profile_image} alt="" className="h-full w-full object-cover" />
+                        <img src={a.img} alt="" loading="lazy" className="h-full w-full object-cover" />
                       ) : (
-                        (p.first_name?.[0] ?? "?").toUpperCase()
+                        a.initial
                       )}
                     </span>
-                  ))
-                ) : (
-                  [0, 1, 2].map((i) => (
-                    <span key={i} className="h-10 w-10 rounded-full bg-black/[0.07] ring-2 ring-white" />
-                  ))
-                )}
+                  ))}
               </div>
             </div>
           </button>
