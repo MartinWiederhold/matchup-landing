@@ -9,6 +9,7 @@ import { loadTourProfile, loadTourPlan } from "@/lib/tour";
 import { planAlerts, kindShort, type Urgency } from "@/lib/deadlines";
 import { schengenProjection } from "@/lib/schengen";
 import { flagEmoji } from "@/lib/flags";
+import { ServicesRow } from "./HomeSections";
 import type { TourProfile } from "@/lib/types";
 
 const MS_DAY = 86_400_000;
@@ -295,6 +296,9 @@ export default function TourHome() {
           {t("mode.inviteTeam")}
         </button>
       )}
+
+      {/* Services am Turnierort / in der Nähe */}
+      <ServicesRow city={activeT?.city ?? tournaments[0]?.city ?? tour?.tax_residence ?? null} onOpen={() => openSubView({ type: "services" })} title={t("services.atTournament")} />
 
       {/* Visa / Compliance */}
       <div className="mt-6 mb-2.5 flex items-center justify-between px-1">

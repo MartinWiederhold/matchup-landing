@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 import Avatar from "../shared/Avatar";
-import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, PostComposerCard } from "../home/HomeSections";
+import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, PostComposerCard, ServicesRow } from "../home/HomeSections";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
@@ -278,6 +278,9 @@ export default function DiscoverTab() {
             openSubView({ type: "people-browse" });
           }}
         />
+
+        {/* Services in der Nähe (Coaches/Hitting/Stringer) */}
+        <ServicesRow city={profile.city} onOpen={() => openSubView({ type: "services" })} />
 
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />

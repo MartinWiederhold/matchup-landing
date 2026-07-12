@@ -14,6 +14,42 @@ import {
   SportIcon,
 } from "../shared/icons";
 import type { Profile, GameEvent, Sport } from "@/lib/types";
+import { loadProvidersNear, type ServiceProvider } from "@/lib/services";
+
+/* ── Services-Reihe (Coaches/Hitting/Stringer in der Nähe) ─────────── */
+export function ServicesRow({ city, onOpen, title }: { city: string | null; onOpen: () => void; title?: string }) {
+  const t = useT();
+  const [rows, setRows] = useState<ServiceProvider[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadProvidersNear(city, 10).then((r) => { if (alive) setRows(r.rows.slice(0, 8)); });
+    return () => { alive = false; };
+  }, [city]);
+  if (!rows || rows.length === 0) return null;
+  return (
+    <section className="mt-6 px-4">
+      <div className="mb-2.5 flex items-center justify-between px-1">
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{title ?? t("services.nearYouTitle")}</span>
+        <button type="button" onClick={onOpen} className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wider text-matchup">{t("services.title")} <ChevronRightIcon size={13} /></button>
+      </div>
+      <div className="no-scrollbar flex gap-3 overflow-x-auto">
+        {rows.map((p) => (
+          <button key={p.id} type="button" onClick={onOpen} className="w-[132px] shrink-0 overflow-hidden rounded-2xl border border-black/[0.07] p-2.5 text-left">
+            {p.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.image_url} alt="" loading="lazy" className="h-[104px] w-full rounded-xl object-cover" />
+            ) : (
+              <span className="flex h-[104px] w-full items-center justify-center rounded-xl bg-neutral-200 text-lg font-bold text-neutral-500">{p.name[0]}</span>
+            )}
+            <p className="mt-1.5 truncate text-[13px] font-bold text-neutral-900">{p.name}</p>
+            <p className="truncate text-[11px] text-neutral-500">{t(`services.one_${p.category}`)}{p.rating != null ? ` · ★ ${p.rating}` : ""}</p>
+            {p.price_from != null && <p className="text-[12px] font-bold text-matchup">{t("services.from")} {p.price_from} {p.currency}</p>}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 /* ── Begrüßung nach Tageszeit ─────────────────────────────── */
 export function greeting(t: ReturnType<typeof useT>, name: string): string {
