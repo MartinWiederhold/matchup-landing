@@ -52,11 +52,11 @@ export default function Comments({ postId }: { postId: string }) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("matches.commentsTitle", { count: comments.length })} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("matches.commentsTitle", { count: comments.length })} />
       <div className="flex-1 overflow-y-auto">
         {post && (
-          <div className="border-b border-zinc-800 p-4">
+          <div className="border-b border-black/[0.08] p-4">
             <div className="flex items-center gap-2.5">
               <Avatar
                 src={post.author?.profile_image}
@@ -80,7 +80,7 @@ export default function Comments({ postId }: { postId: string }) {
             )}
           </div>
         )}
-        <ul className="divide-y divide-zinc-800">
+        <ul className="divide-y divide-black/[0.06]">
           {comments.map((c) => (
             <li key={c.id} className="flex items-start gap-2.5 p-4">
               <Avatar
@@ -91,18 +91,18 @@ export default function Comments({ postId }: { postId: string }) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
                   <span className="font-semibold">{c.author?.first_name}</span>{" "}
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-neutral-400">
                     · {timeAgo(c.created_at)}
                   </span>
                 </p>
-                <p className="text-sm text-zinc-300">{c.content}</p>
+                <p className="text-sm text-neutral-700">{c.content}</p>
               </div>
               {c.author_id === profile.id && (
                 <button
                   type="button"
                   onClick={() => deleteComment(c.id)}
                   aria-label={t("community.deleteComment")}
-                  className="shrink-0 rounded-full px-2 py-1 text-xs text-zinc-500 hover:text-amber-300"
+                  className="shrink-0 rounded-full px-2 py-1 text-xs text-neutral-400 hover:text-red-500"
                 >
                   ✕
                 </button>
@@ -111,13 +111,13 @@ export default function Comments({ postId }: { postId: string }) {
           ))}
         </ul>
       </div>
-      <div className="flex shrink-0 items-center gap-2 border-t border-zinc-800 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="flex shrink-0 items-center gap-2 border-t border-black/[0.08] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder={t("matches.commentPlaceholder")}
-          className="min-w-0 flex-1 rounded-full bg-zinc-800 px-4 py-2.5 text-base outline-none"
+          className="min-w-0 flex-1 rounded-full bg-black/[0.05] px-4 py-2.5 text-base text-neutral-900 outline-none placeholder:text-neutral-400"
         />
         <button
           type="button"

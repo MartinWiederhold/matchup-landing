@@ -9,6 +9,7 @@ import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { MegaphoneIcon, PlusIcon, MessageIcon } from "../shared/icons";
 import { FullLoading, EmptyState } from "../shared/ui";
+import PostComposer from "../shared/PostComposer";
 
 const REACTIONS = ["👍", "🎾", "🔥", "😂", "❤️", "👏"];
 // Alt-Likes (reaction = 'like') als Daumen darstellen.
@@ -22,6 +23,7 @@ export default function CommunityFeed() {
   const [loading, setLoading] = useState(true);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -292,12 +294,14 @@ export default function CommunityFeed() {
 
       <button
         type="button"
-        onClick={() => openSubView({ type: "create-post" })}
+        onClick={() => setComposerOpen(true)}
         className="absolute bottom-4 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-matchup text-white shadow-lg"
         aria-label={t("community.createPostAria")}
       >
         <PlusIcon size={26} />
       </button>
+
+      <PostComposer open={composerOpen} onClose={() => setComposerOpen(false)} onPosted={load} />
     </div>
   );
 }

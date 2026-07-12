@@ -16,6 +16,7 @@ import TourGate from "../home/TourGate";
 import { setMode as persistMode, tourUnlocked, acceptInvite } from "@/lib/tour";
 import { useAuth } from "@/lib/auth";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
+import PostComposer from "../shared/PostComposer";
 import FilterSheet from "./FilterSheet";
 
 const SKILL_ORDER = ["beginner", "intermediate", "advanced", "competitive"];
@@ -44,6 +45,7 @@ export default function DiscoverTab() {
     })();
   }, []);
   const [candidates, setCandidates] = useState<Profile[]>([]);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => {
@@ -252,7 +254,7 @@ export default function DiscoverTab() {
         </div>
 
         {/* Beitrag verfassen (wie mockup2 Home) */}
-        <PostComposerCard onCompose={() => openSubView({ type: "create-post" })} />
+        <PostComposerCard onCompose={() => setComposerOpen(true)} />
 
         {/* Live im Profitennis — Google-Style-Widget (wie mockup2) */}
         <div className="mt-6 px-4">
@@ -327,6 +329,8 @@ export default function DiscoverTab() {
           </div>
         </div>
       )}
+
+      <PostComposer open={composerOpen} onClose={() => setComposerOpen(false)} />
     </div>
   );
 }
