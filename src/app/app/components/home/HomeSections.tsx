@@ -226,10 +226,11 @@ const SPORT_GROUPS: { key: Sport; color: string }[] = [
 ];
 // Seed-Avatare je Sport für die Übersicht (Anzeige) — echte Mitglieder gehen vor.
 // Fake-Teaser-Avatare je Sport (immer sichtbar, für jeden Nutzer gleich).
+// Nur eindeutige Bilder — keine Duplikate, kein Sport-übergreifendes Bild.
 const SPORT_SEED: Record<Sport, string[]> = {
-  tennis: ["/seed/tx1.jpg", "/seed/tx2.jpg", "/seed/te1.jpg", "/seed/te3.jpg"],
+  tennis: ["/seed/tx1.jpg", "/seed/tx2.jpg"],
   padel: ["/seed/px1.jpg", "/seed/px2.jpg", "/seed/px3.jpg", "/seed/px4.jpg"],
-  pickleball: ["/seed/kx1.jpg", "/seed/kx2.jpg", "/seed/pi1.jpg", "/seed/fy1.jpg"],
+  pickleball: ["/seed/kx1.jpg", "/seed/kx2.jpg"],
 };
 export function SportGroups({
   onSelect,
