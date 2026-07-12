@@ -95,6 +95,48 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
   );
 }
 
+/* ── „Für dich"-Reihe: kuratierte Demo-Profile (nur Anzeige) ──────────
+ * Diese Profile sind reine Deko für die Übersicht (wie mockup2). Sie sind KEINE
+ * echten DB-Profile → beim „Finden"/People-Browse erscheinen weiterhin nur echte User.
+ * Tippen (Avatar oder „Finden") öffnet die echte Personensuche. */
+const SEED_PEOPLE: { name: string; img: string }[] = [
+  { name: "Adzana", img: "https://i.pravatar.cc/160?img=5" },
+  { name: "Feera", img: "https://i.pravatar.cc/160?img=9" },
+  { name: "Kevin", img: "https://i.pravatar.cc/160?img=12" },
+  { name: "Laila", img: "https://i.pravatar.cc/160?img=16" },
+  { name: "Fernando", img: "https://i.pravatar.cc/160?img=13" },
+  { name: "Sofia", img: "https://i.pravatar.cc/160?img=1" },
+  { name: "Jonas", img: "https://i.pravatar.cc/160?img=3" },
+  { name: "Mara", img: "https://i.pravatar.cc/160?img=10" },
+  { name: "Leo", img: "https://i.pravatar.cc/160?img=8" },
+  { name: "Nina", img: "https://i.pravatar.cc/160?img=20" },
+];
+
+export function SeedStoryRow({ onFind }: { onFind: () => void }) {
+  const t = useT();
+  return (
+    <section className="mt-6 px-4">
+      <div className="mb-3 flex items-center px-0.5">
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("discover.forYou")}</span>
+      </div>
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
+        <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-black text-white"><PlusIcon size={22} /></span>
+          <span className="max-w-[60px] truncate text-[11px] text-neutral-500">{t("discover.find")}</span>
+        </button>
+        {SEED_PEOPLE.map((p) => (
+          <button key={p.name} type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+            <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
+              <img src={p.img} alt="" loading="lazy" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
+            </span>
+            <span className="max-w-[60px] truncate text-[11px] font-medium text-neutral-600">{p.name}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ── Sport-Gruppen (Tennis/Padel/Pickleball) mit Mitglieder-Avataren ── */
 const SPORT_GROUPS: { key: Sport; color: string }[] = [
   { key: "tennis", color: "#10e6a0" },

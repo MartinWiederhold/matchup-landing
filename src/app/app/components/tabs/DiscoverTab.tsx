@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { haversineKm } from "@/lib/utils/haversine";
-import { CheckIcon, UsersIcon } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
-import { FullLoading, EmptyState } from "../shared/ui";
+import { FullLoading } from "../shared/ui";
 import Avatar from "../shared/Avatar";
-import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection } from "../home/HomeSections";
+import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow } from "../home/HomeSections";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
@@ -285,32 +284,8 @@ export default function DiscoverTab() {
         {/* Schlagzeilen (Tennis/Padel/Pickleball-News) — über „Für dich" */}
         <NewsSection />
 
-        {/* Für dich empfohlen */}
-        <section className="mt-6 px-4">
-          <div className="mb-2.5 flex items-center justify-between px-0.5">
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("discover.forYou")}</span>
-            <span className="text-[11px] font-bold text-neutral-400">{candidates.length}</span>
-          </div>
-          {candidates.length === 0 ? (
-            <EmptyState
-              icon={<UsersIcon size={44} />}
-              title={t("discover.emptyTitle")}
-              message={t("discover.emptyMessage")}
-              actionLabel={t("discover.emptyAction")}
-              onAction={() => setShowFilter(true)}
-            />
-          ) : (
-            <div className="grid grid-cols-3 gap-2.5">
-              {candidates.map((c) => (
-                <FeedCard
-                  key={c.id}
-                  player={c}
-                  onOpen={() => openSubView({ type: "full-profile", userId: c.id })}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
+        <SeedStoryRow onFind={() => openSubView({ type: "people-browse" })} />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />
@@ -357,40 +332,5 @@ export default function DiscoverTab() {
         </div>
       )}
     </div>
-  );
-}
-
-function FeedCard({
-  player,
-  onOpen,
-}: {
-  player: Profile;
-  onOpen: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-200 text-left"
-    >
-      {player.profile_image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={player.profile_image}
-          alt={player.first_name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
-      )}
-      {player.is_verified && (
-        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-matchup backdrop-blur-sm">
-          <CheckIcon size={12} />
-        </span>
-      )}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2.5 pt-8">
-        <span className="text-[13px] font-bold text-white">{player.first_name}</span>
-      </div>
-    </button>
   );
 }

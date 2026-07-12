@@ -183,70 +183,66 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
             <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
+        {/* Kategorie-Tabs (nur aufgeklappt) */}
+        {open && (
+          <div className="no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4">
+            {cats.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
+                className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                  c.key === (cat?.key ?? "") ? "border-matchup text-neutral-900" : "border-transparent text-neutral-400"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Aufklapp-Bereich: sanft animiert (Höhe via grid-rows 0fr→1fr + Fade) */}
-      <div className="grid transition-[grid-template-rows] duration-300 ease-out" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
-        <div className={`overflow-hidden transition-opacity duration-200 ${open ? "opacity-100 delay-100" : "opacity-0"}`}>
-          {/* Kategorie-Tabs */}
-          <div className={`${cx.headerBg} px-4`}>
-            <div className="no-scrollbar -mx-4 flex gap-5 overflow-x-auto px-4">
-              {cats.map((c) => (
+      {/* Tages-Leiste + Matches (nur aufgeklappt) */}
+      {open && (
+      <div className={cx.body}>
+        {days.length > 0 && (
+          <div className={`no-scrollbar flex gap-1 overflow-x-auto border-b ${cx.dayBorder} px-2 py-2`}>
+            {days.map((k) => {
+              const active = k === day;
+              return (
                 <button
-                  key={c.key}
+                  key={k}
+                  ref={active ? activeDayRef : undefined}
                   type="button"
-                  onClick={() => { touched.current = true; setCatKey(c.key); setDay(null); }}
-                  className={`shrink-0 whitespace-nowrap border-b-2 pb-2.5 text-[12px] font-bold uppercase tracking-wide transition-colors ${
-                    c.key === (cat?.key ?? "") ? "border-matchup text-neutral-900" : "border-transparent text-neutral-400"
-                  }`}
+                  onClick={() => setDay(k)}
+                  className="flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5"
                 >
-                  {c.label}
+                  <span className={`text-[12px] font-bold ${active ? cx.dayActive : cx.dayIdle}`}>{labelTop(k)}</span>
+                  <span className={`text-[12px] ${active ? cx.dayActive : cx.dayIdle}`}>{labelBottom(k)}</span>
+                  <span className={`mt-1 h-0.5 w-6 rounded-full ${active ? cx.dayUnderline : "bg-transparent"}`} />
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
+        )}
 
-          {/* Tages-Leiste + Matches */}
-          <div className={cx.body}>
-            {days.length > 0 && (
-              <div className={`no-scrollbar flex gap-1 overflow-x-auto border-b ${cx.dayBorder} px-2 py-2`}>
-                {days.map((k) => {
-                  const active = k === day;
-                  return (
-                    <button
-                      key={k}
-                      ref={active ? activeDayRef : undefined}
-                      type="button"
-                      onClick={() => setDay(k)}
-                      className="flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5"
-                    >
-                      <span className={`text-[12px] font-bold ${active ? cx.dayActive : cx.dayIdle}`}>{labelTop(k)}</span>
-                      <span className={`text-[12px] ${active ? cx.dayActive : cx.dayIdle}`}>{labelBottom(k)}</span>
-                      <span className={`mt-1 h-0.5 w-6 rounded-full ${active ? cx.dayUnderline : "bg-transparent"}`} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {/* Matches */}
+        <div className={`divide-y ${cx.divide}`}>
+          {status === "loading" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Lädt Live-Daten …</p>}
+          {status === "empty" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Aktuell keine Daten im Feed.</p>}
+          {status === "ok" && shown.length === 0 && <p className={`py-8 text-center text-sm ${cx.empty}`}>Keine Partien an diesem Tag.</p>}
+          {shown.map((m, i) => (
+            <MatchRow key={i} m={m} cx={cx} />
+          ))}
+        </div>
 
-            {/* Matches */}
-            <div className={`divide-y ${cx.divide}`}>
-              {status === "loading" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Lädt Live-Daten …</p>}
-              {status === "empty" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Aktuell keine Daten im Feed.</p>}
-              {status === "ok" && shown.length === 0 && <p className={`py-8 text-center text-sm ${cx.empty}`}>Keine Partien an diesem Tag.</p>}
-              {shown.map((m, i) => (
-                <MatchRow key={i} m={m} cx={cx} />
-              ))}
-            </div>
-
-            {/* Fuss */}
-            <div className={`flex items-center justify-between px-4 py-3 text-[11px] ${cx.foot}`}>
-              <span>Alle Zeitangaben: MEZ</span>
-              {data?.updatedAt && <span>Quelle ESPN · {fmtTime(data.updatedAt)}</span>}
-            </div>
-          </div>
+        {/* Fuss */}
+        <div className={`flex items-center justify-between px-4 py-3 text-[11px] ${cx.foot}`}>
+          <span>Alle Zeitangaben: MEZ</span>
+          {data?.updatedAt && <span>Quelle ESPN · {fmtTime(data.updatedAt)}</span>}
         </div>
       </div>
+      )}
     </div>
   );
 }
