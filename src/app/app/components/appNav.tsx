@@ -36,6 +36,7 @@ export type SubViewState =
   | { type: "tour-deadlines" }
   | { type: "tour-visa" }
   | { type: "tour-planner" }
+  | { type: "tour-tournament"; tournamentId: string }
   | { type: "services" };
 
 interface AppNavContextType {

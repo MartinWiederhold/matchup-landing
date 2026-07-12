@@ -132,14 +132,14 @@ export default function TourPlanner() {
               <>
                 <p className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("mode.thisWeek")}</p>
                 <div className="mb-4 rounded-2xl border-l-[3px] border-emerald-500 bg-black/[0.035] p-4">
-                  <div className="flex items-center gap-2.5">
+                  <button type="button" onClick={() => openSubView({ type: "tour-tournament", tournamentId: thisWeek.id })} className="flex w-full items-center gap-2.5 text-left">
                     <span className="text-[20px]">{flagEmoji(thisWeek.country)}</span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[14px] font-bold text-neutral-900">{thisWeek.name}</p>
                       <p className="text-[11.5px] text-neutral-500">{thisWeek.tier} · {thisWeek.surface} · {fmt(thisWeek.start_date)}–{fmt(thisWeek.end_date)}</p>
                     </div>
                     <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600">{t("mode.activeTournament")}</span>
-                  </div>
+                  </button>
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     {[
                       { v: money(prizeByT[thisWeek.id] ?? 0), l: t("mode.prizeMoney") },
@@ -164,19 +164,20 @@ export default function TourPlanner() {
                   {upcoming.map((tr) => {
                     const a = alertFor(tr.id);
                     return (
-                      <a key={tr.id} href="/map" className="block rounded-2xl border border-black/[0.07] p-3.5">
+                      <button key={tr.id} type="button" onClick={() => openSubView({ type: "tour-tournament", tournamentId: tr.id })} className="block w-full rounded-2xl border border-black/[0.07] p-3.5 text-left">
                         <div className="flex items-center gap-2.5">
                           <span className="text-[18px]">{flagEmoji(tr.country)}</span>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
                             <p className="text-[11px] text-neutral-500">{tr.tier} · {tr.surface} · {fmt(tr.start_date)}–{fmt(tr.end_date)}</p>
                           </div>
+                          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m9 6 6 6-6 6" /></svg>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {a && <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${URG_BG[a.urgency]}`}>{kindShort(a.kind, locale)} {a.daysLeft === 0 ? t("mode.today") : t("mode.inDays", { n: a.daysLeft })}</span>}
                           {regimePill(tr.country)}
                         </div>
-                      </a>
+                      </button>
                     );
                   })}
                 </div>
