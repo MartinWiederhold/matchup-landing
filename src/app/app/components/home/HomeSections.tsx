@@ -190,9 +190,9 @@ const SPORT_GROUPS: { key: Sport; color: string }[] = [
 ];
 // Seed-Avatare je Sport für die Übersicht (Anzeige) — echte Mitglieder gehen vor.
 const SPORT_SEED: Record<Sport, string[]> = {
-  tennis: ["/seed/tt1.jpg", "/seed/tt5.jpg", "https://i.pravatar.cc/120?img=15", "https://i.pravatar.cc/120?img=33"],
-  padel: ["/seed/tt3.jpg", "/seed/tt4.jpg", "https://i.pravatar.cc/120?img=22", "https://i.pravatar.cc/120?img=44"],
-  pickleball: ["https://i.pravatar.cc/120?img=27", "https://i.pravatar.cc/120?img=52", "https://i.pravatar.cc/120?img=14", "https://i.pravatar.cc/120?img=6"],
+  tennis: ["/seed/te1.jpg", "/seed/te2.jpg", "/seed/te3.jpg", "/seed/tt1.jpg"],
+  padel: ["/seed/pa1.jpg", "/seed/pa2.jpg", "/seed/pa3.jpg", "/seed/pa4.jpg"],
+  pickleball: ["/seed/pi1.jpg", "/seed/fy1.jpg", "/seed/tt5.jpg", "/seed/tt4.jpg"],
 };
 export function SportGroups({
   people,
