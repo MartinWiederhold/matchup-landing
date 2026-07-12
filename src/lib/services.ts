@@ -52,3 +52,22 @@ export async function loadProvidersNear(city: string | null, limit = 60): Promis
   }
   return { rows: await loadProviders({ limit }), exact: false };
 }
+
+/* ── Favoriten ────────────────────────────────────────────── */
+export async function loadFavoriteIds(userId: string): Promise<Set<string>> {
+  const { data } = await supabase.from("service_favorites").select("provider_id").eq("user_id", userId);
+  return new Set((data as { provider_id: string }[] ?? []).map((r) => r.provider_id));
+}
+
+export async function toggleFavorite(userId: string, providerId: string, on: boolean): Promise<void> {
+  if (on) await supabase.from("service_favorites").insert({ user_id: userId, provider_id: providerId });
+  else await supabase.from("service_favorites").delete().eq("user_id", userId).eq("provider_id", providerId);
+}
+
+/** Favorisierte Anbieter laden. */
+export async function loadFavoriteProviders(userId: string): Promise<ServiceProvider[]> {
+  const ids = await loadFavoriteIds(userId);
+  if (ids.size === 0) return [];
+  const { data } = await supabase.from("service_providers").select("*").in("id", [...ids]).order("rating", { ascending: false, nullsFirst: false });
+  return (data as ServiceProvider[]) ?? [];
+}

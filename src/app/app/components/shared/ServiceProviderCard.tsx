@@ -10,12 +10,17 @@ const UNIT_KEY: Record<string, string> = {
   week: "services.perWeek", year: "services.perYear",
 };
 
-export default function ServiceProviderCard({ p }: { p: ServiceProvider }) {
+export default function ServiceProviderCard({ p, favorited, onToggleFav }: { p: ServiceProvider; favorited?: boolean; onToggleFav?: () => void }) {
   const t = useT();
   const [requested, setRequested] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-black/[0.07] p-3">
+    <div className="relative rounded-2xl border border-black/[0.07] p-3">
+      {onToggleFav && (
+        <button type="button" onClick={onToggleFav} aria-label="Favorit" className="absolute right-2.5 top-2.5 z-10 text-neutral-300">
+          <svg viewBox="0 0 24 24" className={`h-[18px] w-[18px] ${favorited ? "text-red-500" : "text-neutral-300"}`} fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" /></svg>
+        </button>
+      )}
       <div className="flex gap-3">
         {p.image_url ? (
           <img src={p.image_url} alt="" loading="lazy" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
