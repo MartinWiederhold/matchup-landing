@@ -117,6 +117,7 @@ export default function TourProfileTab() {
       <div className="px-5">
         <Row icon="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11zM12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18M5 10h14" label={t("mode.visaTitle")} onClick={() => openSubView({ type: "tour-visa" })} />
         <Row icon="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 12h6M12 9v6" label={t("mode.openFinance")} onClick={() => openSubView({ type: "tour-expenses" })} />
+        <Row icon="M3 9l1-5h16l1 5M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M3 9h18M9 13h6" label={t("services.title")} onClick={() => openSubView({ type: "services" })} />
         <Row icon="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" label={t("mode.scheduleTitle")} onClick={() => openSubView({ type: "tour-schedule" })} />
         <Row icon="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v4l2.5 2.5" label={t("mode.editProfileTitle")} onClick={() => openSubView({ type: "tour-profile-edit" })} />
         {playerCount > 0 && (

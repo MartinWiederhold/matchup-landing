@@ -260,6 +260,22 @@ export default function ProfileTab() {
           </button>
         )}
 
+        {/* Services (Coaches, Hitting, Stringer) */}
+        <button
+          type="button"
+          onClick={() => openSubView({ type: "services" })}
+          className="flex w-full items-center gap-3 rounded-2xl bg-black/[0.035] p-4 text-left"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-matchup">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l1-5h16l1 5M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M3 9h18M9 13h6" /></svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-neutral-900">{t("services.title")}</p>
+            <p className="text-[12px] text-neutral-500">{t("services.hubSubtitle")}</p>
+          </div>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+
         {/* Freunde einladen — Matchup-Lila-Karte */}
         <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20">

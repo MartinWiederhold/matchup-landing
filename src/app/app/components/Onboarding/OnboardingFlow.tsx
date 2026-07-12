@@ -28,6 +28,7 @@ import {
   CalendarIcon,
 } from "../shared/icons";
 import AvatarCropper from "../shared/AvatarCropper";
+import ServicesNearStep from "./ServicesNearStep";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -585,6 +586,13 @@ export default function OnboardingFlow() {
                 {state.city}
               </div>
             )}
+          </Step>
+        )}
+
+        {/* Services near you (Discovery) */}
+        {cur === "services" && (
+          <Step title={t("services.nearYouTitle")} subtitle={t("services.nearYouSubtitle")}>
+            <ServicesNearStep city={state.city} />
           </Step>
         )}
 

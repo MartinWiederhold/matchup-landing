@@ -43,7 +43,7 @@ export const initialOnboardingState: OnboardingState = {
 
 /** Step-IDs in Reihenfolge. Gemeinsam bis zur Gabelung, dann je nach Modus. */
 export type StepId =
-  | "welcome" | "language" | "sports" | "location" | "club" | "identity" | "fork"
+  | "welcome" | "language" | "sports" | "location" | "services" | "club" | "identity" | "fork"
   | "skill" | "height" | "goals" | "photos"
   | "circuit" | "ranking" | "passport" | "team" | "calendar";
 
@@ -51,8 +51,8 @@ export type StepId =
 // beide Pfade die für das Profil nötigen Daten (Sport/Ort/Club/Identität, DB-Pflicht)
 // plus ihre modus-spezifischen Schritte.
 const PRE: StepId[] = ["welcome", "language", "fork"];
-const PLAY: StepId[] = ["sports", "location", "club", "identity", "skill", "height", "goals", "photos"];
-const TOUR: StepId[] = ["sports", "location", "club", "identity", "circuit", "ranking", "passport", "team", "calendar", "photos"];
+const PLAY: StepId[] = ["sports", "location", "services", "club", "identity", "skill", "height", "goals", "photos"];
+const TOUR: StepId[] = ["sports", "location", "services", "club", "identity", "circuit", "ranking", "passport", "team", "calendar", "photos"];
 
 /** Sichtbare Schritte je nach gewähltem Modus. */
 export function visibleSteps(state: OnboardingState): StepId[] {
@@ -227,6 +227,8 @@ export function isStepValid(state: OnboardingState): boolean {
         state.longitude !== null &&
         state.city.trim().length > 0
       );
+    case "services":
+      return true; // reine Discovery — überspringbar
     case "club":
       return true; // Club optional (bleibt im Play-Pfad erhalten)
     case "identity":
