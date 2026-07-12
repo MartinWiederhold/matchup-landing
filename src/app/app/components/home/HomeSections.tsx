@@ -232,13 +232,17 @@ const SPORT_SEED: Record<Sport, string[]> = {
 };
 export function SportGroups({
   people,
+  seedPeople = [],
   onSelect,
+  onOpenProfile,
   onFind,
   onCreateGame,
   weekMatches = 0,
 }: {
   people: Profile[];
+  seedPeople?: Profile[];
   onSelect: (sport: Sport) => void;
+  onOpenProfile?: (id: string) => void;
   onFind?: () => void;
   onCreateGame?: (sport?: Sport) => void;
   weekMatches?: number;
@@ -260,6 +264,19 @@ export function SportGroups({
 
   const s = SPORT_GROUPS[active];
   const members = people.filter((p) => (p.sports ?? []).includes(s.key));
+  const memberIds = new Set(members.map((p) => p.id));
+  const seedForSport = seedPeople.filter((p) => (p.sports ?? []).includes(s.key) && !memberIds.has(p.id));
+  // Avatare der Circle-Karte: echte Nutzer zuerst, dann verbindbare Seed-Profile.
+  // Beide tragen eine echte Profil-ID → antippbar. Nur wenn nichts vorhanden ist,
+  // greifen generische Demo-Bilder (ohne Klickziel).
+  const circleAvatars: { id: string | null; img: string | null; initial: string }[] = [
+    ...members.map((p) => ({ id: p.id, img: (p.profile_image as string | null) ?? null, initial: (p.first_name?.[0] ?? "?").toUpperCase() })),
+    ...seedForSport.map((p) => ({ id: p.id, img: (p.profile_image as string | null) ?? null, initial: (p.first_name?.[0] ?? "?").toUpperCase() })),
+  ];
+  if (circleAvatars.length === 0) {
+    for (const img of SPORT_SEED[s.key] ?? []) circleAvatars.push({ id: null, img, initial: "" });
+  }
+  const avatars = circleAvatars.slice(0, 4);
 
   return (
     <section className="mt-6 px-4">
@@ -281,28 +298,25 @@ export function SportGroups({
                 <br />
                 {t("discover.circle")}
               </h3>
-              <div className="mt-4 flex -space-x-3">
-                {[
-                  ...members.map((p) => ({ img: p.profile_image as string | null, initial: (p.first_name?.[0] ?? "?").toUpperCase() })),
-                  ...(SPORT_SEED[s.key] ?? []).map((img) => ({ img, initial: "" })),
-                ]
-                  .slice(0, 4)
-                  .map((a, i) => (
-                    <span
-                      key={i}
-                      className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[12px] font-bold text-neutral-500 ring-2 ring-white"
-                    >
-                      {a.img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={a.img} alt="" loading="lazy" className="h-full w-full object-cover" />
-                      ) : (
-                        a.initial
-                      )}
-                    </span>
-                  ))}
-              </div>
             </div>
           </button>
+          {/* Avatare — echte Nutzer + verbindbare Seed-Profile, einzeln antippbar */}
+          <div className="mt-4 flex -space-x-3">
+            {avatars.map((a, i) => {
+              const inner = a.img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={a.img} alt="" loading="lazy" className="h-full w-full object-cover" />
+              ) : (
+                a.initial
+              );
+              const cls = "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-200 text-[12px] font-bold text-neutral-500 ring-2 ring-white";
+              return a.id && onOpenProfile ? (
+                <button key={a.id} type="button" onClick={() => onOpenProfile(a.id!)} className={cls} aria-label="Profil öffnen">{inner}</button>
+              ) : (
+                <span key={i} className={cls}>{inner}</span>
+              );
+            })}
+          </div>
           {/* Punkte zum Wechseln — direkt unter den Profilbildern, in der Karte */}
           <div className="mt-3 flex gap-1.5">
             {SPORT_GROUPS.map((g, i) => (
