@@ -11,7 +11,7 @@ const CATS: (ServiceCategory | "all")[] = ["all", "coach", "hitting", "stringer"
 
 export default function ServicesHub() {
   const t = useT();
-  const { profile } = useAppNav();
+  const { profile, openSubView } = useAppNav();
   const [view, setView] = useState<"browse" | "favorites">("browse");
   const [cat, setCat] = useState<ServiceCategory | "all">("all");
   const [query, setQuery] = useState("");
@@ -71,7 +71,7 @@ export default function ServicesHub() {
           <p className="pt-8 text-center text-[13px] text-neutral-400">{view === "favorites" ? t("services.noFavorites") : t("services.empty")}</p>
         ) : (
           <div className="space-y-2.5">
-            {shown.map((p) => <ServiceProviderCard key={p.id} p={p} favorited={favs.has(p.id)} onToggleFav={() => toggle(p)} />)}
+            {shown.map((p) => <ServiceProviderCard key={p.id} p={p} favorited={favs.has(p.id)} onToggleFav={() => toggle(p)} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} />)}
           </div>
         )}
       </div>

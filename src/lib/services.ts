@@ -71,3 +71,39 @@ export async function loadFavoriteProviders(userId: string): Promise<ServiceProv
   const { data } = await supabase.from("service_providers").select("*").in("id", [...ids]).order("rating", { ascending: false, nullsFirst: false });
   return (data as ServiceProvider[]) ?? [];
 }
+
+/* ── Einzel-Anbieter + Reviews ────────────────────────────── */
+export async function loadProvider(id: string): Promise<ServiceProvider | null> {
+  const { data } = await supabase.from("service_providers").select("*").eq("id", id).maybeSingle();
+  return (data as ServiceProvider | null) ?? null;
+}
+
+export type ProviderReview = {
+  id: string;
+  user_id: string;
+  rating: number;
+  text: string | null;
+  created_at: string;
+  author: { first_name: string | null; profile_image: string | null } | null;
+};
+
+export async function loadReviews(providerId: string): Promise<ProviderReview[]> {
+  const { data } = await supabase
+    .from("provider_reviews")
+    .select("id,user_id,rating,text,created_at, author:profiles!provider_reviews_user_id_fkey(first_name,profile_image)")
+    .eq("provider_id", providerId)
+    .order("created_at", { ascending: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((data as any[]) ?? []).map((r) => ({ ...r, author: Array.isArray(r.author) ? r.author[0] ?? null : r.author ?? null }));
+}
+
+export async function submitReview(providerId: string, userId: string, rating: number, text: string): Promise<void> {
+  await supabase.from("provider_reviews").upsert(
+    { provider_id: providerId, user_id: userId, rating, text: text.trim() || null },
+    { onConflict: "provider_id,user_id" },
+  );
+}
+
+export async function deleteReview(providerId: string, userId: string): Promise<void> {
+  await supabase.from("provider_reviews").delete().eq("provider_id", providerId).eq("user_id", userId);
+}

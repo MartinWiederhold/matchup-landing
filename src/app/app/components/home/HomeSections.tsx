@@ -17,7 +17,7 @@ import type { Profile, GameEvent, Sport } from "@/lib/types";
 import { loadProvidersNear, type ServiceProvider } from "@/lib/services";
 
 /* ── Services-Reihe (Coaches/Hitting/Stringer in der Nähe) ─────────── */
-export function ServicesRow({ city, onOpen, title }: { city: string | null; onOpen: () => void; title?: string }) {
+export function ServicesRow({ city, onOpen, onOpenProvider, title }: { city: string | null; onOpen: () => void; onOpenProvider?: (id: string) => void; title?: string }) {
   const t = useT();
   const [rows, setRows] = useState<ServiceProvider[] | null>(null);
   useEffect(() => {
@@ -34,7 +34,7 @@ export function ServicesRow({ city, onOpen, title }: { city: string | null; onOp
       </div>
       <div className="no-scrollbar flex gap-3 overflow-x-auto">
         {rows.map((p) => (
-          <button key={p.id} type="button" onClick={onOpen} className="w-[132px] shrink-0 overflow-hidden rounded-2xl border border-black/[0.07] p-2.5 text-left">
+          <button key={p.id} type="button" onClick={() => (onOpenProvider ? onOpenProvider(p.id) : onOpen())} className="w-[132px] shrink-0 overflow-hidden rounded-2xl border border-black/[0.07] p-2.5 text-left">
             {p.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.image_url} alt="" loading="lazy" className="h-[104px] w-full rounded-xl object-cover" />

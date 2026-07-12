@@ -24,6 +24,7 @@ import TourVisa from "./subviews/TourVisa";
 import TourPlanner from "./subviews/TourPlanner";
 import ServicesHub from "./subviews/ServicesHub";
 import TourTournament from "./subviews/TourTournament";
+import ServiceProviderDetail from "./subviews/ServiceProviderDetail";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -103,6 +104,8 @@ export default function SubViewRenderer({
       return <ServicesHub />;
     case "tour-tournament":
       return <TourTournament tournamentId={subView.tournamentId} />;
+    case "service-detail":
+      return <ServiceProviderDetail providerId={subView.providerId} />;
     default:
       return null;
   }

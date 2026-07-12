@@ -298,7 +298,7 @@ export default function TourHome() {
       )}
 
       {/* Services am Turnierort / in der Nähe */}
-      <ServicesRow city={activeT?.city ?? tournaments[0]?.city ?? tour?.tax_residence ?? null} onOpen={() => openSubView({ type: "services" })} title={t("services.atTournament")} />
+      <ServicesRow city={activeT?.city ?? tournaments[0]?.city ?? tour?.tax_residence ?? null} onOpen={() => openSubView({ type: "services" })} onOpenProvider={(id) => openSubView({ type: "service-detail", providerId: id })} title={t("services.atTournament")} />
 
       {/* Visa / Compliance */}
       <div className="mt-6 mb-2.5 flex items-center justify-between px-1">

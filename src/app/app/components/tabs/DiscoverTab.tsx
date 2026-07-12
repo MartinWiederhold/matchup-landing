@@ -280,7 +280,7 @@ export default function DiscoverTab() {
         />
 
         {/* Services in der Nähe (Coaches/Hitting/Stringer) */}
-        <ServicesRow city={profile.city} onOpen={() => openSubView({ type: "services" })} />
+        <ServicesRow city={profile.city} onOpen={() => openSubView({ type: "services" })} onOpenProvider={(id) => openSubView({ type: "service-detail", providerId: id })} />
 
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />

@@ -21,7 +21,7 @@ const CAT_TO_EXPENSE: Record<ServiceCategory, string> = {
 export default function TourTournament({ tournamentId }: { tournamentId: string }) {
   const t = useT();
   const { locale } = useLocale();
-  const { profile } = useAppNav();
+  const { profile, openSubView } = useAppNav();
   const [tourn, setTourn] = useState<Tourn | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[] | null>(null);
   const [prize, setPrize] = useState(0);
@@ -118,7 +118,7 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
           <div className="space-y-2.5">
             {providers.map((p) => (
               <div key={p.id}>
-                <ServiceProviderCard p={p} />
+                <ServiceProviderCard p={p} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} />
                 <button
                   type="button"
                   onClick={() => addExpense(p)}
