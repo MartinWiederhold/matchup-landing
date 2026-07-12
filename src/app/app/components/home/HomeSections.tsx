@@ -99,7 +99,18 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
  * Diese Profile sind reine Deko für die Übersicht (wie mockup2). Sie sind KEINE
  * echten DB-Profile → beim „Finden"/People-Browse erscheinen weiterhin nur echte User.
  * Tippen (Avatar oder „Finden") öffnet die echte Personensuche. */
-const SEED_PEOPLE: { name: string; img: string }[] = [
+// Neue Demo-Fotos (lokal, komprimiert in /public/seed).
+const TT_PEOPLE: { name: string; img: string }[] = [
+  { name: "Nico", img: "/seed/tt1.jpg" },
+  { name: "Emma", img: "/seed/tt2.jpg" },
+  { name: "Luca", img: "/seed/tt3.jpg" },
+  { name: "Mia", img: "/seed/tt4.jpg" },
+  { name: "Timo", img: "/seed/tt5.jpg" },
+  { name: "Sara", img: "/seed/tt6.jpg" },
+  { name: "Jan", img: "/seed/tt7.jpg" },
+];
+// Bisherige Demo-Profile.
+const EXISTING_PEOPLE: { name: string; img: string }[] = [
   { name: "Adzana", img: "https://i.pravatar.cc/160?img=5" },
   { name: "Feera", img: "https://i.pravatar.cc/160?img=9" },
   { name: "Kevin", img: "https://i.pravatar.cc/160?img=12" },
@@ -111,6 +122,16 @@ const SEED_PEOPLE: { name: string; img: string }[] = [
   { name: "Leo", img: "https://i.pravatar.cc/160?img=8" },
   { name: "Nina", img: "https://i.pravatar.cc/160?img=20" },
 ];
+// Abwechselnd: neues Foto, dann ein bestehendes, … bis alle neuen drin sind; Rest hinten dran.
+const SEED_PEOPLE: { name: string; img: string }[] = (() => {
+  const out: { name: string; img: string }[] = [];
+  const n = Math.max(TT_PEOPLE.length, EXISTING_PEOPLE.length);
+  for (let i = 0; i < n; i++) {
+    if (TT_PEOPLE[i]) out.push(TT_PEOPLE[i]);
+    if (EXISTING_PEOPLE[i]) out.push(EXISTING_PEOPLE[i]);
+  }
+  return out;
+})();
 
 export function SeedStoryRow({ onFind }: { onFind: () => void }) {
   const t = useT();
