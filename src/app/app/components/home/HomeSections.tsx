@@ -111,7 +111,7 @@ const TT_PEOPLE: { name: string; img: string }[] = [
 ];
 // Bisherige Demo-Profile.
 const EXISTING_PEOPLE: { name: string; img: string }[] = [
-  { name: "Adzana", img: "https://i.pravatar.cc/160?img=5" },
+  { name: "Marco", img: "/seed/m1.jpg" },
   { name: "Feera", img: "https://i.pravatar.cc/160?img=9" },
   { name: "Kevin", img: "https://i.pravatar.cc/160?img=12" },
   { name: "Laila", img: "https://i.pravatar.cc/160?img=16" },
