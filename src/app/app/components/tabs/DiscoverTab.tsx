@@ -45,7 +45,6 @@ export default function DiscoverTab() {
     })();
   }, []);
   const [candidates, setCandidates] = useState<Profile[]>([]);
-  const [seedPeople, setSeedPeople] = useState<Profile[]>([]);
   const [composerOpen, setComposerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
@@ -205,22 +204,6 @@ export default function DiscoverTab() {
     loadCandidates();
   }, [loadCandidates]);
 
-  // Seed-Profile (echte, verbindbare Demo-Profile aus /public/seed) für die
-  // Sport-Circle-Avatare. Erkennung über das Bildmuster, damit der Discover-Deck
-  // (is_seed = false) unangetastet bleibt.
-  useEffect(() => {
-    let alive = true;
-    supabase
-      .from("profiles")
-      .select("*")
-      .like("profile_image", "%/seed/%")
-      .eq("is_paused", false)
-      .eq("is_banned", false)
-      .limit(60)
-      .then(({ data }) => { if (alive) setSeedPeople((data as Profile[]) ?? []); });
-    return () => { alive = false; };
-  }, [profile.id]);
-
   function applyMode(m: "play" | "tour") {
     setModeState(m);
     void persistMode(profile.id, m).then(() => refreshProfile());
@@ -283,9 +266,6 @@ export default function DiscoverTab() {
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
         <SportGroups
-          people={candidates}
-          seedPeople={seedPeople}
-          onOpenProfile={(id) => openSubView({ type: "full-profile", userId: id })}
           weekMatches={weekGames}
           onFind={() => openSubView({ type: "people-browse" })}
           onCreateGame={(sport) => openSubView({ type: "create-game", sport })}
