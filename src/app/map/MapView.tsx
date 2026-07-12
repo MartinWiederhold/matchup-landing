@@ -39,6 +39,22 @@ import {
   type PlayerProfile,
 } from "@/lib/player";
 import { loadTourPlan, saveTourPlan } from "@/lib/tour";
+import { loadProviders, type ServiceProvider } from "@/lib/services";
+
+const SVC_CAT_LABEL: Record<string, string> = {
+  coach: "Coach", hitting: "Hitting Partner", stringer: "Stringer", physio: "Physio",
+  sc: "Athletik", mental: "Mental", nutrition: "Ernährung", tour_companion: "Tour-Begleiter",
+};
+const SVC_UNIT: Record<string, string> = { hour: "/Std.", session: "/Session", stringing: "/Besp.", week: "/Wo.", year: "/Jahr" };
+function serviceMarkerIcon(p: ServiceProvider): L.DivIcon {
+  const price = p.price_from != null ? `${p.currency ?? ""} ${p.price_from}` : SVC_CAT_LABEL[p.category] ?? "Service";
+  return L.divIcon({
+    className: "mu-fade",
+    iconSize: [1, 1],
+    iconAnchor: [0, 0],
+    html: `<div style="transform:translate(-50%,-100%);white-space:nowrap;display:inline-flex;align-items:center;gap:4px;background:#4b3bf3;color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:9999px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.25);">${price}</div>`,
+  });
+}
 
 const ZURICH: [number, number] = [47.3769, 8.5417];
 // Ab dieser Zoomstufe (oder weiter draussen) werden Clubs zu Städte-Clustern zusammengefasst
@@ -311,8 +327,10 @@ export default function MapView() {
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Saison-planen-Tab (ATP/Challenger/ITF)
-  const [tab, setTab] = useState<"discover" | "season">("discover");
+  // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
+  const [tab, setTab] = useState<"discover" | "season" | "services">("discover");
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
   const [startBase, setStartBase] = useState<HomeBase>(HOME_BASES[0]);
   const [budget, setBudget] = useState(15000);
@@ -732,6 +750,27 @@ export default function MapView() {
     }
   }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, seasonStart, presence]);
 
+  // Services-Anbieter einmalig laden (MVP: kleiner Datensatz).
+  useEffect(() => {
+    loadProviders({ limit: 200 }).then(setProviders);
+  }, []);
+  // Auswahl zurücksetzen, wenn man den Services-Tab verlässt.
+  useEffect(() => { if (tab !== "services") setSelProvider(null); }, [tab]);
+
+  // Services-Layer: Preis-Pins je Anbieter.
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = layerRef.current;
+    if (!map || !layer || !ready || tab !== "services") return;
+    layer.clearLayers();
+    for (const p of providers) {
+      if (p.latitude == null || p.longitude == null) continue;
+      L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p), keyboard: false })
+        .addTo(layer)
+        .on("click", () => { setSelProvider(p); map.flyTo([p.latitude!, p.longitude!], 14, { duration: 0.6 }); });
+    }
+  }, [ready, tab, providers]);
+
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
     const map = mapRef.current;
@@ -818,7 +857,8 @@ export default function MapView() {
         <div className="shrink-0 border-b border-neutral-200 p-3">
           <div className="flex rounded-full bg-neutral-100 p-1">
             <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
-            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>Saison planen</TabBtn>
+            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>Saison</TabBtn>
+            <TabBtn active={tab === "services"} onClick={() => setTab("services")}>Services</TabBtn>
           </div>
         </div>
         {tab === "season" ? (
@@ -850,6 +890,18 @@ export default function MapView() {
             setOnlyEligible={setOnlyEligible}
             venues={venues}
           />
+        ) : tab === "services" ? (
+          <>
+            <div className="shrink-0 border-b border-neutral-200 p-4">
+              <span className="text-lg font-bold tracking-tight">Services</span>
+              <p className="text-xs text-neutral-400">Coaches, Hitting Partner & Stringer · {providers.length}</p>
+            </div>
+            <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+              {providers.map((p) => (
+                <SvcCard key={p.id} p={p} onFly={() => { setSelProvider(p); if (p.latitude != null && p.longitude != null) mapRef.current?.flyTo([p.latitude, p.longitude], 14, { duration: 0.6 }); }} />
+              ))}
+            </div>
+          </>
         ) : sel ? (
           <VenueDetail venue={sel} onBack={backToList} />
         ) : (
@@ -922,6 +974,7 @@ export default function MapView() {
               <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
                 <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
                 <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>Saison</TabBtn>
+                <TabBtn small active={tab === "services"} onClick={() => setTab("services")}>Services</TabBtn>
               </div>
             </div>
             {tab === "discover" && (
@@ -950,6 +1003,15 @@ export default function MapView() {
         {tab === "discover" && sel && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] h-[66%] overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
             <VenueDetail venue={sel} onBack={backToList} sheet />
+          </div>
+        )}
+
+        {/* Mobile: Service-Anbieter als Bottom-Sheet (bei Pin-Tap) */}
+        {tab === "services" && selProvider && (
+          <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5 md:hidden">
+            <div className="mb-2 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
+            <button type="button" onClick={() => setSelProvider(null)} aria-label="Schliessen" className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
+            <SvcCard p={selProvider} />
           </div>
         )}
 
@@ -989,6 +1051,42 @@ export default function MapView() {
             />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* Service-Anbieter-Karte auf der Map (Liste + Detail-Sheet). */
+function SvcCard({ p, onFly }: { p: ServiceProvider; onFly?: () => void }) {
+  const [req, setReq] = useState(false);
+  return (
+    <div className="rounded-2xl border border-neutral-200 p-3">
+      <button type="button" onClick={onFly} className="flex w-full gap-3 text-left" disabled={!onFly}>
+        {p.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+        ) : (
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-lg font-bold text-neutral-500">{p.name[0]}</span>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-[14px] font-bold text-neutral-900">{p.name}</span>
+            {p.verified === "tour_certified" && <span className="shrink-0 rounded-full bg-matchup/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-matchup">Tour</span>}
+          </span>
+          <span className="block truncate text-[11.5px] text-neutral-500">{SVC_CAT_LABEL[p.category] ?? p.category}{p.level ? ` · ${p.level}` : ""}{p.rating != null ? ` · ★ ${p.rating}` : ""}</span>
+          <span className="mt-0.5 flex flex-wrap gap-1.5">
+            {p.travels && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">Reist mit</span>}
+            {p.sponsor && <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">{p.sponsor}</span>}
+          </span>
+        </span>
+      </button>
+      <div className="mt-2.5 flex items-center justify-between border-t border-neutral-100 pt-2.5">
+        <span className="text-[13px] font-bold text-neutral-900">
+          {p.price_from != null && <><span className="text-neutral-400">ab </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? SVC_UNIT[p.price_unit] ?? "" : ""}</span></>}
+        </span>
+        <button type="button" onClick={() => setReq(true)} disabled={req} className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${req ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>
+          {req ? "Angefragt ✓" : "Anfragen"}
+        </button>
       </div>
     </div>
   );
