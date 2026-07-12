@@ -6,7 +6,7 @@ import { loadProviders, type ServiceProvider, type ServiceCategory } from "@/lib
 import { SubViewHeader } from "../shared/ui";
 import ServiceProviderCard from "../shared/ServiceProviderCard";
 
-const CATS: (ServiceCategory | "all")[] = ["all", "coach", "hitting", "stringer"];
+const CATS: (ServiceCategory | "all")[] = ["all", "coach", "hitting", "stringer", "physio"];
 
 export default function ServicesHub() {
   const t = useT();

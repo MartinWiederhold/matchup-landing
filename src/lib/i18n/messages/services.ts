@@ -39,6 +39,7 @@ export const services = {
     one_coach: "Coach",
     one_hitting: "Hitting Partner",
     one_stringer: "Stringer",
+    one_physio: "Physio",
   },
   en: {
     title: "Services",
@@ -78,5 +79,6 @@ export const services = {
     one_coach: "Coach",
     one_hitting: "Hitting partner",
     one_stringer: "Stringer",
+    one_physio: "Physio",
   },
 };
