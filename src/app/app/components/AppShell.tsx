@@ -13,24 +13,30 @@ import ProfileTab from "./tabs/ProfileTab";
 import TourProfileTab from "./tabs/TourProfileTab";
 import TourMatchesTab from "./tabs/TourMatchesTab";
 import TourChatTab from "./tabs/TourChatTab";
+import EarthTab from "./tabs/EarthTab";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
 
+// Design wie /app/mockup2: home · chat · earth · stats · people.
 const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
-  { key: "discover", labelKey: "app.tabDiscover", icon: "M12 2 4 7v10l8 5 8-5V7z" },
-  { key: "matches", labelKey: "app.tabMatches", icon: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
-  { key: "games", labelKey: "app.tabGames", icon: "M8 21h8m-4-4v4M5 4h14v7a7 7 0 0 1-14 0z" },
-  { key: "profile", labelKey: "app.tabProfile", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
+  { key: "discover", labelKey: "app.tabDiscover", icon: "M3 11l9-8 9 8M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" },
+  { key: "matches", labelKey: "app.tabMatches", icon: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z" },
+  { key: "earth", labelKey: "app.tabEarth", icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2c3 3 4 7 4 10s-1 7-4 10M12 2c-3 3-4 7-4 10s1 7 4 10" },
+  { key: "games", labelKey: "app.tabGames", icon: "M6 20V10M12 20V4M18 20v-7" },
+  { key: "profile", labelKey: "app.tabProfile", icon: "M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M17 3.13a4 4 0 0 1 0 7.75" },
 ];
 
 export default function AppShell({ profile }: { profile: Profile }) {
   const t = useT();
   const isTour = profile.mode === "tour";
-  const tabs: TabDef[] = TAB_DEFS.map((tab) => {
-    // Im Tour-Modus wird der Games-Slot zum Team-Chat.
-    if (isTour && tab.key === "games") return { key: tab.key, label: t("mode.chatTab"), icon: "M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" };
-    return { key: tab.key, label: t(tab.labelKey), icon: tab.icon };
-  });
+  const tabs: TabDef[] = TAB_DEFS
+    // Earth-Tab nur im Play-Modus (Tour behält 4 Tabs + zentralen Planner-Button).
+    .filter((tab) => !(isTour && tab.key === "earth"))
+    .map((tab) => {
+      // Im Tour-Modus wird der Games-Slot zum Team-Chat.
+      if (isTour && tab.key === "games") return { key: tab.key, label: t("mode.chatTab"), icon: "M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" };
+      return { key: tab.key, label: t(tab.labelKey), icon: tab.icon };
+    });
   const [activeTab, setActiveTab] = useState<TabKey>("discover");
   const [stack, setStack] = useState<SubViewState[]>([]);
   const [likeCount, setLikeCount] = useState(0);
@@ -229,6 +235,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
           )}
           <div className="pb-28">
             {activeTab === "discover" && <DiscoverTab />}
+            {activeTab === "earth" && <EarthTab />}
             {activeTab === "matches" && (profile.mode === "tour" ? <TourMatchesTab /> : <MatchesTab />)}
             {activeTab === "games" && (isTour ? <TourChatTab /> : <GamesTab />)}
             {activeTab === "profile" && (profile.mode === "tour" ? <TourProfileTab /> : <ProfileTab />)}

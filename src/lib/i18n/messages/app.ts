@@ -6,8 +6,10 @@ export const app = {
     tabDiscover: "Entdecken",
     tabLikes: "Anfragen",
     tabMatches: "Matches",
+    tabEarth: "Welt",
     tabGames: "Spiele",
     tabProfile: "Profil",
+    earthFeature: "Weltkarte",
     // AppGuard
     supabaseNotConfigured: "Supabase nicht konfiguriert",
     supabaseNotConfiguredHint:
@@ -48,8 +50,10 @@ export const app = {
     tabDiscover: "Discover",
     tabLikes: "Requests",
     tabMatches: "Matches",
+    tabEarth: "World",
     tabGames: "Games",
     tabProfile: "Profile",
+    earthFeature: "World map",
     // AppGuard
     supabaseNotConfigured: "Supabase not configured",
     supabaseNotConfiguredHint:

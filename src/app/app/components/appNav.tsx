@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 import type { Profile, Sport } from "@/lib/types";
 
-export type TabKey = "discover" | "likes" | "matches" | "games" | "profile";
+export type TabKey = "discover" | "likes" | "matches" | "earth" | "games" | "profile";
 
 export type SubViewState =
   | { type: "chat"; matchId: string }
