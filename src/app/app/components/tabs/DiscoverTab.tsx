@@ -9,7 +9,7 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 import Avatar from "../shared/Avatar";
-import { StoryRow, SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow } from "../home/HomeSections";
+import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow } from "../home/HomeSections";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
@@ -256,12 +256,8 @@ export default function DiscoverTab() {
           <WimbledonWidget theme="light" />
         </div>
 
-        {/* Neue Leute (Stories) */}
-        <StoryRow
-          people={candidates.slice(0, 10)}
-          onOpen={(id) => openSubView({ type: "full-profile", userId: id })}
-          onFind={() => openSubView({ type: "people-browse" })}
-        />
+        {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
+        <SeedStoryRow onFind={() => openSubView({ type: "people-browse" })} />
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
         <SportGroups
@@ -281,11 +277,8 @@ export default function DiscoverTab() {
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />
 
-        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) — über „Für dich" */}
+        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) */}
         <NewsSection />
-
-        {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
-        <SeedStoryRow onFind={() => openSubView({ type: "people-browse" })} />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />

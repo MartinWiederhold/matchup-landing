@@ -103,9 +103,9 @@ export function StoryRow({ people, onOpen, onFind }: { people: Profile[]; onOpen
 const TT_PEOPLE: { name: string; img: string }[] = [
   { name: "Nico", img: "/seed/tt1.jpg" },
   { name: "Emma", img: "/seed/tt2.jpg" },
-  { name: "Luca", img: "/seed/tt3.jpg" },
+  { name: "Elena", img: "/seed/tt3.jpg" },
   { name: "Mia", img: "/seed/tt4.jpg" },
-  { name: "Timo", img: "/seed/tt5.jpg" },
+  { name: "Anna", img: "/seed/tt5.jpg" },
   { name: "Sara", img: "/seed/tt6.jpg" },
   { name: "Jan", img: "/seed/tt7.jpg" },
 ];
@@ -137,9 +137,6 @@ export function SeedStoryRow({ onFind }: { onFind: () => void }) {
   const t = useT();
   return (
     <section className="mt-6 px-4">
-      <div className="mb-3 flex items-center px-0.5">
-        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("discover.forYou")}</span>
-      </div>
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
           <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-black text-white"><PlusIcon size={22} /></span>
