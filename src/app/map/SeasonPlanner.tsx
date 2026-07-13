@@ -66,6 +66,10 @@ export default function SeasonPlanner({
   setBudget,
   region,
   setRegion,
+  countryFilter = "",
+  setCountryFilter,
+  classFilter = "",
+  setClassFilter,
   seasonStart,
   setSeasonStart,
   selTid,
@@ -93,6 +97,10 @@ export default function SeasonPlanner({
   setBudget: (n: number) => void;
   region: RegionFilter;
   setRegion: (r: RegionFilter) => void;
+  countryFilter?: string;
+  setCountryFilter?: (c: string) => void;
+  classFilter?: string;
+  setClassFilter?: (c: string) => void;
   seasonStart: string;
   setSeasonStart: (d: string) => void;
   selTid: string | null;
@@ -138,15 +146,18 @@ export default function SeasonPlanner({
   const inPlan = (id: string) => planIds.includes(id);
 
   const catalog = useMemo(() => {
+    const cf = (classFilter ?? "").trim().toLowerCase();
     return [...tours].sort(byDate).filter((t) => {
       if (planIds.includes(t.id)) return true;
       if (seasonStart && t.start < seasonStart) return false;
       if (!regionMatch(region, t.country)) return false;
+      if (countryFilter && t.country !== countryFilter) return false;
+      if (cf && !`${t.classification ?? ""} ${t.category ?? ""} ${t.tier}`.toLowerCase().includes(cf)) return false;
       if (group !== "Alle" && TIER_META[t.tier].group !== group) return false;
       if (surface !== "Alle" && t.surface !== surface) return false;
       return true;
     });
-  }, [group, surface, tours, region, seasonStart, planIds]);
+  }, [group, surface, tours, region, seasonStart, planIds, countryFilter, classFilter]);
 
   // Katalog nach Ort gruppieren: Hubs mit ≥3 Wochen → Cluster-Karte, Rest → Einzelzeilen.
   const grouped = useMemo(() => {
@@ -227,6 +238,25 @@ export default function SeasonPlanner({
               {r.label}
             </button>
           ))}
+        </div>
+        {/* Feiner Filter: Land + Klassierung/Level (greift, sobald nationale Turniere im Feed sind) */}
+        <div className="mt-2 flex gap-1.5">
+          <select
+            value={countryFilter}
+            onChange={(e) => setCountryFilter?.(e.target.value)}
+            className="flex-1 rounded-full bg-neutral-100 px-3 py-2 text-[12px] font-semibold text-neutral-700 outline-none"
+          >
+            <option value="">Alle Länder</option>
+            {[...new Set(tours.map((t) => t.country))].sort().map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <input
+            value={classFilter}
+            onChange={(e) => setClassFilter?.(e.target.value)}
+            placeholder="Level / Klassierung (z. B. R1, U14)"
+            className="flex-[1.4] rounded-full bg-neutral-100 px-3.5 py-2 text-[12px] font-semibold text-neutral-700 outline-none placeholder:font-normal placeholder:text-neutral-400"
+          />
         </div>
       </div>
 

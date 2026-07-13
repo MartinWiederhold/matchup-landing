@@ -31,6 +31,10 @@ export type Tournament = {
   cutDirect?: number | null; // offizieller Hauptfeld-Cut-Off (aus Meldeliste), sonst Richtwert
   cutQuali?: number | null; // offizieller Quali-Cut-Off (aus Meldeliste), sonst Richtwert
   cutSource?: string | null; // z.B. "official" | "manual" | null (=Richtwert aus Modell)
+  category?: string | null; // z.B. "Aktive" | "Junioren U14" | "Senioren 45+"
+  classification?: string | null; // Eligibility-Band, z.B. "R7-R9" | "N & R1-R3" | "U14" | "45+"
+  region?: string | null; // z.B. "Zürich" | "Romandie"
+  sport?: string; // tennis | padel | pickleball
 };
 
 // Punkte je Runde [Sieger, Finale, HF, VF, AF] + Preisgeld (Sieger, EUR) + Farbe + Kürzel

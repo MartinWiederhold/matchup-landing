@@ -340,6 +340,8 @@ export default function MapView() {
   const [profile, setProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [onlyEligible, setOnlyEligible] = useState(false);
   const [region, setRegion] = useState<RegionFilter>("all");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [classFilter, setClassFilter] = useState("");
   const [seasonStart, setSeasonStart] = useState<string>(""); // ab diesem Datum planen (leer = ganze Saison)
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
@@ -519,6 +521,10 @@ export default function MapView() {
             cutDirect: (r.cut_direct as number) ?? null,
             cutQuali: (r.cut_quali as number) ?? null,
             cutSource: (r.cut_source as string) ?? null,
+            category: (r.category as string) ?? null,
+            classification: (r.classification as string) ?? null,
+            region: (r.region as string) ?? null,
+            sport: (r.sport as string) ?? "tennis",
           })),
         );
       });
@@ -700,10 +706,13 @@ export default function MapView() {
     L.marker([startBase.lat, startBase.lng], { icon: startMarkerIcon(), keyboard: false, zIndexOffset: 400 }).addTo(layer);
 
     // Turniere nach Ort gruppieren → Cluster-Hubs (viele Wochen am selben Ort) als EINE Bubble.
+    const cf = classFilter.trim().toLowerCase();
     const passesFilter = (t: Tournament, inP: boolean) => {
       if (inP) return true;
       if (seasonStart && t.start < seasonStart) return false;
       if (!regionMatch(region, t.country)) return false;
+      if (countryFilter && t.country !== countryFilter) return false;
+      if (cf && !`${t.classification ?? ""} ${t.category ?? ""} ${t.tier}`.toLowerCase().includes(cf)) return false;
       if (onlyEligible && hasRank) return eligibility(profile, t).status !== "red";
       return true;
     };
@@ -757,7 +766,7 @@ export default function MapView() {
           });
       }
     }
-  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, seasonStart, presence]);
+  }, [ready, tab, planIds, startBase, selTid, tours, profile, hasRank, onlyEligible, region, seasonStart, presence, countryFilter, classFilter]);
 
   // Services-Anbieter einmalig laden (MVP: kleiner Datensatz).
   useEffect(() => {
@@ -880,6 +889,10 @@ export default function MapView() {
             setBudget={setBudget}
             region={region}
             setRegion={setRegion}
+            countryFilter={countryFilter}
+            setCountryFilter={setCountryFilter}
+            classFilter={classFilter}
+            setClassFilter={setClassFilter}
             seasonStart={seasonStart}
             setSeasonStart={setSeasonStart}
             selTid={selTid}
@@ -1039,6 +1052,10 @@ export default function MapView() {
               setBudget={setBudget}
               region={region}
               setRegion={setRegion}
+            countryFilter={countryFilter}
+            setCountryFilter={setCountryFilter}
+            classFilter={classFilter}
+            setClassFilter={setClassFilter}
               seasonStart={seasonStart}
               setSeasonStart={setSeasonStart}
               selTid={selTid}
