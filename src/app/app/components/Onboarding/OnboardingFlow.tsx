@@ -105,8 +105,18 @@ type NominatimResult = {
   display_name: string;
   lat: string;
   lon: string;
-  address?: { country_code?: string };
+  address?: { country_code?: string; city?: string; town?: string; village?: string; municipality?: string; suburb?: string; county?: string };
 };
+
+/** Echten Ortsnamen aus einem Nominatim-Treffer ziehen (nicht die PLZ). */
+function cityFromResult(r: NominatimResult): string {
+  const a = r.address ?? {};
+  const name = a.city || a.town || a.village || a.municipality || a.suburb || a.county;
+  if (name) return name;
+  // Fallback: erster nicht-numerischer Teil des display_name (PLZ überspringen)
+  const parts = r.display_name.split(",").map((s) => s.trim());
+  return parts.find((p) => !/^\d+$/.test(p)) || parts[0];
+}
 
 export default function OnboardingFlow() {
   const { user, refreshProfile } = useAuth();
@@ -577,17 +587,18 @@ export default function OnboardingFlow() {
                 key={i}
                 type="button"
                 onClick={() => {
+                  const cityName = cityFromResult(r);
                   dispatch({
                     type: "SET_LOCATION",
                     payload: {
-                      city: r.display_name.split(",")[0],
+                      city: cityName,
                       lat: parseFloat(r.lat),
                       lng: parseFloat(r.lon),
                       country: (r.address?.country_code || "ch").toUpperCase(),
                     },
                   });
                   setLocResults([]);
-                  setLocQuery(r.display_name.split(",")[0]);
+                  setLocQuery(cityName);
                 }}
                 className="block w-full rounded-lg bg-black/[0.035] px-4 py-2.5 text-left text-sm text-neutral-600"
               >
