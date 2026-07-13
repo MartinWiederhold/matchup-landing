@@ -1080,13 +1080,20 @@ function SvcCard({ p, onFly }: { p: ServiceProvider; onFly?: () => void }) {
           </span>
         </span>
       </button>
-      <div className="mt-2.5 flex items-center justify-between border-t border-neutral-100 pt-2.5">
+      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-neutral-100 pt-2.5">
         <span className="text-[13px] font-bold text-neutral-900">
           {p.price_from != null && <><span className="text-neutral-400">ab </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? SVC_UNIT[p.price_unit] ?? "" : ""}</span></>}
         </span>
-        <button type="button" onClick={() => setReq(true)} disabled={req} className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${req ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>
-          {req ? "Angefragt ✓" : "Anfragen"}
-        </button>
+        {p.contact_email || p.website ? (
+          <span className="flex shrink-0 items-center gap-1.5">
+            {p.website && <a href={p.website} target="_blank" rel="noopener noreferrer" className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700">Website</a>}
+            {p.contact_email && <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent("Anfrage über Matchup")}`} className="rounded-full bg-matchup px-4 py-1.5 text-[12px] font-bold text-white">E-Mail</a>}
+          </span>
+        ) : (
+          <button type="button" onClick={() => setReq(true)} disabled={req} className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${req ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>
+            {req ? "Angefragt ✓" : "Anfragen"}
+          </button>
+        )}
       </div>
     </div>
   );
