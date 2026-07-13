@@ -115,7 +115,9 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
         {/* Services in dieser Stadt */}
         <p className="mb-2 mt-6 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("services.inCity", { city: tourn.city ?? "" })}</p>
         {providers === null ? null : providers.length === 0 ? (
-          <p className="rounded-2xl bg-black/[0.035] p-4 text-center text-[13px] text-neutral-400">{t("services.empty")}</p>
+          <button type="button" onClick={() => openSubView({ type: "services" })} className="w-full rounded-2xl bg-black/[0.035] p-4 text-center text-[13px] text-neutral-500">
+            {t("services.noneInCity", { city: tourn.city ?? "" })}
+          </button>
         ) : (
           <div className="space-y-2.5">
             {providers.map((p) => (

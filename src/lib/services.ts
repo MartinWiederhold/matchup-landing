@@ -48,13 +48,13 @@ export async function loadProviders(
 }
 
 /**
- * Anbieter „in deiner Nähe": erst nach Stadt, bei 0 Treffern Fallback auf alle
- * (im MVP nur Zürich geseedet). So sieht der Nutzer immer Angebote.
+ * Anbieter „in deiner Nähe": streng nach Stadt. Kein Fallback auf fremde Städte —
+ * eine Stadt ohne Anbieter liefert leer (Aufrufer zeigt „noch keine Services hier").
+ * Nur ganz ohne Stadtangabe werden alle Anbieter gezeigt.
  */
 export async function loadProvidersNear(city: string | null, limit = 60): Promise<{ rows: ServiceProvider[]; exact: boolean }> {
   if (city && city.trim()) {
-    const rows = await loadProviders({ city, limit });
-    if (rows.length) return { rows, exact: true };
+    return { rows: await loadProviders({ city, limit }), exact: true };
   }
   return { rows: await loadProviders({ limit }), exact: false };
 }
@@ -168,6 +168,13 @@ export type NewListing = {
   currency: string;
 };
 
+/** URL normalisieren: fehlendes Schema → https:// voranstellen (sonst relativer Link). */
+function normalizeUrl(u: string): string | null {
+  const s = u.trim();
+  if (!s) return null;
+  return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+}
+
 /** Eigenen Anbieter-Eintrag anlegen (source='self', is_seed=false). */
 export async function createProviderListing(userId: string, l: NewListing): Promise<{ id: string } | null> {
   const { data } = await supabase
@@ -180,7 +187,7 @@ export async function createProviderListing(userId: string, l: NewListing): Prom
       country: "CH",
       level: l.level.trim() || null,
       bio: l.bio.trim() || null,
-      website: l.website.trim() || null,
+      website: normalizeUrl(l.website),
       contact_email: l.contact_email.trim() || null,
       price_from: l.price_from,
       price_unit: l.price_from != null ? l.price_unit : null,

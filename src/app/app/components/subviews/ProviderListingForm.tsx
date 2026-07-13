@@ -27,6 +27,7 @@ export default function ProviderListingForm() {
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => { loadMyListings(profile.id).then(setMine); }, [profile.id]);
 
@@ -35,12 +36,14 @@ export default function ProviderListingForm() {
   async function submit() {
     if (!valid || saving) return;
     setSaving(true);
+    setError(false);
     const res = await createProviderListing(profile.id, {
       name, category, sport, city, level, bio, website, contact_email: email,
       price_from: price.trim() ? Number(price) : null, price_unit: unit, currency: "CHF",
     });
     setSaving(false);
     if (res) openSubView({ type: "service-detail", providerId: res.id });
+    else setError(true);
   }
 
   async function remove(id: string) {
@@ -115,6 +118,7 @@ export default function ProviderListingForm() {
 
         <p className="mt-2 px-1 text-[11px] text-neutral-400">{t("services.listContactHint")}</p>
 
+        {error && <p className="mt-3 rounded-xl bg-red-500/[0.08] px-3 py-2 text-center text-[12px] font-semibold text-red-600">{t("services.listError")}</p>}
         <button type="button" onClick={submit} disabled={!valid || saving} className="mt-4 w-full rounded-full bg-matchup py-3 text-[14px] font-bold text-white disabled:opacity-40">
           {saving ? "…" : t("services.listSubmit")}
         </button>

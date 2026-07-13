@@ -9,11 +9,10 @@ import ServiceProviderCard from "../shared/ServiceProviderCard";
 export default function ServicesNearStep({ city }: { city: string }) {
   const t = useT();
   const [rows, setRows] = useState<ServiceProvider[] | null>(null);
-  const [exact, setExact] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    loadProvidersNear(city).then((res) => { if (alive) { setRows(res.rows); setExact(res.exact); } });
+    loadProvidersNear(city).then((res) => { if (alive) setRows(res.rows); });
     return () => { alive = false; };
   }, [city]);
 
@@ -22,7 +21,6 @@ export default function ServicesNearStep({ city }: { city: string }) {
 
   return (
     <div className="space-y-2.5">
-      {!exact && <p className="px-1 text-[12px] text-neutral-400">{t("services.nearFallback")}</p>}
       {rows.slice(0, 12).map((p) => <ServiceProviderCard key={p.id} p={p} />)}
     </div>
   );
