@@ -53,8 +53,9 @@ export type StepId =
 // plus ihre modus-spezifischen Schritte.
 const PRE: StepId[] = ["welcome", "language", "fork"];
 const PLAY: StepId[] = ["sports", "location", "club", "identity", "skill", "height", "goals", "photos"];
-// Tour: kein Sport-Schritt (Tour = Tennis, automatisch gesetzt) und kein Club-Schritt.
-const TOUR: StepId[] = ["location", "services", "identity", "circuit", "ranking", "budget", "passport", "team", "calendar", "photos"];
+// Tour: kein Sport-Schritt (Tour = Tennis, automatisch gesetzt), kein Club- und
+// kein Services-Schritt (Services gibt's in der App; leerer Screen wirkt schlecht).
+const TOUR: StepId[] = ["location", "identity", "circuit", "ranking", "budget", "passport", "team", "calendar", "photos"];
 
 /** Sichtbare Schritte je nach gewähltem Modus. */
 export function visibleSteps(state: OnboardingState): StepId[] {
@@ -256,9 +257,10 @@ export function isStepValid(state: OnboardingState): boolean {
       return state.goals.length >= 1;
     // Tour
     case "circuit":
-      return state.circuit !== null;
+      // Pro-Circuit ODER nationale Klassierung genügt.
+      return state.circuit !== null || state.official_rating.trim().length > 0;
     case "ranking":
-      return state.tour_ranking !== null && state.tour_ranking > 0;
+      return true; // optional — Ranking/Punkte können später ergänzt werden
     case "budget":
       return true; // optional — später im Profil möglich
     case "passport":

@@ -451,7 +451,7 @@ export default function OnboardingFlow() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white text-neutral-900">
+    <div className="relative flex min-h-dvh flex-col bg-white text-neutral-900">
       {/* Progress + Header — auf dem Welcome-Screen ausgeblendet (Video im Vollbild) */}
       {cur !== "welcome" && (
       <div className="px-5 pt-5">
@@ -484,7 +484,7 @@ export default function OnboardingFlow() {
       <div className={`flex-1 overflow-y-auto ${cur === "welcome" ? "" : "px-5 py-8"}`}>
         {/* Step 1 — Welcome (Vollbild-Video) */}
         {cur === "welcome" && (
-          <div className="relative flex h-full min-h-[75vh] flex-col items-center justify-center overflow-hidden text-center">
+          <div className="relative flex h-full min-h-full flex-col items-center justify-center overflow-hidden text-center">
             {/* Titelvideo im Hintergrund */}
             <video className="pointer-events-none absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline poster="/hero-poster.jpg" aria-hidden="true">
               <source src="/hero.mp4" type="video/mp4" />
@@ -849,6 +849,33 @@ export default function OnboardingFlow() {
                 <span className="block text-xs text-neutral-500">{c.desc}</span>
               </SelectRow>
             ))}
+
+            {/* Nationale Klassierung (optional) — Land wählen → z.B. Swiss Tennis R/N */}
+            {(() => {
+              const nat = nationalRankSystem(rankCountry);
+              return (
+                <div className="mt-5 space-y-3 rounded-2xl border border-black/[0.08] p-3.5">
+                  <p className="text-[13px] font-bold text-neutral-900">{t("onboarding.tourNationalTitle")}</p>
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingCountry")}</label>
+                    <select value={rankCountry} onChange={(e) => setRankCountry(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
+                      {RANK_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{nat.label}</label>
+                    {nat.options ? (
+                      <select value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
+                        <option value="">{t("onboarding.noRating")}</option>
+                        {nat.options.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    ) : (
+                      <input value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} placeholder={nat.placeholder} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-400" />
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </Step>
         )}
 
@@ -880,7 +907,22 @@ export default function OnboardingFlow() {
         {/* Tour — Saisonbudget (optional) */}
         {cur === "budget" && (
           <Step title={t("onboarding.budgetTitle")} subtitle={t("onboarding.budgetSubtitle")}>
-            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.budgetLabel")}</label>
+            <div className="mb-4 text-center">
+              <span className="text-[32px] font-extrabold tracking-tight text-neutral-900">{(state.season_budget ?? 0).toLocaleString(state.language === "de" ? "de-CH" : "en-US")}</span>
+              <span className="ml-1 text-[15px] font-bold text-neutral-400">CHF</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100000}
+              step={1000}
+              value={state.season_budget ?? 0}
+              onChange={(e) => dispatch({ type: "SET_BUDGET", payload: Number(e.target.value) || null })}
+              className="w-full accent-matchup"
+            />
+            <div className="mt-1 flex justify-between text-[11px] font-medium text-neutral-400"><span>0</span><span>100k+</span></div>
+
+            <label className="mb-1.5 mt-5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.budgetLabel")}</label>
             <div className="flex items-center gap-2 rounded-xl bg-black/[0.04] px-4 py-3.5">
               <span className="text-sm font-semibold text-neutral-400">CHF</span>
               <input
@@ -1254,8 +1296,8 @@ export default function OnboardingFlow() {
         )}
       </div>
 
-      {/* Bottom button */}
-      <div className="border-t border-black/10 p-5">
+      {/* Bottom button — auf dem Welcome-Screen über dem Video schwebend */}
+      <div className={cur === "welcome" ? "absolute inset-x-0 bottom-0 z-10 p-5" : "border-t border-black/10 p-5"}>
         <button
           type="button"
           onClick={handleNext}
