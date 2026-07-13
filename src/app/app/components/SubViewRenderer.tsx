@@ -28,6 +28,7 @@ import ServiceProviderDetail from "./subviews/ServiceProviderDetail";
 import MyTeam from "./subviews/MyTeam";
 import ProviderListingForm from "./subviews/ProviderListingForm";
 import TournamentFinder from "./subviews/TournamentFinder";
+import SelectProfileBrowse from "./subviews/SelectProfileBrowse";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -115,6 +116,8 @@ export default function SubViewRenderer({
       return <ProviderListingForm />;
     case "tournament-finder":
       return <TournamentFinder />;
+    case "select-profile":
+      return <SelectProfileBrowse />;
     default:
       return null;
   }

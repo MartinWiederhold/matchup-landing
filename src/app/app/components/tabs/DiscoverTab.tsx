@@ -262,7 +262,7 @@ export default function DiscoverTab() {
         </div>
 
         {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
-        <SeedStoryRow onFind={() => openSubView({ type: "people-browse" })} />
+        <SeedStoryRow onFind={() => openSubView({ type: "select-profile" })} />
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
         <SportGroups
