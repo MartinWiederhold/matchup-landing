@@ -43,7 +43,7 @@ export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen,
           </div>
         </div>
       </div>
-      <div className="mt-2.5 flex items-center justify-between border-t border-black/[0.06] pt-2.5">
+      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/[0.06] pt-2.5">
         <span className="text-[13px] font-bold text-neutral-900">
           {p.price_from != null && (
             <>
@@ -53,16 +53,27 @@ export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen,
             </>
           )}
         </span>
-        <button
-          type="button"
-          onClick={() => { setRequested(true); void onRequest?.(); }}
-          disabled={requested}
-          className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}
-        >
-          {requested ? t("services.requested") : t("services.request")}
-        </button>
+        {p.contact_email || p.website ? (
+          <span className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {p.website && (
+              <a href={p.website} target="_blank" rel="noopener noreferrer" className="rounded-full bg-black/[0.05] px-3 py-1.5 text-[12px] font-bold text-neutral-700">{t("services.website")}</a>
+            )}
+            {p.contact_email && (
+              <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent(t("services.mailSubject"))}`} className="rounded-full bg-matchup px-4 py-1.5 text-[12px] font-bold text-white">{t("services.email")}</a>
+            )}
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { setRequested(true); void onRequest?.(); }}
+            disabled={requested}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}
+          >
+            {requested ? t("services.requested") : t("services.request")}
+          </button>
+        )}
       </div>
-      {requested && <p className="mt-1.5 text-[11px] text-neutral-400">{t("services.requestSent")}</p>}
+      {requested && !p.contact_email && !p.website && <p className="mt-1.5 text-[11px] text-neutral-400">{t("services.requestSent")}</p>}
     </div>
   );
 }

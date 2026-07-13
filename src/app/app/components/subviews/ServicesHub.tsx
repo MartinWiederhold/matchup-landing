@@ -82,6 +82,12 @@ export default function ServicesHub() {
             {shown.map((p) => <ServiceProviderCard key={p.id} p={p} favorited={favs.has(p.id)} onToggleFav={() => toggle(p)} onOpen={() => openSubView({ type: "service-detail", providerId: p.id })} requested={reqs.has(p.id)} onRequest={() => request(p)} />)}
           </div>
         )}
+
+        {view === "browse" && (
+          <button type="button" onClick={() => openSubView({ type: "list-provider" })} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-matchup/40 py-3.5 text-[13px] font-bold text-matchup">
+            <span className="text-lg leading-none">+</span> {t("services.listCta")}
+          </button>
+        )}
       </div>
     </div>
   );

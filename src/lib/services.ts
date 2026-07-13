@@ -25,6 +25,10 @@ export type ServiceProvider = {
   verified: string | null; // z. B. "tour_certified"
   travels: boolean;
   sports: string[];
+  website: string | null;
+  contact_email: string | null;
+  source: string | null; // seed | directory | self
+  created_by: string | null;
 };
 
 /** Anbieter laden — optional gefiltert nach Kategorie/Stadt. */
@@ -34,6 +38,8 @@ export async function loadProviders(
   let q = supabase
     .from("service_providers")
     .select("*")
+    // Echte Anbieter zuerst: 'directory' < 'self' < 'seed' (alphabetisch), dann nach Rating.
+    .order("source", { ascending: true })
     .order("rating", { ascending: false, nullsFirst: false });
   if (opts.category) q = q.eq("category", opts.category);
   if (opts.city && opts.city.trim()) q = q.ilike("city", `%${opts.city.trim()}%`);
@@ -145,4 +151,55 @@ export async function loadRequests(userId: string): Promise<ServiceRequest[]> {
     .order("created_at", { ascending: false });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return ((data as any[]) ?? []).map((r) => ({ ...r, provider: Array.isArray(r.provider) ? r.provider[0] ?? null : r.provider ?? null }));
+}
+
+/* ── Self-Listing (Anbieter tragen sich selbst ein) ───────── */
+export type NewListing = {
+  name: string;
+  category: ServiceCategory;
+  sport: string;
+  city: string;
+  level: string;
+  bio: string;
+  website: string;
+  contact_email: string;
+  price_from: number | null;
+  price_unit: string; // hour | session | stringing | week | year
+  currency: string;
+};
+
+/** Eigenen Anbieter-Eintrag anlegen (source='self', is_seed=false). */
+export async function createProviderListing(userId: string, l: NewListing): Promise<{ id: string } | null> {
+  const { data } = await supabase
+    .from("service_providers")
+    .insert({
+      name: l.name.trim(),
+      category: l.category,
+      sports: [l.sport],
+      city: l.city.trim() || null,
+      country: "CH",
+      level: l.level.trim() || null,
+      bio: l.bio.trim() || null,
+      website: l.website.trim() || null,
+      contact_email: l.contact_email.trim() || null,
+      price_from: l.price_from,
+      price_unit: l.price_from != null ? l.price_unit : null,
+      currency: l.currency,
+      source: "self",
+      is_seed: false,
+      created_by: userId,
+    })
+    .select("id")
+    .maybeSingle();
+  return (data as { id: string } | null) ?? null;
+}
+
+/** Eigene Anbieter-Einträge des Nutzers. */
+export async function loadMyListings(userId: string): Promise<ServiceProvider[]> {
+  const { data } = await supabase.from("service_providers").select("*").eq("created_by", userId).order("name");
+  return (data as ServiceProvider[]) ?? [];
+}
+
+export async function deleteListing(userId: string, id: string): Promise<void> {
+  await supabase.from("service_providers").delete().eq("id", id).eq("created_by", userId);
 }

@@ -107,9 +107,16 @@ export default function ServiceProviderDetail({ providerId }: { providerId: stri
           <span className="text-[15px] font-extrabold">
             {p.price_from != null && <><span className="text-neutral-400 text-[12px] font-medium">{t("services.from")} </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? t(UNIT[p.price_unit] ?? "services.perHour") : ""}</span></>}
           </span>
-          <button type="button" onClick={() => { setRequested(true); void createRequest(profile.id, providerId); }} disabled={requested} className={`rounded-full px-5 py-2 text-[13px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>{requested ? t("services.requested") : t("services.request")}</button>
+          {p.contact_email || p.website ? (
+            <span className="flex items-center gap-1.5">
+              {p.website && <a href={p.website} target="_blank" rel="noopener noreferrer" className="rounded-full bg-black/[0.06] px-4 py-2 text-[13px] font-bold text-neutral-700">{t("services.website")}</a>}
+              {p.contact_email && <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent(t("services.mailSubject"))}`} className="rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white">{t("services.email")}</a>}
+            </span>
+          ) : (
+            <button type="button" onClick={() => { setRequested(true); void createRequest(profile.id, providerId); }} disabled={requested} className={`rounded-full px-5 py-2 text-[13px] font-bold ${requested ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>{requested ? t("services.requested") : t("services.request")}</button>
+          )}
         </div>
-        {requested && <p className="mt-1.5 px-1 text-[11px] text-neutral-400">{t("services.requestSent")}</p>}
+        {requested && !p.contact_email && !p.website && <p className="mt-1.5 px-1 text-[11px] text-neutral-400">{t("services.requestSent")}</p>}
 
         {/* Reviews */}
         <p className="mb-2 mt-6 px-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{t("services.reviewsTitle")}</p>

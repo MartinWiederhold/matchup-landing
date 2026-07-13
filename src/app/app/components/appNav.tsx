@@ -39,7 +39,8 @@ export type SubViewState =
   | { type: "tour-tournament"; tournamentId: string }
   | { type: "services" }
   | { type: "service-detail"; providerId: string }
-  | { type: "my-team" };
+  | { type: "my-team" }
+  | { type: "list-provider" };
 
 interface AppNavContextType {
   profile: Profile;
