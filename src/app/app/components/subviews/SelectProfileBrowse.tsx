@@ -22,10 +22,11 @@ const SKILL: Record<string, string> = {
 
 export default function SelectProfileBrowse() {
   const t = useT();
-  const { profile, openSubView } = useAppNav();
+  const { profile } = useAppNav();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [sel, setSel] = useState<Row | null>(null);
   const [connected, setConnected] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     supabase
@@ -53,7 +54,7 @@ export default function SelectProfileBrowse() {
         ) : (
           <div className="grid grid-cols-2 gap-x-5 gap-y-7 px-5 pb-10 pt-7">
             {rows.map((p) => (
-              <button key={p.id} type="button" onClick={() => { setSel(p); setConnected(false); }} className="flex flex-col items-center">
+              <button key={p.id} type="button" onClick={() => { setSel(p); setConnected(false); setExpanded(false); }} className="flex flex-col items-center">
                 <img src={p.profile_image ?? ""} alt="" loading="lazy" className="aspect-square w-full rounded-full object-cover" />
                 <span className="mt-3 text-[15px] font-semibold text-neutral-900">@{(p.first_name ?? "spieler").toLowerCase()}</span>
                 <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400">
@@ -95,24 +96,32 @@ export default function SelectProfileBrowse() {
                   ))}
                 </div>
 
-                {sel.bio && <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">{sel.bio}</p>}
-
                 <div className="mt-4 flex gap-2.5">
                   <button type="button" onClick={() => setConnected(true)} className={`flex-1 rounded-full py-3.5 text-[15px] font-bold ${connected ? "bg-emerald-500/20 text-emerald-300" : "bg-white text-neutral-900"}`}>
                     {connected ? t("services.requested") : t("discover.connect")}
                   </button>
-                  <button type="button" onClick={() => openSubView({ type: "full-profile", userId: sel.id })} className="flex-1 rounded-full border border-white/25 py-3.5 text-[15px] font-bold text-white">{t("discover.viewProfile")}</button>
+                  {(sel.bio || gallery.length > 0) && (
+                    <button type="button" onClick={() => setExpanded((v) => !v)} className="flex-1 rounded-full border border-white/25 py-3.5 text-[15px] font-bold text-white">
+                      {expanded ? t("discover.less") : t("discover.more")}
+                    </button>
+                  )}
                 </div>
                 <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Matchup</p>
 
-                {gallery.length > 0 && (
-                  <div className="mt-5 border-t border-white/10 pt-4">
-                    <p className="mb-2.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/40">{t("discover.photos")}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {gallery.map((g, i) => (
-                        <img key={i} src={g} alt="" loading="lazy" className="aspect-square w-full rounded-2xl object-cover" />
-                      ))}
-                    </div>
+                {/* Aufklappbar: Beschreibung + Galerie */}
+                {expanded && (
+                  <div className="mt-4 border-t border-white/10 pt-4">
+                    {sel.bio && <p className="text-[13.5px] leading-relaxed text-white/60">{sel.bio}</p>}
+                    {gallery.length > 0 && (
+                      <div className="mt-4">
+                        <p className="mb-2.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/40">{t("discover.photos")}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {gallery.map((g, i) => (
+                            <img key={i} src={g} alt="" loading="lazy" className="aspect-square w-full rounded-2xl object-cover" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
