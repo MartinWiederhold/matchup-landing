@@ -1020,7 +1020,7 @@ export default function MapView() {
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5 md:hidden">
             <div className="mb-2 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
             <button type="button" onClick={() => setSelProvider(null)} aria-label="Schliessen" className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
-            <SvcCard p={selProvider} />
+            <SvcCard p={selProvider} detailed />
           </div>
         )}
 
@@ -1066,29 +1066,36 @@ export default function MapView() {
 }
 
 /* Service-Anbieter-Karte auf der Map (Liste + Detail-Sheet). */
-function SvcCard({ p, onFly }: { p: ServiceProvider; onFly?: () => void }) {
+function SvcCard({ p, onFly, detailed }: { p: ServiceProvider; onFly?: () => void; detailed?: boolean }) {
   const [req, setReq] = useState(false);
+  const [imgOk, setImgOk] = useState(true);
   return (
     <div className="rounded-2xl border border-neutral-200 p-3">
       <button type="button" onClick={onFly} className="flex w-full gap-3 text-left" disabled={!onFly}>
-        {p.image_url ? (
+        {p.image_url && imgOk ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+          <img src={p.image_url} alt="" loading="lazy" onError={() => setImgOk(false)} className={`${detailed ? "h-16 w-16" : "h-14 w-14"} shrink-0 rounded-xl bg-neutral-100 object-contain`} />
         ) : (
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-lg font-bold text-neutral-500">{p.name[0]}</span>
+          <span className={`${detailed ? "h-16 w-16" : "h-14 w-14"} flex shrink-0 items-center justify-center rounded-xl bg-matchup/10 text-lg font-bold text-matchup`}>{p.name[0]}</span>
         )}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-[14px] font-bold text-neutral-900">{p.name}</span>
             {p.verified === "tour_certified" && <span className="shrink-0 rounded-full bg-matchup/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-matchup">Tour</span>}
           </span>
-          <span className="block truncate text-[11.5px] text-neutral-500">{SVC_CAT_LABEL[p.category] ?? p.category}{p.level ? ` · ${p.level}` : ""}{p.rating != null ? ` · ★ ${p.rating}` : ""}</span>
+          <span className="block truncate text-[11.5px] text-neutral-500">{SVC_CAT_LABEL[p.category] ?? p.category}{p.level ? ` · ${p.level}` : ""}{p.city ? ` · ${p.city}` : ""}{p.rating != null ? ` · ★ ${p.rating}` : ""}</span>
           <span className="mt-0.5 flex flex-wrap gap-1.5">
             {p.travels && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">Reist mit</span>}
             {p.sponsor && <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">{p.sponsor}</span>}
           </span>
         </span>
       </button>
+      {detailed && (p.bio || (p.languages?.length ?? 0) > 0) && (
+        <div className="mt-2.5 border-t border-neutral-100 pt-2.5">
+          {p.bio && <p className="text-[12.5px] leading-snug text-neutral-600">{p.bio}</p>}
+          {p.languages?.length > 0 && <p className="mt-1.5 text-[11px] text-neutral-400">{p.languages.join(", ").toUpperCase()}</p>}
+        </div>
+      )}
       <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-neutral-100 pt-2.5">
         <span className="text-[13px] font-bold text-neutral-900">
           {p.price_from != null && <><span className="text-neutral-400">ab </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? SVC_UNIT[p.price_unit] ?? "" : ""}</span></>}

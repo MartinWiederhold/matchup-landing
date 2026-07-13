@@ -13,6 +13,7 @@ const UNIT_KEY: Record<string, string> = {
 export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen, onRequest, requested: requestedInit }: { p: ServiceProvider; favorited?: boolean; onToggleFav?: () => void; onOpen?: () => void; onRequest?: () => void | Promise<void>; requested?: boolean }) {
   const t = useT();
   const [requested, setRequested] = useState(!!requestedInit);
+  const [imgOk, setImgOk] = useState(true);
 
   return (
     <div className="relative rounded-2xl border border-black/[0.07] p-3">
@@ -22,10 +23,10 @@ export default function ServiceProviderCard({ p, favorited, onToggleFav, onOpen,
         </button>
       )}
       <div className={`flex gap-3 ${onOpen ? "cursor-pointer" : ""}`} onClick={onOpen} role={onOpen ? "button" : undefined}>
-        {p.image_url ? (
-          <img src={p.image_url} alt="" loading="lazy" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+        {p.image_url && imgOk ? (
+          <img src={p.image_url} alt="" loading="lazy" onError={() => setImgOk(false)} className="h-16 w-16 shrink-0 rounded-xl bg-neutral-100 object-contain" />
         ) : (
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-lg font-bold text-neutral-500">{p.name[0]}</span>
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-matchup/10 text-lg font-bold text-matchup">{p.name[0]}</span>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">

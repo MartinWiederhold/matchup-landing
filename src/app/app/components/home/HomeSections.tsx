@@ -37,9 +37,9 @@ export function ServicesRow({ city, onOpen, onOpenProvider, title }: { city: str
           <button key={p.id} type="button" onClick={() => (onOpenProvider ? onOpenProvider(p.id) : onOpen())} className="w-[132px] shrink-0 overflow-hidden rounded-2xl border border-black/[0.07] p-2.5 text-left">
             {p.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.image_url} alt="" loading="lazy" className="h-[104px] w-full rounded-xl object-cover" />
+              <img src={p.image_url} alt="" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} className="h-[104px] w-full rounded-xl bg-neutral-100 object-contain" />
             ) : (
-              <span className="flex h-[104px] w-full items-center justify-center rounded-xl bg-neutral-200 text-lg font-bold text-neutral-500">{p.name[0]}</span>
+              <span className="flex h-[104px] w-full items-center justify-center rounded-xl bg-matchup/10 text-lg font-bold text-matchup">{p.name[0]}</span>
             )}
             <p className="mt-1.5 truncate text-[13px] font-bold text-neutral-900">{p.name}</p>
             <p className="truncate text-[11px] text-neutral-500">{t(`services.one_${p.category}`)}{p.rating != null ? ` · ★ ${p.rating}` : ""}</p>

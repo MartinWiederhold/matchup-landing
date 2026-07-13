@@ -85,7 +85,7 @@ export default function ServiceProviderDetail({ providerId }: { providerId: stri
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         {/* Hero */}
         <div className="flex gap-3.5">
-          {p.image_url ? <img src={p.image_url} alt="" className="h-20 w-20 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-neutral-200 text-2xl font-bold text-neutral-500">{p.name[0]}</span>}
+          {p.image_url ? <img src={p.image_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} className="h-20 w-20 shrink-0 rounded-2xl bg-neutral-100 object-contain" /> : <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-matchup/10 text-2xl font-bold text-matchup">{p.name[0]}</span>}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h2 className="truncate text-[18px] font-extrabold tracking-tight">{p.name}</h2>
