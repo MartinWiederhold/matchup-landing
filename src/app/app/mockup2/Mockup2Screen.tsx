@@ -180,6 +180,7 @@ export default function Mockup2Screen() {
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
   const [foryouView, setForyouView] = useState<ForYouPerson | null>(null);
+  const [orbView, setOrbView] = useState<{ name: string; img: string } | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
 
   // Chat-Detailansicht
@@ -710,12 +711,12 @@ export default function Mockup2Screen() {
                   <span className="text-[11px] text-neutral-400">Find</span>
                 </button>
                 {NEARBY.map((p) => (
-                  <div key={p.name} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+                  <button type="button" key={p.name} onClick={() => setOrbView(p)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
                     <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
                       <img src={p.img} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
                     </span>
                     <span className="max-w-[60px] truncate text-[11px] font-medium text-neutral-600">{p.name}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
@@ -1048,6 +1049,69 @@ export default function Mockup2Screen() {
             </div>
           </div>
         )}
+
+        {/* Profil-Detailansicht im ORB-Style (Klick auf "New people nearby") */}
+        {orbView && (() => {
+          const h = orbView.name.split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+          const hx = (n: number) => (h * (n + 1)).toString(16).padStart(4, "0").slice(0, 4);
+          const idRows = [
+            { label: "Username", value: `@${orbView.name.toLowerCase()}`, copy: false },
+            { label: "Profile ID", value: `0x${hx(1)}…${hx(9)}`, copy: true },
+            { label: "Owner", value: `0x${hx(3)}…${hx(7)}`, copy: true },
+            { label: "Device ID", value: `0x${hx(5)}…1234`, copy: true },
+          ];
+          const checkRows = ["Profile Recovery", "Payments", "Signless Transactions"];
+          return (
+            <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] flex-col overflow-hidden bg-neutral-950" onClick={() => setOrbView(null)}>
+              {/* Kopfzeile */}
+              <div className="flex items-center justify-between px-5 pt-[max(14px,env(safe-area-inset-top))]">
+                <div className="flex items-center gap-4 text-white">
+                  <Icon path="M12 5v14M5 12h14" size={26} />
+                  <Icon path="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3" size={24} />
+                </div>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setOrbView(null); }} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+                  <Icon path="M6 6l12 12M18 6L6 18" size={18} />
+                </button>
+              </div>
+              <h1 className="px-5 pt-5 text-[46px] font-extrabold leading-[0.92] tracking-tight text-white/25">Select<br />Profile</h1>
+
+              {/* Weisse Profil-Karte */}
+              <div className="mt-auto p-3.5" onClick={(e) => e.stopPropagation()}>
+                <div className="rounded-[26px] bg-white p-5 pb-4 shadow-2xl">
+                  <img src={orbView.img} alt="" className="h-12 w-12 rounded-2xl object-cover" />
+                  <h2 className="mt-2.5 text-[42px] font-extrabold leading-none tracking-tight text-neutral-900">Profile</h2>
+
+                  <div className="mt-4 space-y-3">
+                    {idRows.map((r) => (
+                      <div key={r.label} className="flex items-center justify-between">
+                        <span className="text-[15px] text-neutral-500">{r.label}</span>
+                        <span className="flex items-center gap-1.5 text-[15px] font-semibold text-neutral-900">
+                          {r.value}
+                          {r.copy && <Icon path="M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" size={15} />}
+                        </span>
+                      </div>
+                    ))}
+                    {checkRows.map((label) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[15px] text-neutral-500">
+                          {label}
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-300"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
+                        </span>
+                        <Icon path="M5 13l4 4L19 7" size={18} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex gap-2.5">
+                    <button type="button" className="flex-1 rounded-full bg-neutral-900 py-3.5 text-[15px] font-bold text-white">Verbinden</button>
+                    <button type="button" onClick={() => setOrbView(null)} className="flex-1 rounded-full border border-black/15 py-3.5 text-[15px] font-bold text-neutral-900">Schliessen</button>
+                  </div>
+                  <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">Zuletzt aktiv auf Matchup · vor 4 Min.</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* For-You-Detailansicht (Vollbild) */}
         {foryouView && (
