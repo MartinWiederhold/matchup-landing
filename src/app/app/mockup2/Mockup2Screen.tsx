@@ -181,6 +181,7 @@ export default function Mockup2Screen() {
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
   const [foryouView, setForyouView] = useState<ForYouPerson | null>(null);
   const [orbView, setOrbView] = useState<{ name: string; img: string } | null>(null);
+  const [selectProfile, setSelectProfile] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
 
   // Chat-Detailansicht
@@ -706,7 +707,7 @@ export default function Mockup2Screen() {
             <section className="mt-6">
               <SectionHead label="New people nearby" />
               <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
-                <button type="button" className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
+                <button type="button" onClick={() => setSelectProfile(true)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
                   <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-black/25 text-neutral-400"><Icon path="M12 5v14M5 12h14" size={22} /></span>
                   <span className="text-[11px] text-neutral-400">Find</span>
                 </button>
@@ -1050,7 +1051,38 @@ export default function Mockup2Screen() {
           </div>
         )}
 
-        {/* Profil-Detailansicht im ORB-Style (Klick auf "New people nearby") */}
+        {/* Select-Profile-Übersicht (Klick auf "Find") — ORB-Style-Grid */}
+        {selectProfile && (
+          <div className="fixed inset-0 z-[66] mx-auto flex max-w-[430px] flex-col overflow-hidden bg-neutral-950">
+            <div className="flex items-center justify-between px-5 pt-[max(14px,env(safe-area-inset-top))]">
+              <div className="flex items-center gap-4 text-white">
+                <Icon path="M12 5v14M5 12h14" size={26} />
+                <Icon path="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3" size={24} />
+              </div>
+              <button type="button" onClick={() => setSelectProfile(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+                <Icon path="M6 6l12 12M18 6L6 18" size={18} />
+              </button>
+            </div>
+            <h1 className="px-5 pt-5 text-[46px] font-extrabold leading-[0.92] tracking-tight text-white">Select<br />Profile</h1>
+            <div className="flex-1 overflow-y-auto px-5 pb-8 pt-7">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-7">
+                {NEARBY.map((p, i) => {
+                  const h = p.name.split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+                  const tag = ["WALLET", "EMAIL", "LOCAL", "WALLET", "LOCAL"][i % 5];
+                  return (
+                    <button key={p.name} type="button" onClick={() => setOrbView(p)} className="flex flex-col items-center">
+                      <img src={p.img} alt="" className="aspect-square w-full rounded-full object-cover" />
+                      <span className="mt-3 text-[15px] font-semibold text-white">@{p.name.toLowerCase()}</span>
+                      <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/35">{tag} 0X{(h % 65536).toString(16).padStart(4, "0").slice(0, 4)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Profil-Detailansicht im ORB-Style (Klick auf "New people nearby" oder Select-Profile-Grid) */}
         {orbView && (() => {
           const h = orbView.name.split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
           const hx = (n: number) => (h * (n + 1)).toString(16).padStart(4, "0").slice(0, 4);
