@@ -180,7 +180,7 @@ export default function Mockup2Screen() {
   const [chatList, setChatList] = useState<ChatItem[]>(CHATS_INIT);
   const [profileView, setProfileView] = useState<ReqPerson | null>(null);
   const [foryouView, setForyouView] = useState<ForYouPerson | null>(null);
-  const [orbView, setOrbView] = useState<{ name: string; img: string } | null>(null);
+  const [orbView, setOrbView] = useState<ForYouPerson | null>(null);
   const [selectProfile, setSelectProfile] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
 
@@ -711,7 +711,7 @@ export default function Mockup2Screen() {
                   <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-black/25 text-neutral-400"><Icon path="M12 5v14M5 12h14" size={22} /></span>
                   <span className="text-[11px] text-neutral-400">Find</span>
                 </button>
-                {NEARBY.map((p) => (
+                {FORYOU.map((p) => (
                   <button type="button" key={p.name} onClick={() => setOrbView(p)} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
                     <span className="block h-[58px] w-[58px] rounded-full bg-gradient-to-br from-matchup to-indigo-500 p-[2px]">
                       <img src={p.img} alt="" className="h-full w-full rounded-full object-cover ring-[2.5px] ring-white" />
@@ -1066,17 +1066,13 @@ export default function Mockup2Screen() {
             <h1 className="px-5 pt-5 text-[46px] font-extrabold leading-[0.92] tracking-tight text-white">Select<br />Profile</h1>
             <div className="flex-1 overflow-y-auto px-5 pb-8 pt-7">
               <div className="grid grid-cols-2 gap-x-5 gap-y-7">
-                {NEARBY.map((p, i) => {
-                  const h = p.name.split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-                  const tag = ["WALLET", "EMAIL", "LOCAL", "WALLET", "LOCAL"][i % 5];
-                  return (
-                    <button key={p.name} type="button" onClick={() => setOrbView(p)} className="flex flex-col items-center">
-                      <img src={p.img} alt="" className="aspect-square w-full rounded-full object-cover" />
-                      <span className="mt-3 text-[15px] font-semibold text-white">@{p.name.toLowerCase()}</span>
-                      <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/35">{tag} 0X{(h % 65536).toString(16).padStart(4, "0").slice(0, 4)}</span>
-                    </button>
-                  );
-                })}
+                {FORYOU.map((p) => (
+                  <button key={p.name} type="button" onClick={() => setOrbView(p)} className="flex flex-col items-center">
+                    <img src={p.img} alt="" className="aspect-square w-full rounded-full object-cover" />
+                    <span className="mt-3 text-[15px] font-semibold text-white">@{p.name.toLowerCase()}</span>
+                    <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/35">{p.sports[0]} · {p.level}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -1085,14 +1081,18 @@ export default function Mockup2Screen() {
         {/* Profil-Detailansicht im ORB-Style (Klick auf "New people nearby" oder Select-Profile-Grid) */}
         {orbView && (() => {
           const h = orbView.name.split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-          const hx = (n: number) => (h * (n + 1)).toString(16).padStart(4, "0").slice(0, 4);
-          const idRows = [
-            { label: "Username", value: `@${orbView.name.toLowerCase()}`, copy: false },
-            { label: "Profile ID", value: `0x${hx(1)}…${hx(9)}`, copy: true },
-            { label: "Owner", value: `0x${hx(3)}…${hx(7)}`, copy: true },
-            { label: "Device ID", value: `0x${hx(5)}…1234`, copy: true },
+          const height = 168 + (h % 24); // deterministische Grösse für den Mockup
+          const rows: { label: string; value: string }[] = [
+            { label: "Username", value: `@${orbView.name.toLowerCase()}` },
+            { label: "Alter", value: `${orbView.age}` },
+            { label: "Grösse", value: `${height} cm` },
+            { label: "Level", value: orbView.level },
+            { label: "Sportarten", value: orbView.sports.join(", ") },
+            { label: "Stadt", value: orbView.city },
+            { label: "Matchscore", value: `${orbView.score}` },
+            { label: "Bilanz", value: `${orbView.matches} Spiele · ${orbView.winrate}` },
           ];
-          const checkRows = ["Profile Recovery", "Payments", "Signless Transactions"];
+          const extraPhotos = (orbView.gallery ?? []).filter((g) => g !== orbView.img);
           return (
             <div className="fixed inset-0 z-[70] mx-auto flex max-w-[430px] flex-col overflow-hidden bg-neutral-950" onClick={() => setOrbView(null)}>
               {/* Kopfzeile */}
@@ -1107,38 +1107,43 @@ export default function Mockup2Screen() {
               </div>
               <h1 className="px-5 pt-5 text-[46px] font-extrabold leading-[0.92] tracking-tight text-white/25">Select<br />Profile</h1>
 
-              {/* Weisse Profil-Karte */}
-              <div className="mt-auto p-3.5" onClick={(e) => e.stopPropagation()}>
-                <div className="rounded-[26px] bg-white p-5 pb-4 shadow-2xl">
-                  <img src={orbView.img} alt="" className="h-12 w-12 rounded-2xl object-cover" />
-                  <h2 className="mt-2.5 text-[42px] font-extrabold leading-none tracking-tight text-neutral-900">Profile</h2>
+              {/* Weisse Profil-Karte (scrollbar → Galerie beim Runterscrollen) */}
+              <div className="mt-auto max-h-[82vh] overflow-hidden p-3.5" onClick={(e) => e.stopPropagation()}>
+                <div className="max-h-[calc(82vh-28px)] overflow-y-auto rounded-[26px] bg-white p-5 pb-4 shadow-2xl">
+                  {/* Kopf: Vorname links, Profilbild oben rechts im Kreis */}
+                  <div className="flex items-start justify-between">
+                    <h2 className="text-[42px] font-extrabold leading-none tracking-tight text-neutral-900">{orbView.name}</h2>
+                    <img src={orbView.img} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                  </div>
 
-                  <div className="mt-4 space-y-3">
-                    {idRows.map((r) => (
+                  <div className="mt-5 space-y-3">
+                    {rows.map((r) => (
                       <div key={r.label} className="flex items-center justify-between">
                         <span className="text-[15px] text-neutral-500">{r.label}</span>
-                        <span className="flex items-center gap-1.5 text-[15px] font-semibold text-neutral-900">
-                          {r.value}
-                          {r.copy && <Icon path="M9 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" size={15} />}
-                        </span>
-                      </div>
-                    ))}
-                    {checkRows.map((label) => (
-                      <div key={label} className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-[15px] text-neutral-500">
-                          {label}
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-300"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
-                        </span>
-                        <Icon path="M5 13l4 4L19 7" size={18} />
+                        <span className="text-[15px] font-semibold text-neutral-900">{r.value}</span>
                       </div>
                     ))}
                   </div>
+
+                  {orbView.bio && <p className="mt-4 text-[13.5px] leading-relaxed text-neutral-500">{orbView.bio}</p>}
 
                   <div className="mt-4 flex gap-2.5">
                     <button type="button" className="flex-1 rounded-full bg-neutral-900 py-3.5 text-[15px] font-bold text-white">Verbinden</button>
                     <button type="button" onClick={() => setOrbView(null)} className="flex-1 rounded-full border border-black/15 py-3.5 text-[15px] font-bold text-neutral-900">Schliessen</button>
                   </div>
                   <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">Zuletzt aktiv auf Matchup · vor 4 Min.</p>
+
+                  {/* Weitere Fotos */}
+                  {extraPhotos.length > 0 && (
+                    <div className="mt-5 border-t border-black/[0.07] pt-4">
+                      <p className="mb-2.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">Fotos</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {extraPhotos.map((g, i) => (
+                          <img key={i} src={g} alt="" className="aspect-square w-full rounded-2xl object-cover" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
