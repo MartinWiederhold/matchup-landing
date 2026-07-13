@@ -29,7 +29,7 @@ import {
 } from "../shared/icons";
 import AvatarCropper from "../shared/AvatarCropper";
 import ServicesNearStep from "./ServicesNearStep";
-import { CountrySelect, DobPicker } from "./pickers";
+import { CountrySelect, DobInput } from "./pickers";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -181,10 +181,20 @@ export default function OnboardingFlow() {
     }
     setLocLoading(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5`,
-      );
-      setLocResults(await res.json());
+      // Land-Bias: Treffer im (Standard-)Land des Nutzers zuerst — sonst liefert
+      // Nominatim bei PLZ wie "8001" wahllose Orte weltweit. Fällt global zurück,
+      // falls im Land zu wenige Treffer.
+      const cc = (state.country || "CH").toLowerCase();
+      const base = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6";
+      const [local, global] = await Promise.all([
+        fetch(`${base}&countrycodes=${cc}&q=${encodeURIComponent(q)}`).then((r) => r.json()).catch(() => []),
+        fetch(`${base}&q=${encodeURIComponent(q)}`).then((r) => r.json()).catch(() => []),
+      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const seen = new Set((local as any[]).map((x) => x.place_id));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const merged = [...(local as any[]), ...(global as any[]).filter((x) => !seen.has(x.place_id))].slice(0, 6);
+      setLocResults(merged);
     } catch {
       setLocResults([]);
     } finally {
@@ -759,7 +769,7 @@ export default function OnboardingFlow() {
                 <label className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldBirthdate")}</label>
                 {state.age != null && <span className="text-sm font-bold text-matchup">{t("onboarding.ageYears", { age: state.age })}</span>}
               </div>
-              <DobPicker value={state.birthdate} locale={state.language} onChange={(iso) => dispatch({ type: "SET_BIRTHDATE", payload: iso })} />
+              <DobInput value={state.birthdate} locale={state.language} onChange={(iso) => dispatch({ type: "SET_BIRTHDATE", payload: iso })} />
               {state.birthdate && state.age != null && state.age < 18 && (
                 <p className="mt-1 text-sm text-amber-600">{t("onboarding.ageMin")}</p>
               )}
@@ -811,8 +821,9 @@ export default function OnboardingFlow() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/onboarding/tour.jpg" alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5 text-[15px] font-bold text-neutral-900">
+                  <span className="flex flex-wrap items-center gap-1.5 text-[15px] font-bold text-neutral-900">
                     {t("onboarding.forkTour")}
+                    <span className="rounded-full bg-matchup/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-matchup">{t("onboarding.forkTennisOnly")}</span>
                     {!tourOk && <span className="rounded-full bg-black/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.soon")}</span>}
                   </span>
                   <span className="mt-0.5 block text-[12px] leading-snug text-neutral-500">{t("onboarding.forkTourDesc")}</span>

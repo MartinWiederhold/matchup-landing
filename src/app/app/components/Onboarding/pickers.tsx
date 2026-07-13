@@ -95,6 +95,45 @@ export function CountrySelect({ value, onChange, placeholder, locale = "de" }: {
   );
 }
 
+/** Einfache Geburtsdatum-Eingabe per Tastatur: TT.MM.JJJJ, Punkte automatisch. */
+export function DobInput({ value, onChange, locale = "de" }: {
+  value: string; onChange: (iso: string) => void; locale?: string;
+}) {
+  // ISO (yyyy-mm-dd) → Anzeige (dd.mm.yyyy)
+  const initial = (() => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+    return m ? `${m[3]}.${m[2]}.${m[1]}` : "";
+  })();
+  const [text, setText] = useState(initial);
+
+  function handle(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, 8);
+    let out = digits;
+    if (digits.length >= 5) out = `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
+    else if (digits.length >= 3) out = `${digits.slice(0, 2)}.${digits.slice(2)}`;
+    setText(out);
+    if (digits.length === 8) {
+      const d = +digits.slice(0, 2), mo = +digits.slice(2, 4), y = +digits.slice(4);
+      const dt = new Date(y, mo - 1, d);
+      const valid = dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d && y >= 1920 && y <= new Date().getFullYear();
+      onChange(valid ? `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}` : "");
+    } else {
+      onChange("");
+    }
+  }
+
+  return (
+    <input
+      value={text}
+      onChange={(e) => handle(e.target.value)}
+      inputMode="numeric"
+      autoComplete="bday"
+      placeholder={locale === "de" ? "TT.MM.JJJJ" : "DD.MM.YYYY"}
+      className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup"
+    />
+  );
+}
+
 /** Moderner Geburtsdatum-Picker: Tag / Monat / Jahr als Dropdowns. */
 export function DobPicker({ value, onChange, locale = "de" }: {
   value: string; onChange: (iso: string) => void; locale?: string;
