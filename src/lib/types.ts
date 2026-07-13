@@ -503,6 +503,8 @@ export interface TourProfile {
   injury_months: number | null; // Dauer der Verletzungspause in Monaten
   team: TeamMember[];
   season_budget: number | null; // Saisonbudget (optional)
+  circuits: string[]; // verfolgte Circuits (pro/itf/national_ch/juniors/seniors/utr/padel)
+  age_category: string | null; // Open | U12 … | 35+ …
   calendar_connected: boolean;
   created_at?: string;
   updated_at?: string;

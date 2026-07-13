@@ -19,6 +19,7 @@ import { games } from "./games";
 import { groups } from "./groups";
 import { community } from "./community";
 import { services } from "./services";
+import { tourCal } from "./tourCal";
 import { profile } from "./profile";
 import { support } from "./support";
 import { waitlist } from "./waitlist";
@@ -46,6 +47,7 @@ const namespaces: Record<string, Namespace> = {
   groups,
   community,
   services,
+  tourCal,
   profile,
   support,
   waitlist,

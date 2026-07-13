@@ -120,6 +120,7 @@ export default function TourProfileTab() {
         <Row icon="M3 9l1-5h16l1 5M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M3 9h18M9 13h6" label={t("services.title")} onClick={() => openSubView({ type: "services" })} />
         <Row icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" label={t("services.myTeam")} onClick={() => openSubView({ type: "my-team" })} />
         <Row icon="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" label={t("mode.scheduleTitle")} onClick={() => openSubView({ type: "tour-schedule" })} />
+        <Row icon="M6 2h12v6a6 6 0 0 1-12 0V2zM6 8H4a2 2 0 0 1-2-2V4h4M18 8h2a2 2 0 0 0 2-2V4h-4M9 21h6M12 15v6" label={t("tourCal.title")} onClick={() => openSubView({ type: "tournament-finder" })} />
         <Row icon="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v4l2.5 2.5" label={t("mode.editProfileTitle")} onClick={() => openSubView({ type: "tour-profile-edit" })} />
         {playerCount > 0 && (
           <Row icon="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" label={t("mode.myPlayers")} right={<span className="text-[11px] font-bold text-matchup">{playerCount}</span>} onClick={() => openSubView({ type: "tour-players" })} />

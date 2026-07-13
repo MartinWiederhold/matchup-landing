@@ -1,0 +1,26 @@
+export const tourCal = {
+  de: {
+    title: "Turniere finden",
+    finderSub: "ITF, national, Junioren, Senioren, UTR — alle Kalender",
+    intro: "Wähle deine Circuits und Alterskategorie — wir zeigen dir die passenden offiziellen Turnierkalender. Fast alle Verbände haben keine offene Schnittstelle, daher verlinken wir direkt auf die richtige Kalender-Seite.",
+    yourCircuits: "Deine Circuits",
+    ageCategory: "Alterskategorie",
+    ageOpen: "Aktiv / Open",
+    saved: "Gespeichert ✓",
+    calendars: "Offizielle Kalender",
+    openFor: "Kalender für {cat} öffnen",
+    disclaimer: "Die Kalender liegen bei den Verbänden (ITF, Swiss Tennis, Tennis Europe, FIP, UTR). Wir verlinken nur — Anmeldung und Meldung laufen dort.",
+  },
+  en: {
+    title: "Find tournaments",
+    finderSub: "ITF, national, juniors, seniors, UTR — every calendar",
+    intro: "Pick your circuits and age category — we show you the right official tournament calendars. Almost no federation offers an open API, so we link directly to the correct calendar page.",
+    yourCircuits: "Your circuits",
+    ageCategory: "Age category",
+    ageOpen: "Open / Adult",
+    saved: "Saved ✓",
+    calendars: "Official calendars",
+    openFor: "Open calendar for {cat}",
+    disclaimer: "The calendars live with the federations (ITF, Swiss Tennis, Tennis Europe, FIP, UTR). We only link — entry and sign-up happen there.",
+  },
+};

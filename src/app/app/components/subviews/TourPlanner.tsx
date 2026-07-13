@@ -127,6 +127,18 @@ export default function TourPlanner() {
               </div>
             )}
 
+            {/* Turnier-Finder für alle Levels (ITF, national, Junioren, Senioren, UTR) */}
+            <button type="button" onClick={() => openSubView({ type: "tournament-finder" })} className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-black/[0.08] p-4 text-left">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-matchup">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2h12v6a6 6 0 0 1-12 0V2zM6 8H4a2 2 0 0 1-2-2V4h4M18 8h2a2 2 0 0 0 2-2V4h-4M9 21h6M12 15v6" /></svg>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-bold text-neutral-900">{t("tourCal.title")}</span>
+                <span className="block text-[12px] text-neutral-500">{t("tourCal.finderSub")}</span>
+              </span>
+              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+
             {/* This week */}
             {thisWeek && (
               <>

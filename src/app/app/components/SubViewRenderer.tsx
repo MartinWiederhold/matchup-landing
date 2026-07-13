@@ -27,6 +27,7 @@ import TourTournament from "./subviews/TourTournament";
 import ServiceProviderDetail from "./subviews/ServiceProviderDetail";
 import MyTeam from "./subviews/MyTeam";
 import ProviderListingForm from "./subviews/ProviderListingForm";
+import TournamentFinder from "./subviews/TournamentFinder";
 import GameRequests from "./subviews/GameRequests";
 import Comments from "./subviews/Comments";
 import CreatePost from "./subviews/CreatePost";
@@ -112,6 +113,8 @@ export default function SubViewRenderer({
       return <MyTeam />;
     case "list-provider":
       return <ProviderListingForm />;
+    case "tournament-finder":
+      return <TournamentFinder />;
     default:
       return null;
   }
