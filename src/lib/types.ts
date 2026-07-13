@@ -432,6 +432,7 @@ export interface OnboardingState {
   esta_status: string | null; // 'ESTA' | 'B-1' | 'P-1' | 'None'
   esta_date: string; // ISO yyyy-mm-dd (Ablauf)
   team: TeamMember[];
+  season_budget: number | null; // Saisonbudget (optional)
   calendar_connected: boolean;
 }
 
@@ -501,6 +502,7 @@ export interface TourProfile {
   last_event_date: string | null; // ISO — letztes Turnier vor der Verletzung (für Protected Ranking)
   injury_months: number | null; // Dauer der Verletzungspause in Monaten
   team: TeamMember[];
+  season_budget: number | null; // Saisonbudget (optional)
   calendar_connected: boolean;
   created_at?: string;
   updated_at?: string;

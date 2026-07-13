@@ -344,6 +344,7 @@ export default function MapView() {
   const [profileUser, setProfileUser] = useState<string | null>(null); // App-Anmeldung → DB-Sync
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const profileReady = useRef(false);
+  const initialTabSet = useRef(false);
 
   // Auf angemeldeten Nutzer anwenden: DB-Profil laden, sonst lokales Profil in die DB migrieren.
   const applyUser = useCallback(async (uid: string | null, email: string | null) => {
@@ -357,6 +358,14 @@ export default function MapView() {
         const local = loadProfile(); // erstes Sichern: lokales Profil übernehmen
         setProfile(local);
         await saveProfileRemote(uid, local);
+      }
+      // Tour-Nutzer starten auf „Saison planen", Play-Nutzer auf „Entdecken".
+      if (!initialTabSet.current) {
+        initialTabSet.current = true;
+        try {
+          const { data: pr } = await supabase.from("profiles").select("mode").eq("id", uid).maybeSingle();
+          if ((pr as { mode?: string } | null)?.mode === "tour") setTab("season");
+        } catch { /* ignore */ }
       }
     } else {
       setProfile(loadProfile());

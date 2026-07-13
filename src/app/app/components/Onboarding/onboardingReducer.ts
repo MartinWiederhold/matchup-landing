@@ -38,6 +38,7 @@ export const initialOnboardingState: OnboardingState = {
   esta_status: null,
   esta_date: "",
   team: [],
+  season_budget: null,
   calendar_connected: false,
 };
 
@@ -45,14 +46,15 @@ export const initialOnboardingState: OnboardingState = {
 export type StepId =
   | "welcome" | "language" | "sports" | "location" | "services" | "club" | "identity" | "fork"
   | "skill" | "height" | "goals" | "photos"
-  | "circuit" | "ranking" | "passport" | "team" | "calendar";
+  | "circuit" | "ranking" | "budget" | "passport" | "team" | "calendar";
 
 // Fork (Play/Tour) kommt FRÜH — direkt nach Welcome + Sprache. Danach sammeln
 // beide Pfade die für das Profil nötigen Daten (Sport/Ort/Club/Identität, DB-Pflicht)
 // plus ihre modus-spezifischen Schritte.
 const PRE: StepId[] = ["welcome", "language", "fork"];
 const PLAY: StepId[] = ["sports", "location", "club", "identity", "skill", "height", "goals", "photos"];
-const TOUR: StepId[] = ["sports", "location", "services", "club", "identity", "circuit", "ranking", "passport", "team", "calendar", "photos"];
+// Tour: kein Sport-Schritt (Tour = Tennis, automatisch gesetzt) und kein Club-Schritt.
+const TOUR: StepId[] = ["location", "services", "identity", "circuit", "ranking", "budget", "passport", "team", "calendar", "photos"];
 
 /** Sichtbare Schritte je nach gewähltem Modus. */
 export function visibleSteps(state: OnboardingState): StepId[] {
@@ -116,6 +118,7 @@ export type Action =
   | { type: "SET_TAX_RESIDENCE"; payload: string }
   | { type: "SET_ESTA"; payload: { status?: string | null; date?: string } }
   | { type: "SET_TEAM"; payload: TeamMember[] }
+  | { type: "SET_BUDGET"; payload: number | null }
   | { type: "SET_CALENDAR"; payload: boolean }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" };
@@ -182,7 +185,8 @@ export function onboardingReducer(
         visibility_age_max: action.payload.ageMax,
       };
     case "SET_MODE":
-      return { ...state, onb_mode: action.payload };
+      // Tour = nur Tennis → Sport automatisch setzen (kein Sport-Schritt im Tour-Pfad).
+      return { ...state, onb_mode: action.payload, sports: action.payload === "tour" ? ["tennis"] : state.sports };
     case "SET_CIRCUIT":
       return { ...state, circuit: action.payload };
     case "SET_TOUR_RANKING":
@@ -201,6 +205,8 @@ export function onboardingReducer(
       };
     case "SET_TEAM":
       return { ...state, team: action.payload };
+    case "SET_BUDGET":
+      return { ...state, season_budget: action.payload };
     case "SET_CALENDAR":
       return { ...state, calendar_connected: action.payload };
     case "NEXT_STEP":
@@ -253,8 +259,10 @@ export function isStepValid(state: OnboardingState): boolean {
       return state.circuit !== null;
     case "ranking":
       return state.tour_ranking !== null && state.tour_ranking > 0;
+    case "budget":
+      return true; // optional — später im Profil möglich
     case "passport":
-      return state.passports.filter((p) => p.trim()).length >= 1;
+      return true; // optional — später im Profil möglich
     case "team":
       return true; // optional
     case "calendar":

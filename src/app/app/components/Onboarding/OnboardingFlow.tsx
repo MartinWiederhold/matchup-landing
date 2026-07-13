@@ -29,6 +29,7 @@ import {
 } from "../shared/icons";
 import AvatarCropper from "../shared/AvatarCropper";
 import ServicesNearStep from "./ServicesNearStep";
+import { CountrySelect, DobPicker } from "./pickers";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -360,6 +361,7 @@ export default function OnboardingFlow() {
             esta_status: state.esta_status,
             esta_expiry: state.esta_date || null,
             team: state.team,
+            season_budget: state.season_budget,
             calendar_connected: state.calendar_connected,
           });
         } catch {
@@ -440,7 +442,8 @@ export default function OnboardingFlow() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white text-neutral-900">
-      {/* Progress + Header */}
+      {/* Progress + Header — auf dem Welcome-Screen ausgeblendet (Video im Vollbild) */}
+      {cur !== "welcome" && (
       <div className="px-5 pt-5">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/[0.04]">
           <div
@@ -465,12 +468,13 @@ export default function OnboardingFlow() {
           </span>
         </div>
       </div>
+      )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-8">
-        {/* Step 1 — Welcome */}
+      <div className={`flex-1 overflow-y-auto ${cur === "welcome" ? "" : "px-5 py-8"}`}>
+        {/* Step 1 — Welcome (Vollbild-Video) */}
         {cur === "welcome" && (
-          <div className="relative flex h-full min-h-[68vh] flex-col items-center justify-center overflow-hidden rounded-[28px] text-center">
+          <div className="relative flex h-full min-h-[75vh] flex-col items-center justify-center overflow-hidden text-center">
             {/* Titelvideo im Hintergrund */}
             <video className="pointer-events-none absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline poster="/hero-poster.jpg" aria-hidden="true">
               <source src="/hero.mp4" type="video/mp4" />
@@ -755,14 +759,7 @@ export default function OnboardingFlow() {
                 <label className="text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.fieldBirthdate")}</label>
                 {state.age != null && <span className="text-sm font-bold text-matchup">{t("onboarding.ageYears", { age: state.age })}</span>}
               </div>
-              <input
-                type="date"
-                value={state.birthdate}
-                max={new Date(Date.now() - 18 * 365.25 * 86400000).toISOString().slice(0, 10)}
-                min="1930-01-01"
-                onChange={(e) => dispatch({ type: "SET_BIRTHDATE", payload: e.target.value })}
-                className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup"
-              />
+              <DobPicker value={state.birthdate} locale={state.language} onChange={(iso) => dispatch({ type: "SET_BIRTHDATE", payload: iso })} />
               {state.birthdate && state.age != null && state.age < 18 && (
                 <p className="mt-1 text-sm text-amber-600">{t("onboarding.ageMin")}</p>
               )}
@@ -869,30 +866,37 @@ export default function OnboardingFlow() {
           </Step>
         )}
 
+        {/* Tour — Saisonbudget (optional) */}
+        {cur === "budget" && (
+          <Step title={t("onboarding.budgetTitle")} subtitle={t("onboarding.budgetSubtitle")}>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.budgetLabel")}</label>
+            <div className="flex items-center gap-2 rounded-xl bg-black/[0.04] px-4 py-3.5">
+              <span className="text-sm font-semibold text-neutral-400">CHF</span>
+              <input
+                inputMode="numeric"
+                value={state.season_budget ?? ""}
+                onChange={(e) => {
+                  const n = e.target.value.replace(/[^0-9]/g, "");
+                  dispatch({ type: "SET_BUDGET", payload: n ? Number(n) : null });
+                }}
+                placeholder="0"
+                className="w-full bg-transparent text-sm text-neutral-900 outline-none"
+              />
+            </div>
+            <p className="mt-3 rounded-xl bg-black/[0.035] px-3 py-2 text-[12px] text-neutral-500">{t("onboarding.budgetHint")}</p>
+          </Step>
+        )}
+
         {/* Tour — Pässe + Steuerresidenz + ESTA */}
         {cur === "passport" && (
           <Step title={t("onboarding.passportTitle")} subtitle={t("onboarding.passportSubtitle")}>
+            <p className="mb-3 rounded-xl bg-black/[0.035] px-3 py-2 text-[12px] text-neutral-500">{t("onboarding.passportOptional")}</p>
             <InfoLabel text={t("onboarding.passportPrimary")} info={t("onboarding.passportPrimaryInfo")} id="pp" openInfo={openInfo} setOpenInfo={setOpenInfo} />
-            <input
-              value={state.passports[0] ?? ""}
-              onChange={(e) => dispatch({ type: "SET_PASSPORTS", payload: [e.target.value, state.passports[1] ?? ""] })}
-              placeholder={t("onboarding.passportPlaceholder")}
-              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
-            />
+            <CountrySelect value={state.passports[0] ?? ""} locale={state.language} placeholder={t("onboarding.passportSearch")} onChange={(v) => dispatch({ type: "SET_PASSPORTS", payload: [v, state.passports[1] ?? ""] })} />
             <p className="pt-2 text-sm font-semibold">{t("onboarding.passportSecond")}</p>
-            <input
-              value={state.passports[1] ?? ""}
-              onChange={(e) => dispatch({ type: "SET_PASSPORTS", payload: [state.passports[0] ?? "", e.target.value] })}
-              placeholder={t("onboarding.passportAdd")}
-              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
-            />
+            <CountrySelect value={state.passports[1] ?? ""} locale={state.language} placeholder={t("onboarding.passportSearch")} onChange={(v) => dispatch({ type: "SET_PASSPORTS", payload: [state.passports[0] ?? "", v] })} />
             <InfoLabel text={t("onboarding.taxResidence")} info={t("onboarding.taxResidenceInfo")} id="tax" openInfo={openInfo} setOpenInfo={setOpenInfo} className="pt-2" />
-            <input
-              value={state.tax_residence}
-              onChange={(e) => dispatch({ type: "SET_TAX_RESIDENCE", payload: e.target.value })}
-              placeholder={t("onboarding.taxPlaceholder")}
-              className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-matchup"
-            />
+            <CountrySelect value={state.tax_residence} locale={state.language} placeholder={t("onboarding.passportSearch")} onChange={(v) => dispatch({ type: "SET_TAX_RESIDENCE", payload: v })} />
             <InfoLabel text={t("onboarding.usAuth")} info={t("onboarding.usAuthInfo")} id="us" openInfo={openInfo} setOpenInfo={setOpenInfo} className="pt-2" />
             <div className="flex flex-wrap gap-2">
               {["ESTA", "B-1", "P-1", "None"].map((o) => (
@@ -948,6 +952,15 @@ export default function OnboardingFlow() {
         {/* Tour — Kalender */}
         {cur === "calendar" && (
           <Step title={t("onboarding.calendarTitle")} subtitle={t("onboarding.calendarSubtitle")}>
+            <div className="mb-3 rounded-2xl bg-matchup/[0.06] p-3.5">
+              <p className="text-[13px] font-semibold text-neutral-800">{t("onboarding.calendarHowTitle")}</p>
+              <ul className="mt-1.5 space-y-1 text-[12.5px] leading-snug text-neutral-600">
+                <li>• {t("onboarding.calendarHow1")}</li>
+                <li>• {t("onboarding.calendarHow2")}</li>
+                <li>• {t("onboarding.calendarHow3")}</li>
+              </ul>
+              <p className="mt-2 text-[11px] text-neutral-400">{t("onboarding.calendarPrivacy")}</p>
+            </div>
             <SelectRow selected={state.calendar_connected} onClick={() => dispatch({ type: "SET_CALENDAR", payload: true })}>
               <span className="block font-semibold">Google Calendar</span>
               <span className="block text-xs text-neutral-500">{t("onboarding.calendarGoogleDesc")}</span>
@@ -1171,7 +1184,9 @@ export default function OnboardingFlow() {
               {state.bio.length}/300
             </p>
 
-            {/* Visibility */}
+            {/* Visibility — nur Play (Tour braucht kein „wer kann mich finden") */}
+            {state.onb_mode !== "tour" && (
+            <>
             <p className="pt-4 text-sm font-semibold">{t("onboarding.whoCanFindYou")}</p>
             <div className="flex gap-3">
               {[
@@ -1216,6 +1231,8 @@ export default function OnboardingFlow() {
                 />
               </div>
             </div>
+            </>
+            )}
 
             {submitError && (
               <div className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-600">
