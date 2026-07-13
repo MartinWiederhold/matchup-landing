@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type P = { name: string; country: string | null; flag: string | null; seed: number | null; sets: number[]; won: boolean };
 type M = { round: string; court: string | null; state: "pre" | "in" | "post"; statusText: string; date: string | null; players: P[] };
@@ -152,8 +153,26 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
   }, [day, open, catKey]);
 
   const t = data?.tournament;
-  const logo = t?.name ? slamLogo(t.name) : null;
   const liveAny = cats.some((c) => c.matches.some((m) => m.state === "in"));
+
+  // Turnier-Logo automatisch: erst Slam-Fallback, dann echte Domain aus web.tournaments
+  // (Namensabgleich) → Google-Favicon. Fällt bei Fehler auf das generische Icon zurück.
+  const [logo, setLogo] = useState<string | null>(null);
+  const [logoOk, setLogoOk] = useState(true);
+  useEffect(() => {
+    const name = t?.name;
+    setLogoOk(true);
+    if (!name) { setLogo(null); return; }
+    let alive = true;
+    setLogo(slamLogo(name));
+    supabase.from("tournaments").select("url").ilike("name", name).not("url", "is", null).limit(1)
+      .then(({ data: rows }) => {
+        if (!alive) return;
+        const url = (rows?.[0] as { url?: string } | undefined)?.url;
+        if (url) { try { setLogo(`https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`); setLogoOk(true); } catch { /* ignore */ } }
+      });
+    return () => { alive = false; };
+  }, [t?.name]);
 
   return (
     <div className={`mt-4 overflow-hidden rounded-[24px] ${cx.ring} ${cx.outer}`}>
@@ -161,8 +180,8 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
       <div className={`${cx.headerBg} px-4 pt-4`}>
         <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 pb-4 text-left">
           <span className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/10 ${cx.badge}`}>
-            {logo ? (
-              <img src={logo} alt="" className="h-7 w-7 object-contain" />
+            {logo && logoOk ? (
+              <img src={logo} alt="" onError={() => setLogoOk(false)} className="h-7 w-7 object-contain" />
             ) : (
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4b3bf3" strokeWidth="1.7" strokeLinecap="round">
                 <path d="M7 3l4 8M17 3l-4 8M4 6l6 4M20 6l-6 4" />
