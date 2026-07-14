@@ -54,7 +54,7 @@ export default async function ComparePage() {
       <SeasonJourney />
 
       {/* Feature-Grid (dunkel, animierte Karten) */}
-      <section className="bg-neutral-950 px-4 py-24 text-white sm:px-6 lg:px-12">
+      <section className="bg-neutral-950 px-4 pb-24 pt-40 text-white sm:px-6 lg:px-12 sm:pt-48">
         <div className="mx-auto max-w-[1280px]">
           <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
             {t("landing.competeSectionTitle")}
