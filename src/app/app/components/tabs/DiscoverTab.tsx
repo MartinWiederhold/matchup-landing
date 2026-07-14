@@ -137,7 +137,7 @@ export default function DiscoverTab() {
       .select("*")
       .eq("is_paused", false)
       .eq("is_banned", false)
-      .eq("is_seed", false)
+      // Seed-/Demo-Profile bleiben sichtbar (App populated); Admin trennt sie über is_seed.
       .order("last_active", { ascending: false })
       .limit(200);
 
