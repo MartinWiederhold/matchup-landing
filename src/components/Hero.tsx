@@ -104,7 +104,7 @@ export default function Hero() {
 
       <div className="relative mx-auto flex min-h-[calc(100svh-68px-44px)] max-w-[1600px] flex-col px-4 py-10 sm:py-12 sm:px-6 lg:px-12">
         <div className="flex flex-1 flex-col justify-center">
-          <h1 className="max-w-5xl text-[2.75rem] font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[6.5rem]">
+          <h1 className="max-w-5xl whitespace-pre-line text-[2.75rem] font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[6.5rem]">
             {t("landing.heroTitle")}
           </h1>
           <p className="mt-7 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
