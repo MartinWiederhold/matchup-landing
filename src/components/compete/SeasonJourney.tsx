@@ -14,7 +14,7 @@ const PATH: [number, number][] = [
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];       // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 66, pinY: 90, cx: 0.30 };  // Weganfang (Heimbasis), Karte links-mittig
+const START = { pinX: 84, pinY: 95, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
