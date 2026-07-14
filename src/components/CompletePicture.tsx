@@ -268,7 +268,7 @@ export default function CompletePicture() {
         </div>
 
         {/* PLAY */}
-        <div className="mt-14 flex items-baseline gap-3">
+        <div className="mt-14 flex flex-col items-start gap-2.5">
           <span className="rounded-full bg-matchup/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-matchup">{t("landing.playSectionLabel")}</span>
           <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{t("landing.playSectionTitle")}</h3>
         </div>
@@ -280,7 +280,7 @@ export default function CompletePicture() {
 
         {/* COMPETE */}
         <div className="mt-16 overflow-hidden rounded-3xl bg-neutral-950 p-8 text-white sm:p-12">
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-col items-start gap-2.5">
             <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white">{t("landing.competeSectionLabel")}</span>
             <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{t("landing.competeSectionTitle")}</h3>
           </div>
