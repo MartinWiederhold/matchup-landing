@@ -73,12 +73,12 @@ export const landing = {
     // HealthStats
     statsTitle: "Eine wachsende Community von Spielern",
     statsSubtitle:
-      "Ob Anfänger oder Wettkampfspieler, auf Matchup findest du Partner auf deinem Level, in deiner Sportart und in deiner Nähe.",
-    statsTitleA: "Eine wachsende Community",
-    statsTitleB: "von Spielern",
-    statSports: "Tennis, Padel & Pickleball",
-    statClubs: "Clubs weltweit auf der Karte",
-    statCountries: "Länder weltweit vernetzt",
+      "Play oder Compete — Matchup wächst mit dir. Vom ersten Match in deiner Nähe bis zur durchgeplanten Wettkampfsaison.",
+    statsTitleA: "Für Hobby",
+    statsTitleB: "und Wettkampf gebaut",
+    statSports: "Sportarten: Tennis, Padel & Pickleball",
+    statClubs: "Clubs & Turnierorte auf der Karte",
+    statCountries: "Länder — Ranking von LK bis UTR",
 
     // Showcase
     securityEyebrow: "SICHERHEIT",
@@ -173,12 +173,12 @@ export const landing = {
 
     statsTitle: "A growing community of players",
     statsSubtitle:
-      "Whether you're a beginner or a competitor, on Matchup you'll find partners at your level, in your sport and near you.",
-    statsTitleA: "A growing community",
-    statsTitleB: "of players",
-    statSports: "Tennis, padel & pickleball",
-    statClubs: "Clubs worldwide on the map",
-    statCountries: "Countries connected worldwide",
+      "Play or Compete — Matchup grows with you. From your first match nearby to a fully planned competitive season.",
+    statsTitleA: "Built for players",
+    statsTitleB: "and competitors",
+    statSports: "Sports: tennis, padel & pickleball",
+    statClubs: "Clubs & tournament venues on the map",
+    statCountries: "Countries — ranking from LK to UTR",
 
     securityEyebrow: "SECURITY",
     securityTitle: "Safe and verified",
