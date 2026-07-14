@@ -541,28 +541,23 @@ export default function OnboardingFlow() {
             title={t("onboarding.sportsTitle")}
             subtitle={t("onboarding.sportsSubtitle")}
           >
-            <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
               {SPORTS.map((s) => {
                 const active = state.sports.includes(s.value);
                 return (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_SPORTS", payload: toggleArray(state.sports, s.value) })}
-                    className={`relative flex h-24 w-full items-end overflow-hidden rounded-2xl text-left transition-all ${active ? "ring-2 ring-matchup ring-offset-2" : ""}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={s.img} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/25 to-transparent" />
-                    <div className="relative z-10 flex items-center gap-2 p-4 text-white">
-                      <SportIcon sport={s.value} size={20} />
-                      <span className="text-[17px] font-bold">{t(s.labelKey)}</span>
-                    </div>
-                    {active && (
-                      <span className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-matchup text-white">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
-                      </span>
-                    )}
+                  <button key={s.value} type="button" onClick={() => dispatch({ type: "SET_SPORTS", payload: toggleArray(state.sports, s.value) })} className="flex flex-col items-center gap-2">
+                    <span className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-black/[0.04] transition-all ${active ? "ring-2 ring-matchup ring-offset-2" : ""}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={s.img} alt="" className="h-full w-full object-contain" />
+                      {active && (
+                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-matchup text-white shadow">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+                        </span>
+                      )}
+                    </span>
+                    <span className={`flex items-center gap-1 text-[13px] font-bold ${active ? "text-matchup" : "text-neutral-700"}`}>
+                      <SportIcon sport={s.value} size={14} /> {t(s.labelKey)}
+                    </span>
                   </button>
                 );
               })}
