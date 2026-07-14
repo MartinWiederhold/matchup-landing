@@ -11,6 +11,7 @@ const PATH: [number, number][] = [
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [7, 10]; // Punkt am Wegende (Ziel/Flag)
+const START = { pinX: 64, pinY: 95, side: "l" as const }; // Weganfang (Heimbasis)
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * Logo = echtes Turnier-Favicon (tournamentLogo), Farbe = Tier-Farbe (wie auf der Map). */
@@ -143,6 +144,15 @@ export default function SeasonJourney() {
               className="absolute inset-0 h-full w-full object-cover"
             />
 
+            {/* START-Knoten am Weganfang (grosser weisser Kreis, immer sichtbar) */}
+            <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${START.pinX}%`, top: `${START.pinY}%` }}>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_0_22px_rgba(255,255,255,0.85)]">
+                <svg width="18" height="18" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+                  <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
+                </svg>
+              </span>
+            </span>
+
             {/* Marker-Kugel + Puls-Ring */}
             <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${mx}%`, top: `${my}%` }}>
               <span className="absolute inset-0 -m-3 animate-ping rounded-full bg-white/40" style={{ animationDuration: "1.8s" }} />
@@ -188,6 +198,32 @@ export default function SeasonJourney() {
               <span className="text-[11px] font-bold tabular-nums text-white/80">{doneCount}/{WAYPOINTS.length}</span>
             </div>
           </div>
+
+          {/* START-Karte am Weganfang (Heimbasis) — immer sichtbar */}
+          {box && (() => {
+            const pin = px(START.pinX, START.pinY)!;
+            const left = START.side === "l";
+            return (
+              <>
+                <div className="absolute h-px bg-white/45"
+                  style={{ top: pin.y, left: left ? 0 : pin.x, right: left ? undefined : 0, width: left ? pin.x : undefined }} />
+                <div className="absolute w-[min(42vw,236px)] -translate-y-1/2" style={{ top: pin.y, left: left ? 16 : undefined, right: left ? undefined : 16 }}>
+                  <div className="flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]">
+                      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+                        <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
+                      </svg>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#353fcc]">{lang === "de" ? "START" : "START"}</p>
+                      <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight text-neutral-900">Zürich</p>
+                      <p className="mt-0.5 truncate text-[11px] font-medium text-neutral-500">{lang === "de" ? "Heimbasis · Saisonstart" : "Home base · season start"}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Turnier-Karten in den Flanken + Leader-Lines */}
           {box && WAYPOINTS.map((w, i) => {
