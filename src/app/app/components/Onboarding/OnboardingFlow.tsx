@@ -119,7 +119,7 @@ function cityFromResult(r: NominatimResult): string {
 }
 
 export default function OnboardingFlow() {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, signOut } = useAuth();
   const t = useT();
   // Fortschritt aus sessionStorage wiederherstellen → ein (versehentlicher) Remount
   // wirft den Nutzer nicht mehr auf Schritt 1 zurück. Fotos (File[]) sind nicht
@@ -483,9 +483,14 @@ export default function OnboardingFlow() {
           ) : (
             <span />
           )}
-          <span className="text-neutral-400">
-            {t("onboarding.stepOf", { current: state.step, total })}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-400">
+              {t("onboarding.stepOf", { current: state.step, total })}
+            </span>
+            <button type="button" onClick={() => signOut()} className="text-neutral-400 underline-offset-2 hover:underline">
+              {t("onboarding.logout")}
+            </button>
+          </div>
         </div>
       </div>
       )}
@@ -500,6 +505,9 @@ export default function OnboardingFlow() {
               <source src="/hero.mp4" type="video/mp4" />
             </video>
             <div className="absolute inset-0 bg-black/55" />
+            <button type="button" onClick={() => signOut()} className="absolute right-4 top-[max(16px,env(safe-area-inset-top))] z-20 rounded-full bg-white/15 px-3.5 py-1.5 text-[12px] font-semibold text-white backdrop-blur">
+              {t("onboarding.logout")}
+            </button>
             <div className="relative z-10 px-6 text-white">
               <span className="text-4xl font-extrabold tracking-[0.2em] text-white">MATCHUP</span>
               <div className="mt-4 flex justify-center gap-4 text-white/85">

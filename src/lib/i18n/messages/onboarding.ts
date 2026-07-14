@@ -2,6 +2,7 @@ export const onboarding = {
   de: {
     // Progress / Navigation
     back: "Zurück",
+    logout: "Abmelden",
     stepOf: "{current} / {total}",
     // Step 1 — Welcome
     welcomeTitle: "Finde deinen perfekten Spielpartner",
@@ -190,6 +191,7 @@ export const onboarding = {
   en: {
     // Progress / Navigation
     back: "Back",
+    logout: "Log out",
     stepOf: "{current} / {total}",
     // Step 1 — Welcome
     welcomeTitle: "Find your perfect playing partner",
