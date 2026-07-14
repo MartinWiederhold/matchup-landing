@@ -8,7 +8,7 @@ export const landing = {
     // Hero
     heroTitle: "Finde dein Spiel.\nMeistere deine Saison.",
     heroSubtitle:
-      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe — und gibt Wettkampfspielern alles für die Saison: Turniere, Ranking, Finanzen, Deadlines. Play oder Compete — eine App.",
+      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe, und gibt Wettkampfspielern alles für die Saison: Turniere, Ranking, Finanzen, Deadlines. Play oder Compete, eine App.",
     heroCtaPrimary: "Partner finden",
     heroCtaSecondary: "Saison meistern",
     heroPlay: "Video abspielen",
@@ -109,9 +109,9 @@ export const landing = {
     promoLong: "Play or Compete — your game, your call",
     promoCta: "Get started",
 
-    heroTitle: "Find your game.\nOwn your season.",
+    heroTitle: "Find your game.\nOwn the season.",
     heroSubtitle:
-      "Matchup connects you with tennis, padel and pickleball players near you — and gives competitors everything for the season: tournaments, ranking, finances, deadlines. Play or Compete — one app.",
+      "Matchup connects you with tennis, padel and pickleball players near you, and gives competitors everything for the season: tournaments, ranking, finances, deadlines. Play or Compete, one app.",
     heroCtaPrimary: "Find a partner",
     heroCtaSecondary: "Own your season",
     heroPlay: "Play video",
