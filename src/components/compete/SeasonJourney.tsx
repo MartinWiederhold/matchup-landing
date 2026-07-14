@@ -8,13 +8,16 @@ import {
   type Tournament,
 } from "@/lib/tournaments";
 
-/* Grob nachgezeichneter Weg (x%, y% der Bühne) von unten (Spieler) → oben (Ziel). */
+/* Grob nachgezeichneter Weg (x%, y% der Bühne) von unten (Spieler) → oben (Ziel).
+ * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
+ * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
+  [95, 88], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];       // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 84, pinY: 95, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 95, pinY: 88, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -167,9 +170,9 @@ export default function SeasonJourney() {
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
             <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${START.pinX}%`, top: `${START.pinY}%` }}>
-              <span className="absolute inset-0 -m-2 rounded-full bg-white/25 blur-md" />
-              <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_0_30px_rgba(255,255,255,0.85)]">
-                <svg width="30" height="30" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+              <span className="absolute inset-0 -m-3 rounded-full bg-white/25 blur-md" />
+              <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_0_34px_rgba(255,255,255,0.9)]">
+                <svg width="38" height="38" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
