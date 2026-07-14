@@ -12,12 +12,12 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [95, 88], // START → Person
+  [102, 95], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
-const FINISH: [number, number] = [13, 15];       // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 95, pinY: 88, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
+const START = { pinX: 102, pinY: 95, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -137,6 +137,10 @@ export default function SeasonJourney() {
   }, []);
 
   const [mx, my] = pointAt(p);
+  // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
+  const startPx = px(START.pinX, START.pinY);
+  const markerPx = px(mx, my);
+  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < 46);
   const finished = p > 0.9;
   const doneCount = WAYPOINTS.filter((w) => p >= w.at).length;
   const px = (X: number, Y: number) => box ? { x: box.l + (X / 100) * box.w, y: box.t + (Y / 100) * box.h } : null;
@@ -178,8 +182,8 @@ export default function SeasonJourney() {
               </span>
             </span>
 
-            {/* Marker-Kugel + Puls-Ring */}
-            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${mx}%`, top: `${my}%` }}>
+            {/* Marker-Kugel + Puls-Ring (erst sichtbar, wenn ausserhalb des START-Kreises) */}
+            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200" style={{ left: `${mx}%`, top: `${my}%`, opacity: insideStart ? 0 : 1 }}>
               <span className="absolute inset-0 -m-3 animate-ping rounded-full bg-white/40" style={{ animationDuration: "1.8s" }} />
               <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.95)]">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#353fcc]" />
