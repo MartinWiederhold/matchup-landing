@@ -29,7 +29,7 @@ import {
 } from "../shared/icons";
 import AvatarCropper from "../shared/AvatarCropper";
 import ServicesNearStep from "./ServicesNearStep";
-import { CountrySelect, DobInput } from "./pickers";
+import { CountrySelect, DobInput, PickerSelect } from "./pickers";
 import {
   onboardingReducer,
   initialOnboardingState,
@@ -873,17 +873,12 @@ export default function OnboardingFlow() {
                   <p className="text-[13px] font-bold text-neutral-900">{t("onboarding.tourNationalTitle")}</p>
                   <div>
                     <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingCountry")}</label>
-                    <select value={rankCountry} onChange={(e) => setRankCountry(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
-                      {RANK_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-                    </select>
+                    <PickerSelect value={rankCountry} onChange={setRankCountry} options={RANK_COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{nat.label}</label>
                     {nat.options ? (
-                      <select value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
-                        <option value="">{t("onboarding.noRating")}</option>
-                        {nat.options.map((r) => <option key={r} value={r}>{r}</option>)}
-                      </select>
+                      <PickerSelect value={state.official_rating} onChange={(v) => dispatch({ type: "SET_RATING", payload: v })} placeholder={t("onboarding.noRating")} options={[{ value: "", label: t("onboarding.noRating") }, ...nat.options.map((r) => ({ value: r, label: r }))]} />
                     ) : (
                       <input value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} placeholder={nat.placeholder} className="w-full rounded-xl bg-black/[0.04] px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-400" />
                     )}
@@ -1076,19 +1071,14 @@ export default function OnboardingFlow() {
                 {/* Land */}
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{t("onboarding.rankingCountry")}</label>
-                  <select value={rankCountry} onChange={(e) => setRankCountry(e.target.value)} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
-                    {RANK_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </select>
+                  <PickerSelect value={rankCountry} onChange={setRankCountry} options={RANK_COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} />
                 </div>
 
                 {/* Nationales System */}
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-neutral-400">{nat.label}</label>
                   {nat.options ? (
-                    <select value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup">
-                      <option value="">{t("onboarding.noRating")}</option>
-                      {nat.options.map((r) => <option key={r} value={r}>{r}</option>)}
-                    </select>
+                    <PickerSelect value={state.official_rating} onChange={(v) => dispatch({ type: "SET_RATING", payload: v })} placeholder={t("onboarding.noRating")} options={[{ value: "", label: t("onboarding.noRating") }, ...nat.options.map((r) => ({ value: r, label: r }))]} />
                   ) : (
                     <input value={state.official_rating} onChange={(e) => dispatch({ type: "SET_RATING", payload: e.target.value })} placeholder={nat.placeholder} className="w-full rounded-xl bg-black/[0.04] px-4 py-3.5 text-sm text-neutral-900 outline-none focus:ring-1 focus:ring-matchup placeholder:text-neutral-400" />
                   )}

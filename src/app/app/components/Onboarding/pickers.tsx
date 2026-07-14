@@ -95,6 +95,34 @@ export function CountrySelect({ value, onChange, placeholder, locale = "de" }: {
   );
 }
 
+/** Modernes Dropdown im Matchup-Stil (Button + Bottom-Sheet-Liste). */
+export function PickerSelect({ value, options, onChange, placeholder = "Auswählen" }: {
+  value: string; options: { value: string; label: string }[]; onChange: (v: string) => void; placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const sel = options.find((o) => o.value === value);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center justify-between rounded-xl bg-black/[0.04] px-4 py-3.5 text-left text-sm text-neutral-900">
+        <span className={sel ? "font-medium" : "text-neutral-400"}>{sel ? sel.label : placeholder}</span>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[60] mx-auto flex max-w-[430px] items-end bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)}>
+          <div className="max-h-[70vh] w-full overflow-y-auto rounded-t-[24px] bg-white p-2" onClick={(e) => e.stopPropagation()}>
+            {options.map((o) => (
+              <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-[15px] ${o.value === value ? "bg-matchup/10 font-bold text-matchup" : "text-neutral-800 hover:bg-black/[0.04]"}`}>
+                {o.label}
+                {o.value === value && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 /** Einfache Geburtsdatum-Eingabe per Tastatur: TT.MM.JJJJ, Punkte automatisch. */
 export function DobInput({ value, onChange, locale = "de" }: {
   value: string; onChange: (iso: string) => void; locale?: string;
