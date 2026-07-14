@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import PageCta from "@/components/PageCta";
 import { CompeteCard, COMPETE_FEATURES } from "@/components/CompletePicture";
+import SeasonJourney from "@/components/compete/SeasonJourney";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,6 +48,9 @@ export default async function ComparePage() {
           </p>
         </div>
       </section>
+
+      {/* Season Journey — scroll-getriebene Weg-Animation mit Turnier-Stationen */}
+      <SeasonJourney />
 
       {/* Feature-Grid (dunkel, animierte Karten) */}
       <section className="bg-neutral-950 px-4 py-24 text-white sm:px-6 lg:px-12">
