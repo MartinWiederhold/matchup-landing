@@ -14,11 +14,14 @@ const PATH: [number, number][] = [
 /* Punkt am Wegende (Ziel/Flag) — Bild-relativ in %. */
 const FINISH: [number, number] = [7, 10];
 
+type IconKey = "globe" | "slam" | "challenger" | "atp";
 type WP = {
   at: number;                 // Reveal-Schwelle (Scroll-Progress 0–1)
   pinX: number; pinY: number; // Punkt AUF dem Weg (Bild-relativ %)
   side: "l" | "r";            // in welche Flanke die Karte hängt
-  code: string;               // Kürzel im Logo-Kreis
+  icon: IconKey;              // Emblem-Icon im Kreis
+  logo?: string;              // optional: echtes Logo-Bild (überschreibt icon)
+  code: string;               // Kürzel unter dem Emblem
   ring: string;               // Kategorie-Farbe
   tier: { de: string; en: string };
   name: string;
@@ -31,7 +34,7 @@ type WP = {
 const WAYPOINTS: WP[] = [
   {
     at: 0.15, pinX: 54, pinY: 74, side: "l",
-    code: "M25", ring: "#7c8698",
+    icon: "globe", code: "M25", ring: "#6b7686",
     tier: { de: "ITF WORLD TOUR", en: "ITF WORLD TOUR" },
     name: "ITF M25 Wetzlar",
     cat: { de: "$25.000 · Sand", en: "$25,000 · Clay" },
@@ -41,7 +44,7 @@ const WAYPOINTS: WP[] = [
   },
   {
     at: 0.39, pinX: 32, pinY: 57, side: "r",
-    code: "RG", ring: "#c6432b",
+    icon: "slam", code: "RG", ring: "#c6432b",
     tier: { de: "GRAND SLAM · QUALI", en: "GRAND SLAM · QUALI" },
     name: "Roland-Garros",
     cat: { de: "Qualifikation · Sand", en: "Qualifying · Clay" },
@@ -51,7 +54,7 @@ const WAYPOINTS: WP[] = [
   },
   {
     at: 0.61, pinX: 69, pinY: 44, side: "l",
-    code: "CH", ring: "#1f9d55",
+    icon: "challenger", code: "CH", ring: "#1f9d55",
     tier: { de: "ATP CHALLENGER", en: "ATP CHALLENGER" },
     name: "Challenger Prag",
     cat: { de: "CH 75 · Sand", en: "CH 75 · Clay" },
@@ -61,7 +64,7 @@ const WAYPOINTS: WP[] = [
   },
   {
     at: 0.83, pinX: 31, pinY: 29, side: "r",
-    code: "250", ring: "#e0a500",
+    icon: "atp", code: "250", ring: "#d99400",
     tier: { de: "ATP TOUR", en: "ATP TOUR" },
     name: "ATP 250 Gstaad",
     cat: { de: "Hauptfeld · Sand", en: "Main draw · Clay" },
@@ -80,19 +83,54 @@ function pointAt(p: number): [number, number] {
   return [lerp(PATH[i][0], PATH[i + 1][0], t), lerp(PATH[i][1], PATH[i + 1][1], t)];
 }
 
-/* Runder „Logo"-Chip mit Kategorie-Farbring. */
-function LogoChip({ code, ring, size = 46 }: { code: string; ring: string; size?: number }) {
+/* Kategorie-Icon (eigenes Emblem — keine geschützten Marken). */
+function CatIcon({ icon }: { icon: IconKey }) {
+  if (icon === "globe")
+    return (
+      <g fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M3.5 12h17" />
+        <path d="M12 3.5c3 2.7 3 14.3 0 17M12 3.5c-3 2.7-3 14.3 0 17" />
+      </g>
+    );
+  if (icon === "slam") // Pokal / Grand Slam
+    return (
+      <g fill="currentColor">
+        <path d="M7 4h10v3.2a5 5 0 0 1-10 0V4Z" />
+        <path d="M11 12.4h2V16h-2z" />
+        <path d="M8.5 16.5h7L16 19H8z" />
+        <path fill="none" stroke="currentColor" strokeWidth="1.4" d="M7 5.5H5.2a2.6 2.6 0 0 0 2.6 2.9M17 5.5h1.8a2.6 2.6 0 0 1-2.6 2.9" />
+      </g>
+    );
+  if (icon === "challenger") // Aufstieg / Berg + Fahne
+    return (
+      <g fill="currentColor">
+        <path d="M3 19.5 10 6l3.4 6.2L16 8l5 11.5H3Z" />
+        <path fill="none" stroke="#fff" strokeWidth="1.3" d="M10 6.2v4.2M10 6.2l3 1-3 1.1" />
+      </g>
+    );
+  // atp — Stern
+  return (
+    <path fill="currentColor" d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.7 6.6 19.5l1.1-5.9L3.4 9.4l5.9-.8L12 3.2Z" />
+  );
+}
+
+/* Runder Turnier-Emblem: echtes Logo-Bild falls vorhanden, sonst gezeichnetes
+ * Kategorie-Emblem (weisser Kreis, Kategorie-Farbring, farbiges Icon). */
+function Emblem({ w, size = 48 }: { w: WP; size?: number }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-full bg-white font-extrabold tracking-tight"
-      style={{
-        width: size, height: size,
-        boxShadow: `0 0 0 2.5px ${ring}, 0 6px 16px -6px rgba(0,0,0,0.4)`,
-        color: ring,
-        fontSize: code.length > 2 ? 12 : 14,
-      }}
+      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white"
+      style={{ width: size, height: size, boxShadow: `0 0 0 2.5px ${w.ring}, 0 6px 16px -6px rgba(0,0,0,0.4)`, color: w.ring }}
     >
-      {code}
+      {w.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={w.logo} alt="" className="h-full w-full object-contain p-1.5" />
+      ) : (
+        <svg width={size * 0.52} height={size * 0.52} viewBox="0 0 24 24" aria-hidden>
+          <CatIcon icon={w.icon} />
+        </svg>
+      )}
     </span>
   );
 }
@@ -233,7 +271,7 @@ export default function SeasonJourney() {
         {/* ── Overlay: Kopfzeile, Flanken-Karten, Leader-Lines, Ergebnis ── */}
         <div className="pointer-events-none absolute inset-0 z-40">
           {/* Kopfzeile oben-rechts (freie Fläche, kein Overlap mit dem Weg) */}
-          <div className="absolute right-5 top-6 max-w-[min(52%,380px)] text-right text-white sm:right-8 sm:top-9">
+          <div className="absolute right-5 top-[84px] max-w-[min(52%,380px)] text-right text-white sm:right-8 sm:top-24">
             <span className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-white/75">{T.label}</span>
             <h2 className="mt-2 whitespace-pre-line text-[26px] font-bold leading-[1.05] tracking-tight sm:text-[38px]">{T.title}</h2>
             <p className="ml-auto mt-3 max-w-[22em] text-[12px] leading-snug text-white/70 sm:text-sm">{T.sub}</p>
@@ -283,7 +321,7 @@ export default function SeasonJourney() {
                     className={`transition-all duration-500 ${active ? "translate-x-0 opacity-100" : "opacity-0 " + (left ? "-translate-x-4" : "translate-x-4")}`}
                   >
                     <div className="flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
-                      <LogoChip code={w.code} ring={w.ring} />
+                      <Emblem w={w} />
                       <div className="min-w-0">
                         <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.13em]" style={{ color: w.ring }}>{w.tier[lang]}</p>
                         <p className="mt-0.5 truncate text-[14px] font-extrabold leading-tight text-neutral-900">{w.name}</p>
