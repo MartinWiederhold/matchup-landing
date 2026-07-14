@@ -329,6 +329,8 @@ export default function MapView() {
 
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
   const [tab, setTab] = useState<"discover" | "season" | "services">("discover");
+  const [dark, setDark] = useState(false);
+  const tileRef = useRef<L.TileLayer | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
@@ -610,23 +612,51 @@ export default function MapView() {
       ".leaflet-control-zoom a:hover{background:#f6f6f7!important;color:#4b3bf3!important}" +
       // dezente Attribution ohne Flagge
       ".leaflet-control-attribution{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(4px);font-size:9px!important;color:#9ca3af!important;padding:1px 6px!important;border-radius:8px 0 0 0!important}" +
-      ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}";
+      ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}" +
+      // ── Dark-Mode: scoped Overrides für die (durchgehend hellen) Map-Utilities ──
+      ".map-dark{background:#0b0b0f!important}" +
+      ".map-dark .bg-white,.map-dark .bg-white\\/95{background:#15151c!important}" +
+      ".map-dark .bg-neutral-50{background:#101016!important}" +
+      ".map-dark .bg-neutral-100{background:#1c1c24!important}" +
+      ".map-dark .bg-neutral-200{background:#2a2a33!important}" +
+      ".map-dark .text-neutral-900{color:#f2f2f5!important}" +
+      ".map-dark .text-neutral-700{color:#d0d0d8!important}" +
+      ".map-dark .text-neutral-600{color:#b4b4be!important}" +
+      ".map-dark .text-neutral-500{color:#9a9aa4!important}" +
+      ".map-dark .text-neutral-400{color:#7a7a84!important}" +
+      ".map-dark .border-neutral-200,.map-dark .border-neutral-100,.map-dark .border-r{border-color:#2a2a33!important}" +
+      ".map-dark .ring-neutral-200,.map-dark .ring-neutral-300{--tw-ring-color:#2a2a33!important}" +
+      ".map-dark .leaflet-control-zoom a{background:#15151c!important;color:#e5e5ea!important;border-color:#2a2a33!important}" +
+      ".map-dark .leaflet-control-zoom a:hover{background:#20202a!important}" +
+      ".map-dark .leaflet-control-attribution{background:rgba(10,10,15,.6)!important}";
     document.head.appendChild(el);
     return () => {
       el.remove();
     };
   }, []);
 
+  // Dark-Mode-Präferenz laden
+  useEffect(() => {
+    try { setDark(localStorage.getItem("mu-map-dark") === "1"); } catch { /* ignore */ }
+  }, []);
+
+  // Tile-Layer je nach Theme (wechselt beim Umschalten)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    if (tileRef.current) map.removeLayer(tileRef.current);
+    const variant = dark ? "dark_all" : "light_all";
+    tileRef.current = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}{r}.png`, {
+      subdomains: "abcd", maxZoom: 20, attribution: "© OpenStreetMap · CARTO",
+    }).addTo(map);
+    try { localStorage.setItem("mu-map-dark", dark ? "1" : "0"); } catch { /* ignore */ }
+  }, [ready, dark]);
+
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
     const map = L.map(mapEl.current, { center: ZURICH, zoom: 12, zoomControl: false });
     mapRef.current = map;
     layerRef.current = L.layerGroup().addTo(map);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd",
-      maxZoom: 20,
-      attribution: "© OpenStreetMap · CARTO",
-    }).addTo(map);
     map.attributionControl.setPrefix(false); // entfernt "Leaflet" + Ukraine-Flagge
     L.control.zoom({ position: "bottomright" }).addTo(map);
     setZoom(map.getZoom());
@@ -869,7 +899,7 @@ export default function MapView() {
   );
 
   return (
-    <div className="relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900">
+    <div className={`relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900 ${dark ? "map-dark" : ""}`}>
       {/* Desktop: Sidebar (Liste bzw. Detail) */}
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         <div className="shrink-0 border-b border-neutral-200 p-3">
@@ -988,6 +1018,20 @@ export default function MapView() {
       {/* Karte (mobil Vollbild, desktop rechts) */}
       <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0 z-0" />
+
+        {/* Dark-Mode-Umschalter */}
+        <button
+          type="button"
+          onClick={() => setDark((d) => !d)}
+          aria-label={dark ? "Light Mode" : "Dark Mode"}
+          className="absolute right-3 top-3 z-[560] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur md:right-4 md:top-4"
+        >
+          {dark ? (
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+          )}
+        </button>
 
         {/* Mobile: Tab-Umschalter + (nur Entdecken) Suche/Filter oben */}
         {!(tab === "discover" && sel) && (
