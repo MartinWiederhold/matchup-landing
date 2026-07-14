@@ -27,6 +27,7 @@ export default function SelectProfileBrowse() {
   const [sel, setSel] = useState<Row | null>(null);
   const [connected, setConnected] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -54,7 +55,7 @@ export default function SelectProfileBrowse() {
         ) : (
           <div className="grid grid-cols-2 gap-x-5 gap-y-7 px-5 pb-10 pt-7">
             {rows.map((p) => (
-              <button key={p.id} type="button" onClick={() => { setSel(p); setConnected(false); setExpanded(false); }} className="flex flex-col items-center">
+              <button key={p.id} type="button" onClick={() => { setSel(p); setConnected(false); setExpanded(false); setLightbox(null); }} className="flex flex-col items-center">
                 <img src={p.profile_image ?? ""} alt="" loading="lazy" className="aspect-square w-full rounded-full object-cover" />
                 <span className="mt-3 text-[15px] font-semibold text-neutral-900">@{(p.first_name ?? "spieler").toLowerCase()}</span>
                 <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400">
@@ -68,7 +69,8 @@ export default function SelectProfileBrowse() {
 
       {/* Schwarze Detailkarte (Popup) */}
       {sel && (() => {
-        const gallery = (sel.additional_images ?? []).filter((g) => g && g !== sel.profile_image);
+        // Galerie inkl. Profilbild (zuerst), dupliziert nicht.
+        const gallery = [sel.profile_image, ...(sel.additional_images ?? [])].filter((g, i, arr): g is string => !!g && arr.indexOf(g) === i);
         const rowsData = [
           { label: "Username", value: `@${(sel.first_name ?? "spieler").toLowerCase()}` },
           ...(sel.age != null ? [{ label: "Alter", value: `${sel.age}` }] : []),
@@ -106,9 +108,7 @@ export default function SelectProfileBrowse() {
                     </button>
                   )}
                 </div>
-                <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">Matchup</p>
-
-                {/* Aufklappbar: Beschreibung + Galerie */}
+                {/* Aufklappbar: Beschreibung + Galerie (inkl. Profilbild) */}
                 {expanded && (
                   <div className="mt-4 border-t border-white/10 pt-4">
                     {sel.bio && <p className="text-[13.5px] leading-relaxed text-white/60">{sel.bio}</p>}
@@ -117,7 +117,9 @@ export default function SelectProfileBrowse() {
                         <p className="mb-2.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/40">{t("discover.photos")}</p>
                         <div className="grid grid-cols-2 gap-2">
                           {gallery.map((g, i) => (
-                            <img key={i} src={g} alt="" loading="lazy" className="aspect-square w-full rounded-2xl object-cover" />
+                            <button key={i} type="button" onClick={() => setLightbox(g)} className="aspect-square w-full overflow-hidden rounded-2xl">
+                              <img src={g} alt="" loading="lazy" className="h-full w-full object-cover" />
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -129,6 +131,16 @@ export default function SelectProfileBrowse() {
           </div>
         );
       })()}
+
+      {/* Lightbox: Bild gross */}
+      {lightbox && (
+        <div className="fixed inset-0 z-[80] mx-auto flex max-w-[430px] items-center justify-center bg-black/90 p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="" className="max-h-full max-w-full rounded-2xl object-contain" />
+          <button type="button" onClick={() => setLightbox(null)} className="absolute right-4 top-[max(16px,env(safe-area-inset-top))] flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
