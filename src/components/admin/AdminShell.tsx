@@ -113,10 +113,15 @@ export default function AdminShell({
             Dein Account hat keine Admin-Rechte.
           </p>
           <button
-            onClick={() => supabase.auth.signOut()}
-            className="px-4 py-2 bg-black text-white rounded-xl text-sm font-semibold"
+            type="button"
+            onClick={async () => {
+              try { await supabase.auth.signOut(); } catch { /* ignore */ }
+              try { Object.keys(localStorage).filter((k) => k.startsWith("sb-")).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
+              window.location.replace("/admin");
+            }}
+            className="relative z-10 cursor-pointer px-5 py-3 bg-black text-white rounded-xl text-sm font-semibold active:scale-95"
           >
-            Abmelden
+            Abmelden &amp; neu anmelden
           </button>
         </div>
       </div>
