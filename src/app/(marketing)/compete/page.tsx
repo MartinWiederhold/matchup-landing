@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import PageCta from "@/components/PageCta";
-import { CompeteCard, COMPETE_FEATURES } from "@/components/CompletePicture";
+import { CompeteCard } from "@/components/CompletePicture";
+import { COMPETE_FEATURES } from "@/components/compete/features";
 import SeasonJourney from "@/components/compete/SeasonJourney";
 import { getT } from "@/lib/i18n/server";
 

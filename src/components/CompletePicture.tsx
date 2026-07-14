@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useT } from "@/lib/i18n";
+import { COMPETE_FEATURES } from "@/components/compete/features";
 
 type Overlay = "discover" | "organize" | "community" | "progress";
 
@@ -192,13 +193,6 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
     </article>
   );
 }
-
-export const COMPETE_FEATURES: { key: string; stat: string }[] = [
-  { key: "competeSeason", stat: "12 Events" },
-  { key: "competeTournament", stat: "+CHF 4.2k" },
-  { key: "competeRanking", stat: "72% in" },
-  { key: "competeTeam", stat: "Team of 4" },
-];
 
 /* Animierte Mini-Grafik je Compete-Feature (spielt beim Reinscrollen ab, wie die Play-Karten). */
 function CompeteViz({ k, show }: { k: string; show: boolean }) {
