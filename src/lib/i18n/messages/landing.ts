@@ -1,16 +1,16 @@
 export const landing = {
   de: {
     // PromoBar
-    promoShort: "Finde deinen Spielpartner",
-    promoLong: "Finde deinen Spielpartner für Tennis, Padel & Pickleball",
+    promoShort: "Play oder Compete",
+    promoLong: "Play oder Compete — dein Spiel, deine Wahl",
     promoCta: "Jetzt starten",
 
     // Hero
-    heroTitle: "Finde deinen perfekten Spielpartner.",
+    heroTitle: "Finde dein Spiel. Meistere deine Saison.",
     heroSubtitle:
-      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe. Matche, chatte und spiele, alles in einer App.",
-    heroCtaPrimary: "Jetzt Partner finden",
-    heroCtaSecondary: "So funktioniert's",
+      "Matchup verbindet dich mit Tennis-, Padel- und Pickleball-Spielern in deiner Nähe — und gibt Wettkampfspielern alles für die Saison: Turniere, Ranking, Finanzen, Deadlines. Play oder Compete — eine App.",
+    heroCtaPrimary: "Partner finden",
+    heroCtaSecondary: "Saison meistern",
     heroPlay: "Video abspielen",
     heroPause: "Video pausieren",
 
@@ -86,21 +86,21 @@ export const landing = {
     partnersCta: "Jetzt Partner finden",
 
     // CtaBanner
-    ctaTitle: "Bereit für dein nächstes Match?",
+    ctaTitle: "Bereit für deine beste Saison?",
     ctaCopy:
-      "Erstelle dein Profil in unter 3 Minuten und finde Spielpartner in deiner Nähe.",
+      "Finde Partner in deiner Nähe oder plane deine ganze Wettkampfsaison — beides in einer App.",
     ctaButton: "Kostenlos starten",
   },
   en: {
-    promoShort: "Find your playing partner",
-    promoLong: "Find your playing partner for tennis, padel & pickleball",
+    promoShort: "Play or Compete",
+    promoLong: "Play or Compete — your game, your call",
     promoCta: "Get started",
 
-    heroTitle: "Find your perfect playing partner.",
+    heroTitle: "Find your game. Own your season.",
     heroSubtitle:
-      "Matchup connects you with tennis, padel and pickleball players near you. Match, chat and play, all in one app.",
-    heroCtaPrimary: "Find a partner now",
-    heroCtaSecondary: "How it works",
+      "Matchup connects you with tennis, padel and pickleball players near you — and gives competitors everything for the season: tournaments, ranking, finances, deadlines. Play or Compete — one app.",
+    heroCtaPrimary: "Find a partner",
+    heroCtaSecondary: "Own your season",
     heroPlay: "Play video",
     heroPause: "Pause video",
 
@@ -170,9 +170,9 @@ export const landing = {
       "Whether you're the number 1 of your club or just starting out, Matchup helps you find the right people to play with.",
     partnersCta: "Find a partner now",
 
-    ctaTitle: "Ready for your next match?",
+    ctaTitle: "Ready for your best season?",
     ctaCopy:
-      "Create your profile in under 3 minutes and find playing partners near you.",
+      "Find partners near you or plan your whole competitive season — both in one app.",
     ctaButton: "Start for free",
   },
 };

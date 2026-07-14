@@ -119,7 +119,7 @@ export default function Hero() {
             {t("landing.heroCtaPrimary")}
           </a>
           <a
-            href="/find-a-partner"
+            href="/map"
             className="inline-block rounded-full border border-white/70 px-10 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black sm:px-12"
           >
             {t("landing.heroCtaSecondary")}
