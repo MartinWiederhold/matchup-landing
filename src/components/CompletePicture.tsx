@@ -193,6 +193,13 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   );
 }
 
+const COMPETE_FEATURES: { key: string; path: string }[] = [
+  { key: "competeSeason", path: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" },
+  { key: "competeTournament", path: "M6 3h12v4a6 6 0 0 1-12 0V3zM6 7H4a2 2 0 0 1-2-2V3h4M18 7h2a2 2 0 0 0 2-2V3h-4M9 21h6M12 15v6" },
+  { key: "competeRanking", path: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+  { key: "competeTeam", path: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
+];
+
 export default function CompletePicture() {
   const t = useT();
   return (
@@ -207,10 +214,38 @@ export default function CompletePicture() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* PLAY */}
+        <div className="mt-14 flex items-baseline gap-3">
+          <span className="rounded-full bg-matchup/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-matchup">{t("landing.playSectionLabel")}</span>
+          <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{t("landing.playSectionTitle")}</h3>
+        </div>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <FeatureCard key={f.overlay} f={f} />
           ))}
+        </div>
+
+        {/* COMPETE */}
+        <div className="mt-16 overflow-hidden rounded-3xl bg-neutral-950 p-8 text-white sm:p-12">
+          <div className="flex items-baseline gap-3">
+            <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white">{t("landing.competeSectionLabel")}</span>
+            <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{t("landing.competeSectionTitle")}</h3>
+          </div>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">{t("landing.competeSectionCopy")}</p>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {COMPETE_FEATURES.map((f) => (
+              <div key={f.key} className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup/20 text-matchup">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={f.path} /></svg>
+                </span>
+                <h4 className="mt-4 text-[15px] font-bold">{t(`landing.${f.key}Title`)}</h4>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-white/55">{t(`landing.${f.key}Copy`)}</p>
+              </div>
+            ))}
+          </div>
+          <a href="/map" className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-white/90">
+            {t("landing.heroCtaSecondary")}
+          </a>
         </div>
       </div>
     </section>
