@@ -137,13 +137,14 @@ export default function SeasonJourney() {
   }, []);
 
   const [mx, my] = pointAt(p);
+  const finished = p > 0.9;
+  const doneCount = WAYPOINTS.filter((w) => p >= w.at).length;
+  const px = (X: number, Y: number) => box ? { x: box.l + (X / 100) * box.w, y: box.t + (Y / 100) * box.h } : null;
+
   // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
   const startPx = px(START.pinX, START.pinY);
   const markerPx = px(mx, my);
   const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < 46);
-  const finished = p > 0.9;
-  const doneCount = WAYPOINTS.filter((w) => p >= w.at).length;
-  const px = (X: number, Y: number) => box ? { x: box.l + (X / 100) * box.w, y: box.t + (Y / 100) * box.h } : null;
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
