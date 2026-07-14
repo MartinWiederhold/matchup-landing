@@ -28,13 +28,13 @@ export default async function ComparePage() {
       {/* Hero */}
       <section className="relative flex h-[46vh] min-h-[320px] items-center justify-center overflow-hidden">
         <Image
-          src="/onboarding/tour.jpg"
+          src="/compete/compete-hero.webp"
           alt=""
           fill
           priority
           sizes="100vw"
           className="object-cover"
-          style={{ objectPosition: "center 40%" }}
+          style={{ objectPosition: "center 55%" }}
         />
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 max-w-4xl px-6 text-center text-white">
