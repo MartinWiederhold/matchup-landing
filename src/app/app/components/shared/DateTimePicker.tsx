@@ -25,7 +25,7 @@ function Sheet({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-t-3xl bg-zinc-950 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-white ring-1 ring-white/10 sm:rounded-3xl"
+        className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-neutral-900 ring-1 ring-black/10 sm:rounded-3xl"
       >
         {children}
       </div>
@@ -94,8 +94,8 @@ export function DateField({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`w-full rounded-xl bg-zinc-800 px-4 py-3 text-left text-sm ${
-          selected ? "text-white" : "text-zinc-500"
+        className={`w-full rounded-xl bg-neutral-100 px-4 py-3 text-left text-sm ${
+          selected ? "text-neutral-900" : "text-neutral-400"
         }`}
       >
         {label}
@@ -109,14 +109,14 @@ export function DateField({
               <button
                 type="button"
                 onClick={() => shift(-1)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-lg"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-lg"
               >
                 ‹
               </button>
               <button
                 type="button"
                 onClick={() => shift(1)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-lg"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-lg"
               >
                 ›
               </button>
@@ -125,7 +125,7 @@ export function DateField({
 
           <div className="grid grid-cols-7 gap-1 text-center">
             {weekdays.map((w) => (
-              <div key={w} className="py-1 text-[11px] font-semibold text-zinc-500">
+              <div key={w} className="py-1 text-[11px] font-semibold text-neutral-400">
                 {w}
               </div>
             ))}
@@ -147,10 +147,10 @@ export function DateField({
                     isSel
                       ? "bg-matchup font-bold text-white"
                       : isPast
-                        ? "text-zinc-700"
+                        ? "text-neutral-300"
                         : isToday
-                          ? "bg-zinc-800 text-white"
-                          : "text-white hover:bg-zinc-800"
+                          ? "bg-neutral-100 font-semibold text-neutral-900"
+                          : "text-neutral-800 hover:bg-neutral-100"
                   }`}
                 >
                   {d.getDate()}
@@ -162,7 +162,7 @@ export function DateField({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="mt-5 w-full rounded-full bg-zinc-800 py-3 text-sm font-semibold"
+            className="mt-5 w-full rounded-full bg-neutral-100 py-3 text-sm font-semibold text-neutral-700"
           >
             {t("games.pickerDone")}
           </button>
@@ -200,8 +200,8 @@ export function TimeField({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`w-full rounded-xl bg-zinc-800 px-4 py-3 text-left text-sm ${
-          value ? "text-white" : "text-zinc-500"
+        className={`w-full rounded-xl bg-neutral-100 px-4 py-3 text-left text-sm ${
+          value ? "text-neutral-900" : "text-neutral-400"
         }`}
       >
         {value || placeholder || ""}
@@ -217,14 +217,14 @@ export function TimeField({
               values={HOURS}
               value={h}
               onChange={(nh) => setPart(nh, m)}
-              fade="rgb(9 9 11)"
+              fade="rgb(255 255 255)"
             />
-            <span className="text-2xl font-bold text-zinc-500">:</span>
+            <span className="text-2xl font-bold text-neutral-400">:</span>
             <WheelPicker
               values={MINUTES}
               value={m}
               onChange={(nm) => setPart(h, nm)}
-              fade="rgb(9 9 11)"
+              fade="rgb(255 255 255)"
             />
           </div>
           <button

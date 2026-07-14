@@ -13,7 +13,7 @@ export default function WheelPicker({
   values,
   value,
   onChange,
-  fade = "rgb(24 24 27)", // Hintergrundfarbe für den Verlauf (zinc-900)
+  fade = "rgb(255 255 255)", // Hintergrundfarbe für den Verlauf (Sheet = weiss)
 }: {
   values: number[];
   value: number;
@@ -59,7 +59,7 @@ export default function WheelPicker({
     <div className="relative select-none" style={{ height: ITEM_H * VISIBLE }}>
       {/* Markierungsband in der Mitte */}
       <div
-        className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 rounded-xl bg-white/5 ring-1 ring-white/10"
+        className="pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 rounded-xl bg-black/[0.04] ring-1 ring-black/10"
         style={{ height: ITEM_H }}
       />
       {/* Verlauf oben/unten (zinc-900 = Sheet-Hintergrund) */}
@@ -95,7 +95,7 @@ export default function WheelPicker({
               })
             }
             className={`flex w-full items-center justify-center text-lg tabular-nums transition-colors ${
-              v === value ? "font-bold text-white" : "text-zinc-500"
+              v === value ? "font-bold text-neutral-900" : "text-neutral-400"
             }`}
             style={{ height: ITEM_H, scrollSnapAlign: "center" }}
           >

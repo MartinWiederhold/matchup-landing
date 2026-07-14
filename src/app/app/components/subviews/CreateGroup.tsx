@@ -47,31 +47,31 @@ export default function CreateGroup() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <SubViewHeader title={t("groups.createTitle")} />
+    <div className="flex h-full flex-col bg-white text-neutral-900">
+      <SubViewHeader light title={t("groups.createTitle")} />
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.nameLabel")}</p>
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("groups.nameLabel")}</p>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("groups.namePlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-sm outline-none placeholder:text-neutral-400"
           />
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.descriptionLabel")}</p>
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("groups.descriptionLabel")}</p>
           <textarea
             rows={3}
             maxLength={500}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("groups.descriptionPlaceholder")}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-sm outline-none placeholder:text-neutral-400"
           />
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">{t("groups.sportLabel")}</p>
+          <p className="mb-2 text-sm font-semibold text-neutral-700">{t("groups.sportLabel")}</p>
           <div className="flex gap-2">
             {SPORTS.map((s) => (
               <button
@@ -81,7 +81,7 @@ export default function CreateGroup() {
                 className={`flex-1 rounded-xl py-2.5 text-sm ${
                   sport === s
                     ? "bg-matchup/20 ring-2 ring-matchup"
-                    : "bg-zinc-800 ring-1 ring-zinc-700"
+                    : "bg-neutral-100 ring-1 ring-black/10"
                 }`}
               >
                 {sportLabel(s)}
@@ -90,7 +90,7 @@ export default function CreateGroup() {
           </div>
         </div>
         <div>
-          <p className="mb-2 text-sm font-semibold text-zinc-300">
+          <p className="mb-2 text-sm font-semibold text-neutral-700">
             {t("groups.maxMembersLabel")}
           </p>
           <input
@@ -99,17 +99,17 @@ export default function CreateGroup() {
             max={500}
             value={maxMembers}
             onChange={(e) => setMaxMembers(Number(e.target.value))}
-            className="w-full rounded-xl bg-zinc-800 px-4 py-3 text-sm outline-none"
+            className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-sm outline-none"
           />
         </div>
         <button
           type="button"
           onClick={() => setIsOpen((v) => !v)}
-          className="flex w-full items-center justify-between rounded-xl bg-zinc-800 px-4 py-3 text-sm"
+          className="flex w-full items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 text-sm"
         >
           <span>{isOpen ? t("groups.openGroup") : t("groups.closedGroup")}</span>
           <span
-            className={`relative h-6 w-11 rounded-full ${isOpen ? "bg-matchup" : "bg-zinc-600"}`}
+            className={`relative h-6 w-11 rounded-full transition-colors ${isOpen ? "bg-matchup" : "bg-neutral-300"}`}
           >
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${isOpen ? "left-[22px]" : "left-0.5"}`}
@@ -117,7 +117,7 @@ export default function CreateGroup() {
           </span>
         </button>
       </div>
-      <div className="shrink-0 border-t border-zinc-800 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 border-t border-black/10 px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           disabled={!valid || saving}
