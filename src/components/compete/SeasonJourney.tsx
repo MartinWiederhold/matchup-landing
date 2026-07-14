@@ -4,7 +4,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n";
 import {
-  TOURNAMENTS, TIER_META, tournamentLogo, HOME_BASES, leg,
+  TOURNAMENTS, TIER_META, tournamentLogo, HOME_BASES, leg, nights,
   type Tournament,
 } from "@/lib/tournaments";
 
@@ -13,19 +13,17 @@ const PATH: [number, number][] = [
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
-const FINISH: [number, number] = [7, 10];
-const START = { pinX: 64, pinY: 95, side: "l" as const };
+const FINISH: [number, number] = [13, 15];       // Ziel-Trophy (etwas nach unten gerückt)
+const START = { pinX: 66, pinY: 90, cx: 0.30 };  // Weganfang (Heimbasis), Karte links-mittig
 
-/* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000). */
-type Stop = {
-  id: string; at: number; pinX: number; pinY: number; side: "l" | "r";
-  note: { de: string; en: string };
-};
+/* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
+ * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
+type Stop = { id: string; at: number; pinX: number; pinY: number; cx: number; note: { de: string; en: string } };
 const STOPS: Stop[] = [
-  { id: "gstaad",    at: 0.15, pinX: 54, pinY: 74, side: "l", note: { de: "Erste Runde · Tour-Debüt", en: "Round 1 · tour debut" } },
-  { id: "barcelona", at: 0.39, pinX: 32, pinY: 57, side: "r", note: { de: "Achtelfinale · +45 Punkte", en: "Round of 16 · +45 points" } },
-  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, side: "l", note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
-  { id: "rome",      at: 0.83, pinX: 31, pinY: 29, side: "r", note: { de: "Hauptfeld · Karriere-Bestwert", en: "Main draw · career best" } },
+  { id: "gstaad",    at: 0.15, pinX: 54, pinY: 74, cx: 0.15, note: { de: "Erste Runde · Tour-Debüt", en: "Round 1 · tour debut" } },
+  { id: "barcelona", at: 0.39, pinX: 32, pinY: 57, cx: 0.85, note: { de: "Achtelfinale · +45 Punkte", en: "Round of 16 · +45 points" } },
+  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, cx: 0.13, note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
+  { id: "rome",      at: 0.83, pinX: 31, pinY: 29, cx: 0.67, note: { de: "Hauptfeld · Karriere-Bestwert", en: "Main draw · career best" } },
 ];
 
 type WP = Stop & { t: Tournament; color: string; tier: string; logo: string | null };
@@ -51,17 +49,19 @@ function rangeLabel(t: Tournament, lang: "de" | "en") {
   return `${s} – ${e}`;
 }
 
-/* ── kleine Icons (eigene, dezente Vektoren) ───────────────────────────── */
+/* ── kleine Icons ──────────────────────────────────────────────────────── */
 function ModeIcon({ icon }: { icon: "plane" | "train" | "car" }) {
   if (icon === "plane") return <path fill="currentColor" d="M21 16v-1.7l-8-4.8V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5v6L2 14.3V16l8-2.4V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.4L21 16Z" />;
   if (icon === "train") return <path fill="currentColor" d="M7 2h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3l1.6 2.3v.4H4.4v-.4L6 16a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3Zm-1 5v4h5V6H7a1 1 0 0 0-1 1Zm7 4h5V7a1 1 0 0 0-1-1h-4v5Zm-3.5 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />;
   return <path fill="currentColor" d="M5 11l1.4-4A2 2 0 0 1 8.3 5.6h7.4A2 2 0 0 1 17.6 7l1.4 4h1a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-.5v.5a1.2 1.2 0 0 1-2.4 0v-.5H6.9v.5a1.2 1.2 0 0 1-2.4 0v-.5H4a1 1 0 0 1-1-1V12a1 1 0 0 1 1-1h1Zm2.3-.4h9.4l-1-2.8a1 1 0 0 0-.9-.6H9.2a1 1 0 0 0-.9.6l-1 2.8ZM6.6 12.6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm10.8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />;
 }
+function BedIcon() { return <path fill="currentColor" d="M2 7a1 1 0 0 1 2 0v4h7V9a1 1 0 0 1 1-1h6a4 4 0 0 1 4 4v5a1 1 0 0 1-2 0v-2H4v2a1 1 0 0 1-2 0V7Zm4.5 0A2.5 2.5 0 1 0 6.5 12 2.5 2.5 0 0 0 6.5 7Z" />; }
+function TeamIcon() { return <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><path d="M16.5 5.3a2.5 2.5 0 0 1 0 4.9M17 13.5a4.6 4.6 0 0 1 3.5 4.5" /></g>; }
 const SERVICES: { key: string; label: { de: string; en: string }; path: string; stroke?: boolean }[] = [
   { key: "string", label: { de: "Besaitung", en: "Stringing" }, path: "M9 9m-5 0a5 5 0 1 0 10 0a5 5 0 1 0-10 0M12.6 12.6 20 20", stroke: true },
   { key: "physio", label: { de: "Physio", en: "Physio" }, path: "M10.5 3h3v6h6v3h-6v6h-3v-6h-6V9h6z" },
   { key: "fitness", label: { de: "Fitness", en: "Fitness" }, path: "M4 9v6M7 6.5v11M17 6.5v11M20 9v6M7 12h10", stroke: true },
-  { key: "team", label: { de: "Team", en: "Team" }, path: "M9 8m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M3.5 19a5.5 5.5 0 0 1 11 0M17 10a2.4 2.4 0 1 0 0-4.8M16.5 13.6A4.5 4.5 0 0 1 20.5 18", stroke: true },
+  { key: "coach", label: { de: "Coach", en: "Coach" }, path: "M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6M6 21a6 6 0 0 1 12 0", stroke: true },
 ];
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -85,16 +85,14 @@ function Emblem({ w, size = 48 }: { w: WP; size?: number }) {
   );
 }
 
-/* Karten-Geometrie: Karte dicht am Pin, kurze Leader-Line die AN der Karte endet. */
-const CARDW = 236, GAP = 42;
-function cardGeom(pinx: number, side: "l" | "r", vw: number) {
-  if (side === "l") {
-    const cardLeft = Math.max(8, pinx - GAP - CARDW);
-    const cardRight = cardLeft + CARDW;
-    return { cardLeft, lineLeft: cardRight, lineWidth: Math.max(0, pinx - cardRight), origin: "right" as const };
-  }
-  const cardLeft = Math.min(vw - CARDW - 8, pinx + GAP);
-  return { cardLeft, lineLeft: pinx, lineWidth: Math.max(0, cardLeft - pinx), origin: "left" as const };
+/* Karte an cx-Ziel (Flanke); Leader-Line läuft vom Pin exakt bis zur Karte. */
+const CARDW = 236;
+function cardGeom(pinx: number, cx: number, vw: number) {
+  const cardLeft = Math.max(12, Math.min(vw - CARDW - 12, cx * vw - CARDW / 2));
+  const cardRight = cardLeft + CARDW;
+  if (pinx >= cardRight) return { cardLeft, lineLeft: cardRight, lineWidth: pinx - cardRight, fromLeft: true };
+  if (pinx <= cardLeft) return { cardLeft, lineLeft: pinx, lineWidth: cardLeft - pinx, fromLeft: false };
+  return { cardLeft, lineLeft: pinx, lineWidth: 0, fromLeft: true };
 }
 
 type Box = { l: number; t: number; w: number; h: number; vw: number };
@@ -150,10 +148,13 @@ export default function SeasonJourney() {
     const a = nodes[i];
     return { mid: { x: (a.x + n.x) / 2, y: (a.y + n.y) / 2 }, at: (a.at + n.at) / 2, L: leg(a.obj, n.obj) };
   });
+  // Saison-Summary für die Ziel-Karte (echte Zahlen).
+  const flights = legs.filter((l) => l.L.mode === "Flug").length;
+  const nightsTotal = WAYPOINTS.reduce((s, w) => s + nights(w.t), 0);
 
   const T = {
-    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", rank: "Ranking", net: "Netto", events: "Turniere" },
-    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", rank: "Ranking", net: "Net", events: "Events" },
+    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", rank: "Ranking", net: "Netto", events: "Turniere", flights: "Flüge", nights: "Nächte", team: "Team" },
+    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", rank: "Ranking", net: "Net", events: "Events", flights: "Flights", nights: "Nights", team: "Team" },
   }[lang];
 
   return (
@@ -164,10 +165,11 @@ export default function SeasonJourney() {
           <div className="relative h-full max-h-screen" style={{ aspectRatio: "900 / 1274" }}>
             <img ref={imgRef} src="/compete/season-journey.jpg" alt="" onLoad={measure} className="absolute inset-0 h-full w-full object-cover" />
 
-            {/* START-Knoten (grosser weisser Kreis, immer sichtbar) */}
+            {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
             <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${START.pinX}%`, top: `${START.pinY}%` }}>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_0_22px_rgba(255,255,255,0.85)]">
-                <svg width="18" height="18" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+              <span className="absolute inset-0 -m-2 rounded-full bg-white/25 blur-md" />
+              <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_0_30px_rgba(255,255,255,0.85)]">
+                <svg width="30" height="30" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
@@ -198,9 +200,9 @@ export default function SeasonJourney() {
                 <span className="absolute inset-0 -m-2 animate-ping rounded-full" style={{ animationDuration: "1.6s", boxShadow: "0 0 0 2px rgba(224,165,0,0.6)" }} />
                 <span className="absolute inset-0 -m-5 animate-ping rounded-full" style={{ animationDuration: "2.2s", boxShadow: "0 0 0 2px rgba(224,165,0,0.35)" }} />
               </>}
-              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white transition-all duration-500"
+              <span className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white transition-all duration-500"
                 style={{ boxShadow: `0 0 0 3px #e0a500, 0 0 26px ${finished ? "rgba(224,165,0,0.85)" : "rgba(224,165,0,0.35)"}`, transform: finished ? "scale(1.05)" : "scale(0.95)" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden>
+                <svg width="24" height="24" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden>
                   <path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" />
                 </svg>
               </span>
@@ -231,8 +233,7 @@ export default function SeasonJourney() {
             const active = p >= lg.at;
             const md = MODE[lg.L.mode];
             return (
-              <div key={`leg-${i}`} className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "translate-y-[-50%] opacity-100" : "opacity-0"}`}
-                style={{ left: m.x, top: m.y }}>
+              <div key={`leg-${i}`} className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "opacity-100" : "opacity-0"}`} style={{ left: m.x, top: m.y }}>
                 <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-semibold text-white/85 ring-1 ring-white/20 backdrop-blur-md">
                   <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden className="opacity-90"><ModeIcon icon={md.icon} /></svg>
                   {md[lang]} · {lg.L.km.toLocaleString(lang === "de" ? "de-CH" : "en-US")} km
@@ -244,7 +245,7 @@ export default function SeasonJourney() {
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
             const pin = px(START.pinX, START.pinY)!;
-            const g = cardGeom(pin.x, START.side, box.vw);
+            const g = cardGeom(pin.x, START.cx, box.vw);
             return (
               <>
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth }} />
@@ -264,17 +265,17 @@ export default function SeasonJourney() {
             );
           })()}
 
-          {/* Turnier-Karten */}
+          {/* Turnier-Karten (in den Flanken) */}
           {box && WAYPOINTS.map((w, i) => {
             const pin = px(w.pinX, w.pinY)!;
             const active = p >= w.at;
-            const g = cardGeom(pin.x, w.side, box.vw);
+            const g = cardGeom(pin.x, w.cx, box.vw);
             return (
               <div key={`card-${i}`}>
-                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.origin, transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
+                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.fromLeft ? "right" : "left", transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
                 <div className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-500" style={{ top: pin.y, left: pin.x, background: w.color, opacity: active ? 1 : 0 }} />
                 <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CARDW }}>
-                  <div className={`transition-all duration-500 ${active ? "translate-x-0 opacity-100" : "opacity-0 " + (w.side === "l" ? "-translate-x-4" : "translate-x-4")}`}>
+                  <div className={`transition-all duration-500 ${active ? "translate-x-0 opacity-100" : "opacity-0 " + (g.fromLeft ? "-translate-x-4" : "translate-x-4")}`}>
                     <div className="rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
                       <div className="flex items-center gap-3">
                         <Emblem w={w} />
@@ -288,15 +289,12 @@ export default function SeasonJourney() {
                           </p>
                         </div>
                       </div>
-                      {/* Team & Services vor Ort (dezent) */}
                       <div className="mt-2.5 flex items-center gap-2.5 border-t border-black/5 pt-2">
                         {SERVICES.map((s, si) => (
                           <span key={s.key} title={s.label[lang]}
                             className={`flex items-center transition-all duration-500 ${active ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
                             style={{ transitionDelay: `${120 + si * 70}ms`, color: "#9aa2b1" }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                              <path d={s.path} />
-                            </svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
                           </span>
                         ))}
                         <span className="ml-auto text-[9px] font-semibold uppercase tracking-wide text-neutral-400">{lang === "de" ? "vor Ort" : "on site"}</span>
@@ -308,25 +306,35 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Ergebnis-Karte */}
-          {box && (() => {
-            const fin = px(FINISH[0], FINISH[1])!;
-            return (
-              <div className={`absolute w-[min(48vw,260px)] transition-all duration-700 ${finished ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={{ top: fin.y + 26, left: 16 }}>
-                <div className="overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-[0_24px_60px_-18px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
-                  <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-black text-neutral-950">✓</span>
-                    <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-400">{T.done}</span>
-                  </div>
-                  <div className="grid grid-cols-3 divide-x divide-white/10">
-                    <div className="px-3 py-3 text-center"><span className="block text-[19px] font-extrabold leading-none">+180</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span></div>
-                    <div className="px-3 py-3 text-center"><span className="block text-[19px] font-extrabold leading-none text-emerald-400">+4.2k</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.net} CHF</span></div>
-                    <div className="px-3 py-3 text-center"><span className="block text-[19px] font-extrabold leading-none">{WAYPOINTS.length}</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.events}</span></div>
-                  </div>
+          {/* Ergebnis-Karte (Ziel) — Trophy-Summary mit Reise & Team */}
+          {box && (
+            <div className={`absolute w-[min(52vw,264px)] transition-all duration-700 ${finished ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={{ top: 88, left: 16 }}>
+              <div className="overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-[0_24px_60px_-18px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+                <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
+                  <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-400">{T.done}</span>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-white/10">
+                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none">+180</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span></div>
+                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none text-emerald-400">+4.2k</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.net} CHF</span></div>
+                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none">{WAYPOINTS.length}</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.events}</span></div>
+                </div>
+                {/* dezente Reise-/Team-Zeile */}
+                <div className="flex items-center gap-3 border-t border-white/10 px-4 py-2.5 text-[10.5px] font-semibold text-white/70">
+                  {[
+                    { icon: <ModeIcon icon="plane" />, val: `${flights} ${T.flights}` },
+                    { icon: <BedIcon />, val: `${nightsTotal} ${T.nights}` },
+                    { icon: <TeamIcon />, val: `${T.team} · 4` },
+                  ].map((c, i) => (
+                    <span key={i} className={`flex items-center gap-1.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`} style={{ transitionDelay: `${250 + i * 110}ms` }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden className="text-white/55">{c.icon}</svg>
+                      {c.val}
+                    </span>
+                  ))}
                 </div>
               </div>
-            );
-          })()}
+            </div>
+          )}
         </div>
       </div>
 
