@@ -193,12 +193,71 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   );
 }
 
-const COMPETE_FEATURES: { key: string; path: string }[] = [
-  { key: "competeSeason", path: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" },
-  { key: "competeTournament", path: "M6 3h12v4a6 6 0 0 1-12 0V3zM6 7H4a2 2 0 0 1-2-2V3h4M18 7h2a2 2 0 0 0 2-2V3h-4M9 21h6M12 15v6" },
-  { key: "competeRanking", path: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
-  { key: "competeTeam", path: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
+const COMPETE_FEATURES: { key: string; stat: string }[] = [
+  { key: "competeSeason", stat: "12 Events" },
+  { key: "competeTournament", stat: "+CHF 4.2k" },
+  { key: "competeRanking", stat: "72% in" },
+  { key: "competeTeam", stat: "Team of 4" },
 ];
+
+/* Animierte Mini-Grafik je Compete-Feature (spielt beim Reinscrollen ab, wie die Play-Karten). */
+function CompeteViz({ k, show }: { k: string; show: boolean }) {
+  if (k === "competeSeason") {
+    // Reise-Route: Stops ploppen nacheinander auf einer Linie.
+    return (
+      <div className="relative flex items-center">
+        <span className="absolute left-1 right-1 top-1/2 h-px -translate-y-1/2 bg-white/20" />
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className={`relative mx-1.5 h-2.5 w-2.5 rounded-full ${i === 3 ? "bg-white ring-2 ring-matchup" : "bg-matchup"} ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 130}ms` }} />
+        ))}
+      </div>
+    );
+  }
+  if (k === "competeTournament") {
+    // P&L: Balken wachsen hoch (grün = Netto).
+    const bars = [50, 30, 80, 55, 95];
+    return (
+      <span className="flex h-9 items-end gap-[3px]">
+        {bars.map((h, i) => (
+          <span key={i} className={`w-1.5 rounded-sm ${i === bars.length - 1 ? "bg-emerald-400" : "bg-white/30"} ${show ? "anim-bar" : ""}`} style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }} />
+        ))}
+      </span>
+    );
+  }
+  if (k === "competeRanking") {
+    // Annahme-Wahrscheinlichkeit: Ring füllt sich auf ~72%.
+    const C = 2 * Math.PI * 14;
+    return (
+      <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
+        <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3.5" />
+        <circle cx="18" cy="18" r="14" fill="none" stroke="#34d399" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * 0.28} className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
+      </svg>
+    );
+  }
+  // competeTeam: Team-Avatare ploppen nacheinander auf.
+  return (
+    <span className="flex -space-x-2">
+      {["#7b6cff", "#34d399", "#f59e0b", "#38bdf8"].map((c, i) => (
+        <span key={i} className={`h-7 w-7 rounded-full ring-2 ring-neutral-950 ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 120}ms` }} />
+      ))}
+    </span>
+  );
+}
+
+function CompeteCard({ f }: { f: (typeof COMPETE_FEATURES)[number] }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+  const t = useT();
+  return (
+    <div ref={ref} className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+      <div className="flex h-11 items-center justify-between">
+        <CompeteViz k={f.key} show={inView} />
+        <span className="rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-bold text-white/80 ring-1 ring-white/10">{f.stat}</span>
+      </div>
+      <h4 className="mt-4 text-[15px] font-bold">{t(`landing.${f.key}Title`)}</h4>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-white/55">{t(`landing.${f.key}Copy`)}</p>
+    </div>
+  );
+}
 
 export default function CompletePicture() {
   const t = useT();
@@ -234,13 +293,7 @@ export default function CompletePicture() {
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">{t("landing.competeSectionCopy")}</p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {COMPETE_FEATURES.map((f) => (
-              <div key={f.key} className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup/20 text-matchup">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={f.path} /></svg>
-                </span>
-                <h4 className="mt-4 text-[15px] font-bold">{t(`landing.${f.key}Title`)}</h4>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-white/55">{t(`landing.${f.key}Copy`)}</p>
-              </div>
+              <CompeteCard key={f.key} f={f} />
             ))}
           </div>
           <a href="/map" className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-white/90">

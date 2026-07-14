@@ -45,10 +45,10 @@ export default function Header() {
   const [waitlist, setWaitlist] = useState<NavFeature | null>(null);
   const t = useT();
 
-  // Sichtbare Top-Level-Links. ATP/Tournaments: Warteliste-Popup (wie Shop/Advice).
+  // Sichtbare Top-Level-Links: die zwei Modi Play & Compete (beide echte Links).
   const primaryItems: NavFeature[] = [
-    { label: t("header.findPartner"), href: "/find-a-partner" },
-    { label: t("header.atp"), href: "/map", waitlist: true },
+    { label: t("header.play"), href: "/find-a-partner" },
+    { label: t("header.compete"), href: "/map" },
   ];
 
   // Unter „Mehr"-Dropdown: Events (Link), dann Shop & Advice (Coming soon).
