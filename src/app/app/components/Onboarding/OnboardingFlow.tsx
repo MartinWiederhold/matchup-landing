@@ -494,7 +494,7 @@ export default function OnboardingFlow() {
       <div className={`flex-1 overflow-y-auto ${cur === "welcome" ? "" : "px-5 py-8"}`}>
         {/* Step 1 — Welcome (Vollbild-Video) */}
         {cur === "welcome" && (
-          <div className="relative flex h-full min-h-full flex-col items-center justify-center overflow-hidden text-center">
+          <div className="relative flex h-dvh min-h-dvh flex-col items-center justify-center overflow-hidden text-center">
             {/* Titelvideo im Hintergrund */}
             <video className="pointer-events-none absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline poster="/hero-poster.jpg" aria-hidden="true">
               <source src="/hero.mp4" type="video/mp4" />
