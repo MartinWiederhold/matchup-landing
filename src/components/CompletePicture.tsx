@@ -193,7 +193,7 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   );
 }
 
-const COMPETE_FEATURES: { key: string; stat: string }[] = [
+export const COMPETE_FEATURES: { key: string; stat: string }[] = [
   { key: "competeSeason", stat: "12 Events" },
   { key: "competeTournament", stat: "+CHF 4.2k" },
   { key: "competeRanking", stat: "72% in" },
@@ -244,7 +244,7 @@ function CompeteViz({ k, show }: { k: string; show: boolean }) {
   );
 }
 
-function CompeteCard({ f }: { f: (typeof COMPETE_FEATURES)[number] }) {
+export function CompeteCard({ f }: { f: (typeof COMPETE_FEATURES)[number] }) {
   const { ref, inView } = useInView<HTMLDivElement>();
   const t = useT();
   return (

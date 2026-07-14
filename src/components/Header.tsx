@@ -48,7 +48,7 @@ export default function Header() {
   // Sichtbare Top-Level-Links: die zwei Modi Play & Compete (beide echte Links).
   const primaryItems: NavFeature[] = [
     { label: t("header.play"), href: "/find-a-partner" },
-    { label: t("header.compete"), href: "/map" },
+    { label: t("header.compete"), href: "/compete" },
   ];
 
   // Unter „Mehr"-Dropdown: Events (Link), dann Shop & Advice (Coming soon).
