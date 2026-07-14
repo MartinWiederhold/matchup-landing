@@ -74,7 +74,7 @@ export const landing = {
     statsTitle: "Eine wachsende Community von Spielern",
     statsSubtitle:
       "Play oder Compete — Matchup wächst mit dir. Vom ersten Match in deiner Nähe bis zur durchgeplanten Wettkampfsaison.",
-    statsTitleA: "Für Hobby",
+    statsTitleA: "Für Freizeit",
     statsTitleB: "und Wettkampf gebaut",
     statSports: "Sportarten: Tennis, Padel & Pickleball",
     statClubs: "Clubs & Turnierorte auf der Karte",
