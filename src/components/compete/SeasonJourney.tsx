@@ -58,7 +58,7 @@ export default function SeasonJourney() {
   }[lang];
 
   return (
-    <section ref={ref} className="relative bg-[#3b46c9]" style={{ height: "230vh" }}>
+    <section ref={ref} className="relative bg-[#353fcc]" style={{ height: "230vh" }}>
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
         {/* Bühne im Bild-Seitenverhältnis (900×1274) */}
         <div className="relative h-full max-h-screen" style={{ aspectRatio: "900 / 1274" }}>
@@ -76,7 +76,7 @@ export default function SeasonJourney() {
             className="absolute z-30 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)] transition-none"
             style={{ left: `${mx}%`, top: `${my}%` }}
           >
-            <span className="h-2 w-2 rounded-full bg-[#3b46c9]" />
+            <span className="h-2 w-2 rounded-full bg-[#353fcc]" />
           </span>
 
           {/* Turnier-Stationen */}
