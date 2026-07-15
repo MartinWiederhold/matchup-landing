@@ -290,11 +290,10 @@ export default function SeasonJourney() {
           <div className="absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white sm:right-8 sm:top-24">
             <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-white/75 sm:text-[10px] sm:tracking-[0.28em]">{T.label}</span>
             <h2 className="mt-1.5 whitespace-pre-line text-[19px] font-bold leading-[1.05] tracking-tight sm:mt-2 sm:text-[38px]">{T.title}</h2>
-            <p className="ml-auto mt-2 max-w-[18em] text-[10.5px] leading-snug text-white/70 sm:mt-3 sm:text-sm">{T.sub}</p>
-            <div className="mt-3 flex items-center justify-end gap-2 sm:mt-4">
+            <div className="mt-3 flex items-center justify-end gap-2 sm:mt-5">
               <div className="flex gap-1 sm:gap-1.5">
                 {WAYPOINTS.map((w, i) => (
-                  <span key={i} className="h-1.5 w-4 rounded-full transition-colors duration-500 sm:w-6" style={{ background: p >= w.at ? "#fff" : "rgba(255,255,255,0.28)" }} />
+                  <span key={i} className="h-1.5 w-4 rounded-full transition-colors duration-500 sm:w-6" style={{ background: p >= w.at ? "#34d399" : "rgba(255,255,255,0.28)" }} />
                 ))}
               </div>
               <span className="text-[10px] font-bold tabular-nums text-white/80 sm:text-[11px]">{doneCount}/{WAYPOINTS.length}</span>
@@ -344,7 +343,6 @@ export default function SeasonJourney() {
                     <div className="min-w-0">
                       <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#353fcc] sm:text-[9px] sm:tracking-[0.16em]">START</p>
                       <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-neutral-900 sm:text-[15px]">{lang === "de" ? "Zürich" : "Zurich"}</p>
-                      <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{lang === "de" ? "Heimbasis · Saisonstart" : "Home base · season start"}</p>
                     </div>
                   </div>
                 </div>
