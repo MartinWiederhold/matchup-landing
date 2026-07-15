@@ -4,6 +4,7 @@ import PageCta from "@/components/PageCta";
 import { CompeteCard } from "@/components/CompletePicture";
 import { COMPETE_FEATURES } from "@/components/compete/features";
 import SeasonJourney from "@/components/compete/SeasonJourney";
+import SeasonWorldMap from "@/components/compete/SeasonWorldMap";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -74,6 +75,9 @@ export default async function ComparePage() {
           </a>
         </div>
       </section>
+
+      {/* Saison auf der Weltkarte: echte Turniere + Flugrouten ab Zürich */}
+      <SeasonWorldMap />
 
       <PageCta
         title={t("landing.competeCtaTitle")}
