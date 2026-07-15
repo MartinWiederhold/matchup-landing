@@ -13,12 +13,12 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 84], // START → Person
+  [102, 94], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 102, pinY: 84, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 102, pinY: 94, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -72,11 +72,11 @@ const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string
 
 /* Team-&-Service-Hinweise: dezente Mini-Karten (Profilbild + Rolle + Trainings-
  * Kalender) verteilt neben dem Weg zwischen den Turnier-Kacheln. */
-const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string; role: { de: string; en: string }; accent: string; days: number[] }[] = [
-  { at: 0.20, roadP: 0.14, dx: 20, key: "fitness", role: { de: "Fitness-Coach", en: "Fitness coach" }, accent: "#f59e0b", days: [0, 2, 4] },
-  { at: 0.34, roadP: 0.33, dx: -21, key: "string", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3] },
-  { at: 0.56, roadP: 0.55, dx: 20, key: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3] },
-  { at: 0.77, roadP: 0.73, dx: -21, key: "coach", role: { de: "Coach", en: "Coach" }, accent: "#7b6cff", days: [0, 1, 2, 4] },
+const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string; cat: string; role: { de: string; en: string }; accent: string; days: number[] }[] = [
+  { at: 0.20, roadP: 0.14, dx: 20, key: "fitness", cat: "sc", role: { de: "Fitness-Coach", en: "Fitness coach" }, accent: "#f59e0b", days: [0, 2, 4] },
+  { at: 0.34, roadP: 0.33, dx: -21, key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3] },
+  { at: 0.56, roadP: 0.55, dx: 20, key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3] },
+  { at: 0.77, roadP: 0.73, dx: -21, key: "coach", cat: "coach", role: { de: "Coach", en: "Coach" }, accent: "#7b6cff", days: [0, 1, 2, 4] },
 ];
 const WEEKDAYS = { de: ["Mo", "Di", "Mi", "Do", "Fr"], en: ["Mo", "Tu", "We", "Th", "Fr"] };
 
@@ -121,24 +121,25 @@ export default function SeasonJourney() {
   const imgRef = useRef<HTMLImageElement>(null);
   const [p, setP] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
-  const [avatars, setAvatars] = useState<{ img: string; name: string }[]>([]);
+  const [team, setTeam] = useState<Record<string, { img: string; name: string }>>({});
 
-  // Echte Seed-Profilbilder als „Team" für die Service-Hinweise laden.
+  // Echte Service-Anbieter (Coach/Physio/Besaiter/Fitness) aus /map als „Team" —
+  // öffentlich lesbar (anders als profiles), mit echten Fotos.
   useEffect(() => {
     let active = true;
     supabase
-      .from("profiles")
-      .select("first_name,profile_image")
-      .eq("is_seed", true)
-      .not("profile_image", "is", null)
-      .limit(6)
+      .from("service_providers")
+      .select("name,category,image_url")
+      .not("image_url", "is", null)
+      .in("category", ["coach", "physio", "stringer", "sc"])
+      .limit(40)
       .then(({ data }) => {
         if (!active || !data) return;
-        setAvatars(
-          data
-            .filter((d: { profile_image: string | null }) => !!d.profile_image)
-            .map((d: { first_name: string | null; profile_image: string | null }) => ({ img: d.profile_image as string, name: d.first_name ?? "" })),
-        );
+        const m: Record<string, { img: string; name: string }> = {};
+        for (const r of data as { name: string; category: string; image_url: string | null }[]) {
+          if (r.image_url && !m[r.category]) m[r.category] = { img: r.image_url, name: r.name };
+        }
+        setTeam(m);
       });
     return () => { active = false; };
   }, []);
@@ -290,34 +291,22 @@ export default function SeasonJourney() {
             const pos = px(rx + h.dx, ry)!;
             const active = p >= h.at;
             const s = SVC[h.key];
-            const av = avatars[i];
+            const person = team[h.cat];
+            const sched = h.days.map((d) => WEEKDAYS[lang][d]).join(" · ");
             return (
-              <div key={`svc-${i}`} className={`absolute w-[152px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
-                <div className="rounded-2xl bg-white/95 p-2.5 shadow-[0_16px_36px_-16px_rgba(0,0,0,0.6)] ring-1 ring-black/5 backdrop-blur">
-                  <div className="flex items-center gap-2">
-                    {av ? (
-                      <img src={av.img} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 2px ${h.accent}` }} />
-                    ) : (
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white" style={{ background: h.accent }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate text-[10px] font-extrabold uppercase tracking-[0.1em]" style={{ color: h.accent }}>{h.role[lang]}</p>
-                      <p className="truncate text-[12px] font-bold leading-tight text-neutral-900">{av?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
-                    </div>
-                  </div>
-                  {/* Trainings-Kalender (Wochentage) */}
-                  <div className="mt-2 flex justify-between border-t border-black/5 pt-2">
-                    {WEEKDAYS[lang].map((d, di) => {
-                      const on = h.days.includes(di);
-                      return (
-                        <span key={d} className="flex flex-col items-center gap-1">
-                          <span className="text-[8px] font-bold text-neutral-400">{d}</span>
-                          <span className={`h-2 w-2 rounded-full transition-all ${active && on ? "scale-100" : "scale-100"}`} style={{ background: on ? h.accent : "#e5e7eb", transitionDelay: `${di * 60}ms` }} />
-                        </span>
-                      );
-                    })}
+              <div key={`svc-${i}`} className={`absolute w-[150px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
+                <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-2.5 py-2 ring-1 ring-white/20 backdrop-blur-md">
+                  {person ? (
+                    <img src={person.img} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 1.5px ${h.accent}` }} />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90" style={{ background: `${h.accent}66`, boxShadow: `0 0 0 1.5px ${h.accent}` }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] font-extrabold uppercase tracking-[0.08em]" style={{ color: h.accent }}>{h.role[lang]}</p>
+                    <p className="truncate text-[11.5px] font-bold leading-tight text-white">{person?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
+                    <p className="mt-0.5 truncate text-[9px] font-semibold text-white/55">{sched}</p>
                   </div>
                 </div>
               </div>
