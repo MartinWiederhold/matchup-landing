@@ -249,12 +249,10 @@ export default function SeasonJourney() {
               </span>
             </span>
 
-            {/* Marker-Kugel + Puls-Ring (erst sichtbar, wenn ausserhalb des START-Kreises) */}
+            {/* Marker = Tennisball (erst sichtbar, wenn ausserhalb des START-Kreises) */}
             <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200" style={{ left: `${mx}%`, top: `${my}%`, opacity: insideStart ? 0 : 1 }}>
-              <span className="absolute inset-0 -m-3 animate-ping rounded-full bg-white/40" style={{ animationDuration: "1.8s" }} />
-              <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-[0_0_26px_rgba(255,255,255,0.95)]">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#353fcc]" />
-              </span>
+              <span className="absolute inset-0 -m-2.5 animate-ping rounded-full bg-white/30" style={{ animationDuration: "1.8s" }} />
+              <img src="/compete/tennis-ball.png" alt="" className="relative h-7 w-7 rounded-full shadow-[0_3px_12px_rgba(0,0,0,0.4)]" />
             </span>
 
             {/* Station-Pins */}
