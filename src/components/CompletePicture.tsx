@@ -194,62 +194,188 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   );
 }
 
-/* Animierte Mini-Grafik je Compete-Feature (spielt beim Reinscrollen ab, wie die Play-Karten). */
-function CompeteViz({ k, show, light }: { k: string; show: boolean; light?: boolean }) {
-  if (k === "competeSeason") {
-    // Reise-Route: Stops ploppen nacheinander auf einer Linie.
-    return (
-      <div className="relative flex items-center">
-        <span className={`absolute left-1 right-1 top-1/2 h-px -translate-y-1/2 ${light ? "bg-black/15" : "bg-white/20"}`} />
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={`relative mx-1.5 h-2.5 w-2.5 rounded-full ${i === 3 ? (light ? "bg-matchup ring-[3px] ring-matchup/20" : "bg-white ring-2 ring-matchup") : "bg-matchup"} ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 130}ms` }} />
+/* ── Compete-Kacheln: gleiche Bühne wie die Play-Bildkacheln (aspect-4/5),
+ *    nur statt Foto eine gestaltete, animierte Mini-Oberfläche. ───────────── */
+
+/* Saison-Planer: Route auf einer Karte zeichnet sich, Stopps ploppen auf. */
+function SeasonTile({ show }: { show: boolean }) {
+  const stops = [
+    { x: 26, y: 105 }, { x: 44, y: 80 }, { x: 36, y: 55 }, { x: 62, y: 37 }, { x: 78, y: 17 },
+  ];
+  const DASH = 150;
+  return (
+    <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_15%_0%,#5b4bff_0%,#3a30c8_45%,#191a6b_100%)]">
+      <div className="absolute inset-0 opacity-[0.22]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px,#fff 1px,transparent 0)", backgroundSize: "16px 16px" }} />
+      <svg viewBox="0 0 100 125" className="absolute inset-0 h-full w-full">
+        <path
+          d="M26 105 Q 40 92 44 80 Q 34 67 36 55 Q 52 46 62 37 Q 72 27 78 17"
+          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.4" strokeLinecap="round"
+          strokeDasharray={DASH} strokeDashoffset={show ? 0 : DASH}
+          className={show ? "anim-draw" : ""} style={{ ["--dash-len" as string]: `${DASH}` }}
+        />
+      </svg>
+      {stops.map((s, i) => (
+        <span key={i} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${i === stops.length - 1 ? "h-3.5 w-3.5 bg-white ring-[3px] ring-white/35" : "h-2.5 w-2.5 bg-white/90 ring-2 ring-white/25"} ${show ? "anim-pop" : ""}`}
+          style={{ left: `${s.x}%`, top: `${s.y / 1.25}%`, animationDelay: `${350 + i * 170}ms` }} />
+      ))}
+    </div>
+  );
+}
+
+/* Turnier-Workspace: Preisgeld vs. Kosten wachsen, Netto zählt hoch. */
+function WorkspaceTile({ show }: { show: boolean }) {
+  const weeks = [40, 65, 35, 80, 55, 95];
+  return (
+    <div className="absolute inset-0 bg-[linear-gradient(165deg,#141736_0%,#0a0b21_60%,#05061a_100%)] p-4">
+      <div className="flex h-full flex-col justify-between">
+        <div>
+          <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-white/40">Net</p>
+          <p className={`mt-0.5 text-2xl font-extrabold tracking-tight text-emerald-400 ${show ? "anim-pop" : ""}`}>+4.2k</p>
+        </div>
+        <div className="space-y-2">
+          {[{ l: "Prize", w: 82, c: "#10b981" }, { l: "Costs", w: 54, c: "rgba(255,255,255,0.28)" }].map((b, i) => (
+            <div key={b.l}>
+              <div className="flex justify-between text-[8.5px] font-bold uppercase tracking-wide text-white/40"><span>{b.l}</span></div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className={`h-full rounded-full ${show ? "anim-growx" : ""}`} style={{ width: `${b.w}%`, background: b.c, animationDelay: `${200 + i * 180}ms` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <span className="flex h-10 items-end gap-1">
+          {weeks.map((h, i) => (
+            <span key={i} className={`flex-1 rounded-sm ${i === weeks.length - 1 ? "bg-emerald-400" : "bg-white/25"} ${show ? "anim-bar" : ""}`}
+              style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 90}ms` }} />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* Ranking & Meldechancen: Ring füllt auf 72 %, Rang steigt. */
+function RankingTile({ show }: { show: boolean }) {
+  const C = 2 * Math.PI * 28;
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(110%_90%_at_50%_0%,#2b2f8f_0%,#12143f_55%,#07081e_100%)] p-4">
+      <div className="relative">
+        <svg viewBox="0 0 72 72" className="h-24 w-24 -rotate-90">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="6" />
+          <circle cx="36" cy="36" r="28" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={C * 0.28}
+            className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-lg font-extrabold text-white">72%</span>
+      </div>
+      <div className="w-full space-y-1">
+        {[{ r: "#412", o: 0.45 }, { r: "#318", o: 0.7 }, { r: "#232", o: 1 }].map((x, i) => (
+          <div key={x.r} className={`flex items-center justify-between rounded-lg bg-white/[0.07] px-2.5 py-1 transition-all duration-500 ${show ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
+            style={{ transitionDelay: `${300 + i * 140}ms` }}>
+            <span className="text-[10px] font-bold text-white/70">ATP {x.r}</span>
+            <span className="text-[9px] font-bold text-emerald-400">▲</span>
+          </div>
         ))}
       </div>
-    );
-  }
-  if (k === "competeTournament") {
-    // P&L: Balken wachsen hoch (grün = Netto).
-    const bars = [50, 30, 80, 55, 95];
+    </div>
+  );
+}
+
+/* Team & Services: Crew ploppt auf, Wochenplan füllt sich. */
+function TeamTile({ show }: { show: boolean }) {
+  const crew = [
+    { c: "#7b6cff", l: "Coach" }, { c: "#10b981", l: "Physio" },
+    { c: "#f59e0b", l: "Fitness" }, { c: "#38bdf8", l: "Stringer" },
+  ];
+  const days = ["M", "T", "W", "T", "F"];
+  return (
+    <div className="absolute inset-0 flex flex-col justify-center gap-4 bg-[linear-gradient(160deg,#3b2ecc_0%,#221c7a_55%,#0c0b33_100%)] p-4">
+      <div className="grid grid-cols-2 gap-2">
+        {crew.map((m, i) => (
+          <div key={m.l} className={`flex items-center gap-2 rounded-xl bg-white/[0.09] px-2 py-1.5 ring-1 ring-white/15 ${show ? "anim-pop" : ""}`}
+            style={{ animationDelay: `${150 + i * 130}ms` }}>
+            <span className="h-5 w-5 shrink-0 rounded-full ring-2 ring-white/25" style={{ background: m.c }} />
+            <span className="truncate text-[9px] font-bold text-white/85">{m.l}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between rounded-xl bg-white/[0.07] px-2.5 py-2 ring-1 ring-white/10">
+        {days.map((d, i) => (
+          <span key={i} className="flex flex-col items-center gap-1">
+            <span className="text-[8px] font-bold text-white/45">{d}</span>
+            <span className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${show ? "scale-100 opacity-100" : "scale-0 opacity-0"}`}
+              style={{ background: [0, 2, 4].includes(i) ? "#10b981" : "rgba(255,255,255,0.25)", transitionDelay: `${500 + i * 90}ms` }} />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompeteTile({ k, show }: { k: string; show: boolean }) {
+  if (k === "competeSeason") return <SeasonTile show={show} />;
+  if (k === "competeTournament") return <WorkspaceTile show={show} />;
+  if (k === "competeRanking") return <RankingTile show={show} />;
+  return <TeamTile show={show} />;
+}
+
+/* Kleine animierte Grafik im Chip — analog zu den Play-Karten. */
+function CompeteChipViz({ k, show }: { k: string; show: boolean }) {
+  if (k === "competeSeason")
     return (
-      <span className="flex h-9 items-end gap-[3px]">
-        {bars.map((h, i) => (
-          <span key={i} className={`w-1.5 rounded-sm ${i === bars.length - 1 ? "bg-emerald-400" : light ? "bg-neutral-300" : "bg-white/30"} ${show ? "anim-bar" : ""}`} style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }} />
+      <span className="flex items-center gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className={`h-1.5 w-1.5 rounded-full bg-matchup ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 110}ms` }} />
         ))}
       </span>
     );
-  }
-  if (k === "competeRanking") {
-    // Annahme-Wahrscheinlichkeit: Ring füllt sich auf ~72%.
-    const C = 2 * Math.PI * 14;
+  if (k === "competeTournament")
     return (
-      <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
-        <circle cx="18" cy="18" r="14" fill="none" stroke={light ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.2)"} strokeWidth="3.5" />
-        <circle cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * 0.28} className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
+      <span className="flex h-4 items-end gap-[3px]">
+        {[45, 70, 40, 95].map((h, i) => (
+          <span key={i} className={`w-1 rounded-sm bg-emerald-400 ${show ? "anim-bar" : ""}`} style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }} />
+        ))}
+      </span>
+    );
+  if (k === "competeRanking") {
+    const C = 2 * Math.PI * 7;
+    return (
+      <svg viewBox="0 0 20 20" className="h-5 w-5 -rotate-90">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" />
+        <circle cx="10" cy="10" r="7" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={C * 0.3} className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
       </svg>
     );
   }
-  // competeTeam: Team-Avatare ploppen nacheinander auf.
   return (
-    <span className="flex -space-x-2">
-      {["#7b6cff", "#10b981", "#f59e0b", "#38bdf8"].map((c, i) => (
-        <span key={i} className={`h-7 w-7 rounded-full ring-2 ${light ? "ring-white" : "ring-neutral-950"} ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 120}ms` }} />
+    <span className="flex -space-x-1.5">
+      {["#7b6cff", "#10b981", "#f59e0b"].map((c, i) => (
+        <span key={i} className={`h-3.5 w-3.5 rounded-full ring-2 ring-black/40 ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 110}ms` }} />
       ))}
     </span>
   );
 }
 
 export function CompeteCard({ f, light }: { f: (typeof COMPETE_FEATURES)[number]; light?: boolean }) {
-  const { ref, inView } = useInView<HTMLDivElement>();
+  const { ref, inView } = useInView<HTMLElement>();
   const t = useT();
+  const right = f.key === "competeRanking" || f.key === "competeTeam";
   return (
-    <div ref={ref} className={light ? "rounded-2xl bg-white p-5 ring-1 ring-black/10 shadow-[0_10px_30px_-16px_rgba(0,0,0,0.35)]" : "rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10"}>
-      <div className="flex h-11 items-center justify-between">
-        <CompeteViz k={f.key} show={inView} light={light} />
-        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ${light ? "bg-neutral-100 text-neutral-600 ring-black/10" : "bg-black/40 text-white/80 ring-white/10"}`}>{f.stat}</span>
+    <article ref={ref} className={`group overflow-hidden rounded-2xl shadow-sm ring-1 ${light ? "bg-white ring-black/5" : "bg-white/[0.06] ring-white/10"}`}>
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
+          <CompeteTile k={f.key} show={inView} />
+        </div>
+        <Chip align={right ? "right" : "left"}>
+          {right && <span>{f.stat}</span>}
+          <CompeteChipViz k={f.key} show={inView} />
+          {!right && <span>{f.stat}</span>}
+        </Chip>
       </div>
-      <h4 className={`mt-4 text-[15px] font-bold ${light ? "text-neutral-900" : ""}`}>{t(`landing.${f.key}Title`)}</h4>
-      <p className={`mt-1.5 text-[13px] leading-relaxed ${light ? "text-neutral-500" : "text-white/55"}`}>{t(`landing.${f.key}Copy`)}</p>
-    </div>
+      <div className="p-6">
+        <h3 className={`text-xl font-bold tracking-tight ${light ? "" : "text-white"}`}>{t(`landing.${f.key}Title`)}</h3>
+        <p className={`mt-2 text-sm leading-relaxed ${light ? "text-neutral-600" : "text-white/60"}`}>{t(`landing.${f.key}Copy`)}</p>
+      </div>
+    </article>
   );
 }
 
