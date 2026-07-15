@@ -172,7 +172,7 @@ const GAME_AVATARS = [
 function OrganizeScene({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <div className="absolute left-2.5 top-2.5 w-[50%] max-w-[142px] sm:left-3 sm:top-3">
+    <div className="absolute left-2.5 top-2.5 w-fit max-w-[46%] sm:left-3 sm:top-3">
       <div
         className={`rounded-xl bg-white/95 p-1.5 shadow-[0_10px_26px_-10px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur ${show ? "anim-pop" : "opacity-0"}`}
         style={show ? { animationDelay: "0.25s" } : undefined}
@@ -186,7 +186,7 @@ function OrganizeScene({ show }: { show: boolean }) {
             <p className="truncate text-[7px] font-semibold leading-tight text-neutral-500">{t("landing.organizeSceneWhen")}</p>
           </div>
         </div>
-        <div className="mt-1 flex items-center justify-between border-t border-black/5 pt-1">
+        <div className="mt-1 flex items-center justify-between gap-2 border-t border-black/5 pt-1">
           <div className="flex -space-x-1">
             {GAME_AVATARS.map((src, i) => (
               <span
@@ -310,7 +310,7 @@ function WorkspaceTile({ show }: { show: boolean }) {
   const weeks = [40, 65, 35, 80, 55, 95];
   return (
     <div className="absolute inset-0 bg-[linear-gradient(165deg,#141736_0%,#0a0b21_60%,#05061a_100%)] p-4">
-      <div className="flex h-full flex-col gap-4">
+      <div className="flex h-full flex-col justify-center gap-4 pb-6">
         {/* Preisgeld vs. Kosten */}
         <div className="space-y-2.5">
           {[{ l: "Prize", w: 82, c: "#10b981" }, { l: "Costs", w: 54, c: "rgba(255,255,255,0.28)" }].map((b, i) => (
