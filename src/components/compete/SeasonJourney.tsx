@@ -73,11 +73,10 @@ const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string
 /* Team-&-Service-Hinweise: dezente Mini-Karten (Profilbild + Rolle + Trainings-
  * Kalender) verteilt neben dem Weg zwischen den Turnier-Kacheln. */
 const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string; cat: string; role: { de: string; en: string }; accent: string; days: number[] }[] = [
-  { at: 0.20, roadP: 0.14, dx: 20, key: "fitness", cat: "sc", role: { de: "Fitness-Coach", en: "Fitness coach" }, accent: "#f59e0b", days: [0, 2, 4] },
-  { at: 0.34, roadP: 0.33, dx: -21, key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3] },
   { at: 0.56, roadP: 0.55, dx: 20, key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3] },
-  { at: 0.77, roadP: 0.73, dx: -21, key: "coach", cat: "coach", role: { de: "Coach", en: "Coach" }, accent: "#7b6cff", days: [0, 1, 2, 4] },
 ];
+// Besaiter wird separat an die EFG-Swiss-Open-Kachel angebunden.
+const STRINGER = { key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3], at: 0.15 };
 const WEEKDAYS = { de: ["Mo", "Di", "Mi", "Do", "Fr"], en: ["Mo", "Tu", "We", "Th", "Fr"] };
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -98,6 +97,28 @@ function Emblem({ w, size = 48 }: { w: WP; size?: number }) {
             <path fill="currentColor" d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.7 6.6 19.5l1.1-5.9L3.4 9.4l5.9-.8L12 3.2Z" />
           </svg>}
     </span>
+  );
+}
+
+/* Kleine, transparente Team-/Service-Kachel (Profilfoto + Rolle + Trainingstage). */
+function ServiceTile({ hint, person, lang }: { hint: { key: string; role: { de: string; en: string }; accent: string; days: number[] }; person?: { img: string; name: string }; lang: "de" | "en" }) {
+  const s = SVC[hint.key];
+  const sched = hint.days.map((d) => WEEKDAYS[lang][d]).join(" · ");
+  return (
+    <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-2 py-1.5 ring-1 ring-white/20 backdrop-blur-md">
+      {person ? (
+        <img src={person.img} alt="" loading="lazy" className="h-7 w-7 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 1.5px ${hint.accent}` }} />
+      ) : (
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/90" style={{ background: `${hint.accent}66`, boxShadow: `0 0 0 1.5px ${hint.accent}` }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.08em]" style={{ color: hint.accent }}>{hint.role[lang]}</p>
+        <p className="truncate text-[11px] font-bold leading-tight text-white">{person?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
+        <p className="mt-0.5 truncate text-[8.5px] font-semibold text-white/55">{sched}</p>
+      </div>
+    </div>
   );
 }
 
@@ -290,25 +311,9 @@ export default function SeasonJourney() {
             const [rx, ry] = pointAt(h.roadP);
             const pos = px(rx + h.dx, ry)!;
             const active = p >= h.at;
-            const s = SVC[h.key];
-            const person = team[h.cat];
-            const sched = h.days.map((d) => WEEKDAYS[lang][d]).join(" · ");
             return (
-              <div key={`svc-${i}`} className={`absolute w-[150px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
-                <div className="flex items-center gap-2.5 rounded-2xl bg-white/10 px-2.5 py-2 ring-1 ring-white/20 backdrop-blur-md">
-                  {person ? (
-                    <img src={person.img} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 1.5px ${h.accent}` }} />
-                  ) : (
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90" style={{ background: `${h.accent}66`, boxShadow: `0 0 0 1.5px ${h.accent}` }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
-                    </span>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-[10px] font-extrabold uppercase tracking-[0.08em]" style={{ color: h.accent }}>{h.role[lang]}</p>
-                    <p className="truncate text-[11.5px] font-bold leading-tight text-white">{person?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
-                    <p className="mt-0.5 truncate text-[9px] font-semibold text-white/55">{sched}</p>
-                  </div>
-                </div>
+              <div key={`svc-${i}`} className={`absolute w-[128px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
+                <ServiceTile hint={h} person={team[h.cat]} lang={lang} />
               </div>
             );
           })}
@@ -359,20 +364,30 @@ export default function SeasonJourney() {
                       </div>
                     </div>
                   </div>
-                  {/* Resultat als kleines Dropdown UNTER der Kachel (animiert) */}
-                  <div className="absolute" style={{ top: pin.y + 40, left: g.cardLeft + 14 }}>
-                    <div
-                      className={`inline-flex origin-top items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 text-[11px] font-bold text-neutral-800 shadow-[0_12px_26px_-12px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur transition-all duration-500 ${active ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
-                      style={{ transitionDelay: active ? "300ms" : "0ms" }}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: w.color }} />
-                      {w.note[lang]}
-                    </div>
-                  </div>
                 </div>
               </div>
             );
           })}
+
+          {/* Besaiter — an EFG Swiss Open (Gstaad) angebunden, mit Verbindungslinie */}
+          {box && (() => {
+            const g = WAYPOINTS[0]; // gstaad
+            const pin = px(g.pinX, g.pinY)!;
+            const geom = cardGeom(pin.x, g.cx, box.vw);
+            const active = p >= STRINGER.at;
+            const tileLeft = geom.cardLeft + 16;
+            const tileTop = pin.y - 118;
+            const lineX = tileLeft + 22;
+            const cardTopEdge = pin.y - 38;
+            return (
+              <div className={`transition-opacity duration-500 ${active ? "opacity-100" : "opacity-0"}`}>
+                <div className="absolute w-px bg-white/40" style={{ left: lineX, top: tileTop + 54, height: Math.max(0, cardTopEdge - (tileTop + 54)) }} />
+                <div className="absolute w-[128px]" style={{ left: tileLeft, top: tileTop }}>
+                  <ServiceTile hint={STRINGER} person={team[STRINGER.cat]} lang={lang} />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Ergebnis-Karte (Ziel) — Trophy-Summary mit Reise & Team */}
           {box && (
