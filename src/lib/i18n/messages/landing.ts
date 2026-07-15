@@ -84,7 +84,7 @@ export const landing = {
     // HealthStats
     statsTitle: "Eine wachsende Community von Spielern",
     statsSubtitle:
-      "Play oder Compete — Matchup wächst mit dir. Vom ersten Match in deiner Nähe bis zur durchgeplanten Wettkampfsaison.",
+      "Play oder Compete, Matchup wächst mit dir. Vom ersten Match in deiner Nähe bis zur durchgeplanten Wettkampfsaison.",
     statsTitleA: "Für Freizeit",
     statsTitleB: "und Wettkampf gebaut",
     statSports: "Tennis, Padel & Pickleball",
@@ -195,7 +195,7 @@ export const landing = {
 
     statsTitle: "A growing community of players",
     statsSubtitle:
-      "Play or Compete — Matchup grows with you. From your first match nearby to a fully planned competitive season.",
+      "Play or Compete, Matchup grows with you. From your first match nearby to a fully planned competitive season.",
     statsTitleA: "Built for players",
     statsTitleB: "and competitors",
     statSports: "Tennis, padel & pickleball",

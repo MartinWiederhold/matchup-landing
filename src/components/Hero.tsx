@@ -5,20 +5,10 @@ import { useT } from "@/lib/i18n";
 
 const HERO_VIDEO = "/hero.mp4";
 const HERO_AUDIO = "/hero-audio.m4a";
-const FADE_START = 12; // ab hier leiser werden
-const FADE_END = 15; // hier praktisch still → sauberer Loop-Übergang
-
-// Lautstärke entlang der Video-Zeit: voll bis 12s, linear aus bis 15s.
-function volAt(time: number): number {
-  if (time < FADE_START) return 1;
-  if (time >= FADE_END) return 0;
-  return Math.max(0, (FADE_END - time) / (FADE_END - FADE_START));
-}
 
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const lastTime = useRef(0);
   const [playing, setPlaying] = useState(true);
   const [sound, setSound] = useState(false); // Musik startet NIE von selbst
   const t = useT();
@@ -35,53 +25,20 @@ export default function Hero() {
     }
   };
 
+  /* Musik ist bewusst NICHT an das Video gekoppelt:
+   * Klick = von vorne abspielen, erneut = stoppen, erneut = wieder von vorne. */
   const toggleSound = () => {
     const a = audioRef.current;
-    const v = videoRef.current;
-    const next = !sound;
-    setSound(next);
     if (!a) return;
-    if (next) {
-      // Ab aktueller Video-Position starten (nur solange die Musik noch läuft)
-      if (v && v.currentTime < FADE_END) {
-        a.currentTime = v.currentTime;
-        a.volume = volAt(v.currentTime);
-        a.muted = false;
-        void a.play();
-      }
-    } else {
+    if (sound) {
       a.pause();
-    }
-  };
-
-  // Musik an die Video-Zeitachse koppeln: 0–20s, beim Loop von vorne.
-  const onTimeUpdate = () => {
-    const v = videoRef.current;
-    const a = audioRef.current;
-    if (!v || !a) return;
-    const wrapped = v.currentTime < lastTime.current - 0.5; // Video ist neu gestartet
-    lastTime.current = v.currentTime;
-
-    if (!sound) {
-      if (!a.paused) a.pause();
-      return;
-    }
-    if (wrapped && v.currentTime < FADE_END) {
+      setSound(false);
+    } else {
       a.currentTime = 0;
       a.volume = 1;
+      a.muted = false;
       void a.play();
-      return;
-    }
-    if (v.currentTime >= FADE_END) {
-      if (!a.paused) a.pause();
-    } else {
-      a.volume = volAt(v.currentTime); // sanfter Fade 12→15s
-      if (a.paused) {
-        a.currentTime = v.currentTime;
-        void a.play();
-      } else if (Math.abs(a.currentTime - v.currentTime) > 0.4) {
-        a.currentTime = v.currentTime; // locker synchron halten
-      }
+      setSound(true);
     }
   };
 
@@ -96,9 +53,9 @@ export default function Hero() {
         loop
         playsInline
         poster="/hero-poster.jpg"
-        onTimeUpdate={onTimeUpdate}
       />
-      <audio ref={audioRef} src={HERO_AUDIO} preload="auto" />
+      {/* Track zu Ende → Button zeigt wieder „Musik an", nächster Klick startet von vorne */}
+      <audio ref={audioRef} src={HERO_AUDIO} preload="auto" onEnded={() => setSound(false)} />
       {/* subtle darkening so the white headline stays legible */}
       <div className="absolute inset-0 bg-black/15" />
 
