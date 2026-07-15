@@ -13,12 +13,12 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 89], // START → Person
+  [102, 92], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 102, pinY: 89, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 102, pinY: 92, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 // Turniername nur bis „Open" (sonst zu lang für die schmale Karte).
 function shortName(name: string) {
