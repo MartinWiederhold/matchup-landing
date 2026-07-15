@@ -13,12 +13,18 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 94], // START → Person
+  [102, 89], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 102, pinY: 94, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 102, pinY: 89, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+
+// Turniername nur bis „Open" (sonst zu lang für die schmale Karte).
+function shortName(name: string) {
+  const i = name.indexOf("Open");
+  return i >= 0 ? name.slice(0, i + 4) : name;
+}
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -337,7 +343,7 @@ export default function SeasonJourney() {
                     </span>
                     <div className="min-w-0">
                       <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#353fcc] sm:text-[9px] sm:tracking-[0.16em]">START</p>
-                      <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-neutral-900 sm:text-[15px]">Zürich</p>
+                      <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-neutral-900 sm:text-[15px]">{lang === "de" ? "Zürich" : "Zurich"}</p>
                       <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{lang === "de" ? "Heimbasis · Saisonstart" : "Home base · season start"}</p>
                     </div>
                   </div>
@@ -362,7 +368,7 @@ export default function SeasonJourney() {
                         <Emblem w={w} size={EMB} />
                         <div className="min-w-0">
                           <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.1em] sm:text-[9px] sm:tracking-[0.13em]" style={{ color: w.color }}>{w.tier}</p>
-                          <p className="mt-0.5 truncate text-[11.5px] font-extrabold leading-tight text-neutral-900 sm:text-[14px]">{w.t.name}</p>
+                          <p className="mt-0.5 truncate text-[11.5px] font-extrabold leading-tight text-neutral-900 sm:text-[14px]">{shortName(w.t.name)}</p>
                           <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{rangeLabel(w.t, lang)} · {SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · {w.t.city}</p>
                         </div>
                       </div>
