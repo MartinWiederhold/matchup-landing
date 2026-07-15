@@ -123,10 +123,9 @@ function ServiceTile({ hint, person, lang }: { hint: { key: string; role: { de: 
 }
 
 /* Karte an cx-Ziel (Flanke); Leader-Line läuft vom Pin exakt bis zur Karte. */
-const CARDW = 236;
-function cardGeom(pinx: number, cx: number, vw: number) {
-  const cardLeft = Math.max(12, Math.min(vw - CARDW - 12, cx * vw - CARDW / 2));
-  const cardRight = cardLeft + CARDW;
+function cardGeom(pinx: number, cx: number, vw: number, cardw: number) {
+  const cardLeft = Math.max(10, Math.min(vw - cardw - 10, cx * vw - cardw / 2));
+  const cardRight = cardLeft + cardw;
   if (pinx >= cardRight) return { cardLeft, lineLeft: cardRight, lineWidth: pinx - cardRight, fromLeft: true };
   if (pinx <= cardLeft) return { cardLeft, lineLeft: pinx, lineWidth: cardLeft - pinx, fromLeft: false };
   return { cardLeft, lineLeft: pinx, lineWidth: 0, fromLeft: true };
@@ -201,6 +200,11 @@ export default function SeasonJourney() {
   const startPx = px(START.pinX, START.pinY);
   const markerPx = px(mx, my);
   const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < 46);
+
+  // Mobil kompakter: schmalere Karten, kleineres Emblem.
+  const mobile = (box?.vw ?? 1024) < 640;
+  const CW = mobile ? 150 : 236;
+  const EMB = mobile ? 34 : 48;
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
@@ -277,17 +281,17 @@ export default function SeasonJourney() {
         {/* ── Overlay ── */}
         <div className="pointer-events-none absolute inset-0 z-40">
           {/* Kopfzeile oben-rechts */}
-          <div className="absolute right-5 top-[84px] max-w-[min(46%,360px)] text-right text-white sm:right-8 sm:top-24">
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-white/75">{T.label}</span>
-            <h2 className="mt-2 whitespace-pre-line text-[26px] font-bold leading-[1.05] tracking-tight sm:text-[38px]">{T.title}</h2>
-            <p className="ml-auto mt-3 max-w-[20em] text-[12px] leading-snug text-white/70 sm:text-sm">{T.sub}</p>
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <div className="flex gap-1.5">
+          <div className="absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white sm:right-8 sm:top-24">
+            <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-white/75 sm:text-[10px] sm:tracking-[0.28em]">{T.label}</span>
+            <h2 className="mt-1.5 whitespace-pre-line text-[19px] font-bold leading-[1.05] tracking-tight sm:mt-2 sm:text-[38px]">{T.title}</h2>
+            <p className="ml-auto mt-2 max-w-[18em] text-[10.5px] leading-snug text-white/70 sm:mt-3 sm:text-sm">{T.sub}</p>
+            <div className="mt-3 flex items-center justify-end gap-2 sm:mt-4">
+              <div className="flex gap-1 sm:gap-1.5">
                 {WAYPOINTS.map((w, i) => (
-                  <span key={i} className="h-1.5 w-6 rounded-full transition-colors duration-500" style={{ background: p >= w.at ? "#fff" : "rgba(255,255,255,0.28)" }} />
+                  <span key={i} className="h-1.5 w-4 rounded-full transition-colors duration-500 sm:w-6" style={{ background: p >= w.at ? "#fff" : "rgba(255,255,255,0.28)" }} />
                 ))}
               </div>
-              <span className="text-[11px] font-bold tabular-nums text-white/80">{doneCount}/{WAYPOINTS.length}</span>
+              <span className="text-[10px] font-bold tabular-nums text-white/80 sm:text-[11px]">{doneCount}/{WAYPOINTS.length}</span>
             </div>
           </div>
 
@@ -321,20 +325,20 @@ export default function SeasonJourney() {
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
             const pin = px(START.pinX, START.pinY)!;
-            const g = cardGeom(pin.x, START.cx, box.vw);
+            const g = cardGeom(pin.x, START.cx, box.vw, CW);
             return (
               <>
                 {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - 46) }} />
-                <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CARDW }}>
-                  <div className="flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]">
-                      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" /></svg>
+                <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CW }}>
+                  <div className="flex items-center gap-2 rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-3">
+                    <span className="flex shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" style={{ width: EMB, height: EMB }}>
+                      <svg width={EMB * 0.46} height={EMB * 0.46} viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" /></svg>
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#353fcc]">START</p>
-                      <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight text-neutral-900">Zürich</p>
-                      <p className="mt-0.5 truncate text-[11px] font-medium text-neutral-500">{lang === "de" ? "Heimbasis · Saisonstart" : "Home base · season start"}</p>
+                      <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#353fcc] sm:text-[9px] sm:tracking-[0.16em]">START</p>
+                      <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-neutral-900 sm:text-[15px]">Zürich</p>
+                      <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{lang === "de" ? "Heimbasis · Saisonstart" : "Home base · season start"}</p>
                     </div>
                   </div>
                 </div>
@@ -346,20 +350,20 @@ export default function SeasonJourney() {
           {box && WAYPOINTS.map((w, i) => {
             const pin = px(w.pinX, w.pinY)!;
             const active = p >= w.at;
-            const g = cardGeom(pin.x, w.cx, box.vw);
+            const g = cardGeom(pin.x, w.cx, box.vw, CW);
             return (
               <div key={`card-${i}`}>
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.fromLeft ? "right" : "left", transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
                 <div className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-500" style={{ top: pin.y, left: pin.x, background: w.color, opacity: active ? 1 : 0 }} />
-                <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CARDW }}>
+                <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CW }}>
                   <div className={`transition-all duration-500 ${active ? "translate-x-0 opacity-100" : "opacity-0 " + (g.fromLeft ? "-translate-x-4" : "translate-x-4")}`}>
-                    <div className="rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
-                      <div className="flex items-center gap-3">
-                        <Emblem w={w} />
+                    <div className="rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:p-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Emblem w={w} size={EMB} />
                         <div className="min-w-0">
-                          <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.13em]" style={{ color: w.color }}>{w.tier}</p>
-                          <p className="mt-0.5 truncate text-[14px] font-extrabold leading-tight text-neutral-900">{w.t.name}</p>
-                          <p className="mt-0.5 truncate text-[11px] font-medium text-neutral-500">{rangeLabel(w.t, lang)} · {SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · {w.t.city}</p>
+                          <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.1em] sm:text-[9px] sm:tracking-[0.13em]" style={{ color: w.color }}>{w.tier}</p>
+                          <p className="mt-0.5 truncate text-[11.5px] font-extrabold leading-tight text-neutral-900 sm:text-[14px]">{w.t.name}</p>
+                          <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{rangeLabel(w.t, lang)} · {SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · {w.t.city}</p>
                         </div>
                       </div>
                     </div>
@@ -373,7 +377,7 @@ export default function SeasonJourney() {
           {box && (() => {
             const g = WAYPOINTS[0]; // gstaad
             const pin = px(g.pinX, g.pinY)!;
-            const geom = cardGeom(pin.x, g.cx, box.vw);
+            const geom = cardGeom(pin.x, g.cx, box.vw, CW);
             const active = p >= STRINGER.at;
             const tileLeft = geom.cardLeft + 16;
             const tileTop = pin.y - 118;
@@ -391,19 +395,19 @@ export default function SeasonJourney() {
 
           {/* Ergebnis-Karte (Ziel) — Trophy-Summary mit Reise & Team */}
           {box && (
-            <div className={`absolute w-[min(52vw,264px)] transition-all duration-700 ${finished ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={{ top: 88, left: 16 }}>
+            <div className={`absolute w-[min(58vw,220px)] transition-all duration-700 sm:w-[min(52vw,264px)] ${finished ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
               <div className="overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-[0_24px_60px_-18px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
-                <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
-                  <svg width="16" height="16" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-400">{T.done}</span>
+                <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2 sm:gap-2 sm:px-4 sm:py-2.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
+                  <span className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-emerald-400 sm:text-[10px] sm:tracking-[0.18em]">{T.done}</span>
                 </div>
                 <div className="grid grid-cols-3 divide-x divide-white/10">
-                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none">+180</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span></div>
-                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none text-emerald-400">+4.2k</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.net} CHF</span></div>
-                  <div className="px-2 py-3 text-center"><span className="block text-[18px] font-extrabold leading-none">{WAYPOINTS.length}</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-wide text-white/45">{T.events}</span></div>
+                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none sm:text-[18px]">+180</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.rank}</span></div>
+                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none text-emerald-400 sm:text-[18px]">+4.2k</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.net} CHF</span></div>
+                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none sm:text-[18px]">{WAYPOINTS.length}</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.events}</span></div>
                 </div>
                 {/* dezente Reise-/Team-Zeile */}
-                <div className="flex items-center gap-3 border-t border-white/10 px-4 py-2.5 text-[10.5px] font-semibold text-white/70">
+                <div className="flex items-center gap-2 border-t border-white/10 px-3 py-2 text-[9px] font-semibold text-white/70 sm:gap-3 sm:px-4 sm:py-2.5 sm:text-[10.5px]">
                   {[
                     { icon: <ModeIcon icon="plane" />, val: `${flights} ${T.flights}` },
                     { icon: <BedIcon />, val: `${nightsTotal} ${T.nights}` },
