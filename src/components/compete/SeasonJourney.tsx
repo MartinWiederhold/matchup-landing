@@ -12,12 +12,12 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 88], // START → Person
+  [102, 94], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 102, pinY: 88, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 102, pinY: 94, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -60,11 +60,22 @@ function ModeIcon({ icon }: { icon: "plane" | "train" | "car" }) {
 }
 function BedIcon() { return <path fill="currentColor" d="M2 7a1 1 0 0 1 2 0v4h7V9a1 1 0 0 1 1-1h6a4 4 0 0 1 4 4v5a1 1 0 0 1-2 0v-2H4v2a1 1 0 0 1-2 0V7Zm4.5 0A2.5 2.5 0 1 0 6.5 12 2.5 2.5 0 0 0 6.5 7Z" />; }
 function TeamIcon() { return <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><path d="M16.5 5.3a2.5 2.5 0 0 1 0 4.9M17 13.5a4.6 4.6 0 0 1 3.5 4.5" /></g>; }
-const SERVICES: { key: string; label: { de: string; en: string }; path: string; stroke?: boolean }[] = [
+type Svc = { key: string; label: { de: string; en: string }; path: string; stroke?: boolean };
+const SERVICES: Svc[] = [
   { key: "string", label: { de: "Besaitung", en: "Stringing" }, path: "M9 9m-5 0a5 5 0 1 0 10 0a5 5 0 1 0-10 0M12.6 12.6 20 20", stroke: true },
   { key: "physio", label: { de: "Physio", en: "Physio" }, path: "M10.5 3h3v6h6v3h-6v6h-3v-6h-6V9h6z" },
   { key: "fitness", label: { de: "Fitness", en: "Fitness" }, path: "M4 9v6M7 6.5v11M17 6.5v11M20 9v6M7 12h10", stroke: true },
   { key: "coach", label: { de: "Coach", en: "Coach" }, path: "M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6M6 21a6 6 0 0 1 12 0", stroke: true },
+];
+const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string, Svc>;
+
+/* Team-&-Service-Hinweise: dezent zwischen den Turnier-Kacheln verteilt, neben
+ * dem Weg in den freien Flächen, blenden beim Vorbeiscrollen ein. */
+const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string }[] = [
+  { at: 0.20, roadP: 0.16, dx: 17, key: "fitness" },
+  { at: 0.34, roadP: 0.34, dx: -18, key: "string" },
+  { at: 0.55, roadP: 0.55, dx: 17, key: "physio" },
+  { at: 0.76, roadP: 0.74, dx: -18, key: "coach" },
 ];
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -250,6 +261,22 @@ export default function SeasonJourney() {
             );
           })}
 
+          {/* Team-&-Service-Hinweise — dezent zwischen den Kacheln, neben dem Weg */}
+          {box && SERVICE_HINTS.map((h, i) => {
+            const [rx, ry] = pointAt(h.roadP);
+            const pos = px(rx + h.dx, ry)!;
+            const active = p >= h.at;
+            const s = SVC[h.key];
+            return (
+              <div key={`svc-${i}`} className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
+                <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-semibold text-white/90 ring-1 ring-white/25 backdrop-blur-md">
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
+                  {s.label[lang]}
+                </span>
+              </div>
+            );
+          })}
+
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
             const pin = px(START.pinX, START.pinY)!;
@@ -297,16 +324,6 @@ export default function SeasonJourney() {
                           </p>
                         </div>
                       </div>
-                      <div className="mt-2.5 flex items-center gap-2.5 border-t border-black/5 pt-2">
-                        {SERVICES.map((s, si) => (
-                          <span key={s.key} title={s.label[lang]}
-                            className={`flex items-center transition-all duration-500 ${active ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
-                            style={{ transitionDelay: `${120 + si * 70}ms`, color: "#9aa2b1" }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
-                          </span>
-                        ))}
-                        <span className="ml-auto text-[9px] font-semibold uppercase tracking-wide text-neutral-400">{lang === "de" ? "vor Ort" : "on site"}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -346,7 +363,6 @@ export default function SeasonJourney() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[26vh] bg-gradient-to-b from-transparent to-neutral-950" />
     </section>
   );
 }

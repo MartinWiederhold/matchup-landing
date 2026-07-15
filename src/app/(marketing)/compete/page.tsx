@@ -53,23 +53,23 @@ export default async function ComparePage() {
       {/* Season Journey — scroll-getriebene Weg-Animation mit Turnier-Stationen */}
       <SeasonJourney />
 
-      {/* Feature-Grid (dunkel, animierte Karten) */}
-      <section className="bg-neutral-950 px-4 pb-24 pt-40 text-white sm:px-6 lg:px-12 sm:pt-48">
+      {/* Feature-Grid (hell, animierte Karten) — sauberer Cut auf weiss */}
+      <section className="bg-white px-4 pb-24 pt-40 text-neutral-900 sm:px-6 lg:px-12 sm:pt-48">
         <div className="mx-auto max-w-[1280px]">
           <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
             {t("landing.competeSectionTitle")}
           </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-neutral-500 sm:text-base">
             {t("landing.competePageIntro")}
           </p>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {COMPETE_FEATURES.map((f) => (
-              <CompeteCard key={f.key} f={f} />
+              <CompeteCard key={f.key} f={f} light />
             ))}
           </div>
 
-          <a href="/find-a-partner" className="mt-12 inline-flex items-center gap-1 text-sm font-semibold text-white/60 underline-offset-4 hover:text-white hover:underline">
+          <a href="/find-a-partner" className="mt-12 inline-flex items-center gap-1 text-sm font-semibold text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline">
             {t("landing.competeBackToPlay")} →
           </a>
         </div>

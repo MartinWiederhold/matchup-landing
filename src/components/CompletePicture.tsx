@@ -195,14 +195,14 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
 }
 
 /* Animierte Mini-Grafik je Compete-Feature (spielt beim Reinscrollen ab, wie die Play-Karten). */
-function CompeteViz({ k, show }: { k: string; show: boolean }) {
+function CompeteViz({ k, show, light }: { k: string; show: boolean; light?: boolean }) {
   if (k === "competeSeason") {
     // Reise-Route: Stops ploppen nacheinander auf einer Linie.
     return (
       <div className="relative flex items-center">
-        <span className="absolute left-1 right-1 top-1/2 h-px -translate-y-1/2 bg-white/20" />
+        <span className={`absolute left-1 right-1 top-1/2 h-px -translate-y-1/2 ${light ? "bg-black/15" : "bg-white/20"}`} />
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={`relative mx-1.5 h-2.5 w-2.5 rounded-full ${i === 3 ? "bg-white ring-2 ring-matchup" : "bg-matchup"} ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 130}ms` }} />
+          <span key={i} className={`relative mx-1.5 h-2.5 w-2.5 rounded-full ${i === 3 ? (light ? "bg-matchup ring-[3px] ring-matchup/20" : "bg-white ring-2 ring-matchup") : "bg-matchup"} ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 130}ms` }} />
         ))}
       </div>
     );
@@ -213,7 +213,7 @@ function CompeteViz({ k, show }: { k: string; show: boolean }) {
     return (
       <span className="flex h-9 items-end gap-[3px]">
         {bars.map((h, i) => (
-          <span key={i} className={`w-1.5 rounded-sm ${i === bars.length - 1 ? "bg-emerald-400" : "bg-white/30"} ${show ? "anim-bar" : ""}`} style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }} />
+          <span key={i} className={`w-1.5 rounded-sm ${i === bars.length - 1 ? "bg-emerald-400" : light ? "bg-neutral-300" : "bg-white/30"} ${show ? "anim-bar" : ""}`} style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 80}ms` }} />
         ))}
       </span>
     );
@@ -223,32 +223,32 @@ function CompeteViz({ k, show }: { k: string; show: boolean }) {
     const C = 2 * Math.PI * 14;
     return (
       <svg viewBox="0 0 36 36" className="h-11 w-11 -rotate-90">
-        <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3.5" />
-        <circle cx="18" cy="18" r="14" fill="none" stroke="#34d399" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * 0.28} className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
+        <circle cx="18" cy="18" r="14" fill="none" stroke={light ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.2)"} strokeWidth="3.5" />
+        <circle cx="18" cy="18" r="14" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * 0.28} className={show ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${C}` }} />
       </svg>
     );
   }
   // competeTeam: Team-Avatare ploppen nacheinander auf.
   return (
     <span className="flex -space-x-2">
-      {["#7b6cff", "#34d399", "#f59e0b", "#38bdf8"].map((c, i) => (
-        <span key={i} className={`h-7 w-7 rounded-full ring-2 ring-neutral-950 ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 120}ms` }} />
+      {["#7b6cff", "#10b981", "#f59e0b", "#38bdf8"].map((c, i) => (
+        <span key={i} className={`h-7 w-7 rounded-full ring-2 ${light ? "ring-white" : "ring-neutral-950"} ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 120}ms` }} />
       ))}
     </span>
   );
 }
 
-export function CompeteCard({ f }: { f: (typeof COMPETE_FEATURES)[number] }) {
+export function CompeteCard({ f, light }: { f: (typeof COMPETE_FEATURES)[number]; light?: boolean }) {
   const { ref, inView } = useInView<HTMLDivElement>();
   const t = useT();
   return (
-    <div ref={ref} className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+    <div ref={ref} className={light ? "rounded-2xl bg-white p-5 ring-1 ring-black/10 shadow-[0_10px_30px_-16px_rgba(0,0,0,0.35)]" : "rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10"}>
       <div className="flex h-11 items-center justify-between">
-        <CompeteViz k={f.key} show={inView} />
-        <span className="rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-bold text-white/80 ring-1 ring-white/10">{f.stat}</span>
+        <CompeteViz k={f.key} show={inView} light={light} />
+        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ${light ? "bg-neutral-100 text-neutral-600 ring-black/10" : "bg-black/40 text-white/80 ring-white/10"}`}>{f.stat}</span>
       </div>
-      <h4 className="mt-4 text-[15px] font-bold">{t(`landing.${f.key}Title`)}</h4>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-white/55">{t(`landing.${f.key}Copy`)}</p>
+      <h4 className={`mt-4 text-[15px] font-bold ${light ? "text-neutral-900" : ""}`}>{t(`landing.${f.key}Title`)}</h4>
+      <p className={`mt-1.5 text-[13px] leading-relaxed ${light ? "text-neutral-500" : "text-white/55"}`}>{t(`landing.${f.key}Copy`)}</p>
     </div>
   );
 }
