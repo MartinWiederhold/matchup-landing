@@ -42,13 +42,22 @@ import {
 import { loadTourPlan, saveTourPlan } from "@/lib/tour";
 import { loadProviders, type ServiceProvider } from "@/lib/services";
 
-const SVC_CAT_LABEL: Record<string, string> = {
-  coach: "Coach", hitting: "Hitting Partner", stringer: "Stringer", physio: "Physio",
-  sc: "Athletik", mental: "Mental", nutrition: "Ernährung", tour_companion: "Tour-Begleiter",
+const SVC_CAT_LABEL: Record<string, { de: string; en: string }> = {
+  coach: { de: "Coach", en: "Coach" }, hitting: { de: "Hitting Partner", en: "Hitting Partner" },
+  stringer: { de: "Stringer", en: "Stringer" }, physio: { de: "Physio", en: "Physio" },
+  sc: { de: "Athletik", en: "Athletic" }, mental: { de: "Mental", en: "Mental" },
+  nutrition: { de: "Ernährung", en: "Nutrition" }, tour_companion: { de: "Tour-Begleiter", en: "Tour Companion" },
 };
-const SVC_UNIT: Record<string, string> = { hour: "/Std.", session: "/Session", stringing: "/Besp.", week: "/Wo.", year: "/Jahr" };
-function serviceMarkerIcon(p: ServiceProvider): L.DivIcon {
-  const price = p.price_from != null ? `${p.currency ?? ""} ${p.price_from}` : SVC_CAT_LABEL[p.category] ?? "Service";
+const svcCatLabel = (category: string, locale: string): string => {
+  const m = SVC_CAT_LABEL[category];
+  return m ? (locale === "de" ? m.de : m.en) : category;
+};
+const SVC_UNIT: Record<string, { de: string; en: string }> = {
+  hour: { de: "/Std.", en: "/hr" }, session: { de: "/Session", en: "/session" },
+  stringing: { de: "/Besp.", en: "/string" }, week: { de: "/Wo.", en: "/wk" }, year: { de: "/Jahr", en: "/yr" },
+};
+function serviceMarkerIcon(p: ServiceProvider, locale: string): L.DivIcon {
+  const price = p.price_from != null ? `${p.currency ?? ""} ${p.price_from}` : (SVC_CAT_LABEL[p.category] ? svcCatLabel(p.category, locale) : "Service");
   return L.divIcon({
     className: "mu-fade",
     iconSize: [1, 1],
@@ -173,18 +182,22 @@ const CITY_IMAGE: Record<string, string> = {
   Frankfurt: "/map-cities/frankfurt.jpg", Stuttgart: "/map-cities/stuttgart.jpg", "Düsseldorf": "/map-cities/dusseldorf.jpg",
   Leipzig: "/map-cities/leipzig.jpg", "Nürnberg": "/map-cities/nuremberg.jpg",
 };
-const hubFor = (city: string | null) => (city && CITY_HUB[city]) || city || "Übrige";
+const hubFor = (city: string | null, locale: string) => (city && CITY_HUB[city]) || city || (locale === "de" ? "Übrige" : "Other");
 
-const AMENITY_LABEL: Record<string, string> = {
-  restaurant: "Restaurant / Bar",
-  showers: "Duschen",
-  parking: "Parkplatz",
-  proshop: "Pro-Shop",
-  ballmachine: "Ballmaschine",
-  coaching: "Trainer / Schule",
-  wallball: "Trainingswand",
-  transit: "ÖV-Anbindung",
+const AMENITY_LABEL: Record<string, { de: string; en: string }> = {
+  restaurant: { de: "Restaurant / Bar", en: "Restaurant / bar" },
+  showers: { de: "Duschen", en: "Showers" },
+  parking: { de: "Parkplatz", en: "Parking" },
+  proshop: { de: "Pro-Shop", en: "Pro shop" },
+  ballmachine: { de: "Ballmaschine", en: "Ball machine" },
+  coaching: { de: "Trainer / Schule", en: "Coaching / school" },
+  wallball: { de: "Trainingswand", en: "Practice wall" },
+  transit: { de: "ÖV-Anbindung", en: "Public transport" },
 };
+
+// Englische Labels für importierte (deutsche) Maps aus @/lib/venuesDb — Render-Zeit-Remap.
+const CAT_LABEL_EN: Record<string, string> = { club: "Club", public: "Public", private: "Private", hotel: "Hotel" };
+const WEEKDAY_EN: Record<string, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
 
 function markerIcon(v: Venue, active: boolean): L.DivIcon {
   const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
@@ -695,7 +708,7 @@ export default function MapView() {
     if (zoom <= CLUSTER_ZOOM) {
       const groups = new Map<string, Venue[]>();
       for (const v of visible) {
-        const c = hubFor(v.city);
+        const c = hubFor(v.city, locale);
         (groups.get(c) ?? groups.set(c, []).get(c)!).push(v);
       }
       for (const [city, vs] of groups) {
@@ -713,7 +726,7 @@ export default function MapView() {
           .setZIndexOffset(v.id === selectedId ? 1000 : 0);
       }
     }
-  }, [visible, inView, ready, zoom, selectedId, focus, tab]);
+  }, [visible, inView, ready, zoom, selectedId, focus, tab, locale]);
 
   // Saison-Modus: Turnier-Marker + animierte Reiseroute vom Startpunkt durch alle Stops
   useEffect(() => {
@@ -822,11 +835,11 @@ export default function MapView() {
     layer.clearLayers();
     for (const p of providers) {
       if (p.latitude == null || p.longitude == null) continue;
-      L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p), keyboard: false })
+      L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p, locale), keyboard: false })
         .addTo(layer)
         .on("click", () => { setSelProvider(p); map.flyTo([p.latitude!, p.longitude!], 14, { duration: 0.6 }); });
     }
-  }, [ready, tab, providers]);
+  }, [ready, tab, providers, locale]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -875,7 +888,7 @@ export default function MapView() {
                   : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
             }`}
           >
-            {s ? SPORT_LABEL[s] : "Alle"}
+            {s ? SPORT_LABEL[s] : tt("Alle", "All")}
           </button>
         );
       })}
@@ -900,7 +913,7 @@ export default function MapView() {
                   : "bg-neutral-100 text-neutral-500"
             }`}
           >
-            {c ? CAT_LABEL[c] : "Alle Typen"}
+            {c ? tt(CAT_LABEL[c], CAT_LABEL_EN[c] ?? CAT_LABEL[c]) : tt("Alle Typen", "All types")}
           </button>
         );
       })}
@@ -955,28 +968,28 @@ export default function MapView() {
           <>
             <div className="shrink-0 border-b border-neutral-200 p-4">
               <span className="text-lg font-bold tracking-tight">Services</span>
-              <p className="text-xs text-neutral-400">Coaches, Hitting Partner & Stringer · {providers.length}</p>
+              <p className="text-xs text-neutral-400">{tt("Coaches, Hitting Partner & Stringer", "Coaches, hitting partners & stringers")} · {providers.length}</p>
             </div>
             <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
               {providers.map((p) => (
-                <SvcCard key={p.id} p={p} onFly={() => { setSelProvider(p); if (p.latitude != null && p.longitude != null) mapRef.current?.flyTo([p.latitude, p.longitude], 14, { duration: 0.6 }); }} />
+                <SvcCard key={p.id} p={p} locale={locale} onFly={() => { setSelProvider(p); if (p.latitude != null && p.longitude != null) mapRef.current?.flyTo([p.latitude, p.longitude], 14, { duration: 0.6 }); }} />
               ))}
             </div>
           </>
         ) : sel ? (
-          <VenueDetail venue={sel} onBack={backToList} />
+          <VenueDetail venue={sel} onBack={backToList} locale={locale} />
         ) : (
           <>
             <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
               <div className="flex items-center gap-2">
                 <PinIcon className="h-5 w-5 text-matchup" />
                 <span className="text-lg font-bold tracking-tight">Zürich</span>
-                <span className="ml-auto text-xs text-neutral-400">{visible.length} Orte</span>
+                <span className="ml-auto text-xs text-neutral-400">{visible.length} {tt("Orte", "places")}</span>
               </div>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Suchen…"
+                placeholder={tt("Suchen…", "Search…")}
                 className="h-10 w-full rounded-full border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none focus:border-matchup"
               />
               <div className="flex flex-wrap gap-1.5">{sportChips(false)}</div>
@@ -1005,7 +1018,7 @@ export default function MapView() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{v.name}</span>
                     <span className="block text-xs text-neutral-400">
-                      {v.sports.map((s) => SPORT_LABEL[s] ?? s).join(", ")} · {CAT_LABEL[v.category] ?? v.category}
+                      {v.sports.map((s) => SPORT_LABEL[s] ?? s).join(", ")} · {tt(CAT_LABEL[v.category] ?? v.category, CAT_LABEL_EN[v.category] ?? CAT_LABEL[v.category] ?? v.category)}
                       {v.city ? ` · ${v.city}` : ""}
                     </span>
                   </span>
@@ -1013,11 +1026,11 @@ export default function MapView() {
               ))}
               {listMore > 0 && (
                 <p className="px-4 py-4 text-center text-xs text-neutral-400">
-                  +{listMore} weitere · auf der Karte reinzoomen zum Eingrenzen
+                  {tt(`+${listMore} weitere · auf der Karte reinzoomen zum Eingrenzen`, `+${listMore} more · zoom in on the map to narrow down`)}
                 </p>
               )}
               {visible.length === 0 && (
-                <p className="px-4 py-8 text-center text-sm text-neutral-400">Keine Treffer.</p>
+                <p className="px-4 py-8 text-center text-sm text-neutral-400">{tt("Keine Treffer.", "No results.")}</p>
               )}
             </div>
           </>
@@ -1059,7 +1072,7 @@ export default function MapView() {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Club oder Ort suchen…"
+                    placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
                     className="h-11 w-full bg-transparent text-sm outline-none"
                   />
                   <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
@@ -1077,7 +1090,7 @@ export default function MapView() {
         {/* Mobile: Club-Detail als Bottom-Sheet */}
         {tab === "discover" && sel && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] h-[66%] overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
-            <VenueDetail venue={sel} onBack={backToList} sheet />
+            <VenueDetail venue={sel} onBack={backToList} locale={locale} sheet />
           </div>
         )}
 
@@ -1085,8 +1098,8 @@ export default function MapView() {
         {tab === "services" && selProvider && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5 md:hidden">
             <div className="mb-2 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
-            <button type="button" onClick={() => setSelProvider(null)} aria-label="Schliessen" className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
-            <SvcCard p={selProvider} detailed />
+            <button type="button" onClick={() => setSelProvider(null)} aria-label={tt("Schliessen", "Close")} className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
+            <SvcCard p={selProvider} locale={locale} detailed />
           </div>
         )}
 
@@ -1136,7 +1149,8 @@ export default function MapView() {
 }
 
 /* Service-Anbieter-Karte auf der Map (Liste + Detail-Sheet). */
-function SvcCard({ p, onFly, detailed }: { p: ServiceProvider; onFly?: () => void; detailed?: boolean }) {
+function SvcCard({ p, onFly, detailed, locale }: { p: ServiceProvider; onFly?: () => void; detailed?: boolean; locale: string }) {
+  const tt = (de: string, en: string) => (locale === "de" ? de : en);
   const [req, setReq] = useState(false);
   const [imgOk, setImgOk] = useState(true);
   return (
@@ -1153,9 +1167,9 @@ function SvcCard({ p, onFly, detailed }: { p: ServiceProvider; onFly?: () => voi
             <span className="truncate text-[14px] font-bold text-neutral-900">{p.name}</span>
             {p.verified === "tour_certified" && <span className="shrink-0 rounded-full bg-matchup/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-matchup">Tour</span>}
           </span>
-          <span className="block truncate text-[11.5px] text-neutral-500">{SVC_CAT_LABEL[p.category] ?? p.category}{p.level ? ` · ${p.level}` : ""}{p.city ? ` · ${p.city}` : ""}{p.rating != null ? ` · ★ ${p.rating}` : ""}</span>
+          <span className="block truncate text-[11.5px] text-neutral-500">{svcCatLabel(p.category, locale)}{p.level ? ` · ${p.level}` : ""}{p.city ? ` · ${p.city}` : ""}{p.rating != null ? ` · ★ ${p.rating}` : ""}</span>
           <span className="mt-0.5 flex flex-wrap gap-1.5">
-            {p.travels && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">Reist mit</span>}
+            {p.travels && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600">{tt("Reist mit", "Travels with")}</span>}
             {p.sponsor && <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">{p.sponsor}</span>}
           </span>
         </span>
@@ -1168,16 +1182,16 @@ function SvcCard({ p, onFly, detailed }: { p: ServiceProvider; onFly?: () => voi
       )}
       <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-neutral-100 pt-2.5">
         <span className="text-[13px] font-bold text-neutral-900">
-          {p.price_from != null && <><span className="text-neutral-400">ab </span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit ? SVC_UNIT[p.price_unit] ?? "" : ""}</span></>}
+          {p.price_from != null && <><span className="text-neutral-400">{tt("ab ", "from ")}</span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit && SVC_UNIT[p.price_unit] ? tt(SVC_UNIT[p.price_unit].de, SVC_UNIT[p.price_unit].en) : ""}</span></>}
         </span>
         {p.contact_email || p.website ? (
           <span className="flex shrink-0 items-center gap-1.5">
             {p.website && <a href={p.website} target="_blank" rel="noopener noreferrer" className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700">Website</a>}
-            {p.contact_email && <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent("Anfrage über Matchup")}`} className="rounded-full bg-matchup px-4 py-1.5 text-[12px] font-bold text-white">E-Mail</a>}
+            {p.contact_email && <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent(tt("Anfrage über Matchup", "Inquiry via Matchup"))}`} className="rounded-full bg-matchup px-4 py-1.5 text-[12px] font-bold text-white">{tt("E-Mail", "Email")}</a>}
           </span>
         ) : (
           <button type="button" onClick={() => setReq(true)} disabled={req} className={`shrink-0 rounded-full px-4 py-1.5 text-[12px] font-bold ${req ? "bg-emerald-500/10 text-emerald-600" : "bg-matchup text-white"}`}>
-            {req ? "Angefragt ✓" : "Anfragen"}
+            {req ? tt("Angefragt ✓", "Requested ✓") : tt("Anfragen", "Request")}
           </button>
         )}
       </div>
@@ -1213,33 +1227,36 @@ function VenueDetail({
   venue: v,
   onBack,
   sheet = false,
+  locale,
 }: {
   venue: Venue;
   onBack: () => void;
   sheet?: boolean;
+  locale: string;
 }) {
+  const tt = (de: string, en: string) => (locale === "de" ? de : en);
   const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
 
   const facts: { label: string; value: string }[] = [];
   const courts = (v.courts_indoor ?? 0) + (v.courts_outdoor ?? 0) || null;
   if (courts)
     facts.push({
-      label: "Plätze",
+      label: tt("Plätze", "Courts"),
       value: [
         v.courts_indoor ? `${v.courts_indoor} Indoor` : "",
         v.courts_outdoor ? `${v.courts_outdoor} Outdoor` : "",
       ].filter(Boolean).join(" · "),
     });
-  if (v.surfaces?.length) facts.push({ label: "Belag", value: v.surfaces.join(", ") });
-  if (v.floodlight != null) facts.push({ label: "Flutlicht", value: v.floodlight ? "Ja" : "Nein" });
-  if (v.member_count) facts.push({ label: "Mitglieder", value: String(v.member_count) });
-  if (v.founded) facts.push({ label: "Gegründet", value: String(v.founded) });
+  if (v.surfaces?.length) facts.push({ label: tt("Belag", "Surface"), value: v.surfaces.join(", ") });
+  if (v.floodlight != null) facts.push({ label: tt("Flutlicht", "Floodlight"), value: v.floodlight ? tt("Ja", "Yes") : tt("Nein", "No") });
+  if (v.member_count) facts.push({ label: tt("Mitglieder", "Members"), value: String(v.member_count) });
+  if (v.founded) facts.push({ label: tt("Gegründet", "Founded"), value: String(v.founded) });
   if (v.guest_access != null)
-    facts.push({ label: "Gäste", value: v.guest_access ? "Willkommen" : "Nur Mitglieder" });
-  if (v.guest_fee) facts.push({ label: "Gastgebühr", value: v.guest_fee });
-  if (v.court_price) facts.push({ label: "Platzmiete", value: v.court_price });
-  if (v.membership_fee) facts.push({ label: "Mitgliedschaft", value: v.membership_fee });
-  if (v.season) facts.push({ label: "Saison", value: v.season });
+    facts.push({ label: tt("Gäste", "Guests"), value: v.guest_access ? tt("Willkommen", "Welcome") : tt("Nur Mitglieder", "Members only") });
+  if (v.guest_fee) facts.push({ label: tt("Gastgebühr", "Guest fee"), value: v.guest_fee });
+  if (v.court_price) facts.push({ label: tt("Platzmiete", "Court rental"), value: v.court_price });
+  if (v.membership_fee) facts.push({ label: tt("Mitgliedschaft", "Membership"), value: v.membership_fee });
+  if (v.season) facts.push({ label: tt("Saison", "Season"), value: v.season });
 
   const hasHours = v.opening_hours && Object.keys(v.opening_hours).length > 0;
 
@@ -1256,7 +1273,7 @@ function VenueDetail({
           onClick={onBack}
           className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-matchup hover:underline"
         >
-          {sheet ? "✕ Schliessen" : "← Alle Clubs"}
+          {sheet ? tt("✕ Schliessen", "✕ Close") : tt("← Alle Clubs", "← All clubs")}
         </button>
         <div className="flex items-center gap-3">
           <span
@@ -1279,7 +1296,7 @@ function VenueDetail({
             </span>
             <h2 className="mt-1 text-lg font-bold leading-tight tracking-tight">{v.name}</h2>
             <p className="text-xs text-neutral-500">
-              {CAT_LABEL[v.category] ?? v.category}
+              {tt(CAT_LABEL[v.category] ?? v.category, CAT_LABEL_EN[v.category] ?? CAT_LABEL[v.category] ?? v.category)}
               {v.city ? ` · ${v.city}` : ""}
               {v.verified ? " · ✓" : ""}
             </p>
@@ -1299,7 +1316,7 @@ function VenueDetail({
                     rel="noreferrer"
                     className="flex flex-1 items-center justify-center rounded-full bg-matchup px-3 py-3 text-sm font-bold text-white hover:bg-matchup-hover"
                   >
-                    Platz buchen
+                    {tt("Platz buchen", "Book court")}
                   </a>
                 )}
                 {v.website && (
@@ -1313,7 +1330,7 @@ function VenueDetail({
                         : "bg-matchup font-bold text-white hover:bg-matchup-hover"
                     }`}
                   >
-                    Website öffnen
+                    {tt("Website öffnen", "Open website")}
                   </a>
                 )}
               </div>
@@ -1326,7 +1343,7 @@ function VenueDetail({
                     className="flex flex-1 items-center justify-center gap-2 rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
                   >
                     <PhoneIcon className="h-4 w-4 text-matchup" />
-                    Anrufen
+                    {tt("Anrufen", "Call")}
                   </a>
                 )}
                 {v.lat != null && v.lng != null && (
@@ -1378,7 +1395,7 @@ function VenueDetail({
         {hasHours && (
           <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
-              Öffnungszeiten
+              {tt("Öffnungszeiten", "Opening hours")}
             </h3>
             <div className="overflow-hidden rounded-xl border border-neutral-200">
               {WEEKDAYS.map((d) => (
@@ -1386,7 +1403,7 @@ function VenueDetail({
                   key={d.key}
                   className="flex items-center justify-between border-b border-neutral-100 px-3 py-2 text-sm last:border-0"
                 >
-                  <span className="text-neutral-500">{d.label}</span>
+                  <span className="text-neutral-500">{tt(d.label, WEEKDAY_EN[d.key] ?? d.label)}</span>
                   <span className="font-medium">{v.opening_hours?.[d.key] || "—"}</span>
                 </div>
               ))}
@@ -1397,12 +1414,12 @@ function VenueDetail({
         {v.amenities?.length > 0 && (
           <div>
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
-              Ausstattung
+              {tt("Ausstattung", "Amenities")}
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {v.amenities.map((a) => (
                 <span key={a} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600">
-                  {AMENITY_LABEL[a] ?? a}
+                  {AMENITY_LABEL[a] ? tt(AMENITY_LABEL[a].de, AMENITY_LABEL[a].en) : a}
                 </span>
               ))}
             </div>
