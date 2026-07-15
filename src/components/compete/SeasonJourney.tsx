@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
 import {
   TOURNAMENTS, TIER_META, tournamentLogo, HOME_BASES, leg, nights,
   type Tournament,
@@ -12,12 +13,12 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 94], // START → Person
+  [102, 84], // START → Person
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [13, 15];        // Ziel-Trophy (etwas nach unten gerückt)
-const START = { pinX: 102, pinY: 94, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
+const START = { pinX: 102, pinY: 84, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
@@ -69,14 +70,15 @@ const SERVICES: Svc[] = [
 ];
 const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string, Svc>;
 
-/* Team-&-Service-Hinweise: dezent zwischen den Turnier-Kacheln verteilt, neben
- * dem Weg in den freien Flächen, blenden beim Vorbeiscrollen ein. */
-const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string }[] = [
-  { at: 0.20, roadP: 0.16, dx: 17, key: "fitness" },
-  { at: 0.34, roadP: 0.34, dx: -18, key: "string" },
-  { at: 0.55, roadP: 0.55, dx: 17, key: "physio" },
-  { at: 0.76, roadP: 0.74, dx: -18, key: "coach" },
+/* Team-&-Service-Hinweise: dezente Mini-Karten (Profilbild + Rolle + Trainings-
+ * Kalender) verteilt neben dem Weg zwischen den Turnier-Kacheln. */
+const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string; role: { de: string; en: string }; accent: string; days: number[] }[] = [
+  { at: 0.20, roadP: 0.14, dx: 20, key: "fitness", role: { de: "Fitness-Coach", en: "Fitness coach" }, accent: "#f59e0b", days: [0, 2, 4] },
+  { at: 0.34, roadP: 0.33, dx: -21, key: "string", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3] },
+  { at: 0.56, roadP: 0.55, dx: 20, key: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3] },
+  { at: 0.77, roadP: 0.73, dx: -21, key: "coach", role: { de: "Coach", en: "Coach" }, accent: "#7b6cff", days: [0, 1, 2, 4] },
 ];
+const WEEKDAYS = { de: ["Mo", "Di", "Mi", "Do", "Fr"], en: ["Mo", "Tu", "We", "Th", "Fr"] };
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 function pointAt(p: number): [number, number] {
@@ -119,6 +121,27 @@ export default function SeasonJourney() {
   const imgRef = useRef<HTMLImageElement>(null);
   const [p, setP] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
+  const [avatars, setAvatars] = useState<{ img: string; name: string }[]>([]);
+
+  // Echte Seed-Profilbilder als „Team" für die Service-Hinweise laden.
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from("profiles")
+      .select("first_name,profile_image")
+      .eq("is_seed", true)
+      .not("profile_image", "is", null)
+      .limit(6)
+      .then(({ data }) => {
+        if (!active || !data) return;
+        setAvatars(
+          data
+            .filter((d: { profile_image: string | null }) => !!d.profile_image)
+            .map((d: { first_name: string | null; profile_image: string | null }) => ({ img: d.profile_image as string, name: d.first_name ?? "" })),
+        );
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -177,7 +200,7 @@ export default function SeasonJourney() {
   }[lang];
 
   return (
-    <section ref={sectionRef} className="relative bg-[#353fcc]" style={{ height: "300vh" }}>
+    <section ref={sectionRef} className="relative bg-[#353fcc]" style={{ height: "360vh" }}>
       <div ref={wrapRef} className="sticky top-0 h-screen overflow-hidden">
         {/* Bühne */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -261,18 +284,42 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Team-&-Service-Hinweise — dezent zwischen den Kacheln, neben dem Weg */}
+          {/* Team-&-Service-Hinweise — Mini-Karten (Profil + Rolle + Trainingskalender) */}
           {box && SERVICE_HINTS.map((h, i) => {
             const [rx, ry] = pointAt(h.roadP);
             const pos = px(rx + h.dx, ry)!;
             const active = p >= h.at;
             const s = SVC[h.key];
+            const av = avatars[i];
             return (
-              <div key={`svc-${i}`} className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
-                <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-semibold text-white/90 ring-1 ring-white/25 backdrop-blur-md">
-                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
-                  {s.label[lang]}
-                </span>
+              <div key={`svc-${i}`} className={`absolute w-[152px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
+                <div className="rounded-2xl bg-white/95 p-2.5 shadow-[0_16px_36px_-16px_rgba(0,0,0,0.6)] ring-1 ring-black/5 backdrop-blur">
+                  <div className="flex items-center gap-2">
+                    {av ? (
+                      <img src={av.img} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 2px ${h.accent}` }} />
+                    ) : (
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white" style={{ background: h.accent }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-[10px] font-extrabold uppercase tracking-[0.1em]" style={{ color: h.accent }}>{h.role[lang]}</p>
+                      <p className="truncate text-[12px] font-bold leading-tight text-neutral-900">{av?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
+                    </div>
+                  </div>
+                  {/* Trainings-Kalender (Wochentage) */}
+                  <div className="mt-2 flex justify-between border-t border-black/5 pt-2">
+                    {WEEKDAYS[lang].map((d, di) => {
+                      const on = h.days.includes(di);
+                      return (
+                        <span key={d} className="flex flex-col items-center gap-1">
+                          <span className="text-[8px] font-bold text-neutral-400">{d}</span>
+                          <span className={`h-2 w-2 rounded-full transition-all ${active && on ? "scale-100" : "scale-100"}`} style={{ background: on ? h.accent : "#e5e7eb", transitionDelay: `${di * 60}ms` }} />
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -283,7 +330,8 @@ export default function SeasonJourney() {
             const g = cardGeom(pin.x, START.cx, box.vw);
             return (
               <>
-                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth }} />
+                {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
+                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - 46) }} />
                 <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CARDW }}>
                   <div className="flex items-center gap-3 rounded-2xl bg-white/97 p-3 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur">
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]">
@@ -318,12 +366,18 @@ export default function SeasonJourney() {
                           <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.13em]" style={{ color: w.color }}>{w.tier}</p>
                           <p className="mt-0.5 truncate text-[14px] font-extrabold leading-tight text-neutral-900">{w.t.name}</p>
                           <p className="mt-0.5 truncate text-[11px] font-medium text-neutral-500">{rangeLabel(w.t, lang)} · {SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · {w.t.city}</p>
-                          <p className="mt-1 flex items-center gap-1 truncate text-[11px] font-bold text-neutral-800">
-                            <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: w.color }} />
-                            {w.note[lang]}
-                          </p>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                  {/* Resultat als kleines Dropdown UNTER der Kachel (animiert) */}
+                  <div className="absolute" style={{ top: pin.y + 40, left: g.cardLeft + 14 }}>
+                    <div
+                      className={`inline-flex origin-top items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 text-[11px] font-bold text-neutral-800 shadow-[0_12px_26px_-12px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur transition-all duration-500 ${active ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none -translate-y-2 scale-95 opacity-0"}`}
+                      style={{ transitionDelay: active ? "300ms" : "0ms" }}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: w.color }} />
+                      {w.note[lang]}
                     </div>
                   </div>
                 </div>
