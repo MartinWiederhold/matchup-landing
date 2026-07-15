@@ -171,26 +171,26 @@ const GAME_AVATARS = [
 function OrganizeScene({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <div className="absolute left-3 top-3 w-[64%] max-w-[210px] sm:left-4 sm:top-4">
+    <div className="absolute left-2.5 top-2.5 w-[50%] max-w-[142px] sm:left-3 sm:top-3">
       <div
-        className={`rounded-2xl bg-white/95 p-2.5 shadow-[0_14px_36px_-10px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur ${show ? "anim-pop" : "opacity-0"}`}
+        className={`rounded-xl bg-white/95 p-1.5 shadow-[0_10px_26px_-10px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur ${show ? "anim-pop" : "opacity-0"}`}
         style={show ? { animationDelay: "0.25s" } : undefined}
       >
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-matchup text-white">
-            <TennisBall className="h-4 w-4" />
+        <div className="flex items-center gap-1.5">
+          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-matchup text-white">
+            <TennisBall className="h-2.5 w-2.5" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-extrabold leading-tight text-neutral-900">{t("landing.organizeSceneType")}</p>
-            <p className="truncate text-[9.5px] font-semibold text-neutral-500">{t("landing.organizeSceneWhen")}</p>
+            <p className="truncate text-[8px] font-extrabold leading-tight text-neutral-900">{t("landing.organizeSceneType")}</p>
+            <p className="truncate text-[7px] font-semibold leading-tight text-neutral-500">{t("landing.organizeSceneWhen")}</p>
           </div>
         </div>
-        <div className="mt-2 flex items-center justify-between border-t border-black/5 pt-2">
-          <div className="flex -space-x-2">
+        <div className="mt-1 flex items-center justify-between border-t border-black/5 pt-1">
+          <div className="flex -space-x-1">
             {GAME_AVATARS.map((src, i) => (
               <span
                 key={src}
-                className={`h-6 w-6 overflow-hidden rounded-full ring-2 ring-white ${show ? "anim-pop" : "opacity-0"}`}
+                className={`h-3.5 w-3.5 overflow-hidden rounded-full ring-1 ring-white ${show ? "anim-pop" : "opacity-0"}`}
                 style={show ? { animationDelay: `${0.5 + i * 0.13}s` } : undefined}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -199,19 +199,19 @@ function OrganizeScene({ show }: { show: boolean }) {
             ))}
             {/* offener Slot */}
             <span
-              className={`flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-matchup/60 bg-white text-[10px] font-bold text-matchup ring-2 ring-white ${show ? "anim-pop" : "opacity-0"}`}
+              className={`flex h-3.5 w-3.5 items-center justify-center rounded-full border border-dashed border-matchup/60 bg-white text-[7px] font-bold leading-none text-matchup ring-1 ring-white ${show ? "anim-pop" : "opacity-0"}`}
               style={show ? { animationDelay: "0.9s" } : undefined}
             >
               +
             </span>
           </div>
-          <span className="shrink-0 text-[9px] font-extrabold text-matchup">{t("landing.organizeSceneSlot")}</span>
+          <span className="shrink-0 text-[6.5px] font-extrabold text-matchup">{t("landing.organizeSceneSlot")}</span>
         </div>
       </div>
 
       {/* Zusage-Pill */}
       <div
-        className={`ml-auto mt-2 w-fit rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-lg ${show ? "anim-pop" : "opacity-0"}`}
+        className={`ml-auto mt-1.5 w-fit rounded-full bg-emerald-500 px-1.5 py-0.5 text-[7px] font-bold text-white shadow-lg ${show ? "anim-pop" : "opacity-0"}`}
         style={show ? { animationDelay: "1.15s" } : undefined}
       >
         ✓ {t("landing.organizeSceneJoined")}
