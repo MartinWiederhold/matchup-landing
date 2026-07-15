@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useT } from "@/lib/i18n";
 import { COMPETE_FEATURES } from "@/components/compete/features";
+import { TOURNAMENTS, TIER_META, tournamentLogo } from "@/lib/tournaments";
 
 type Overlay = "discover" | "organize" | "community" | "progress";
 
@@ -257,11 +258,19 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
 /* ── Compete-Kacheln: gleiche Bühne wie die Play-Bildkacheln (aspect-4/5),
  *    nur statt Foto eine gestaltete, animierte Mini-Oberfläche. ───────────── */
 
-/* Saison-Planer: Route auf einer Karte zeichnet sich, Stopps ploppen auf. */
+/* Saison-Planer: Route zeichnet sich, an jedem Stopp poppt ein echtes
+ * Turnier-Logo (Favicon der offiziellen Turnier-Domain) auf. */
+const SEASON_STOPS = [
+  { x: 26, y: 105, id: "gstaad" },
+  { x: 44, y: 80, id: "barcelona" },
+  { x: 36, y: 55, id: "madrid" },
+  { x: 62, y: 37, id: "rome" },
+  { x: 78, y: 17, id: "roland-garros" },
+].map((s) => {
+  const t = TOURNAMENTS.find((x) => x.id === s.id);
+  return { ...s, logo: t ? tournamentLogo(t) : null, color: t ? TIER_META[t.tier].color : "#fff" };
+});
 function SeasonTile({ show }: { show: boolean }) {
-  const stops = [
-    { x: 26, y: 105 }, { x: 44, y: 80 }, { x: 36, y: 55 }, { x: 62, y: 37 }, { x: 78, y: 17 },
-  ];
   const DASH = 150;
   return (
     <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_15%_0%,#5b4bff_0%,#3a30c8_45%,#191a6b_100%)]">
@@ -274,9 +283,23 @@ function SeasonTile({ show }: { show: boolean }) {
           className={show ? "anim-draw" : ""} style={{ ["--dash-len" as string]: `${DASH}` }}
         />
       </svg>
-      {stops.map((s, i) => (
-        <span key={i} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${i === stops.length - 1 ? "h-3.5 w-3.5 bg-white ring-[3px] ring-white/35" : "h-2.5 w-2.5 bg-white/90 ring-2 ring-white/25"} ${show ? "anim-pop" : ""}`}
-          style={{ left: `${s.x}%`, top: `${s.y / 1.25}%`, animationDelay: `${350 + i * 170}ms` }} />
+      {SEASON_STOPS.map((s, i) => (
+        <span
+          key={s.id}
+          className={`absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full bg-white ${show ? "anim-pop" : "opacity-0"}`}
+          style={{
+            left: `${s.x}%`, top: `${s.y / 1.25}%`,
+            boxShadow: `0 0 0 2px ${s.color}, 0 4px 12px -3px rgba(0,0,0,0.6)`,
+            animationDelay: `${350 + i * 170}ms`,
+          }}
+        >
+          {s.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.logo} alt="" loading="lazy" className="h-[62%] w-[62%] object-contain" />
+          ) : (
+            <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+          )}
+        </span>
       ))}
     </div>
   );
@@ -287,25 +310,23 @@ function WorkspaceTile({ show }: { show: boolean }) {
   const weeks = [40, 65, 35, 80, 55, 95];
   return (
     <div className="absolute inset-0 bg-[linear-gradient(165deg,#141736_0%,#0a0b21_60%,#05061a_100%)] p-4">
-      <div className="flex h-full flex-col justify-between">
-        <div>
-          <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-white/40">Net</p>
-          <p className={`mt-0.5 text-2xl font-extrabold tracking-tight text-emerald-400 ${show ? "anim-pop" : ""}`}>+4.2k</p>
-        </div>
-        <div className="space-y-2">
+      <div className="flex h-full flex-col gap-4">
+        {/* Preisgeld vs. Kosten */}
+        <div className="space-y-2.5">
           {[{ l: "Prize", w: 82, c: "#10b981" }, { l: "Costs", w: 54, c: "rgba(255,255,255,0.28)" }].map((b, i) => (
             <div key={b.l}>
-              <div className="flex justify-between text-[8.5px] font-bold uppercase tracking-wide text-white/40"><span>{b.l}</span></div>
+              <p className="text-[8.5px] font-bold uppercase tracking-[0.14em] text-white/40">{b.l}</p>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div className={`h-full rounded-full ${show ? "anim-growx" : ""}`} style={{ width: `${b.w}%`, background: b.c, animationDelay: `${200 + i * 180}ms` }} />
               </div>
             </div>
           ))}
         </div>
-        <span className="flex h-10 items-end gap-1">
+        {/* Wochenverlauf */}
+        <span className="flex h-14 items-end gap-1">
           {weeks.map((h, i) => (
             <span key={i} className={`flex-1 rounded-sm ${i === weeks.length - 1 ? "bg-emerald-400" : "bg-white/25"} ${show ? "anim-bar" : ""}`}
-              style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${i * 90}ms` }} />
+              style={{ height: `${h}%`, transformOrigin: "bottom", animationDelay: `${400 + i * 90}ms` }} />
           ))}
         </span>
       </div>

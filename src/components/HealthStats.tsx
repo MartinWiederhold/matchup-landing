@@ -31,7 +31,7 @@ export default async function HealthStats() {
                 </span>
                 <span className="ml-1 text-2xl font-semibold">{stat.unit}</span>
               </div>
-              <p className="mt-3 max-w-[12rem] text-sm text-white/70">{stat.label}</p>
+              <p className="mt-3 whitespace-nowrap text-sm text-white/70">{stat.label}</p>
             </div>
           ))}
         </div>
