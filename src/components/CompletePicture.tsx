@@ -161,6 +161,65 @@ function ProgressOverlay({ show }: { show: boolean }) {
   );
 }
 
+/* Spiele organisieren — Match-Einladung ploppt oben links auf: Typ/Zeit/Platz,
+ * Mitspieler füllen die Slots, letzter Slot bleibt offen, dann „Zugesagt". */
+const GAME_AVATARS = [
+  "/find-a-partner/av-man.jpg",
+  "/find-a-partner/av-woman1.jpg",
+  "/find-a-partner/av-woman2.jpg",
+];
+function OrganizeScene({ show }: { show: boolean }) {
+  const t = useT();
+  return (
+    <div className="absolute left-3 top-3 w-[64%] max-w-[210px] sm:left-4 sm:top-4">
+      <div
+        className={`rounded-2xl bg-white/95 p-2.5 shadow-[0_14px_36px_-10px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur ${show ? "anim-pop" : "opacity-0"}`}
+        style={show ? { animationDelay: "0.25s" } : undefined}
+      >
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-matchup text-white">
+            <TennisBall className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-extrabold leading-tight text-neutral-900">{t("landing.organizeSceneType")}</p>
+            <p className="truncate text-[9.5px] font-semibold text-neutral-500">{t("landing.organizeSceneWhen")}</p>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center justify-between border-t border-black/5 pt-2">
+          <div className="flex -space-x-2">
+            {GAME_AVATARS.map((src, i) => (
+              <span
+                key={src}
+                className={`h-6 w-6 overflow-hidden rounded-full ring-2 ring-white ${show ? "anim-pop" : "opacity-0"}`}
+                style={show ? { animationDelay: `${0.5 + i * 0.13}s` } : undefined}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="h-full w-full object-cover" />
+              </span>
+            ))}
+            {/* offener Slot */}
+            <span
+              className={`flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-matchup/60 bg-white text-[10px] font-bold text-matchup ring-2 ring-white ${show ? "anim-pop" : "opacity-0"}`}
+              style={show ? { animationDelay: "0.9s" } : undefined}
+            >
+              +
+            </span>
+          </div>
+          <span className="shrink-0 text-[9px] font-extrabold text-matchup">{t("landing.organizeSceneSlot")}</span>
+        </div>
+      </div>
+
+      {/* Zusage-Pill */}
+      <div
+        className={`ml-auto mt-2 w-fit rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-lg ${show ? "anim-pop" : "opacity-0"}`}
+        style={show ? { animationDelay: "1.15s" } : undefined}
+      >
+        ✓ {t("landing.organizeSceneJoined")}
+      </div>
+    </div>
+  );
+}
+
 function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
   const { ref, inView } = useInView<HTMLElement>();
   const t = useT();
@@ -178,6 +237,7 @@ function FeatureCard({ f }: { f: (typeof FEATURES)[number] }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {f.overlay === "discover" && <DiscoverOverlay show={inView} />}
+        {f.overlay === "organize" && <OrganizeScene show={inView} />}
         {f.overlay === "organize" && <OrganizeOverlay show={inView} />}
         {f.overlay === "community" && <CommunityOverlay show={inView} />}
         {f.overlay === "progress" && <ProgressOverlay show={inView} />}

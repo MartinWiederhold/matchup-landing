@@ -46,6 +46,10 @@ export const landing = {
     organizeCopy:
       "Erstelle ein Match, wähle Ort und Zeit, lade Mitspieler ein oder tritt offenen Spielen bei. Singles oder Doubles, spontan oder geplant.",
     organizeChip: "3/4 Spieler",
+    organizeSceneType: "Doppel · Tennis",
+    organizeSceneWhen: "Sa 18:00 · Platz 3",
+    organizeSceneSlot: "1 Platz frei",
+    organizeSceneJoined: "Zugesagt",
     communityTitle: "Deine Community",
     communityCopy:
       "Gründe Gruppen, tausche dich im Feed aus und vernetze dich mit Gleichgesinnten, von Club-Gruppen bis zu lokalen Spieltreffs.",
@@ -155,6 +159,10 @@ export const landing = {
     organizeCopy:
       "Create a match, pick a place and time, invite players or join open games. Singles or doubles, spontaneous or planned.",
     organizeChip: "3/4 players",
+    organizeSceneType: "Doubles · Tennis",
+    organizeSceneWhen: "Sat 18:00 · Court 3",
+    organizeSceneSlot: "1 spot left",
+    organizeSceneJoined: "Joined",
     communityTitle: "Your community",
     communityCopy:
       "Start groups, share in the feed and connect with like-minded players, from club groups to local meetups.",
