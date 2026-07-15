@@ -107,7 +107,7 @@ export default function Hero() {
           <h1 className="max-w-5xl whitespace-pre-line text-[2.75rem] font-bold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[6.5rem]">
             {t("landing.heroTitle")}
           </h1>
-          <p className="mt-7 max-w-2xl text-[15px] leading-relaxed text-white/90 sm:text-lg">
+          <p className="mt-7 max-w-2xl text-[15px] leading-relaxed text-white/90 sm:max-w-4xl sm:whitespace-pre-line sm:text-lg">
             {t("landing.heroSubtitle")}
           </p>
         </div>
