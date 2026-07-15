@@ -290,7 +290,7 @@ export default function CompletePicture() {
               <CompeteCard key={f.key} f={f} />
             ))}
           </div>
-          <a href="/map" className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-white/90">
+          <a href="/map?tab=season" className="mt-8 inline-block rounded-full bg-white px-8 py-3.5 text-sm font-bold text-neutral-900 transition-colors hover:bg-white/90">
             {t("landing.heroCtaSecondary")}
           </a>
         </div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/lib/supabase";
+import { useLocale } from "@/lib/i18n";
 import {
   type Venue,
   VENUE_SELECT,
@@ -328,7 +329,15 @@ export default function MapView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
-  const [tab, setTab] = useState<"discover" | "season" | "services">("discover");
+  const { locale } = useLocale();
+  const tt = (de: string, en: string) => (locale === "de" ? de : en);
+  const [tab, setTab] = useState<"discover" | "season" | "services">(() => {
+    if (typeof window !== "undefined") {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t === "season" || t === "services" || t === "discover") return t;
+    }
+    return "discover";
+  });
   const [dark, setDark] = useState(false);
   const tileRef = useRef<L.TileLayer | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -904,9 +913,9 @@ export default function MapView() {
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         <div className="shrink-0 border-b border-neutral-200 p-3">
           <div className="flex rounded-full bg-neutral-100 p-1">
-            <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
-            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>Saison</TabBtn>
-            <TabBtn active={tab === "services"} onClick={() => setTab("services")}>Services</TabBtn>
+            <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>
+            <TabBtn active={tab === "services"} onClick={() => setTab("services")}>{tt("Services","Services")}</TabBtn>
           </div>
         </div>
         {tab === "season" ? (
@@ -1038,9 +1047,9 @@ export default function MapView() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[550] space-y-2 p-3 md:hidden">
             <div className="flex justify-center">
               <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>Entdecken</TabBtn>
-                <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>Saison</TabBtn>
-                <TabBtn small active={tab === "services"} onClick={() => setTab("services")}>Services</TabBtn>
+                <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+                <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>
+                <TabBtn small active={tab === "services"} onClick={() => setTab("services")}>{tt("Services","Services")}</TabBtn>
               </div>
             </div>
             {tab === "discover" && (

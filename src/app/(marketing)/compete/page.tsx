@@ -79,7 +79,7 @@ export default async function ComparePage() {
         title={t("landing.competeCtaTitle")}
         text={t("landing.competeCtaText")}
         buttonLabel={t("landing.competeCtaButton")}
-        buttonHref="/map"
+        buttonHref="/map?tab=season"
       />
     </>
   );
