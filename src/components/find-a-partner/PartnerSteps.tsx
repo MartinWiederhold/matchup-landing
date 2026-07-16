@@ -149,7 +149,7 @@ function StepRow({ step, index }: { step: Step; index: number }) {
             step.overlay === "play"
               ? "[object-position:center_20%]"
               : step.overlay === "match"
-                ? "[object-position:center_20%]"
+                ? "[object-position:center_38%]"
                 : step.overlay === "profile"
                   ? "[object-position:center_45%]" // Handy sitzt mittig im Bild
                   : ""
@@ -189,7 +189,7 @@ export default function PartnerSteps() {
       number: "02",
       title: t("findPartner.step2Title"),
       text: t("findPartner.step2Text"),
-      img: "/find-a-partner/step-match-v3.jpg",
+      img: "/find-a-partner/step-match-v4.jpg",
       overlay: "match",
     },
     {
