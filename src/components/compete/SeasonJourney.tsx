@@ -205,15 +205,17 @@ export default function SeasonJourney() {
   const doneCount = WAYPOINTS.filter((w) => p >= w.at).length;
   const px = (X: number, Y: number) => box ? { x: box.l + (X / 100) * box.w, y: box.t + (Y / 100) * box.h } : null;
 
-  // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
-  const startPx = px(START.pinX, START.pinY);
-  const markerPx = px(mx, my);
-  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < 46);
-
   // Mobil kompakter: schmalere Karten, kleineres Emblem.
   const mobile = (box?.vw ?? 1024) < 640;
-  const CW = mobile ? 150 : 236;
-  const EMB = mobile ? 34 : 48;
+  const CW = mobile ? 128 : 236;
+  const EMB = mobile ? 28 : 48;
+  // Mobil passt das Bild in die Breite → x=102% läge ausserhalb; Pin reinholen.
+  const startX = mobile ? 93 : START.pinX;
+
+  // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
+  const startPx = px(startX, START.pinY);
+  const markerPx = px(mx, my);
+  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 30 : 46));
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
@@ -250,13 +252,17 @@ export default function SeasonJourney() {
       <div ref={wrapRef} className="sticky top-0 h-screen overflow-hidden">
         {/* Bühne */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="relative h-full max-h-screen" style={{ aspectRatio: "900 / 1274" }}>
+          {/* Mobil an der BREITE ausrichten (sonst wird das Hochformat seitlich
+              beschnitten und Trophy/Start liegen ausserhalb des Screens).
+              Ab sm wie gehabt an der Höhe. Der blaue Rand oben/unten ist
+              identisch zur Bildfarbe → nahtlos. */}
+          <div className="relative w-full max-h-full sm:h-full sm:w-auto" style={{ aspectRatio: "900 / 1274" }}>
             <img ref={imgRef} src="/compete/season-journey.jpg" alt="" onLoad={measure} className="absolute inset-0 h-full w-full object-cover" />
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
-            <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${START.pinX}%`, top: `${START.pinY}%` }}>
-              <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white">
-                <svg width="38" height="38" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+            <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${startX}%`, top: `${START.pinY}%` }}>
+              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-12 w-12" : "h-20 w-20"}`}>
+                <svg width={mobile ? 22 : 38} height={mobile ? 22 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
@@ -313,7 +319,7 @@ export default function SeasonJourney() {
 
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
-            const pin = px(START.pinX, START.pinY)!;
+            const pin = px(startX, START.pinY)!;
             const g = cardGeom(pin.x, START.cx, box.vw, CW);
             return (
               <>
@@ -378,7 +384,7 @@ export default function SeasonJourney() {
           })}
 
           {/* Services — hängen mit Verbindungslinie über „ihrer" Turnier-Kachel */}
-          {box && ATTACHED.map((svc) => {
+          {box && !mobile && ATTACHED.map((svc) => {
             const w = WAYPOINTS.find((x) => x.id === svc.stop);
             if (!w) return null;
             const pin = px(w.pinX, w.pinY)!;
@@ -405,7 +411,11 @@ export default function SeasonJourney() {
 
           {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
           {box && (
-            <div className={`absolute w-[min(74vw,266px)] transition-all duration-700 sm:w-[318px] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
+            /* Mobil als schmale Leiste UNTEN (oben liegt die Trophy), ab sm oben-links. */
+            <div
+              className={`absolute transition-all duration-700 ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"} ${mobile ? "inset-x-3 bottom-3" : "w-[318px]"}`}
+              style={mobile ? undefined : { top: 88, left: 16 }}
+            >
               <div className="overflow-hidden rounded-[18px] bg-white/97 text-neutral-900 shadow-[0_28px_64px_-20px_rgba(0,0,0,0.7)] ring-1 ring-black/5 backdrop-blur">
                 {/* Kopf: Profil + Abschluss */}
                 <div className="flex items-center gap-2.5 px-3 pb-2 pt-2.5">
