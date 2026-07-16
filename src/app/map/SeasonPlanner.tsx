@@ -1162,7 +1162,7 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
 function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: PlayerProfile }) {
   const { locale } = useLocale();
   const tt = (de: string, en: string) => (locale === "de" ? de : en);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false); // startet eingeklappt (spart Platz im Sheet)
   const [winPct, setWinPct] = useState(50); // frei einstellbare Siegquote
   const gender = profile.gender === "w" ? "w" : "m";
   const currentRank = gender === "w" ? profile.wta : profile.atp;
