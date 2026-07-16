@@ -335,13 +335,22 @@ export default function SeasonJourney() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [mx, my] = pointAt(p);
-  const finished = p > 0.9;
-  const doneCount = WAYPOINTS.filter((w) => p >= w.at).length;
   const px = (X: number, Y: number) => box ? { x: box.l + (X / 100) * box.w, y: box.t + (Y / 100) * box.h } : null;
 
   // Mobil kompakter: schmalere Karten, kleineres Emblem.
   const mobile = (box?.vw ?? 1024) < 640;
+
+  /* Reise-Fortschritt ≠ Scroll-Fortschritt: mobil ist der Ball schon bei 78% des
+     Scrollwegs am Ziel. Erst dann — wenn er die Trophy wirklich passiert hat —
+     erscheinen Trophy und Abschluss-Karte, und die haben danach noch die
+     restlichen 22% Scrollweg, um gesehen zu werden. Auf dem Desktop laeuft die
+     Route wie bisher ueber den ganzen Scrollweg (finished ab 90%). */
+  const journeyEnd = mobile ? 0.78 : 1;
+  const pj = Math.min(1, p / journeyEnd);
+  const [mx, my] = pointAt(pj);
+  const finished = mobile ? pj >= 1 : p > 0.9;
+  const doneCount = WAYPOINTS.filter((w) => pj >= w.at).length;
+
   const CW = mobile ? 140 : 236;
   const EMB = mobile ? 28 : 48;
   // Mobil passt das Bild in die Breite → x=102% läge ausserhalb; Pin reinholen.
@@ -417,7 +426,7 @@ export default function SeasonJourney() {
 
             {/* Station-Pins */}
             {WAYPOINTS.map((w, i) => {
-              const active = p >= w.at;
+              const active = pj >= w.at;
               return (
                 <span key={`pin-${i}`} className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${w.pinX}%`, top: `${w.pinY}%` }}>
                   <span className={`block rounded-full transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
@@ -464,7 +473,7 @@ export default function SeasonJourney() {
             <div className="mt-3 flex items-center justify-end gap-2 sm:mt-5">
               <div className="flex gap-1 sm:gap-1.5">
                 {WAYPOINTS.map((w, i) => (
-                  <span key={i} className="h-1.5 w-4 rounded-full transition-colors duration-500 sm:w-6" style={{ background: p >= w.at ? "#34d399" : "rgba(255,255,255,0.28)" }} />
+                  <span key={i} className="h-1.5 w-4 rounded-full transition-colors duration-500 sm:w-6" style={{ background: pj >= w.at ? "#34d399" : "rgba(255,255,255,0.28)" }} />
                 ))}
               </div>
               <span className="text-[10px] font-bold tabular-nums text-white/80 sm:text-[11px]">{doneCount}/{WAYPOINTS.length}</span>
@@ -479,7 +488,10 @@ export default function SeasonJourney() {
             return (
               <>
                 {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
-                <div className={`absolute h-px bg-white/45 transition-opacity duration-500 ${fade}`} style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - startR - 6) }} />
+                {/* Linie endet exakt an der Kreiskante (lineWidth misst bis zur
+                    Kreis-MITTE, darum den Radius abziehen). Vorher gingen noch 6px
+                    Luft ab — das las sich als „nicht verbunden". */}
+                <div className={`absolute h-px bg-white/45 transition-opacity duration-500 ${fade}`} style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - startR) }} />
                 <div className={`absolute -translate-y-1/2 transition-opacity duration-500 ${fade}`} style={{ top: pin.y, left: g.cardLeft, width: CW }}>
                   <div className="flex items-center gap-2 rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-3">
                     <span className="flex shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" style={{ width: EMB, height: EMB }}>
@@ -500,7 +512,7 @@ export default function SeasonJourney() {
           {/* Turnier-Karten (in den Flanken) */}
           {box && WAYPOINTS.map((w, i) => {
             const pin = px(w.pinX, w.pinY)!;
-            const active = p >= w.at;
+            const active = pj >= w.at;
             const g = cardGeom(pin.x, mobile && w.cxM != null ? w.cxM : w.cx, box.vw, CW);
             return (
               <div key={`card-${i}`}>
@@ -551,7 +563,7 @@ export default function SeasonJourney() {
             if (!w) return null;
             const pin = px(w.pinX, w.pinY)!;
             const geom = cardGeom(pin.x, w.cx, box.vw, CW);
-            const active = p >= svc.at;
+            const active = pj >= svc.at;
             const TW = mobile ? 132 : 168;
             const TH = 58;                 // ungefähre Kachelhöhe
             const CARD_HALF = 38;          // halbe Höhe der Turnier-Karte
