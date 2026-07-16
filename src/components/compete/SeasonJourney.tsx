@@ -81,11 +81,11 @@ const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string
 
 /* Team-&-Service-Hinweise: dezente Mini-Karten (Profilbild + Rolle + Trainings-
  * Kalender) verteilt neben dem Weg zwischen den Turnier-Kacheln. */
-const SERVICE_HINTS: { at: number; roadP: number; dx: number; key: string; cat: string; role: { de: string; en: string }; accent: string; days: number[] }[] = [
-  { at: 0.56, roadP: 0.55, dx: 20, key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3] },
+/* Services hängen unter „ihrer" Turnier-Kachel (per Verbindungslinie). */
+const ATTACHED = [
+  { stop: "gstaad", key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3], at: 0.15 },
+  { stop: "barcelona", key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3], at: 0.39 },
 ];
-// Besaiter wird separat an die EFG-Swiss-Open-Kachel angebunden.
-const STRINGER = { key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3], at: 0.15 };
 const WEEKDAYS = { de: ["Mo", "Di", "Mi", "Do", "Fr"], en: ["Mo", "Tu", "We", "Th", "Fr"] };
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -114,18 +114,18 @@ function ServiceTile({ hint, person, lang }: { hint: { key: string; role: { de: 
   const s = SVC[hint.key];
   const sched = hint.days.map((d) => WEEKDAYS[lang][d]).join(" · ");
   return (
-    <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-2 py-1.5 ring-1 ring-white/20 backdrop-blur-md">
+    <div className="flex items-center gap-2.5 rounded-2xl bg-white/[0.14] px-2.5 py-2 ring-1 ring-white/30 backdrop-blur-md">
       {person ? (
-        <img src={person.img} alt="" loading="lazy" className="h-7 w-7 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 1.5px ${hint.accent}` }} />
+        <img src={person.img} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 2px ${hint.accent}` }} />
       ) : (
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/90" style={{ background: `${hint.accent}66`, boxShadow: `0 0 0 1.5px ${hint.accent}` }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white" style={{ background: `${hint.accent}66`, boxShadow: `0 0 0 2px ${hint.accent}` }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden fill={s.stroke ? "none" : "currentColor"} stroke={s.stroke ? "currentColor" : "none"} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={s.path} /></svg>
         </span>
       )}
       <div className="min-w-0">
-        <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.08em]" style={{ color: hint.accent }}>{hint.role[lang]}</p>
-        <p className="truncate text-[11px] font-bold leading-tight text-white">{person?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
-        <p className="mt-0.5 truncate text-[8.5px] font-semibold text-white/55">{sched}</p>
+        <p className="truncate text-[10px] font-extrabold uppercase tracking-[0.1em]" style={{ color: hint.accent }}>{hint.role[lang]}</p>
+        <p className="truncate text-[12.5px] font-bold leading-tight text-white">{person?.name || (lang === "de" ? "Dein Team" : "Your team")}</p>
+        <p className="mt-0.5 truncate text-[10px] font-semibold text-white/70">{sched}</p>
       </div>
     </div>
   );
@@ -221,17 +221,29 @@ export default function SeasonJourney() {
     { x: START.pinX, y: START.pinY, at: 0, obj: zurich as { name?: string; city?: string; lat: number; lng: number } },
     ...WAYPOINTS.map((w) => ({ x: w.pinX, y: w.pinY, at: w.at, obj: w.t })),
   ];
+  /* Etappen-Korrekturen: Pill-Position + Verkehrsmittel.
+   * Gstaad → Barcelona (698 km) ist realistisch ein Flug, nicht die Bahn. */
+  const LEG_FIX: Record<number, { mode?: "Flug" | "Bahn" | "Auto"; dx?: number; dy?: number }> = {
+    0: { dx: 13, dy: 3 },   // „Auto"-Pill weiter nach rechts, weg vom Spieler
+    1: { mode: "Flug" },
+  };
   const legs = nodes.slice(1).map((n, i) => {
     const a = nodes[i];
-    return { mid: { x: (a.x + n.x) / 2, y: (a.y + n.y) / 2 }, at: (a.at + n.at) / 2, L: leg(a.obj, n.obj) };
+    const L = leg(a.obj, n.obj);
+    const fix = LEG_FIX[i] ?? {};
+    return {
+      mid: { x: (a.x + n.x) / 2 + (fix.dx ?? 0), y: (a.y + n.y) / 2 + (fix.dy ?? 0) },
+      at: (a.at + n.at) / 2,
+      L: fix.mode ? { ...L, mode: fix.mode } : L,
+    };
   });
   // Saison-Summary für die Ziel-Karte (echte Zahlen).
   const flights = legs.filter((l) => l.L.mode === "Flug").length;
   const nightsTotal = WAYPOINTS.reduce((s, w) => s + nights(w.t), 0);
 
   const T = {
-    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", rank: "Ranking", net: "Netto", events: "Turniere", flights: "Flüge", nights: "Nächte", team: "Team" },
-    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", rank: "Ranking", net: "Net", events: "Events", flights: "Flights", nights: "Nights", team: "Team" },
+    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", season: "Saison", rank: "Ranking", net: "Netto", events: "Turniere", flights: "Flüge", nights: "Nächte", team: "Team" },
+    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", season: "Season", rank: "Ranking", net: "Net", events: "Events", flights: "Flights", nights: "Nights", team: "Team" },
   }[lang];
 
   return (
@@ -269,8 +281,8 @@ export default function SeasonJourney() {
               );
             })}
 
-            {/* Ziel-Medaillon (Pokal + Glow, Puls-Ringe bei Abschluss) */}
-            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: `${FINISH[0]}%`, top: `${FINISH[1]}%` }}>
+            {/* Ziel-Medaillon — erscheint erst, wenn der Ball angekommen ist */}
+            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-500" style={{ left: `${FINISH[0]}%`, top: `${FINISH[1]}%`, opacity: finished ? 1 : 0 }}>
               {finished && <>
                 <span className="absolute inset-0 -m-2 animate-ping rounded-full" style={{ animationDuration: "1.6s", boxShadow: "0 0 0 2px rgba(224,165,0,0.6)" }} />
                 <span className="absolute inset-0 -m-5 animate-ping rounded-full" style={{ animationDuration: "2.2s", boxShadow: "0 0 0 2px rgba(224,165,0,0.35)" }} />
@@ -316,18 +328,6 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Team-&-Service-Hinweise — Mini-Karten (Profil + Rolle + Trainingskalender) */}
-          {box && SERVICE_HINTS.map((h, i) => {
-            const [rx, ry] = pointAt(h.roadP);
-            const pos = px(rx + h.dx, ry)!;
-            const active = p >= h.at;
-            return (
-              <div key={`svc-${i}`} className={`absolute w-[128px] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "scale-100 opacity-100" : "scale-90 opacity-0"}`} style={{ left: pos.x, top: pos.y }}>
-                <ServiceTile hint={h} person={team[h.cat]} lang={lang} />
-              </div>
-            );
-          })}
-
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
             const pin = px(START.pinX, START.pinY)!;
@@ -344,6 +344,8 @@ export default function SeasonJourney() {
                     <div className="min-w-0">
                       <p className="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#353fcc] sm:text-[9px] sm:tracking-[0.16em]">START</p>
                       <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight text-neutral-900 sm:text-[15px]">{lang === "de" ? "Zürich" : "Zurich"}</p>
+                      {/* Abflug: kurz vor dem ersten Turnier (Barcelona, 13. Apr) */}
+                      <p className="mt-0.5 truncate text-[9.5px] font-semibold text-neutral-500 sm:text-[11px]">{lang === "de" ? "10. Apr 2026" : "10 Apr 2026"}</p>
                     </div>
                   </div>
                 </div>
@@ -378,50 +380,76 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Besaiter — an EFG Swiss Open (Gstaad) angebunden, mit Verbindungslinie */}
-          {box && (() => {
-            const g = WAYPOINTS[0]; // gstaad
-            const pin = px(g.pinX, g.pinY)!;
-            const geom = cardGeom(pin.x, g.cx, box.vw, CW);
-            const active = p >= STRINGER.at;
+          {/* Services — hängen mit Verbindungslinie über „ihrer" Turnier-Kachel */}
+          {box && ATTACHED.map((svc) => {
+            const w = WAYPOINTS.find((x) => x.id === svc.stop);
+            if (!w) return null;
+            const pin = px(w.pinX, w.pinY)!;
+            const geom = cardGeom(pin.x, w.cx, box.vw, CW);
+            const active = p >= svc.at;
+            const TW = mobile ? 132 : 168;
             const tileLeft = geom.cardLeft + 16;
-            const tileTop = pin.y - 118;
-            const lineX = tileLeft + 22;
+            const tileTop = pin.y - 126;
+            const lineX = tileLeft + 24;
             const cardTopEdge = pin.y - 38;
             return (
-              <div className={`transition-opacity duration-500 ${active ? "opacity-100" : "opacity-0"}`}>
-                <div className="absolute w-px bg-white/40" style={{ left: lineX, top: tileTop + 54, height: Math.max(0, cardTopEdge - (tileTop + 54)) }} />
-                <div className="absolute w-[128px]" style={{ left: tileLeft, top: tileTop }}>
-                  <ServiceTile hint={STRINGER} person={team[STRINGER.cat]} lang={lang} />
+              <div key={svc.key} className={`transition-all duration-500 ${active ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`} style={{ transitionDelay: active ? "220ms" : "0ms" }}>
+                <div className="absolute w-px bg-white/45" style={{ left: lineX, top: tileTop + 58, height: Math.max(0, cardTopEdge - (tileTop + 58)) }} />
+                <div className="absolute" style={{ left: tileLeft, top: tileTop, width: TW }}>
+                  <ServiceTile hint={svc} person={team[svc.cat]} lang={lang} />
                 </div>
               </div>
             );
-          })()}
+          })}
 
-          {/* Ergebnis-Karte (Ziel) — Trophy-Summary mit Reise & Team */}
+          {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
           {box && (
-            <div className={`absolute w-[min(58vw,220px)] transition-all duration-700 sm:w-[min(52vw,264px)] ${finished ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
-              <div className="overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-[0_24px_60px_-18px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
-                <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2 sm:gap-2 sm:px-4 sm:py-2.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
-                  <span className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-emerald-400 sm:text-[10px] sm:tracking-[0.18em]">{T.done}</span>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-white/10">
-                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none sm:text-[18px]">+180</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.rank}</span></div>
-                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none text-emerald-400 sm:text-[18px]">+4.2k</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.net} CHF</span></div>
-                  <div className="px-1.5 py-2 text-center sm:px-2 sm:py-3"><span className="block text-[15px] font-extrabold leading-none sm:text-[18px]">{WAYPOINTS.length}</span><span className="mt-1 block text-[7px] font-bold uppercase tracking-wide text-white/45 sm:text-[8px]">{T.events}</span></div>
-                </div>
-                {/* dezente Reise-/Team-Zeile */}
-                <div className="flex items-center gap-2 border-t border-white/10 px-3 py-2 text-[9px] font-semibold text-white/70 sm:gap-3 sm:px-4 sm:py-2.5 sm:text-[10.5px]">
-                  {[
-                    { icon: <ModeIcon icon="plane" />, val: `${flights} ${T.flights}` },
-                    { icon: <BedIcon />, val: `${nightsTotal} ${T.nights}` },
-                    { icon: <TeamIcon />, val: `${T.team} · 4` },
-                  ].map((c, i) => (
-                    <span key={i} className={`flex items-center gap-1.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`} style={{ transitionDelay: `${250 + i * 110}ms` }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden className="text-white/55">{c.icon}</svg>
-                      {c.val}
+            <div className={`absolute w-[min(62vw,236px)] transition-all duration-700 sm:w-[min(52vw,290px)] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
+              <div className="overflow-hidden rounded-[20px] bg-[linear-gradient(165deg,#15183a_0%,#0a0b22_60%,#05061a_100%)] text-white shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)] ring-1 ring-white/15">
+                {/* Kopf: Pokal + Saison */}
+                <div className="relative overflow-hidden px-4 pb-3 pt-4">
+                  <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-[#e0a500]/25 blur-2xl" />
+                  <div className="relative flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e0a500]/15 ring-1 ring-[#e0a500]/50">
+                      <svg width="18" height="18" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
                     </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#e0a500]">{T.done}</p>
+                      <p className="truncate text-[13px] font-extrabold leading-tight text-white sm:text-[15px]">{T.season} 2026</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hauptzahl: Netto */}
+                <div className="px-4 pb-3">
+                  <div className="rounded-2xl bg-emerald-400/10 px-3 py-2.5 ring-1 ring-emerald-400/25">
+                    <p className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-emerald-400/80">{T.net} CHF</p>
+                    <p className="mt-0.5 text-[26px] font-extrabold leading-none tracking-tight text-emerald-400 sm:text-[30px]">+4 200</p>
+                  </div>
+                </div>
+
+                {/* Ranking-Sprung */}
+                <div className="mx-4 mb-3 flex items-center justify-between rounded-xl bg-white/[0.06] px-3 py-2 ring-1 ring-white/10">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span>
+                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold tabular-nums text-white">
+                    <span className="text-white/40">#412</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" className="text-emerald-400" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
+                    <span>#232</span>
+                  </span>
+                </div>
+
+                {/* Reise & Team */}
+                <div className="grid grid-cols-3 border-t border-white/10 text-center">
+                  {[
+                    { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
+                    { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
+                    { icon: <TeamIcon />, v: "4", l: T.team },
+                  ].map((c, i) => (
+                    <div key={i} className={`px-1 py-2.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-white/10" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden className="mx-auto text-white/40">{c.icon}</svg>
+                      <p className="mt-1 text-[13px] font-extrabold leading-none">{c.v}</p>
+                      <p className="mt-0.5 text-[7.5px] font-bold uppercase tracking-wide text-white/40">{c.l}</p>
+                    </div>
                   ))}
                 </div>
               </div>
