@@ -348,13 +348,15 @@ export default function SeasonJourney() {
   // Der Kreis ist mobil kleiner (40px), darum passt er bündig an den rechten Rand
   // und sitzt tiefer — dort, wo die Strasse unten aus dem Bild läuft.
   const startX = mobile ? 95 : START.pinX;
-  const startY = mobile ? 81.5 : START.pinY;   // mobil 15% höher als der Weganfang
-  const startR = mobile ? 28 : 40;      // Radius des START-Kreises
+  const startY = mobile ? 101.5 : START.pinY;  // mobil unten am Strassenende
+  const startR = mobile ? 32 : 40;      // Radius des START-Kreises
+  // Ziel-Trophy sitzt mobil etwas weiter rechts (schmalere Bühne).
+  const finishX = mobile ? FINISH[0] + 5 : FINISH[0];
 
   // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
   const startPx = px(startX, startY);
   const markerPx = px(mx, my);
-  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 34 : 46));
+  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 38 : 46));
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
@@ -400,8 +402,8 @@ export default function SeasonJourney() {
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
             <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${startX}%`, top: `${startY}%` }}>
-              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-14 w-14" : "h-20 w-20"}`}>
-                <svg width={mobile ? 26 : 38} height={mobile ? 26 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-16 w-16" : "h-20 w-20"}`}>
+                <svg width={mobile ? 30 : 38} height={mobile ? 30 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
@@ -425,7 +427,7 @@ export default function SeasonJourney() {
             })}
 
             {/* Ziel-Medaillon — erscheint erst, wenn der Ball angekommen ist */}
-            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-500" style={{ left: `${FINISH[0]}%`, top: `${FINISH[1]}%`, opacity: finished ? 1 : 0 }}>
+            <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-500" style={{ left: `${finishX}%`, top: `${FINISH[1]}%`, opacity: finished ? 1 : 0 }}>
               {finished && <>
                 <span className="absolute inset-0 -m-2 animate-ping rounded-full" style={{ animationDuration: "1.6s", boxShadow: "0 0 0 2px rgba(224,165,0,0.6)" }} />
                 <span className="absolute inset-0 -m-5 animate-ping rounded-full" style={{ animationDuration: "2.2s", boxShadow: "0 0 0 2px rgba(224,165,0,0.35)" }} />
@@ -444,8 +446,8 @@ export default function SeasonJourney() {
                 Viewport festgetackert war. Desktop hat dafür den blauen Seitenrand. */}
             {mobile && (
               <div
-                className={`absolute z-40 w-[52%] -translate-y-1/2 transition-all duration-700 ${finished ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0"}`}
-                style={{ left: `${FINISH[0] + 12}%`, top: `${FINISH[1]}%` }}
+                className={`absolute z-40 w-[44%] -translate-y-1/2 transition-all duration-700 ${finished ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0"}`}
+                style={{ left: `${finishX + 9}%`, top: `${FINISH[1] - 5}%` }}
               >
                 <SummaryCardCompact finished={finished} T={T} />
               </div>
@@ -455,9 +457,8 @@ export default function SeasonJourney() {
 
         {/* ── Overlay ── */}
         <div className="pointer-events-none absolute inset-0 z-40">
-          {/* Kopfzeile oben-rechts. Mobil belegt sie denselben Streifen wie die
-              Abschluss-Karte an der Trophy → sie tritt beim Abschluss ab. */}
-          <div className={`absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white transition-opacity duration-500 sm:right-8 sm:top-24 sm:opacity-100 ${mobile && finished ? "opacity-0" : "opacity-100"}`}>
+          {/* Kopfzeile oben-rechts */}
+          <div className="absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white sm:right-8 sm:top-24">
             <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-white/75 sm:text-[10px] sm:tracking-[0.28em]">{T.label}</span>
             <h2 className="mt-1.5 whitespace-pre-line text-[19px] font-bold leading-[1.05] tracking-tight sm:mt-2 sm:text-[38px]">{T.title}</h2>
             <div className="mt-3 flex items-center justify-end gap-2 sm:mt-5">
