@@ -255,8 +255,7 @@ export default function SeasonJourney() {
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
             <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${START.pinX}%`, top: `${START.pinY}%` }}>
-              <span className="absolute inset-0 -m-3 rounded-full bg-white/25 blur-md" />
-              <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_0_34px_rgba(255,255,255,0.9)]">
+              <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white">
                 <svg width="38" height="38" viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
@@ -346,8 +345,9 @@ export default function SeasonJourney() {
               <div key={`card-${i}`}>
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.fromLeft ? "right" : "left", transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
                 <div className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-500" style={{ top: pin.y, left: pin.x, background: w.color, opacity: active ? 1 : 0 }} />
-                {/* Reise-Etappe zu DIESEM Turnier — sitzt auf der Leader-Line */}
-                {legs[i] && g.lineWidth > 70 && (() => {
+                {/* Reise-Etappe zu DIESEM Turnier — sitzt auf der Leader-Line.
+                    Madrid (i=2) bleibt ohne Pill: die Linie ist dort zu kurz/zu voll. */}
+                {legs[i] && i !== 2 && g.lineWidth > 70 && (() => {
                   const md = MODE[legs[i].L.mode];
                   return (
                     <div className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "opacity-100" : "opacity-0"}`}
