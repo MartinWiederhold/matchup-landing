@@ -71,6 +71,7 @@ function ModeIcon({ icon }: { icon: "plane" | "train" | "car" }) {
   return <path fill="currentColor" d="M5 11l1.4-4A2 2 0 0 1 8.3 5.6h7.4A2 2 0 0 1 17.6 7l1.4 4h1a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-.5v.5a1.2 1.2 0 0 1-2.4 0v-.5H6.9v.5a1.2 1.2 0 0 1-2.4 0v-.5H4a1 1 0 0 1-1-1V12a1 1 0 0 1 1-1h1Zm2.3-.4h9.4l-1-2.8a1 1 0 0 0-.9-.6H9.2a1 1 0 0 0-.9.6l-1 2.8ZM6.6 12.6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm10.8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />;
 }
 function BedIcon() { return <path fill="currentColor" d="M2 7a1 1 0 0 1 2 0v4h7V9a1 1 0 0 1 1-1h6a4 4 0 0 1 4 4v5a1 1 0 0 1-2 0v-2H4v2a1 1 0 0 1-2 0V7Zm4.5 0A2.5 2.5 0 1 0 6.5 12 2.5 2.5 0 0 0 6.5 7Z" />; }
+function TrophyIcon() { return <path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" />; }
 function TeamIcon() { return <g fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><path d="M16.5 5.3a2.5 2.5 0 0 1 0 4.9M17 13.5a4.6 4.6 0 0 1 3.5 4.5" /></g>; }
 type Svc = { key: string; label: { de: string; en: string }; path: string; stroke?: boolean };
 const SERVICES: Svc[] = [
@@ -327,11 +328,14 @@ export default function SeasonJourney() {
           {box && (() => {
             const pin = px(startX, startY)!;
             const g = cardGeom(pin.x, START.cx, box.vw, CW);
+            /* Mobil liegt die Abschluss-Karte unten — genau über der START-Karte.
+               Sobald die Saison durch ist, tritt START ab. */
+            const fade = mobile && finished ? "opacity-0" : "opacity-100";
             return (
               <>
                 {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
-                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - startR - 6) }} />
-                <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CW }}>
+                <div className={`absolute h-px bg-white/45 transition-opacity duration-500 ${fade}`} style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - startR - 6) }} />
+                <div className={`absolute -translate-y-1/2 transition-opacity duration-500 ${fade}`} style={{ top: pin.y, left: g.cardLeft, width: CW }}>
                   <div className="flex items-center gap-2 rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-3">
                     <span className="flex shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" style={{ width: EMB, height: EMB }}>
                       <svg width={EMB * 0.46} height={EMB * 0.46} viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" /></svg>
@@ -422,74 +426,94 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
+          {/* Ergebnis-Karte (Ziel) — Saison-Abschluss.
+              Der Gold-Akzent greift die Trophy am Ziel auf: Verlaufskante oben,
+              Schimmer dahinter, Gold-Ring am Profilbild. */}
           {box && (
             /* Mobil als schmale Leiste UNTEN (oben liegt die Trophy), ab sm oben-links. */
             <div
-              className={`absolute transition-all duration-700 ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"} ${mobile ? "inset-x-3 bottom-3" : "w-[318px]"}`}
+              className={`absolute transition-all duration-700 ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-8 scale-95 opacity-0"} ${mobile ? "inset-x-3 bottom-4" : "w-[340px]"}`}
               style={mobile ? undefined : { top: 88, left: 16 }}
             >
-              <div className="overflow-hidden rounded-[18px] bg-white/97 text-neutral-900 shadow-[0_28px_64px_-20px_rgba(0,0,0,0.7)] ring-1 ring-black/5 backdrop-blur">
-                {/* Kopf: Profil + Abschluss */}
-                <div className="flex items-center gap-2.5 px-3 pb-2 pt-2.5">
-                  <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-extrabold leading-tight">Luca M.</p>
-                    <p className="truncate text-[8.5px] font-semibold text-neutral-500">22 · Zürich · Sand</p>
-                  </div>
-                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#e0a500]/12 px-1.5 py-0.5 text-[7px] font-extrabold uppercase tracking-[0.1em] text-[#a97a00] ring-1 ring-[#e0a500]/30">
-                    <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
-                    {T.done}
-                  </span>
-                </div>
+              {/* Goldener Schein hinter der Karte — macht den Abschluss zum Moment */}
+              <div className={`pointer-events-none absolute -inset-6 rounded-[36px] transition-opacity duration-1000 ${finished ? "opacity-100" : "opacity-0"}`}
+                style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(224,165,0,0.30), transparent 70%)" }} />
 
-                {/* Ranking-Ring + Netto/Preisgeld-Balken (Stil der Compete-Kacheln) */}
-                <div className="flex items-center gap-3 px-3 pb-2.5">
+              <div className="relative overflow-hidden rounded-[22px] bg-white text-neutral-900 shadow-[0_30px_70px_-18px_rgba(0,0,0,0.75)] ring-1 ring-black/[0.06]">
+                {/* Gold-Kante + Schimmer */}
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#e0a500] via-[#ffdc7a] to-[#e0a500]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-20"
+                  style={{ background: "radial-gradient(110% 100% at 50% 0%, rgba(224,165,0,0.16), transparent 72%)" }} />
+
+                {/* Kopf: Profil + Ranking */}
+                <div className="relative flex items-center gap-3 px-3.5 pb-3 pt-3.5">
+                  <span className="relative shrink-0">
+                    <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-11 w-11 rounded-full object-cover"
+                      style={{ boxShadow: "0 0 0 2px #fff, 0 0 0 4px #e0a500" }} />
+                    <span className="absolute -bottom-0.5 -right-0.5 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#e0a500] ring-2 ring-white">
+                      <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden className="text-white"><TrophyIcon /></svg>
+                    </span>
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="flex w-fit items-center gap-1 text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-[#a97a00]">
+                      <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden><TrophyIcon /></svg>
+                      {T.done}
+                    </span>
+                    <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight tracking-tight">Luca M.</p>
+                    <p className="truncate text-[9.5px] font-semibold text-neutral-400">22 · Zürich · Sand · 2026</p>
+                  </div>
+
+                  {/* Ranking-Ring */}
                   <div className="relative shrink-0">
-                    <svg viewBox="0 0 44 44" className="h-12 w-12 -rotate-90">
-                      <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="4" />
-                      <circle cx="22" cy="22" r="18" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round"
+                    <svg viewBox="0 0 44 44" className="h-[46px] w-[46px] -rotate-90">
+                      <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="3.5" />
+                      <circle cx="22" cy="22" r="18" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round"
                         strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * 0.44}
                         className={finished ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${2 * Math.PI * 18}` }} />
                     </svg>
                     <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                      <span className="text-[10px] font-extrabold tabular-nums">#232</span>
-                      <span className="text-[6px] font-bold uppercase tracking-wide text-emerald-600">+180</span>
+                      <span className="text-[11px] font-extrabold tabular-nums">#232</span>
+                      <span className="mt-px text-[6.5px] font-extrabold text-emerald-600">+180</span>
                     </span>
                   </div>
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    {[
-                      { l: T.prize, w: 82, c: "#10b981", v: "12.4k" },
-                      { l: T.costs, w: 54, c: "#d4d4d8", v: "8.2k" },
-                    ].map((b, i) => (
-                      <div key={b.l}>
-                        <div className="flex items-baseline justify-between">
-                          <span className="text-[7px] font-extrabold uppercase tracking-[0.12em] text-neutral-400">{b.l}</span>
-                          <span className="text-[8.5px] font-bold tabular-nums text-neutral-500">{b.v}</span>
-                        </div>
-                        <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-                          <div className={`h-full rounded-full ${finished ? "anim-growx" : ""}`} style={{ width: `${b.w}%`, background: b.c, animationDelay: `${200 + i * 160}ms` }} />
-                        </div>
-                      </div>
-                    ))}
-                    <p className="pt-0.5 text-[15px] font-extrabold leading-none tracking-tight text-emerald-600">
-                      +4 200 <span className="text-[7px] font-bold uppercase tracking-wide text-neutral-400">{T.net} CHF</span>
-                    </p>
+                </div>
+
+                {/* Netto als Held + EIN Balken: Preisgeld = ganze Spur,
+                    Kosten grau von links → der grüne Rest IST das Netto. */}
+                <div className="relative px-3.5 pb-3">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[26px] font-extrabold leading-none tracking-tight text-emerald-600">+4 200</span>
+                    <span className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{T.net} CHF</span>
+                  </div>
+                  <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-neutral-100">
+                    <div className={`absolute inset-y-0 left-0 rounded-full bg-emerald-500 ${finished ? "anim-growx" : ""}`}
+                      style={{ width: "100%", animationDelay: "260ms" }} />
+                    <div className={`absolute inset-y-0 left-0 rounded-full bg-neutral-300 ${finished ? "anim-growx" : ""}`}
+                      style={{ width: "66%", animationDelay: "520ms" }} />
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />{T.costs} <span className="tabular-nums text-neutral-500">8.2k</span>
+                    </span>
+                    <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{T.prize} <span className="tabular-nums text-neutral-500">12.4k</span>
+                    </span>
                   </div>
                 </div>
 
                 {/* Reise & Team */}
-                <div className="grid grid-cols-4 border-t border-black/5 text-center">
+                <div className="grid grid-cols-4 border-t border-black/[0.06] bg-neutral-50/70 text-center">
                   {[
                     { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
                     { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
                     { icon: <TeamIcon />, v: "4", l: T.team },
-                    { icon: <ModeIcon icon="car" />, v: String(WAYPOINTS.length), l: T.events },
+                    { icon: <TrophyIcon />, v: String(WAYPOINTS.length), l: T.events },
                   ].map((c, i) => (
-                    <div key={i} className={`px-1 py-1.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 3 ? "border-r border-black/5" : ""}`} style={{ transitionDelay: `${300 + i * 100}ms` }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-400">{c.icon}</svg>
-                      <p className="mt-0.5 text-[10px] font-extrabold leading-none">{c.v}</p>
-                      <p className="mt-0.5 text-[6.5px] font-bold uppercase tracking-wide text-neutral-400">{c.l}</p>
+                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 3 ? "border-r border-black/[0.06]" : ""}`} style={{ transitionDelay: `${420 + i * 90}ms` }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-300">{c.icon}</svg>
+                      <p className="mt-1 text-[12px] font-extrabold leading-none tabular-nums">{c.v}</p>
+                      <p className="mt-1 text-[6.5px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{c.l}</p>
                     </div>
                   ))}
                 </div>
