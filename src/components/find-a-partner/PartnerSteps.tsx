@@ -147,7 +147,7 @@ function StepRow({ step, index }: { step: Step; index: number }) {
           sizes="(max-width: 1024px) 100vw, 50vw"
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
             step.overlay === "play"
-              ? "[object-position:center_20%]"
+              ? "[object-position:center_38%]"
               : step.overlay === "match"
                 ? "[object-position:center_38%]"
                 : step.overlay === "profile"
@@ -196,7 +196,7 @@ export default function PartnerSteps() {
       number: "03",
       title: t("findPartner.step3Title"),
       text: t("findPartner.step3Text"),
-      img: "/find-a-partner/step-play-v4.jpg",
+      img: "/find-a-partner/step-play-v5.jpg",
       overlay: "play",
     },
   ];
