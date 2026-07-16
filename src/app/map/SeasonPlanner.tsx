@@ -132,16 +132,16 @@ function CountryPicker({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={`flex w-full items-center justify-between gap-2 rounded-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
-          open ? "bg-white/[0.14] text-white ring-1 ring-white/30" : "bg-white/[0.07] text-white/70 ring-1 ring-white/10 hover:bg-white/[0.12]"
+          open ? "bg-white text-neutral-900 ring-2 ring-matchup" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200/70"
         }`}
       >
         <span className="truncate">{value || allLabel}</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
-          className={`shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`}><path d="M6 9l6 6 6-6" /></svg>
+          className={`shrink-0 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`}><path d="M6 9l6 6 6-6" /></svg>
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto rounded-2xl bg-[#1a1a4d] p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] ring-1 ring-white/15">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto rounded-2xl bg-white p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10">
           {items.map((c) => {
             const sel = c === value;
             return (
@@ -150,7 +150,7 @@ function CountryPicker({
                 type="button"
                 onClick={() => { onChange(c); setOpen(false); }}
                 className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold transition ${
-                  sel ? "bg-emerald-400/15 text-emerald-300" : "text-white/75 hover:bg-white/[0.08]"
+                  sel ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-100"
                 }`}
               >
                 <span className="truncate">{c || allLabel}</span>
@@ -305,36 +305,38 @@ export default function SeasonPlanner({
     null,
   );
 
-  /* Ganze Fläche im Compete-Kachel-Stil: dunkler Indigo-Verlauf, Glas-Karten,
-   * grüne Akzente. Einzige Ausnahme: das ausgeklappte Profil-Formular bleibt
-   * eine weisse Karte (viele Eingabefelder → wie ein Modal auf Dunkel). */
   return (
-    <div className="flex-1 space-y-3 overflow-y-auto bg-[linear-gradient(180deg,#3b2ecc_0%,#221c7a_38%,#0c0b33_100%)] px-4 pb-4 pt-1 text-white md:space-y-4 md:pt-4">
-      {/* Spielerprofil (treibt die Eligibility-Ampel) */}
-      <ProfileCard
-        profile={profile}
-        setProfile={setProfile}
-        synced={profileSynced}
-        email={profileEmail}
-        onSignIn={onSignIn}
-        onSignUp={onSignUp}
-        onSignOut={onSignOut}
-      />
+    <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-4 pt-1 md:space-y-4 md:pt-4">
+      {/* ── Season Cockpit (dunkel, im Stil der Compete-Kacheln) ──────────
+          Profil + Strategie + Status + Projektion = die Kennzahlen, die man
+          beim Öffnen zuerst sieht. Das Werkzeug darunter bleibt hell. */}
+      <div className="-mx-1 space-y-2.5 rounded-[22px] bg-[linear-gradient(165deg,#3b2ecc_0%,#221c7a_55%,#0c0b33_100%)] p-2.5 shadow-[0_20px_50px_-18px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
+        {/* Spielerprofil (treibt die Eligibility-Ampel) */}
+        <ProfileCard
+          profile={profile}
+          setProfile={setProfile}
+          synced={profileSynced}
+          email={profileEmail}
+          onSignIn={onSignIn}
+          onSignUp={onSignUp}
+          onSignOut={onSignOut}
+        />
 
-      {/* Strategie-Empfehlung nach Ranking */}
-      <StrategyCard profile={profile} setGroup={setGroup} />
+        {/* Strategie-Empfehlung nach Ranking */}
+        <StrategyCard profile={profile} setGroup={setGroup} />
 
-      {/* Status-Übersicht der geplanten Saison */}
-      {plan.length > 0 && (
-        <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
-      )}
+        {/* Status-Übersicht der geplanten Saison */}
+        {plan.length > 0 && (
+          <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
+        )}
 
-      {/* Ranking-Projektion: welchen Rang könntest du mit dieser Saison erreichen? */}
-      {plan.length > 0 && <ProjectionCard plan={plan} profile={profile} />}
+        {/* Ranking-Projektion: welchen Rang könntest du mit dieser Saison erreichen? */}
+        {plan.length > 0 && <ProjectionCard plan={plan} profile={profile} />}
+      </div>
 
       {/* Region-Filter: Europa / USA / Alle */}
       <div>
-        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-white/45">{tt("Region", "Region")}</div>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{tt("Region", "Region")}</div>
         <div className="flex gap-1.5">
           {([
             { key: "all", label: tt("Alle", "All") },
@@ -346,7 +348,7 @@ export default function SeasonPlanner({
               type="button"
               onClick={() => setRegion(r.key)}
               className={`flex-1 rounded-full px-3 py-2 text-[12px] font-semibold transition-colors ${
-                region === r.key ? "bg-white text-neutral-900" : "bg-white/[0.07] text-white/70 ring-1 ring-white/10 hover:bg-white/[0.12]"
+                region === r.key ? "bg-matchup text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
               }`}
             >
               {r.label}
@@ -365,7 +367,7 @@ export default function SeasonPlanner({
             value={classFilter}
             onChange={(e) => setClassFilter?.(e.target.value)}
             placeholder={tt("Level / Klassierung (z. B. R1, U14)", "Level / ranking (e.g. R1, U14)")}
-            className="flex-[1.4] rounded-full bg-white/[0.07] px-3.5 py-2 text-[12px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-white/35 focus:ring-white/30"
+            className="flex-[1.4] rounded-full bg-neutral-100 px-3.5 py-2 text-[12px] font-semibold text-neutral-700 outline-none placeholder:font-normal placeholder:text-neutral-400"
           />
         </div>
       </div>
@@ -410,28 +412,28 @@ export default function SeasonPlanner({
       </div>
 
       {/* Budget */}
-      <div className="rounded-2xl bg-white/[0.07] p-4 ring-1 ring-white/10">
+      <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-white/45">{tt("Budget", "Budget")}</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Budget", "Budget")}</span>
           <div className="flex items-center gap-1 text-sm">
             <input
               type="number"
               value={budget}
               onChange={(e) => setBudget(Math.max(0, Number(e.target.value) || 0))}
-              className="w-24 rounded-lg bg-white/[0.09] px-2 py-1 text-right font-bold text-white outline-none ring-1 ring-white/15 focus:ring-white/35"
+              className="w-24 rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1 text-right font-bold outline-none focus:border-matchup"
             />
-            <span className="font-bold text-white/50">€</span>
+            <span className="font-bold text-neutral-500">€</span>
           </div>
         </div>
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-neutral-100">
           <div
             className="h-full rounded-full transition-all"
-            style={{ width: `${spentPct}%`, background: over ? "#f87171" : "#34d399" }}
+            style={{ width: `${spentPct}%`, background: over ? "#dc2626" : "#4b3bf3" }}
           />
         </div>
         <div className="mt-2 flex items-center justify-between text-sm">
-          <span className="text-white/55">{tt("Ausgaben", "Spent")} {fmtEUR(cost.total)}</span>
-          <span className={`font-bold ${over ? "text-red-400" : "text-emerald-400"}`}>
+          <span className="text-neutral-500">{tt("Ausgaben", "Spent")} {fmtEUR(cost.total)}</span>
+          <span className={`font-bold ${over ? "text-red-600" : "text-emerald-600"}`}>
             {over ? tt("Über Budget ", "Over budget ") : tt("Rest ", "Left ")} {fmtEUR(Math.abs(remaining))}
           </span>
         </div>
@@ -442,7 +444,7 @@ export default function SeasonPlanner({
           <Row label={tt("Transfers", "Transfers")} value={fmtEUR(cost.transfers)} />
           <Row label={tt("Nenngelder", "Entry fees")} value={fmtEUR(cost.entry)} />
         </div>
-        <div className="mt-3 flex gap-2 border-t border-white/10 pt-3">
+        <div className="mt-3 flex gap-2 border-t border-neutral-100 pt-3">
           <Stat label={tt("Dauer", "Duration")} value={tt(`${planSpanDays(plan)} T`, `${planSpanDays(plan)} d`)} />
           <Stat label={tt("Punkte bei Sieg", "Points if won")} value={cost.points.toLocaleString("de-CH")} accent />
           <Stat label={tt("Preisgeld bei Sieg", "Prize money if won")} value={fmtEUR(cost.prize)} />
@@ -451,7 +453,7 @@ export default function SeasonPlanner({
 
       {/* Startdatum */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Startdatum", "Start date")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Startdatum", "Start date")}</h3>
         <div className="flex items-center gap-2">
           <input
             type="date"
@@ -459,36 +461,36 @@ export default function SeasonPlanner({
             min="2026-01-01"
             max="2026-12-31"
             onChange={(e) => setSeasonStart(e.target.value)}
-            className="flex-1 rounded-xl bg-white/[0.09] px-3 py-2 text-sm text-white outline-none ring-1 ring-white/15 [color-scheme:dark] focus:ring-white/35"
+            className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-matchup"
           />
           {seasonStart && (
-            <button type="button" onClick={() => setSeasonStart("")} className="rounded-full bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/60 ring-1 ring-white/10 hover:bg-white/[0.12]">
+            <button type="button" onClick={() => setSeasonStart("")} className="rounded-full bg-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-500 hover:bg-neutral-200">
               {tt("Ganze Saison", "Whole season")}
             </button>
           )}
         </div>
-        <p className="mt-1 text-[11px] text-white/40">{tt("Nur Turniere ab diesem Datum werden geplant & angezeigt.", "Only tournaments from this date are planned & shown.")}</p>
+        <p className="mt-1 text-[11px] text-neutral-400">{tt("Nur Turniere ab diesem Datum werden geplant & angezeigt.", "Only tournaments from this date are planned & shown.")}</p>
       </div>
 
       {/* Wohnort / Startpunkt (frei wählbar) */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Wohnort / Startpunkt", "Home / start point")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Wohnort / Startpunkt", "Home / start point")}</h3>
         <div className="relative">
           <input
             type="text"
             value={locQuery}
             onChange={(e) => setLocQuery(e.target.value)}
             placeholder={tt(`Aktuell: ${start.name} — Stadt suchen…`, `Current: ${start.name} — search city…`)}
-            className="w-full rounded-xl bg-white/[0.09] px-3 py-2 text-sm text-white outline-none ring-1 ring-white/15 placeholder:text-white/35 focus:ring-white/35"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none placeholder:text-neutral-400 focus:border-matchup"
           />
           {locMatches.length > 0 && (
-            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl bg-[#1a1a4d] py-1 shadow-lg ring-1 ring-white/15">
+            <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white py-1 shadow-lg">
               {locMatches.map((c) => (
                 <button
                   key={c.name}
                   type="button"
                   onClick={() => { setStart(c); setLocQuery(""); }}
-                  className="block w-full px-3 py-2 text-left text-sm text-white/75 hover:bg-white/[0.08]"
+                  className="block w-full px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
                 >
                   {c.name}
                 </button>
@@ -505,7 +507,7 @@ export default function SeasonPlanner({
                 type="button"
                 onClick={() => setStart(b)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                  active ? "bg-emerald-500 text-white" : "bg-white/[0.07] text-white/70 ring-1 ring-white/10 hover:bg-white/[0.12]"
+                  active ? "bg-emerald-600 text-white shadow-sm" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
               >
                 {b.name}
@@ -517,11 +519,11 @@ export default function SeasonPlanner({
 
       {/* Meine Saison */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
           {tt("Meine Saison", "My season")}{plan.length ? ` · ${plan.length} ${tt("Stops", "stops")}` : ""}
         </h3>
         {plan.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/15 px-3 py-4 text-center text-sm text-white/40">
+          <p className="rounded-xl border border-dashed border-neutral-200 px-3 py-4 text-center text-sm text-neutral-400">
             {tt("Wähle unten Turniere aus – die Route erscheint live auf der Karte.", "Pick tournaments below – the route appears live on the map.")}
           </p>
         ) : (
@@ -532,7 +534,7 @@ export default function SeasonPlanner({
             </li>
             {cost.perTour.map((p, i) => (
               <li key={p.t.id}>
-                <div className="flex items-center gap-1 py-0.5 pl-2 text-[11px] text-white/40">
+                <div className="flex items-center gap-1 py-0.5 pl-2 text-[11px] text-neutral-400">
                   <span>↓ {tt(p.leg.mode, LEG_MODE_EN[p.leg.mode] ?? p.leg.mode)}</span>
                   <span>· {p.leg.km.toLocaleString("de-CH")} km</span>
                   <span>· {fmtEUR(p.leg.cost)}</span>
@@ -540,7 +542,7 @@ export default function SeasonPlanner({
                 <button
                   type="button"
                   onClick={() => { setSelTid(p.t.id); onFocus(p.t); }}
-                  className="flex w-full items-center gap-2.5 rounded-xl bg-white/[0.07] px-2.5 py-2 text-left ring-1 ring-white/10 hover:bg-white/[0.12]"
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 text-left hover:border-matchup/40"
                 >
                   <span
                     className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold text-white"
@@ -550,7 +552,7 @@ export default function SeasonPlanner({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{p.t.name}</span>
-                    <span className="block text-[11px] text-white/45">
+                    <span className="block text-[11px] text-neutral-400">
                       {fmtRange(p.t)} · {TIER_META[p.t.tier].label} · {fmtEUR(p.total)}
                     </span>
                   </span>
@@ -559,7 +561,7 @@ export default function SeasonPlanner({
                     tabIndex={0}
                     onClick={(e) => { e.stopPropagation(); onTogglePlan(p.t.id); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onTogglePlan(p.t.id); } }}
-                    className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-white/40 hover:bg-white/10 hover:text-red-400"
+                    className="shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-neutral-400 hover:bg-neutral-100 hover:text-red-500"
                   >
                     {tt("Entfernen", "Remove")}
                   </span>
@@ -573,13 +575,13 @@ export default function SeasonPlanner({
       {/* Turnierkatalog */}
       <div>
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-white/45">{tt("Turniere", "Tournaments")}</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Turniere", "Tournaments")}</h3>
           {hasRank && (
             <button
               type="button"
               onClick={() => setOnlyEligible(!onlyEligible)}
               className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                onlyEligible ? "bg-emerald-500 text-white" : "bg-white/[0.07] text-white/70 ring-1 ring-white/10 hover:bg-white/[0.12]"
+                onlyEligible ? "bg-emerald-600 text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
               }`}
             >
               {onlyEligible ? tt("✓ Nur für mich mögliche", "✓ Eligible for me") : tt("Nur für mich mögliche", "Eligible for me")}
@@ -588,12 +590,12 @@ export default function SeasonPlanner({
         </div>
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           {GROUPS.map((g) => (
-            <Chip key={g} dark active={group === g} onClick={() => setGroup(g)}>{g === "Alle" ? tt("Alle", "All") : g}</Chip>
+            <Chip key={g} active={group === g} onClick={() => setGroup(g)}>{g === "Alle" ? tt("Alle", "All") : g}</Chip>
           ))}
         </div>
         <div className="mb-2.5 flex flex-wrap gap-1.5">
           {SURFACES.map((s) => (
-            <Chip key={s} dark active={surface === s} onClick={() => setSurface(s)} subtle>
+            <Chip key={s} active={surface === s} onClick={() => setSurface(s)} subtle>
               {s === "Alle" ? tt("Alle Beläge", "All surfaces") : tt(SURFACE_LABEL[s], SURFACE_LABEL_EN[s])}
             </Chip>
           ))}
@@ -622,7 +624,7 @@ export default function SeasonPlanner({
             />
           ))}
           {grouped.clusters.length === 0 && grouped.singles.length === 0 && (
-            <p className="rounded-xl border border-dashed border-white/15 px-3 py-4 text-center text-sm text-white/40">{tt("Keine Turniere für diese Auswahl.", "No tournaments for this selection.")}</p>
+            <p className="rounded-xl border border-dashed border-neutral-200 px-3 py-4 text-center text-sm text-neutral-400">{tt("Keine Turniere für diese Auswahl.", "No tournaments for this selection.")}</p>
           )}
         </div>
       </div>
@@ -638,22 +640,22 @@ function CatalogRow({ t, added, el, onOpen, onToggle }: { t: Tournament; added: 
   const meta = TIER_META[t.tier];
   const logo = tournamentLogo(t);
   return (
-    <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.07] px-2.5 py-2 ring-1 ring-white/10">
+    <div className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
       <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
         <span className="h-8 w-1.5 shrink-0 rounded-full" style={{ background: el ? ELIG_COLOR[el.status] : meta.color }} />
         {logo ? (
-          <img src={logo} alt="" className="h-7 w-7 shrink-0 rounded-md bg-white object-contain p-0.5" />
+          <img src={logo} alt="" className="h-7 w-7 shrink-0 rounded-md object-contain ring-1 ring-neutral-200" />
         ) : (
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
         )}
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-white">{t.name}</span>
-          <span className="block text-[11px] text-white/45">{fmtRange(t)} · {t.city} · {tt(SURFACE_LABEL[t.surface], SURFACE_LABEL_EN[t.surface])}{t.indoor ? " (Indoor)" : ""}</span>
+          <span className="block truncate text-sm font-semibold">{t.name}</span>
+          <span className="block text-[11px] text-neutral-400">{fmtRange(t)} · {t.city} · {tt(SURFACE_LABEL[t.surface], SURFACE_LABEL_EN[t.surface])}{t.indoor ? " (Indoor)" : ""}</span>
         </span>
         <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ background: meta.color }}>{meta.short}</span>
       </button>
       <button type="button" onClick={onToggle}
-        className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors ${added ? "bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/30" : "bg-white text-neutral-900 hover:bg-white/90"}`}>
+        className={`shrink-0 rounded-full px-2.5 py-1.5 text-xs font-bold transition-colors ${added ? "bg-emerald-50 text-emerald-600" : "bg-matchup text-white hover:bg-matchup-hover"}`}>
         {added ? "✓" : "+"}
       </button>
     </div>
@@ -861,7 +863,7 @@ function TournamentDetail({
 
       {/* Wetter zur Turnierzeit (Klimawerte Vorjahr) */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Wetter zur Turnierzeit", "Weather during the tournament")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Wetter zur Turnierzeit", "Weather during the tournament")}</h3>
         {t.indoor ? (
           <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-600">
             <span>🏟️</span> {tt("Indoor-Turnier – wetterunabhängig.", "Indoor tournament – weather-independent.")}
@@ -904,7 +906,7 @@ function TournamentDetail({
         for (let i = roundPrize.length - 1; i >= 0; i--) if (roundPrize[i] >= weekCost) { beIdx = i; break; }
         return (
           <div>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Punkte & Preisgeld je Runde", "Points & prize money per round")}</h3>
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Punkte & Preisgeld je Runde", "Points & prize money per round")}</h3>
             {/* Break-even */}
             <div className="mb-2 rounded-2xl p-3" style={{ background: beIdx >= 0 ? "#ecfdf5" : "#fff7ed" }}>
               <div className="flex items-center gap-1.5 text-sm font-extrabold" style={{ color: beIdx >= 0 ? "#059669" : "#c2410c" }}>
@@ -941,7 +943,7 @@ function TournamentDetail({
       })()}
 
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Benötigte Dokumente", "Required documents")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Benötigte Dokumente", "Required documents")}</h3>
         <div className="flex flex-wrap gap-1.5">
           {req.map((k) => {
             const ok = !missing.includes(k);
@@ -965,7 +967,7 @@ function TournamentDetail({
       </div>
 
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Kosten ab", "Costs from")} {start.name}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Kosten ab", "Costs from")} {start.name}</h3>
         <div className="overflow-hidden rounded-xl border border-neutral-200">
           <Line label={tt(`Anreise (${cost.leg.mode}, ${cost.leg.km.toLocaleString("de-CH")} km)`, `Travel (${LEG_MODE_EN[cost.leg.mode] ?? cost.leg.mode}, ${cost.leg.km.toLocaleString("de-CH")} km)`)} value={fmtEUR(cost.leg.cost)} />
           <Line label={tt(`Unterkunft (${cost.nights} Nächte)`, `Accommodation (${cost.nights} nights)`)} value={fmtEUR(cost.hotel)} />
@@ -982,7 +984,7 @@ function TournamentDetail({
 
       {/* Unterkunft & Transfer – Deep-Links (Buchung beim Anbieter, für Turnierdaten vorausgefüllt) */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Unterkunft & Transfer", "Accommodation & transfer")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Unterkunft & Transfer", "Accommodation & transfer")}</h3>
         <div className="grid grid-cols-3 gap-2">
           <BookLink href={bookingUrl} kind="hotel" label={tt("Hotels", "Hotels")} sub={hotelSub} live={live.hotel.price != null} />
           <BookLink href={flightLink} kind="flight" label={tt("Flüge", "Flights")} sub={flightSub} live={live.flight.price != null} />
@@ -996,7 +998,7 @@ function TournamentDetail({
       </div>
 
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Vor Ort", "On site")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Vor Ort", "On site")}</h3>
         <div className="flex flex-wrap gap-1.5">
           {EXTRAS[t.tier].map((x) => (
             <span key={x} className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-600">✔ {tt(x, EXTRAS_EN[x] ?? x)}</span>
@@ -1006,13 +1008,13 @@ function TournamentDetail({
 
       {/* Rund ums Turnier (OSM) */}
       <div>
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Rund ums Turnier", "Around the tournament")}</h3>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Rund ums Turnier", "Around the tournament")}</h3>
         <POINearby pois={pois} />
       </div>
 
       {nearby.length > 0 && (
         <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">{tt("Trainingsplätze in der Nähe", "Practice courts nearby")}</h3>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">{tt("Trainingsplätze in der Nähe", "Practice courts nearby")}</h3>
           <div className="space-y-1.5">
             {nearby.map(({ v, km }) => (
               <a
@@ -1024,7 +1026,7 @@ function TournamentDetail({
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{v.name}</span>
-                  <span className="block text-[11px] text-white/45">{v.city ? `${v.city} · ` : ""}{tt(`${km} km entfernt`, `${km} km away`)}</span>
+                  <span className="block text-[11px] text-neutral-400">{v.city ? `${v.city} · ` : ""}{tt(`${km} km entfernt`, `${km} km away`)}</span>
                 </span>
                 <span className="shrink-0 text-xs font-semibold text-matchup">↗</span>
               </a>
@@ -1039,16 +1041,16 @@ function TournamentDetail({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-1.5">
-      <span className="min-w-0 text-white/50">{label}</span>
-      <span className="shrink-0 whitespace-nowrap font-semibold text-white/85">{value}</span>
+      <span className="min-w-0 text-neutral-500">{label}</span>
+      <span className="shrink-0 whitespace-nowrap font-semibold text-neutral-700">{value}</span>
     </div>
   );
 }
 function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className={`flex-1 rounded-xl px-3 py-2 ${accent ? "bg-emerald-400/10 ring-1 ring-emerald-400/25" : "bg-white/[0.06]"}`}>
-      <div className={`text-sm font-extrabold ${accent ? "text-emerald-400" : "text-white"}`}>{value}</div>
-      <div className="text-[10px] font-medium uppercase tracking-wide text-white/40">{label}</div>
+    <div className={`flex-1 rounded-xl px-3 py-2 ${accent ? "bg-matchup/10" : "bg-neutral-50"}`}>
+      <div className={`text-sm font-extrabold ${accent ? "text-matchup" : "text-neutral-800"}`}>{value}</div>
+      <div className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">{label}</div>
     </div>
   );
 }
@@ -1661,7 +1663,7 @@ function PresenceSection({ t, profile, synced }: { t: Tournament; profile: Playe
 
   return (
     <div>
-      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-white/45">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-neutral-400">
         {tt("Wer ist hier?", "Who's here?")}{rows ? ` · ${rows.length}` : ""}
       </h3>
 
@@ -1756,20 +1758,14 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/* dark = auf dem dunklen Planer-Grund; ohne = im weissen Profil-Formular. */
-function Chip({ children, active, onClick, subtle = false, dark = false }: { children: ReactNode; active: boolean; onClick: () => void; subtle?: boolean; dark?: boolean }) {
-  const cls = dark
-    ? active
-      ? "bg-white text-neutral-900"
-      : "bg-white/[0.07] text-white/70 ring-1 ring-white/10 hover:bg-white/[0.12]"
-    : active
-      ? subtle ? "bg-neutral-900 text-white" : "bg-matchup text-white shadow-sm"
-      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200";
+function Chip({ children, active, onClick, subtle = false }: { children: ReactNode; active: boolean; onClick: () => void; subtle?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors ${cls}`}
+      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+        active ? (subtle ? "bg-neutral-900 text-white" : "bg-matchup text-white shadow-sm") : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+      }`}
     >
       {children}
     </button>
