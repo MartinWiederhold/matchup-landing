@@ -367,7 +367,7 @@ function TeamTile({ show }: { show: boolean }) {
     { c: "#7b6cff", l: "Coach", img: "/compete/team/coach.png" },
     { c: "#10b981", l: "Physio", img: "/compete/team/physio.png" },
     { c: "#f59e0b", l: "Fitness", img: "/compete/team/fitness.png" },
-    { c: "#38bdf8", l: "Stringer", img: null },
+    { c: "#38bdf8", l: "Stringer", img: "/compete/team/stringer.png" },
   ];
   const days = ["M", "T", "W", "T", "F"];
   return (
