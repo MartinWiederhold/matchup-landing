@@ -224,8 +224,9 @@ export default function SeasonJourney() {
   /* Etappen-Korrekturen: Pill-Position + Verkehrsmittel.
    * Gstaad → Barcelona (698 km) ist realistisch ein Flug, nicht die Bahn. */
   const LEG_FIX: Record<number, { mode?: "Flug" | "Bahn" | "Auto"; dx?: number; dy?: number }> = {
-    0: { dx: 13, dy: 3 },   // „Auto"-Pill weiter nach rechts, weg vom Spieler
-    1: { mode: "Flug" },
+    0: { dx: 27, dy: 3 },              // „Auto · 139 km" weiter nach rechts
+    1: { mode: "Flug", dx: -17 },      // „Flug · 698 km" nach links
+    2: { dx: 17 },                     // „Bahn · 505 km" nach rechts
   };
   const legs = nodes.slice(1).map((n, i) => {
     const a = nodes[i];
@@ -404,36 +405,38 @@ export default function SeasonJourney() {
 
           {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
           {box && (
-            <div className={`absolute w-[min(62vw,236px)] transition-all duration-700 sm:w-[min(52vw,290px)] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
-              <div className="overflow-hidden rounded-[20px] bg-[linear-gradient(165deg,#15183a_0%,#0a0b22_60%,#05061a_100%)] text-white shadow-[0_30px_70px_-20px_rgba(0,0,0,0.85)] ring-1 ring-white/15">
-                {/* Kopf: Pokal + Saison */}
-                <div className="relative overflow-hidden px-4 pb-3 pt-4">
-                  <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-[#e0a500]/25 blur-2xl" />
-                  <div className="relative flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e0a500]/15 ring-1 ring-[#e0a500]/50">
-                      <svg width="18" height="18" viewBox="0 0 24 24" style={{ color: "#e0a500" }} aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
-                    </span>
+            <div className={`absolute w-[min(54vw,198px)] transition-all duration-700 sm:w-[min(40vw,232px)] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
+              <div className="overflow-hidden rounded-[18px] bg-[linear-gradient(165deg,#15183a_0%,#0a0b22_60%,#05061a_100%)] text-white shadow-[0_28px_64px_-20px_rgba(0,0,0,0.85)] ring-1 ring-white/15">
+                {/* Kopf: Spielerprofil */}
+                <div className="relative overflow-hidden px-3 pb-2.5 pt-3">
+                  <div className="absolute -right-5 -top-7 h-20 w-20 rounded-full bg-[#e0a500]/25 blur-2xl" />
+                  <div className="relative flex items-center gap-2">
+                    <img src="/find-a-partner/av-man.jpg" alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
                     <div className="min-w-0">
-                      <p className="truncate text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#e0a500]">{T.done}</p>
-                      <p className="truncate text-[13px] font-extrabold leading-tight text-white sm:text-[15px]">{T.season} 2026</p>
+                      <p className="truncate text-[11.5px] font-extrabold leading-tight text-white">Luca M.</p>
+                      <p className="truncate text-[8.5px] font-semibold text-white/50">ATP #232 · 22 · Zürich</p>
                     </div>
                   </div>
+                  <p className="relative mt-2 flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-[#e0a500]">
+                    <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
+                    {T.done}
+                  </p>
                 </div>
 
-                {/* Hauptzahl: Netto */}
-                <div className="px-4 pb-3">
-                  <div className="rounded-2xl bg-emerald-400/10 px-3 py-2.5 ring-1 ring-emerald-400/25">
-                    <p className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-emerald-400/80">{T.net} CHF</p>
-                    <p className="mt-0.5 text-[26px] font-extrabold leading-none tracking-tight text-emerald-400 sm:text-[30px]">+4 200</p>
+                {/* Netto */}
+                <div className="px-3 pb-2.5">
+                  <div className="rounded-xl bg-emerald-400/10 px-2.5 py-2 ring-1 ring-emerald-400/25">
+                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-emerald-400/80">{T.net} CHF</p>
+                    <p className="mt-0.5 text-[20px] font-extrabold leading-none tracking-tight text-emerald-400 sm:text-[23px]">+4 200</p>
                   </div>
                 </div>
 
                 {/* Ranking-Sprung */}
-                <div className="mx-4 mb-3 flex items-center justify-between rounded-xl bg-white/[0.06] px-3 py-2 ring-1 ring-white/10">
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span>
-                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold tabular-nums text-white">
+                <div className="mx-3 mb-2.5 flex items-center justify-between rounded-lg bg-white/[0.06] px-2.5 py-1.5 ring-1 ring-white/10">
+                  <span className="text-[8px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span>
+                  <span className="flex items-center gap-1 text-[10px] font-extrabold tabular-nums text-white">
                     <span className="text-white/40">#412</span>
-                    <svg width="10" height="10" viewBox="0 0 24 24" className="text-emerald-400" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
+                    <svg width="9" height="9" viewBox="0 0 24 24" className="text-emerald-400" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
                     <span>#232</span>
                   </span>
                 </div>
@@ -445,10 +448,10 @@ export default function SeasonJourney() {
                     { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
                     { icon: <TeamIcon />, v: "4", l: T.team },
                   ].map((c, i) => (
-                    <div key={i} className={`px-1 py-2.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-white/10" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden className="mx-auto text-white/40">{c.icon}</svg>
-                      <p className="mt-1 text-[13px] font-extrabold leading-none">{c.v}</p>
-                      <p className="mt-0.5 text-[7.5px] font-bold uppercase tracking-wide text-white/40">{c.l}</p>
+                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-white/10" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-white/40">{c.icon}</svg>
+                      <p className="mt-0.5 text-[11px] font-extrabold leading-none">{c.v}</p>
+                      <p className="mt-0.5 text-[7px] font-bold uppercase tracking-wide text-white/40">{c.l}</p>
                     </div>
                   ))}
                 </div>
