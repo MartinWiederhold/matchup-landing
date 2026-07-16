@@ -1,8 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { TourProfile } from "@/lib/types";
 
-/** Tour ist vorerst gesperrt (Early Access). Freischalt-Code für interne Tests. */
-export const TOUR_CODE = "5080";
+/** Tour ist vorerst gesperrt (Early Access). Freischaltung via WaitlistScreen-Code. */
 export function tourUnlocked(): boolean {
   try {
     return localStorage.getItem("mu_tour_unlocked") === "1";

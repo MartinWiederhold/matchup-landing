@@ -3,12 +3,6 @@ export const mode = {
     play: "Play",
     tour: "Compete",
     // Early-Access-Sperre
-    tourLockedTitle: "Compete – bald verfügbar",
-    tourLockedSub: "Der Wettkampf-Modus für Turnierplanung, Deadlines, Visa & Finanzen ist noch im Early Access. Trag dich auf die Warteliste ein.",
-    tourCodePlaceholder: "Zugangscode",
-    tourCodeWrong: "Code stimmt nicht.",
-    tourUnlockCta: "Freischalten",
-    tourWaitlistCta: "Auf die Warteliste",
     soon: "Bald",
     or: "oder",
     // Tour-Home
@@ -206,12 +200,6 @@ export const mode = {
   en: {
     play: "Play",
     tour: "Compete",
-    tourLockedTitle: "Compete – coming soon",
-    tourLockedSub: "The competition mode for tournament planning, deadlines, visa & finances is still in early access. Join the waitlist.",
-    tourCodePlaceholder: "Access code",
-    tourCodeWrong: "Wrong code.",
-    tourUnlockCta: "Unlock",
-    tourWaitlistCta: "Join the waitlist",
     soon: "Soon",
     or: "or",
     urgent: "Urgent",
