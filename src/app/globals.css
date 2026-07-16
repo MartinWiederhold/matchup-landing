@@ -98,7 +98,7 @@ body {
   from { stroke-dashoffset: var(--dash-len); }
   to { stroke-dashoffset: 0; }
 }
-.anim-draw { animation: drawLine 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.anim-draw { animation: drawLine 1.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 /* Horizontaler Balken wächst von links */
 @keyframes growX {
   from { transform: scaleX(0); }
@@ -107,15 +107,15 @@ body {
 .anim-growx {
   transform-origin: left;
   transform: scaleX(0);
-  animation: growX 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: growX 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.anim-ring { animation: ringFill 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.anim-fill { animation: fillGrow 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.anim-pop { animation: popIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.anim-ring { animation: ringFill 1.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fill { animation: fillGrow 1.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-pop { animation: popIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .anim-bar {
   transform-origin: bottom;
   transform: scaleY(0);
-  animation: barGrow 0.6s ease-out forwards;
+  animation: barGrow 0.6s ease-out both;
 }
 @keyframes riseIn {
   from { opacity: 0; transform: translateY(8px); }
