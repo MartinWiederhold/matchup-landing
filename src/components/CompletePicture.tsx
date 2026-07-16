@@ -364,8 +364,10 @@ function RankingTile({ show }: { show: boolean }) {
 /* Team & Services: Crew ploppt auf, Wochenplan füllt sich. */
 function TeamTile({ show }: { show: boolean }) {
   const crew = [
-    { c: "#7b6cff", l: "Coach" }, { c: "#10b981", l: "Physio" },
-    { c: "#f59e0b", l: "Fitness" }, { c: "#38bdf8", l: "Stringer" },
+    { c: "#7b6cff", l: "Coach", img: "/compete/team/coach.png" },
+    { c: "#10b981", l: "Physio", img: "/compete/team/physio.png" },
+    { c: "#f59e0b", l: "Fitness", img: "/compete/team/fitness.png" },
+    { c: "#38bdf8", l: "Stringer", img: null },
   ];
   const days = ["M", "T", "W", "T", "F"];
   return (
@@ -374,7 +376,12 @@ function TeamTile({ show }: { show: boolean }) {
         {crew.map((m, i) => (
           <div key={m.l} className={`flex items-center gap-2 rounded-xl bg-white/[0.09] px-2 py-1.5 ring-1 ring-white/15 ${show ? "anim-pop" : ""}`}
             style={{ animationDelay: `${150 + i * 130}ms` }}>
-            <span className="h-5 w-5 shrink-0 rounded-full ring-2 ring-white/25" style={{ background: m.c }} />
+            {m.img ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={m.img} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-full object-cover" style={{ boxShadow: `0 0 0 1.5px ${m.c}` }} />
+            ) : (
+              <span className="h-5 w-5 shrink-0 rounded-full ring-2 ring-white/25" style={{ background: m.c }} />
+            )}
             <span className="truncate text-[9px] font-bold text-white/85">{m.l}</span>
           </div>
         ))}
@@ -429,8 +436,9 @@ function CompeteChipViz({ k, show }: { k: string; show: boolean }) {
   }
   return (
     <span className="flex -space-x-1.5">
-      {["#7b6cff", "#10b981", "#f59e0b"].map((c, i) => (
-        <span key={i} className={`h-3.5 w-3.5 rounded-full ring-2 ring-black/40 ${show ? "anim-pop" : ""}`} style={{ background: c, animationDelay: `${i * 110}ms` }} />
+      {["/compete/team/coach.png", "/compete/team/physio.png", "/compete/team/fitness.png"].map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={src} src={src} alt="" loading="lazy" className={`h-4 w-4 rounded-full object-cover ring-2 ring-black/40 ${show ? "anim-pop" : ""}`} style={{ animationDelay: `${i * 110}ms` }} />
       ))}
     </span>
   );
