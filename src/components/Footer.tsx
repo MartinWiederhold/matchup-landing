@@ -1,3 +1,4 @@
+import Link from "next/link";
 import MatchupLogo from "./MatchupLogo";
 import { getT } from "@/lib/i18n/server";
 
@@ -67,12 +68,12 @@ export default async function Footer() {
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <a
+                    <Link
                       href={link.href}
                       className="text-sm text-white/80 transition-colors hover:text-white"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

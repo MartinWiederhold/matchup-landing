@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 
 export default async function PromoBar() {
@@ -9,12 +10,12 @@ export default async function PromoBar() {
           <span className="sm:hidden">{t("landing.promoShort")}</span>
           <span className="hidden sm:inline">{t("landing.promoLong")}</span>
         </span>
-        <a
+        <Link
           href="/app"
           className="shrink-0 font-semibold underline underline-offset-2 hover:opacity-80"
         >
           {t("landing.promoCta")}
-        </a>
+        </Link>
       </div>
     </div>
   );

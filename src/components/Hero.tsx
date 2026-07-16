@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 
@@ -71,18 +72,18 @@ export default function Hero() {
           </p>
         </div>
         <div className="flex flex-col items-start gap-3 pb-2 sm:flex-row sm:items-center sm:justify-center sm:gap-4 sm:pb-6">
-          <a
+          <Link
             href="/app"
             className="inline-block rounded-full bg-matchup px-10 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-matchup-hover sm:px-12"
           >
             {t("landing.heroCtaPrimary")}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/map?tab=season"
             className="inline-block rounded-full border border-white/70 px-10 py-4 text-sm font-bold tracking-wide text-white transition-colors hover:bg-white hover:text-black sm:px-12"
           >
             {t("landing.heroCtaSecondary")}
-          </a>
+          </Link>
         </div>
       </div>
 

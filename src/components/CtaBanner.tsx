@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 
 export default async function CtaBanner() {
@@ -12,12 +13,12 @@ export default async function CtaBanner() {
           {t("landing.ctaCopy")}
         </p>
         <div className="mt-10">
-          <a
+          <Link
             href="/app"
             className="inline-block rounded-full bg-white px-10 py-4 text-sm font-bold tracking-wide text-matchup transition-opacity hover:opacity-90"
           >
             {t("landing.ctaButton")}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

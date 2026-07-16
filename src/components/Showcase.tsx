@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { getT } from "@/lib/i18n/server";
 
@@ -54,12 +55,12 @@ export default async function Showcase() {
               <p className="mt-6 text-base leading-relaxed text-neutral-600 sm:text-lg">
                 {row.copy}
               </p>
-              <a
+              <Link
                 href={row.cta.href}
                 className="mt-8 inline-block rounded-full border border-black px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
               >
                 {row.cta.label}
-              </a>
+              </Link>
             </div>
           </div>
         ))}

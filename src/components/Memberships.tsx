@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import RotatingImage, { type RotatingImg } from "./RotatingImage";
 import SportAccordion, { type SportPanel } from "./SportAccordion";
@@ -146,7 +147,7 @@ export default async function Memberships() {
                   ))}
                 </ul>
 
-                <a
+                <Link
                   href="/app"
                   className={`mt-8 inline-block rounded-full px-6 py-3.5 text-center text-sm font-bold tracking-wide transition-colors ${
                     tier.featured
@@ -155,7 +156,7 @@ export default async function Memberships() {
                   }`}
                 >
                   {t("landing.sportsCta")}
-                </a>
+                </Link>
               </div>
             </article>
           ))}

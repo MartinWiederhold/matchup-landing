@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function PageCta({
   title,
   text,
@@ -19,12 +21,12 @@ export default function PageCta({
           {text}
         </p>
         <div className="mt-10">
-          <a
+          <Link
             href={buttonHref}
             className="inline-block rounded-full bg-white px-10 py-4 text-sm font-bold tracking-wide text-matchup transition-opacity hover:opacity-90"
           >
             {buttonLabel}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

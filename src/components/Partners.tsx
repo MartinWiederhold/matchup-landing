@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { getT } from "@/lib/i18n/server";
 
@@ -22,12 +23,12 @@ export default async function Partners() {
           {t("landing.partnersCopy")}
         </p>
         <div className="mt-10">
-          <a
+          <Link
             href="/app"
             className="inline-block rounded-full bg-white px-8 py-4 text-sm font-bold tracking-wide text-black transition-colors hover:bg-white/85"
           >
             {t("landing.partnersCta")}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

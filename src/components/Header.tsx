@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import MatchupLogo from "./MatchupLogo";
 import AppInstall from "./AppInstall";
 import WaitlistModal from "./WaitlistModal";
@@ -74,9 +75,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-black text-white">
       <div className="mx-auto flex h-[68px] max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
-        <a href="/" className="shrink-0">
+        <Link href="/" className="shrink-0">
           <MatchupLogo />
-        </a>
+        </Link>
 
         {/* Desktop-Nav + (Coming soon) */}
         <nav className="hidden items-center gap-5 lg:flex">
@@ -91,13 +92,13 @@ export default function Header() {
                 {item.label}
               </button>
             ) : (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="text-[13px] font-semibold tracking-wide text-white/90 transition-colors hover:text-white"
               >
                 {item.label}
-              </a>
+              </Link>
             ),
           )}
 
@@ -129,14 +130,14 @@ export default function Header() {
                         {item.label}
                       </button>
                     ) : (
-                      <a
+                      <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setMoreOpen(false)}
                         className="block w-full rounded-xl px-3.5 py-2.5 text-left text-[13px] font-semibold tracking-wide text-white/85 transition-colors hover:bg-white/10 hover:text-white"
                       >
                         {item.label}
-                      </a>
+                      </Link>
                     ),
                   )}
                 </div>
@@ -183,14 +184,14 @@ export default function Header() {
                 {item.label}
               </button>
             ) : (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
               >
                 {item.label}
-              </a>
+              </Link>
             ),
           )}
 
