@@ -306,7 +306,7 @@ export default function SeasonPlanner({
   );
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4">
+    <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-4 pt-1 md:space-y-4 md:pt-4">
       {/* Spielerprofil (treibt die Eligibility-Ampel) */}
       <ProfileCard
         profile={profile}
@@ -1393,12 +1393,12 @@ function ProfileCard({
   const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "");
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-left">
+    <div className="rounded-2xl bg-black/[0.035]">
+      <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-2.5 text-left">
         {profile.avatar ? (
-          <img src={profile.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-neutral-200" />
+          <img src={profile.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white" />
         ) : (
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup ring-2 ring-white">
             {initials || "👤"}
           </span>
         )}
