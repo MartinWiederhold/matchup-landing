@@ -54,8 +54,10 @@ export default function Hero() {
         playsInline
         poster="/hero-poster.jpg"
       />
-      {/* Track zu Ende → Button zeigt wieder „Musik an", nächster Klick startet von vorne */}
-      <audio ref={audioRef} src={HERO_AUDIO} preload="auto" onEnded={() => setSound(false)} />
+      {/* loop: läuft nach dem Track-Ende automatisch wieder von vorne, bis der
+          Nutzer stoppt. (Der Track ist 32s, das Video nur 15s — ohne loop wäre
+          nach einmal Durchlaufen Stille.) */}
+      <audio ref={audioRef} src={HERO_AUDIO} preload="auto" loop />
       {/* subtle darkening so the white headline stays legible */}
       <div className="absolute inset-0 bg-black/15" />
 
