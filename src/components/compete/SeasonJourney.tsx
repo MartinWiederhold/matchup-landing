@@ -224,9 +224,9 @@ export default function SeasonJourney() {
   /* Etappen-Korrekturen: Pill-Position + Verkehrsmittel.
    * Gstaad → Barcelona (698 km) ist realistisch ein Flug, nicht die Bahn. */
   const LEG_FIX: Record<number, { mode?: "Flug" | "Bahn" | "Auto"; dx?: number; dy?: number }> = {
-    0: { dx: 27, dy: 3 },              // „Auto · 139 km" weiter nach rechts
-    1: { mode: "Flug", dx: -17 },      // „Flug · 698 km" nach links
-    2: { dx: 17 },                     // „Bahn · 505 km" nach rechts
+    0: { dx: 62, dy: 3 },              // „Auto · 139 km" weiter nach rechts
+    1: { mode: "Flug", dx: -37 },      // „Flug · 698 km" nach links
+    2: { dx: 32 },                     // „Bahn · 505 km" nach rechts
   };
   const legs = nodes.slice(1).map((n, i) => {
     const a = nodes[i];
@@ -243,8 +243,8 @@ export default function SeasonJourney() {
   const nightsTotal = WAYPOINTS.reduce((s, w) => s + nights(w.t), 0);
 
   const T = {
-    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", season: "Saison", rank: "Ranking", net: "Netto", events: "Turniere", flights: "Flüge", nights: "Nächte", team: "Team" },
-    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", season: "Season", rank: "Ranking", net: "Net", events: "Events", flights: "Flights", nights: "Nights", team: "Team" },
+    de: { label: "SEASON JOURNEY", title: "Deine Saison,\nSchritt für Schritt.", sub: "Nur echte ATP-Turniere — mit Reise, Team und Kosten im Blick.", done: "Saison abgeschlossen", season: "Saison", prize: "Preisgeld", costs: "Kosten", rank: "Ranking", net: "Netto", events: "Turniere", flights: "Flüge", nights: "Nächte", team: "Team" },
+    en: { label: "SEASON JOURNEY", title: "Your season,\nstep by step.", sub: "Real ATP tournaments only — travel, team and cost in one view.", done: "Season complete", season: "Season", prize: "Prize", costs: "Costs", rank: "Ranking", net: "Net", events: "Events", flights: "Flights", nights: "Nights", team: "Team" },
   }[lang];
 
   return (
@@ -405,48 +405,68 @@ export default function SeasonJourney() {
 
           {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
           {box && (
-            <div className={`absolute w-[min(72vw,260px)] transition-all duration-700 sm:w-[340px] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
+            <div className={`absolute w-[min(74vw,266px)] transition-all duration-700 sm:w-[318px] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
               <div className="overflow-hidden rounded-[18px] bg-white/97 text-neutral-900 shadow-[0_28px_64px_-20px_rgba(0,0,0,0.7)] ring-1 ring-black/5 backdrop-blur">
-                {/* Kopf: Spielerprofil + Abschluss-Chip */}
-                <div className="flex items-center gap-2.5 border-b border-black/5 px-3 py-2.5">
-                  <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
+                {/* Kopf: Profil + Abschluss */}
+                <div className="flex items-center gap-2.5 px-3 pb-2 pt-2.5">
+                  <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12.5px] font-extrabold leading-tight text-neutral-900">Luca M.</p>
-                    <p className="truncate text-[9px] font-semibold text-neutral-500">ATP #232 · 22 · Zürich</p>
+                    <p className="truncate text-[12px] font-extrabold leading-tight">Luca M.</p>
+                    <p className="truncate text-[8.5px] font-semibold text-neutral-500">22 · Zürich · Sand</p>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#e0a500]/12 px-2 py-1 text-[7.5px] font-extrabold uppercase tracking-[0.12em] text-[#a97a00] ring-1 ring-[#e0a500]/30">
-                    <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#e0a500]/12 px-1.5 py-0.5 text-[7px] font-extrabold uppercase tracking-[0.1em] text-[#a97a00] ring-1 ring-[#e0a500]/30">
+                    <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
                     {T.done}
                   </span>
                 </div>
 
-                {/* Netto + Ranking nebeneinander (breit statt hoch) */}
-                <div className="grid grid-cols-2 gap-2 p-2.5">
-                  <div className="rounded-xl bg-emerald-500/10 px-2.5 py-2 ring-1 ring-emerald-500/25">
-                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-emerald-700/70">{T.net} CHF</p>
-                    <p className="mt-0.5 text-[20px] font-extrabold leading-none tracking-tight text-emerald-600">+4 200</p>
+                {/* Ranking-Ring + Netto/Preisgeld-Balken (Stil der Compete-Kacheln) */}
+                <div className="flex items-center gap-3 px-3 pb-2.5">
+                  <div className="relative shrink-0">
+                    <svg viewBox="0 0 44 44" className="h-12 w-12 -rotate-90">
+                      <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="4" />
+                      <circle cx="22" cy="22" r="18" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * 0.44}
+                        className={finished ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${2 * Math.PI * 18}` }} />
+                    </svg>
+                    <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+                      <span className="text-[10px] font-extrabold tabular-nums">#232</span>
+                      <span className="text-[6px] font-bold uppercase tracking-wide text-emerald-600">+180</span>
+                    </span>
                   </div>
-                  <div className="rounded-xl bg-neutral-100 px-2.5 py-2 ring-1 ring-black/5">
-                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{T.rank}</p>
-                    <p className="mt-0.5 flex items-center gap-1 text-[13px] font-extrabold leading-none tabular-nums text-neutral-900">
-                      <span className="text-neutral-400">#412</span>
-                      <svg width="9" height="9" viewBox="0 0 24 24" className="text-emerald-600" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
-                      <span>#232</span>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    {[
+                      { l: T.prize, w: 82, c: "#10b981", v: "12.4k" },
+                      { l: T.costs, w: 54, c: "#d4d4d8", v: "8.2k" },
+                    ].map((b, i) => (
+                      <div key={b.l}>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-[7px] font-extrabold uppercase tracking-[0.12em] text-neutral-400">{b.l}</span>
+                          <span className="text-[8.5px] font-bold tabular-nums text-neutral-500">{b.v}</span>
+                        </div>
+                        <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
+                          <div className={`h-full rounded-full ${finished ? "anim-growx" : ""}`} style={{ width: `${b.w}%`, background: b.c, animationDelay: `${200 + i * 160}ms` }} />
+                        </div>
+                      </div>
+                    ))}
+                    <p className="pt-0.5 text-[15px] font-extrabold leading-none tracking-tight text-emerald-600">
+                      +4 200 <span className="text-[7px] font-bold uppercase tracking-wide text-neutral-400">{T.net} CHF</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Reise & Team */}
-                <div className="grid grid-cols-3 border-t border-black/5 text-center">
+                <div className="grid grid-cols-4 border-t border-black/5 text-center">
                   {[
                     { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
                     { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
                     { icon: <TeamIcon />, v: "4", l: T.team },
+                    { icon: <ModeIcon icon="car" />, v: String(WAYPOINTS.length), l: T.events },
                   ].map((c, i) => (
-                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-black/5" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-400">{c.icon}</svg>
-                      <p className="mt-0.5 text-[11px] font-extrabold leading-none text-neutral-900">{c.v}</p>
-                      <p className="mt-0.5 text-[7px] font-bold uppercase tracking-wide text-neutral-400">{c.l}</p>
+                    <div key={i} className={`px-1 py-1.5 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 3 ? "border-r border-black/5" : ""}`} style={{ transitionDelay: `${300 + i * 100}ms` }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-400">{c.icon}</svg>
+                      <p className="mt-0.5 text-[10px] font-extrabold leading-none">{c.v}</p>
+                      <p className="mt-0.5 text-[6.5px] font-bold uppercase tracking-wide text-neutral-400">{c.l}</p>
                     </div>
                   ))}
                 </div>
