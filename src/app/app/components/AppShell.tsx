@@ -5,6 +5,7 @@ import type { Profile } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useOnline } from "@/lib/hooks/useOnline";
+import { tourUnlocked, TOUR_UNLOCK_EVENT } from "@/lib/tour";
 import { AppNavContext, type TabKey, type SubViewState } from "./appNav";
 import DiscoverTab from "./tabs/DiscoverTab";
 import MatchesTab from "./tabs/MatchesTab";
@@ -28,7 +29,20 @@ const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
 
 export default function AppShell({ profile }: { profile: Profile }) {
   const t = useT();
-  const isTour = profile.mode === "tour";
+  /* Compete ist nur aktiv, wenn es am Profil gewählt UND auf diesem Gerät
+     freigeschaltet ist. profile.mode allein reicht nicht: das Feld liegt in der
+     DB und reist mit dem Account auf jedes Gerät — damit haette man die Sperre
+     umgehen koennen. Erst nach dem Mount pruefen (localStorage gibt es beim
+     Server-Render nicht), und auf das Unlock-Event hoeren, damit die Shell nach
+     Code-Eingabe sofort nachzieht. */
+  const [unlocked, setUnlocked] = useState(false);
+  useEffect(() => {
+    const sync = () => setUnlocked(tourUnlocked());
+    sync();
+    window.addEventListener(TOUR_UNLOCK_EVENT, sync);
+    return () => window.removeEventListener(TOUR_UNLOCK_EVENT, sync);
+  }, []);
+  const isTour = profile.mode === "tour" && unlocked;
   const tabs: TabDef[] = TAB_DEFS
     // Earth-Tab nur im Play-Modus (Tour behält 4 Tabs + zentralen Planner-Button).
     .filter((tab) => !(isTour && tab.key === "earth"))
@@ -236,9 +250,9 @@ export default function AppShell({ profile }: { profile: Profile }) {
           <div className="pb-28">
             {activeTab === "discover" && <DiscoverTab />}
             {activeTab === "earth" && <EarthTab />}
-            {activeTab === "matches" && (profile.mode === "tour" ? <TourMatchesTab /> : <MatchesTab />)}
+            {activeTab === "matches" && (isTour ? <TourMatchesTab /> : <MatchesTab />)}
             {activeTab === "games" && (isTour ? <TourChatTab /> : <GamesTab />)}
-            {activeTab === "profile" && (profile.mode === "tour" ? <TourProfileTab /> : <ProfileTab />)}
+            {activeTab === "profile" && (isTour ? <TourProfileTab /> : <ProfileTab />)}
           </div>
 
           <TabBar

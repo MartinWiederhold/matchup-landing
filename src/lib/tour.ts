@@ -1,17 +1,30 @@
 import { supabase } from "@/lib/supabase";
 import type { TourProfile } from "@/lib/types";
 
-/** Tour ist vorerst gesperrt (Early Access). Freischaltung via WaitlistScreen-Code. */
+/* Tour ist vorerst gesperrt (Early Access). Freischaltung via WaitlistScreen-Code.
+ *
+ * Der Schlüssel trägt bewusst ein _v2: die v1-Flag wurde noch mit dem alten Code
+ * „5080" gesetzt, den es nicht mehr gibt. Alte Freischaltungen sollen darum nicht
+ * weitergelten — sonst bliebe Compete auf Testgeräten offen. */
+const UNLOCK_KEY = "mu_tour_unlocked_v2";
+/** unlockTour() feuert dieses Event, damit die Shell sofort nachzieht (statt Reload). */
+export const TOUR_UNLOCK_EVENT = "mu-tour-unlock";
+
 export function tourUnlocked(): boolean {
   try {
-    return localStorage.getItem("mu_tour_unlocked") === "1";
+    return localStorage.getItem(UNLOCK_KEY) === "1";
   } catch {
     return false;
   }
 }
 export function unlockTour(): void {
   try {
-    localStorage.setItem("mu_tour_unlocked", "1");
+    localStorage.setItem(UNLOCK_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.dispatchEvent(new Event(TOUR_UNLOCK_EVENT));
   } catch {
     /* ignore */
   }
