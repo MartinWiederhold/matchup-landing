@@ -189,7 +189,7 @@ export default function PartnerSteps() {
       number: "02",
       title: t("findPartner.step2Title"),
       text: t("findPartner.step2Text"),
-      img: "/find-a-partner/step-match-v2.jpg",
+      img: "/find-a-partner/step-match-v3.jpg",
       overlay: "match",
     },
     {
