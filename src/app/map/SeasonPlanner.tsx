@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   TIER_META,
   ROUND_LABELS,
@@ -93,6 +93,78 @@ const POI_LABEL_EN: Record<string, string> = {
   supermarket: "Supermarket",
   pharmacy: "Pharmacy",
 };
+
+/* Eigenes Ziel-Icon (ersetzt das 🎯-Emoji) — Fadenkreuz mit Treffer im Zentrum. */
+function TargetIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" />
+    </svg>
+  );
+}
+
+/* Modernes Dropdown statt nativem <select> (das sieht auf macOS grauslig aus). */
+function CountryPicker({
+  value, options, allLabel, onChange,
+}: { value: string; options: string[]; allLabel: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onEsc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onEsc);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onEsc); };
+  }, [open]);
+
+  const items = ["", ...options];
+  return (
+    <div ref={ref} className="relative flex-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between gap-2 rounded-full px-3.5 py-2 text-left text-[12px] font-semibold transition ${
+          open ? "bg-white text-neutral-900 ring-2 ring-matchup" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200/70"
+        }`}
+      >
+        <span className="truncate">{value || allLabel}</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+          className={`shrink-0 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`}><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto rounded-2xl bg-white p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10">
+          {items.map((c) => {
+            const sel = c === value;
+            return (
+              <button
+                key={c || "__all"}
+                type="button"
+                onClick={() => { onChange(c); setOpen(false); }}
+                className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold transition ${
+                  sel ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-100"
+                }`}
+              >
+                <span className="truncate">{c || allLabel}</span>
+                {sel && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M20 6L9 17l-5-5" /></svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SeasonPlanner({
   planIds,
@@ -280,16 +352,12 @@ export default function SeasonPlanner({
         </div>
         {/* Feiner Filter: Land + Klassierung/Level (greift, sobald nationale Turniere im Feed sind) */}
         <div className="mt-2 flex gap-1.5">
-          <select
+          <CountryPicker
             value={countryFilter}
-            onChange={(e) => setCountryFilter?.(e.target.value)}
-            className="flex-1 rounded-full bg-neutral-100 px-3 py-2 text-[12px] font-semibold text-neutral-700 outline-none"
-          >
-            <option value="">{tt("Alle Länder", "All countries")}</option>
-            {[...new Set(tours.map((t) => t.country))].sort().map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+            options={[...new Set(tours.map((t) => t.country))].sort()}
+            allLabel={tt("Alle Länder", "All countries")}
+            onChange={(v) => setCountryFilter?.(v)}
+          />
           <input
             value={classFilter}
             onChange={(e) => setClassFilter?.(e.target.value)}
@@ -1161,7 +1229,7 @@ function StrategyCard({ profile, setGroup }: { profile: PlayerProfile; setGroup:
         onClick={() => setOpen(true)}
         className="flex w-full items-center gap-2 rounded-full border border-matchup/20 bg-matchup/5 px-3.5 py-2 text-left transition hover:bg-matchup/10"
       >
-        <span className="text-sm">🎯</span>
+        <TargetIcon className="h-4 w-4 shrink-0 text-matchup" />
         <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-neutral-700">
           <span className="text-matchup">{tt("Strategie:", "Strategy:")}</span> {s.headline} · {s.focus}
         </span>
@@ -1173,7 +1241,7 @@ function StrategyCard({ profile, setGroup }: { profile: PlayerProfile; setGroup:
   return (
     <div className="rounded-2xl border border-matchup/20 bg-matchup/5 p-3.5">
       <button type="button" onClick={() => setOpen(false)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">
-        <span>🎯 {tt("Strategie für dich", "Strategy for you")}</span>
+        <span className="flex items-center gap-1.5"><TargetIcon className="h-3.5 w-3.5" />{tt("Strategie für dich", "Strategy for you")}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div className="mt-1 text-sm font-bold text-neutral-800">{s.headline}</div>
