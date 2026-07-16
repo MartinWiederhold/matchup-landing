@@ -307,32 +307,27 @@ export default function SeasonPlanner({
 
   return (
     <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-4 pt-1 md:space-y-4 md:pt-4">
-      {/* ── Season Cockpit (dunkel, im Stil der Compete-Kacheln) ──────────
-          Profil + Strategie + Status + Projektion = die Kennzahlen, die man
-          beim Öffnen zuerst sieht. Das Werkzeug darunter bleibt hell. */}
-      <div className="-mx-1 space-y-2.5 rounded-[22px] bg-[linear-gradient(165deg,#3b2ecc_0%,#221c7a_55%,#0c0b33_100%)] p-2.5 shadow-[0_20px_50px_-18px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
-        {/* Spielerprofil (treibt die Eligibility-Ampel) */}
-        <ProfileCard
-          profile={profile}
-          setProfile={setProfile}
-          synced={profileSynced}
-          email={profileEmail}
-          onSignIn={onSignIn}
-          onSignUp={onSignUp}
-          onSignOut={onSignOut}
-        />
+      {/* Spielerprofil (treibt die Eligibility-Ampel) */}
+      <ProfileCard
+        profile={profile}
+        setProfile={setProfile}
+        synced={profileSynced}
+        email={profileEmail}
+        onSignIn={onSignIn}
+        onSignUp={onSignUp}
+        onSignOut={onSignOut}
+      />
 
-        {/* Strategie-Empfehlung nach Ranking */}
-        <StrategyCard profile={profile} setGroup={setGroup} />
+      {/* Strategie-Empfehlung nach Ranking */}
+      <StrategyCard profile={profile} setGroup={setGroup} />
 
-        {/* Status-Übersicht der geplanten Saison */}
-        {plan.length > 0 && (
-          <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
-        )}
+      {/* Status-Übersicht der geplanten Saison */}
+      {plan.length > 0 && (
+        <StatusOverview plan={plan} profile={profile} hasRank={hasRank} over={over} spentPct={spentPct} />
+      )}
 
-        {/* Ranking-Projektion: welchen Rang könntest du mit dieser Saison erreichen? */}
-        {plan.length > 0 && <ProjectionCard plan={plan} profile={profile} />}
-      </div>
+      {/* Ranking-Projektion: welchen Rang könntest du mit dieser Saison erreichen? */}
+      {plan.length > 0 && <ProjectionCard plan={plan} profile={profile} />}
 
       {/* Region-Filter: Europa / USA / Alle */}
       <div>
@@ -1082,11 +1077,11 @@ function StatusRing({ id, label, value, pct, done }: { id: number; label: string
         <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
           <defs>
             <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="100%" stopColor="#10b981" />
+              <stop offset="0%" stopColor="#4b3bf3" />
+              <stop offset="100%" stopColor="#8b5cf6" />
             </linearGradient>
           </defs>
-          <circle cx="32" cy="32" r={R} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="5" />
+          <circle cx="32" cy="32" r={R} fill="none" stroke="#eceaff" strokeWidth="5" />
           <circle
             cx="32" cy="32" r={R} fill="none" stroke={`url(#${gid})`} strokeWidth="5" strokeLinecap="round"
             strokeDasharray={C} strokeDashoffset={off} className="transition-all duration-700"
@@ -1096,19 +1091,19 @@ function StatusRing({ id, label, value, pct, done }: { id: number; label: string
           {done ? (
             <span
               className="flex h-9 w-9 items-center justify-center rounded-full shadow-sm"
-              style={{ background: "linear-gradient(135deg, #34d399, #10b981)" }}
+              style={{ background: "linear-gradient(135deg, #4b3bf3, #8b5cf6)" }}
             >
               {/* Matchup-Mark (weiss) sobald dieser Punkt vollständig ist */}
               <img src="/icon-192.png" alt="" className="h-4 w-4" style={{ filter: "brightness(0) invert(1)" }} />
             </span>
           ) : (
-            <span className="text-sm font-extrabold text-white">{Math.round(p)}%</span>
+            <span className="text-sm font-extrabold text-matchup">{Math.round(p)}%</span>
           )}
         </div>
       </div>
       <div className="text-center leading-tight">
-        <div className="text-[11px] font-bold text-white/85">{label}</div>
-        <div className="text-[10px] text-white/45">{value}</div>
+        <div className="text-[11px] font-bold text-neutral-700">{label}</div>
+        <div className="text-[10px] text-neutral-400">{value}</div>
       </div>
     </div>
   );
@@ -1145,10 +1140,10 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
   const ready = rows.filter((r) => r.done).length;
 
   return (
-    <div className="rounded-2xl bg-white/[0.07] p-3 ring-1 ring-white/10">
+    <div className="rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">{tt("Saison-Status", "Season status")}</span>
-        <span className="rounded-full bg-black/40 px-2 py-0.5 text-[11px] font-bold text-white/80 ring-1 ring-white/10">{ready} / 3 {tt("bereit", "ready")}</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">{tt("Saison-Status", "Season status")}</span>
+        <span className="rounded-full bg-matchup/10 px-2 py-0.5 text-[11px] font-bold text-matchup">{ready} / 3 {tt("bereit", "ready")}</span>
       </div>
       <div className="grid grid-cols-3 gap-1">
         {rows.map((r, i) => (
@@ -1162,7 +1157,7 @@ function StatusOverview({ plan, profile, hasRank, over, spentPct }: { plan: Tour
 function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: PlayerProfile }) {
   const { locale } = useLocale();
   const tt = (de: string, en: string) => (locale === "de" ? de : en);
-  const [open, setOpen] = useState(false); // startet eingeklappt (spart Platz im Sheet)
+  const [open, setOpen] = useState(false); // startet eingeklappt
   const [winPct, setWinPct] = useState(50); // frei einstellbare Siegquote
   const gender = profile.gender === "w" ? "w" : "m";
   const currentRank = gender === "w" ? profile.wta : profile.atp;
@@ -1173,25 +1168,22 @@ function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: Player
   const bestRank = pointsToRank(bestPts, gender);
 
   return (
-    <div className="rounded-2xl bg-white/[0.07] p-3 ring-1 ring-white/10">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
-        <span className="flex items-center gap-1.5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><path d="M3 17l6-6 4 4 7-7" /><path d="M14 8h6v6" /></svg>
-          {tt("Mögliches Ranking mit dieser Saison", "Possible ranking with this season")}
-        </span>
+    <div className="rounded-2xl border border-matchup/20 bg-white p-3.5 shadow-sm">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">
+        <span>📈 {tt("Mögliches Ranking mit dieser Saison", "Possible ranking with this season")}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={open ? "rotate-180" : ""}><path d="M6 9l6 6 6-6" /></svg>
       </button>
       {currentRank != null && (
-        <div className="mt-1 text-[11px] text-white/40">{tt("Aktuell", "Current")}: {gender === "w" ? "WTA" : "ATP"} {currentRank}</div>
+        <div className="mt-1 text-[11px] text-neutral-400">{tt("Aktuell", "Current")}: {gender === "w" ? "WTA" : "ATP"} {currentRank}</div>
       )}
       {open && (
-        <div className="mt-2.5">
+        <div className="mt-3">
           {/* Ergebnis */}
           <div className="flex items-baseline justify-between">
-            <span className="text-[12px] font-semibold text-white/50">{tt("Bei", "With")} <span className="text-emerald-400">{winPct}%</span> {tt("gewonnenen Matches", "of matches won")}</span>
-            <span className="text-[11px] text-white/40">{pts.toLocaleString("de-CH")} {tt("P.", "pts")}</span>
+            <span className="text-[12px] font-semibold text-neutral-500">{tt("Bei", "With")} <span className="text-matchup">{winPct}%</span> {tt("gewonnenen Matches", "of matches won")}</span>
+            <span className="text-[11px] text-neutral-400">{pts.toLocaleString("de-CH")} {tt("P.", "pts")}</span>
           </div>
-          <div className="mt-0.5 text-[26px] font-extrabold tracking-tight text-white">{tt("Rang", "Rank")} ~{rank}</div>
+          <div className="mt-0.5 text-[26px] font-extrabold tracking-tight text-neutral-900">{tt("Rang", "Rank")} ~{rank}</div>
 
           {/* Schieberegler */}
           <input
@@ -1201,20 +1193,20 @@ function ProjectionCard({ plan, profile }: { plan: Tournament[]; profile: Player
             step={5}
             value={winPct}
             onChange={(e) => setWinPct(Number(e.target.value))}
-            className="mt-2 w-full accent-emerald-400"
+            className="mt-2 w-full accent-matchup"
           />
-          <div className="flex justify-between text-[10px] text-white/40">
+          <div className="flex justify-between text-[10px] text-neutral-400">
             <span>0 %</span>
             <span>50 %</span>
             <span>100 %</span>
           </div>
 
-          <div className="mt-2 flex items-center justify-between rounded-xl bg-white/[0.06] px-3 py-2">
-            <span className="text-[11px] font-semibold text-white/50">{tt("Maximal (alles gewinnen)", "Maximum (win everything)")}</span>
-            <span className="text-sm font-extrabold text-emerald-400">{tt("Rang", "Rank")} ~{bestRank}</span>
+          <div className="mt-2 flex items-center justify-between rounded-xl bg-neutral-50 px-3 py-2">
+            <span className="text-[11px] font-semibold text-neutral-500">{tt("Maximal (alles gewinnen)", "Maximum (win everything)")}</span>
+            <span className="text-sm font-extrabold text-emerald-600">{tt("Rang", "Rank")} ~{bestRank}</span>
           </div>
 
-          <p className="pt-1.5 text-[10px] leading-relaxed text-white/35">
+          <p className="pt-1.5 text-[10px] leading-relaxed text-neutral-400">
             {tt("Richtwert: beste 19 Turniere, erwartete Punkte je Siegquote (", "Estimate: best 19 tournaments, expected points per win rate (")}{gender === "w" ? "WTA" : "ATP"}{tt("-Kurve). Grobe Schätzung, kein offizieller Cut-Off.", " curve). Rough estimate, not an official cut-off.")}
           </p>
         </div>
@@ -1235,27 +1227,27 @@ function StrategyCard({ profile, setGroup }: { profile: PlayerProfile; setGroup:
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-2 text-left ring-1 ring-white/10 transition hover:bg-white/[0.12]"
+        className="flex w-full items-center gap-2 rounded-full border border-matchup/20 bg-matchup/5 px-3.5 py-2 text-left transition hover:bg-matchup/10"
       >
-        <TargetIcon className="h-4 w-4 shrink-0 text-emerald-400" />
-        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-white/80">
-          <span className="text-emerald-400">{tt("Strategie:", "Strategy:")}</span> {s.headline} · {s.focus}
+        <TargetIcon className="h-4 w-4 shrink-0 text-matchup" />
+        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-neutral-700">
+          <span className="text-matchup">{tt("Strategie:", "Strategy:")}</span> {s.headline} · {s.focus}
         </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-white/40"><path d="M6 9l6 6 6-6" /></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-neutral-400"><path d="M6 9l6 6 6-6" /></svg>
       </button>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.07] p-3 ring-1 ring-white/10">
-      <button type="button" onClick={() => setOpen(false)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
-        <span className="flex items-center gap-1.5"><TargetIcon className="h-3.5 w-3.5 text-emerald-400" />{tt("Strategie für dich", "Strategy for you")}</span>
+    <div className="rounded-2xl border border-matchup/20 bg-matchup/5 p-3.5">
+      <button type="button" onClick={() => setOpen(false)} className="flex w-full items-center justify-between gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">
+        <span className="flex items-center gap-1.5"><TargetIcon className="h-3.5 w-3.5" />{tt("Strategie für dich", "Strategy for you")}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </button>
-      <div className="mt-1 text-sm font-bold text-white">{s.headline}</div>
-      <div className="mt-0.5 text-sm font-semibold text-emerald-400">{s.focus}</div>
-      <p className="mt-1 text-[11px] leading-relaxed text-white/50">{s.note}</p>
-      <button type="button" onClick={() => setGroup(s.group)} className="mt-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-neutral-900 transition hover:bg-white/90">
+      <div className="mt-1 text-sm font-bold text-neutral-800">{s.headline}</div>
+      <div className="mt-0.5 text-sm font-semibold text-matchup">{s.focus}</div>
+      <p className="mt-1 text-[11px] leading-relaxed text-neutral-500">{s.note}</p>
+      <button type="button" onClick={() => setGroup(s.group)} className="mt-2 rounded-full bg-matchup px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-matchup-hover">
         {tt("Passende Turniere zeigen →", "Show matching tournaments →")}
       </button>
     </div>
@@ -1400,35 +1392,31 @@ function ProfileCard({
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || tt("Spielerprofil", "Player profile");
   const initials = (profile.firstName?.[0] ?? "") + (profile.lastName?.[0] ?? "");
 
-  // Eingeklappt: Glas-Karte im Cockpit. Ausgeklappt: weisse Karte, damit das
-  // Formular darunter lesbar bleibt.
   return (
-    <div className={open ? "rounded-2xl bg-white" : "rounded-2xl bg-white/[0.07] ring-1 ring-white/10"}>
+    <div className="rounded-2xl bg-black/[0.035]">
       <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-2.5 text-left">
         {profile.avatar ? (
-          <img src={profile.avatar} alt="" className={`h-9 w-9 shrink-0 rounded-full object-cover ring-2 ${open ? "ring-neutral-100" : "ring-white/25"}`} />
+          <img src={profile.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-2 ring-white" />
         ) : (
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ring-2 ${open ? "bg-matchup/10 text-matchup ring-neutral-100" : "bg-white/15 text-white ring-white/25"}`}>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-sm font-extrabold text-matchup ring-2 ring-white">
             {initials || "👤"}
           </span>
         )}
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
-            <span className={`truncate text-sm font-bold ${open ? "" : "text-white"}`}>{name}</span>
+            <span className="truncate text-sm font-bold">{name}</span>
             <span
               className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-                open
-                  ? synced ? "bg-emerald-50 text-emerald-600" : "bg-neutral-100 text-neutral-400"
-                  : synced ? "bg-emerald-400/15 text-emerald-300" : "bg-white/10 text-white/50"
+                synced ? "bg-emerald-50 text-emerald-600" : "bg-neutral-100 text-neutral-400"
               }`}
               title={synced ? tt("Mit deinem Matchup-Konto synchronisiert – auf allen Geräten verfügbar", "Synced with your Matchup account – available on all devices") : tt("Lokal auf diesem Gerät gespeichert – mit Passwort sichern für geräteübergreifenden Sync", "Stored locally on this device – secure with a password for cross-device sync")}
             >
               {synced ? tt("☁ Konto", "☁ Account") : tt("Lokal", "Local")}
             </span>
           </span>
-          <span className={`block text-xs ${open ? "text-neutral-400" : "text-white/50"}`}>{rankSummary}{profile.nationality ? ` · ${profile.nationality}` : ""}</span>
+          <span className="block text-xs text-neutral-400">{rankSummary}{profile.nationality ? ` · ${profile.nationality}` : ""}</span>
         </span>
-        <span className={`text-xs font-semibold ${open ? "text-matchup" : "text-white/70"}`}>{open ? tt("Schliessen", "Close") : tt("Bearbeiten", "Edit")}</span>
+        <span className="text-xs font-semibold text-matchup">{open ? tt("Schliessen", "Close") : tt("Bearbeiten", "Edit")}</span>
       </button>
 
       {open && (
