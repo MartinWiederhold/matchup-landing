@@ -344,6 +344,8 @@ export default function MapView() {
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
   const { locale } = useLocale();
   const tt = (de: string, en: string) => (locale === "de" ? de : en);
+  // Mobiles Saison-Sheet: eingeklappt bleibt nur der Griff sichtbar → Karte frei.
+  const [seasonOpen, setSeasonOpen] = useState(true);
   const [tab, setTab] = useState<"discover" | "season" | "services">(() => {
     if (typeof window !== "undefined") {
       const t = new URLSearchParams(window.location.search).get("tab");
@@ -1105,10 +1107,25 @@ export default function MapView() {
 
         {/* Mobile: Saisonplaner als Bottom-Sheet, Karte + Route bleiben sichtbar */}
         {tab === "season" && (
-          <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] flex h-[70%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
-            <div className="flex shrink-0 justify-center pt-2.5">
+          <div
+            className={`absolute inset-x-0 bottom-0 z-[600] flex h-[70%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden ${
+              seasonOpen ? "translate-y-0" : "translate-y-[calc(100%-62px)]"
+            }`}
+          >
+            {/* Griff = Schliessen/Öffnen; eingeklappt bleibt genau diese Zeile sichtbar */}
+            <button
+              type="button"
+              onClick={() => setSeasonOpen((v) => !v)}
+              aria-expanded={seasonOpen}
+              className="flex shrink-0 flex-col items-center gap-1 pb-2 pt-2.5"
+            >
               <span className="h-1.5 w-10 rounded-full bg-neutral-300" />
-            </div>
+              <span className="flex items-center gap-1 text-[11px] font-bold text-neutral-500">
+                {seasonOpen ? tt("Schliessen", "Close") : tt("Saison planen", "Plan season")}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
+                  className={`transition-transform ${seasonOpen ? "" : "rotate-180"}`}><path d="M6 9l6 6 6-6" /></svg>
+              </span>
+            </button>
             <SeasonPlanner
               planIds={planIds}
               onTogglePlan={togglePlan}
