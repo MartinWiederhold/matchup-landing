@@ -405,53 +405,48 @@ export default function SeasonJourney() {
 
           {/* Ergebnis-Karte (Ziel) — Saison-Abschluss */}
           {box && (
-            <div className={`absolute w-[min(54vw,198px)] transition-all duration-700 sm:w-[min(40vw,232px)] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
-              <div className="overflow-hidden rounded-[18px] bg-[linear-gradient(165deg,#15183a_0%,#0a0b22_60%,#05061a_100%)] text-white shadow-[0_28px_64px_-20px_rgba(0,0,0,0.85)] ring-1 ring-white/15">
-                {/* Kopf: Spielerprofil */}
-                <div className="relative overflow-hidden px-3 pb-2.5 pt-3">
-                  <div className="absolute -right-5 -top-7 h-20 w-20 rounded-full bg-[#e0a500]/25 blur-2xl" />
-                  <div className="relative flex items-center gap-2">
-                    <img src="/find-a-partner/av-man.jpg" alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
-                    <div className="min-w-0">
-                      <p className="truncate text-[11.5px] font-extrabold leading-tight text-white">Luca M.</p>
-                      <p className="truncate text-[8.5px] font-semibold text-white/50">ATP #232 · 22 · Zürich</p>
-                    </div>
+            <div className={`absolute w-[min(72vw,260px)] transition-all duration-700 sm:w-[340px] ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-6 scale-95 opacity-0"}`} style={{ top: mobile ? 74 : 88, left: mobile ? 10 : 16 }}>
+              <div className="overflow-hidden rounded-[18px] bg-white/97 text-neutral-900 shadow-[0_28px_64px_-20px_rgba(0,0,0,0.7)] ring-1 ring-black/5 backdrop-blur">
+                {/* Kopf: Spielerprofil + Abschluss-Chip */}
+                <div className="flex items-center gap-2.5 border-b border-black/5 px-3 py-2.5">
+                  <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-full object-cover" style={{ boxShadow: "0 0 0 2px #e0a500" }} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-extrabold leading-tight text-neutral-900">Luca M.</p>
+                    <p className="truncate text-[9px] font-semibold text-neutral-500">ATP #232 · 22 · Zürich</p>
                   </div>
-                  <p className="relative mt-2 flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-[0.16em] text-[#e0a500]">
-                    <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#e0a500]/12 px-2 py-1 text-[7.5px] font-extrabold uppercase tracking-[0.12em] text-[#a97a00] ring-1 ring-[#e0a500]/30">
+                    <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M7 4V3h10v1h3v3a4 4 0 0 1-4 4h-.4A6 6 0 0 1 13 13.9V16h3v2H8v-2h3v-2.1A6 6 0 0 1 7.4 11H7a4 4 0 0 1-4-4V4h4Zm0 2H5v1a2 2 0 0 0 2 2V6Zm10 0v3a2 2 0 0 0 2-2V6h-2Z" /></svg>
                     {T.done}
-                  </p>
-                </div>
-
-                {/* Netto */}
-                <div className="px-3 pb-2.5">
-                  <div className="rounded-xl bg-emerald-400/10 px-2.5 py-2 ring-1 ring-emerald-400/25">
-                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-emerald-400/80">{T.net} CHF</p>
-                    <p className="mt-0.5 text-[20px] font-extrabold leading-none tracking-tight text-emerald-400 sm:text-[23px]">+4 200</p>
-                  </div>
-                </div>
-
-                {/* Ranking-Sprung */}
-                <div className="mx-3 mb-2.5 flex items-center justify-between rounded-lg bg-white/[0.06] px-2.5 py-1.5 ring-1 ring-white/10">
-                  <span className="text-[8px] font-bold uppercase tracking-wide text-white/45">{T.rank}</span>
-                  <span className="flex items-center gap-1 text-[10px] font-extrabold tabular-nums text-white">
-                    <span className="text-white/40">#412</span>
-                    <svg width="9" height="9" viewBox="0 0 24 24" className="text-emerald-400" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
-                    <span>#232</span>
                   </span>
                 </div>
 
+                {/* Netto + Ranking nebeneinander (breit statt hoch) */}
+                <div className="grid grid-cols-2 gap-2 p-2.5">
+                  <div className="rounded-xl bg-emerald-500/10 px-2.5 py-2 ring-1 ring-emerald-500/25">
+                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-emerald-700/70">{T.net} CHF</p>
+                    <p className="mt-0.5 text-[20px] font-extrabold leading-none tracking-tight text-emerald-600">+4 200</p>
+                  </div>
+                  <div className="rounded-xl bg-neutral-100 px-2.5 py-2 ring-1 ring-black/5">
+                    <p className="text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{T.rank}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-[13px] font-extrabold leading-none tabular-nums text-neutral-900">
+                      <span className="text-neutral-400">#412</span>
+                      <svg width="9" height="9" viewBox="0 0 24 24" className="text-emerald-600" aria-hidden><path fill="currentColor" d="M12 4l8 10h-5v6h-6v-6H4z" /></svg>
+                      <span>#232</span>
+                    </p>
+                  </div>
+                </div>
+
                 {/* Reise & Team */}
-                <div className="grid grid-cols-3 border-t border-white/10 text-center">
+                <div className="grid grid-cols-3 border-t border-black/5 text-center">
                   {[
                     { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
                     { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
                     { icon: <TeamIcon />, v: "4", l: T.team },
                   ].map((c, i) => (
-                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-white/10" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-white/40">{c.icon}</svg>
-                      <p className="mt-0.5 text-[11px] font-extrabold leading-none">{c.v}</p>
-                      <p className="mt-0.5 text-[7px] font-bold uppercase tracking-wide text-white/40">{c.l}</p>
+                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 2 ? "border-r border-black/5" : ""}`} style={{ transitionDelay: `${300 + i * 110}ms` }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-400">{c.icon}</svg>
+                      <p className="mt-0.5 text-[11px] font-extrabold leading-none text-neutral-900">{c.v}</p>
+                      <p className="mt-0.5 text-[7px] font-bold uppercase tracking-wide text-neutral-400">{c.l}</p>
                     </div>
                   ))}
                 </div>
