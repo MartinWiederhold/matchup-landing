@@ -13,8 +13,11 @@ import {
  * Erster Punkt = START (Strassenende unten-rechts): der Marker animiert von dort
  * zur Person und dann wie gewohnt den Weg hoch. */
 const PATH: [number, number][] = [
-  [102, 92], // START → Person
-  [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
+  [102, 92], // START am Strassenende unten-rechts
+  [84, 86],  // die Strasse diagonal hoch …
+  [65, 79],  // … am Spieler/Schläger vorbei
+  [46, 69],
+  [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
 const FINISH: [number, number] = [2.4, 12.4];     // Ziel-Trophy am Ende der Linie (oben-links)
