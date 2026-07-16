@@ -151,7 +151,7 @@ function StepRow({ step, index }: { step: Step; index: number }) {
               : step.overlay === "match"
                 ? "[object-position:center_20%]"
                 : step.overlay === "profile"
-                  ? "[object-position:center_10%]"
+                  ? "[object-position:center_45%]" // Handy sitzt mittig im Bild
                   : ""
           }`}
         />
