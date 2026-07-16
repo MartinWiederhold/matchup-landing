@@ -439,17 +439,16 @@ function CompeteChipViz({ k, show }: { k: string; show: boolean }) {
 export function CompeteCard({ f, light }: { f: (typeof COMPETE_FEATURES)[number]; light?: boolean }) {
   const { ref, inView } = useInView<HTMLElement>();
   const t = useT();
-  const right = f.key === "competeRanking" || f.key === "competeTeam";
   return (
     <article ref={ref} className={`group overflow-hidden rounded-2xl shadow-sm ring-1 ${light ? "bg-white ring-black/5" : "bg-white/[0.06] ring-white/10"}`}>
       <div className="relative aspect-[4/5] overflow-hidden">
         <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
           <CompeteTile k={f.key} show={inView} />
         </div>
-        <Chip align={right ? "right" : "left"}>
-          {right && <span>{f.stat}</span>}
+        {/* Chip einheitlich rechtsbündig (Stat zuerst, dann Mini-Grafik) */}
+        <Chip align="right">
+          <span>{f.stat}</span>
           <CompeteChipViz k={f.key} show={inView} />
-          {!right && <span>{f.stat}</span>}
         </Chip>
       </div>
       <div className="p-6">
