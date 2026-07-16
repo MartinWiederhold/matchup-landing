@@ -172,7 +172,7 @@ const GAME_AVATARS = [
 function OrganizeScene({ show }: { show: boolean }) {
   const t = useT();
   return (
-    <div className="absolute left-2.5 top-2.5 w-fit max-w-[46%] sm:left-3 sm:top-3">
+    <div className="absolute left-2.5 top-[26%] w-fit max-w-[46%] sm:left-3">
       <div
         className={`rounded-xl bg-white/95 p-1.5 shadow-[0_10px_26px_-10px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur ${show ? "anim-pop" : "opacity-0"}`}
         style={show ? { animationDelay: "0.25s" } : undefined}
