@@ -271,18 +271,49 @@ const SEASON_STOPS = [
   const t = TOURNAMENTS.find((x) => x.id === s.id);
   return { ...s, logo: t ? tournamentLogo(t) : null, color: t ? TIER_META[t.tier].color : "#fff" };
 });
+/* Route in EINZEL-Etappen (Stopp → Stopp), damit sich die Linie Schritt für
+ * Schritt zeichnet und der nächste Stopp erst bei Ankunft erscheint. */
+const SEASON_LEGS = [
+  "M26 105 Q 40 92 44 80",
+  "M44 80 Q 34 67 36 55",
+  "M36 55 Q 52 46 62 37",
+  "M62 37 Q 72 27 78 17",
+];
+const STOP_MS = 120, LEG_MS = 560, STEP_MS = 620; // Takt: Stopp, dann Etappe
+
 function SeasonTile({ show }: { show: boolean }) {
-  const DASH = 150;
+  const legRefs = useRef<(SVGPathElement | null)[]>([]);
+  const [lens, setLens] = useState<number[]>([]);
+  // Exakte Pfadlängen messen → die Linie zeichnet sich sauber (nicht geschätzt).
+  useEffect(() => {
+    setLens(legRefs.current.map((p) => p?.getTotalLength() ?? 35));
+  }, []);
+
   return (
     <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_15%_0%,#5b4bff_0%,#3a30c8_45%,#191a6b_100%)]">
       <div className="absolute inset-0 opacity-[0.22]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px,#fff 1px,transparent 0)", backgroundSize: "16px 16px" }} />
       <svg viewBox="0 0 100 125" className="absolute inset-0 h-full w-full">
-        <path
-          d="M26 105 Q 40 92 44 80 Q 34 67 36 55 Q 52 46 62 37 Q 72 27 78 17"
-          fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.4" strokeLinecap="round"
-          strokeDasharray={DASH} strokeDashoffset={show ? 0 : DASH}
-          className={show ? "anim-draw" : ""} style={{ ["--dash-len" as string]: `${DASH}` }}
-        />
+        {/* blasse Gesamtroute als Führung */}
+        <path d={SEASON_LEGS.join(" ")} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.4" strokeLinecap="round" />
+        {SEASON_LEGS.map((d, i) => {
+          const L = lens[i] ?? 35;
+          return (
+            <path
+              key={i}
+              ref={(el) => { legRefs.current[i] = el; }}
+              d={d}
+              fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.4" strokeLinecap="round"
+              strokeDasharray={L} strokeDashoffset={show ? 0 : L}
+              className={show ? "anim-draw" : ""}
+              style={{
+                ["--dash-len" as string]: `${L}`,
+                animationDuration: `${LEG_MS}ms`,
+                animationDelay: `${STOP_MS + 40 + i * STEP_MS}ms`,
+                filter: "drop-shadow(0 0 3px rgba(255,255,255,0.45))",
+              }}
+            />
+          );
+        })}
       </svg>
       {SEASON_STOPS.map((s, i) => (
         <span
@@ -291,7 +322,8 @@ function SeasonTile({ show }: { show: boolean }) {
           style={{
             left: `${s.x}%`, top: `${s.y / 1.25}%`,
             boxShadow: `0 0 0 2px ${s.color}, 0 4px 12px -3px rgba(0,0,0,0.6)`,
-            animationDelay: `${350 + i * 170}ms`,
+            // Stopp i erscheint, sobald Etappe i-1 angekommen ist
+            animationDelay: `${STOP_MS + i * STEP_MS}ms`,
           }}
         >
           {s.logo ? (
@@ -302,6 +334,19 @@ function SeasonTile({ show }: { show: boolean }) {
           )}
         </span>
       ))}
+      {/* Ziel: Puls-Ring, sobald die letzte Etappe angekommen ist */}
+      {show && (
+        <span
+          className="absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-white/50 opacity-0"
+          style={{
+            left: `${SEASON_STOPS[SEASON_STOPS.length - 1].x}%`,
+            top: `${SEASON_STOPS[SEASON_STOPS.length - 1].y / 1.25}%`,
+            animationDuration: "1.8s",
+            animationDelay: `${STOP_MS + (SEASON_STOPS.length - 1) * STEP_MS}ms`,
+            animationFillMode: "forwards",
+          }}
+        />
+      )}
     </div>
   );
 }
