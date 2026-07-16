@@ -145,6 +145,99 @@ function cardGeom(pinx: number, cx: number, vw: number, cardw: number) {
 
 type Box = { l: number; t: number; w: number; h: number; vw: number };
 
+type Labels = { done: string; net: string; costs: string; prize: string; flights: string; nights: string; team: string; events: string };
+
+/* Saison-Abschluss — der Gold-Akzent greift die Trophy am Ziel auf. */
+function SummaryCard({ finished, flights, nightsTotal, T }: { finished: boolean; flights: number; nightsTotal: number; T: Labels }) {
+  return (
+    <>
+      {/* Goldener Schein hinter der Karte — macht den Abschluss zum Moment */}
+      <div className={`pointer-events-none absolute -inset-6 rounded-[36px] transition-opacity duration-1000 ${finished ? "opacity-100" : "opacity-0"}`}
+        style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(224,165,0,0.30), transparent 70%)" }} />
+
+      <div className="relative overflow-hidden rounded-[22px] bg-white text-neutral-900 shadow-[0_30px_70px_-18px_rgba(0,0,0,0.75)] ring-1 ring-black/[0.06]">
+        {/* Gold-Kante + Schimmer */}
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#e0a500] via-[#ffdc7a] to-[#e0a500]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-20"
+          style={{ background: "radial-gradient(110% 100% at 50% 0%, rgba(224,165,0,0.16), transparent 72%)" }} />
+
+        {/* Kopf: Profil + Ranking */}
+        <div className="relative flex items-center gap-3 px-3.5 pb-3 pt-3.5">
+          <span className="relative shrink-0">
+            <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-11 w-11 rounded-full object-cover"
+              style={{ boxShadow: "0 0 0 2px #fff, 0 0 0 4px #e0a500" }} />
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#e0a500] ring-2 ring-white">
+              <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden className="text-white"><TrophyIcon /></svg>
+            </span>
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <span className="flex w-fit items-center gap-1 text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-[#a97a00]">
+              <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden><TrophyIcon /></svg>
+              {T.done}
+            </span>
+            <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight tracking-tight">Luca M.</p>
+            <p className="truncate text-[9.5px] font-semibold text-neutral-400">22 · Zürich · Sand · 2026</p>
+          </div>
+
+          {/* Ranking-Ring */}
+          <div className="relative shrink-0">
+            <svg viewBox="0 0 44 44" className="h-[46px] w-[46px] -rotate-90">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="3.5" />
+              <circle cx="22" cy="22" r="18" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * 0.44}
+                className={finished ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${2 * Math.PI * 18}` }} />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+              <span className="text-[11px] font-extrabold tabular-nums">#232</span>
+              <span className="mt-px text-[6.5px] font-extrabold text-emerald-600">+180</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Netto als Held + EIN Balken: Preisgeld = ganze Spur,
+            Kosten grau von links → der grüne Rest IST das Netto. */}
+        <div className="relative px-3.5 pb-3">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[26px] font-extrabold leading-none tracking-tight text-emerald-600">+4 200</span>
+            <span className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{T.net} CHF</span>
+          </div>
+          <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-neutral-100">
+            <div className={`absolute inset-y-0 left-0 rounded-full bg-emerald-500 ${finished ? "anim-growx" : ""}`}
+              style={{ width: "100%", animationDelay: "260ms" }} />
+            <div className={`absolute inset-y-0 left-0 rounded-full bg-neutral-300 ${finished ? "anim-growx" : ""}`}
+              style={{ width: "66%", animationDelay: "520ms" }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between">
+            <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />{T.costs} <span className="tabular-nums text-neutral-500">8.2k</span>
+            </span>
+            <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{T.prize} <span className="tabular-nums text-neutral-500">12.4k</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Reise & Team */}
+        <div className="grid grid-cols-4 border-t border-black/[0.06] bg-neutral-50/70 text-center">
+          {[
+            { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
+            { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
+            { icon: <TeamIcon />, v: "4", l: T.team },
+            { icon: <TrophyIcon />, v: String(WAYPOINTS.length), l: T.events },
+          ].map((c, i) => (
+            <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 3 ? "border-r border-black/[0.06]" : ""}`} style={{ transitionDelay: `${420 + i * 90}ms` }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-300">{c.icon}</svg>
+              <p className="mt-1 text-[12px] font-extrabold leading-none tabular-nums">{c.v}</p>
+              <p className="mt-1 text-[6.5px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{c.l}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function SeasonJourney() {
   const { locale } = useLocale();
   const lang = locale === "de" ? "de" : "en";
@@ -152,6 +245,7 @@ export default function SeasonJourney() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [p, setP] = useState(0);
+  const [exit, setExit] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [team, setTeam] = useState<Record<string, { img: string; name: string }>>({});
 
@@ -183,6 +277,11 @@ export default function SeasonJourney() {
       const r = el.getBoundingClientRect();
       const max = el.offsetHeight - window.innerHeight;
       setP(max > 0 ? Math.min(1, Math.max(0, -r.top / max)) : 0);
+      /* Wie viele Pixel der NÄCHSTEN Sektion sind schon im Bild? Daran hängt das
+         Ausblenden der mobilen Abschluss-Karte: erst darf sie ein Stück über die
+         Kante ragen (bis 70px), danach tritt sie über 90px sanft ab. */
+      const over = window.innerHeight - r.bottom;
+      setExit(Math.min(1, Math.max(0, (over - 70) / 90)));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -426,103 +525,45 @@ export default function SeasonJourney() {
             );
           })}
 
-          {/* Ergebnis-Karte (Ziel) — Saison-Abschluss.
-              Der Gold-Akzent greift die Trophy am Ziel auf: Verlaufskante oben,
-              Schimmer dahinter, Gold-Ring am Profilbild. */}
-          {box && (
-            /* Mobil als schmale Leiste UNTEN (oben liegt die Trophy), ab sm oben-links. */
+          {/* Ergebnis-Karte (Ziel) — Desktop: oben-links im Sticky-Bereich.
+              Mobil wird sie weiter unten ausserhalb des Stickys gerendert. */}
+          {box && !mobile && (
             <div
-              className={`absolute transition-all duration-700 ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-8 scale-95 opacity-0"} ${mobile ? "inset-x-3 bottom-4" : "w-[340px]"}`}
-              style={mobile ? undefined : { top: 88, left: 16 }}
+              className={`absolute w-[340px] transition-all duration-700 ${finished ? "translate-y-0 scale-100 opacity-100" : "translate-y-8 scale-95 opacity-0"}`}
+              style={{ top: 88, left: 16 }}
             >
-              {/* Goldener Schein hinter der Karte — macht den Abschluss zum Moment */}
-              <div className={`pointer-events-none absolute -inset-6 rounded-[36px] transition-opacity duration-1000 ${finished ? "opacity-100" : "opacity-0"}`}
-                style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(224,165,0,0.30), transparent 70%)" }} />
-
-              <div className="relative overflow-hidden rounded-[22px] bg-white text-neutral-900 shadow-[0_30px_70px_-18px_rgba(0,0,0,0.75)] ring-1 ring-black/[0.06]">
-                {/* Gold-Kante + Schimmer */}
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#e0a500] via-[#ffdc7a] to-[#e0a500]" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-20"
-                  style={{ background: "radial-gradient(110% 100% at 50% 0%, rgba(224,165,0,0.16), transparent 72%)" }} />
-
-                {/* Kopf: Profil + Ranking */}
-                <div className="relative flex items-center gap-3 px-3.5 pb-3 pt-3.5">
-                  <span className="relative shrink-0">
-                    <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-11 w-11 rounded-full object-cover"
-                      style={{ boxShadow: "0 0 0 2px #fff, 0 0 0 4px #e0a500" }} />
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#e0a500] ring-2 ring-white">
-                      <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden className="text-white"><TrophyIcon /></svg>
-                    </span>
-                  </span>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="flex w-fit items-center gap-1 text-[7.5px] font-extrabold uppercase tracking-[0.14em] text-[#a97a00]">
-                      <svg width="8" height="8" viewBox="0 0 24 24" aria-hidden><TrophyIcon /></svg>
-                      {T.done}
-                    </span>
-                    <p className="mt-0.5 truncate text-[15px] font-extrabold leading-tight tracking-tight">Luca M.</p>
-                    <p className="truncate text-[9.5px] font-semibold text-neutral-400">22 · Zürich · Sand · 2026</p>
-                  </div>
-
-                  {/* Ranking-Ring */}
-                  <div className="relative shrink-0">
-                    <svg viewBox="0 0 44 44" className="h-[46px] w-[46px] -rotate-90">
-                      <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="3.5" />
-                      <circle cx="22" cy="22" r="18" fill="none" stroke="#10b981" strokeWidth="3.5" strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 18} strokeDashoffset={2 * Math.PI * 18 * 0.44}
-                        className={finished ? "anim-ring" : ""} style={{ ["--ring-c" as string]: `${2 * Math.PI * 18}` }} />
-                    </svg>
-                    <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                      <span className="text-[11px] font-extrabold tabular-nums">#232</span>
-                      <span className="mt-px text-[6.5px] font-extrabold text-emerald-600">+180</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Netto als Held + EIN Balken: Preisgeld = ganze Spur,
-                    Kosten grau von links → der grüne Rest IST das Netto. */}
-                <div className="relative px-3.5 pb-3">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[26px] font-extrabold leading-none tracking-tight text-emerald-600">+4 200</span>
-                    <span className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{T.net} CHF</span>
-                  </div>
-                  <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-neutral-100">
-                    <div className={`absolute inset-y-0 left-0 rounded-full bg-emerald-500 ${finished ? "anim-growx" : ""}`}
-                      style={{ width: "100%", animationDelay: "260ms" }} />
-                    <div className={`absolute inset-y-0 left-0 rounded-full bg-neutral-300 ${finished ? "anim-growx" : ""}`}
-                      style={{ width: "66%", animationDelay: "520ms" }} />
-                  </div>
-                  <div className="mt-1.5 flex items-center justify-between">
-                    <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />{T.costs} <span className="tabular-nums text-neutral-500">8.2k</span>
-                    </span>
-                    <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-[0.08em] text-neutral-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{T.prize} <span className="tabular-nums text-neutral-500">12.4k</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Reise & Team */}
-                <div className="grid grid-cols-4 border-t border-black/[0.06] bg-neutral-50/70 text-center">
-                  {[
-                    { icon: <ModeIcon icon="plane" />, v: String(flights), l: T.flights },
-                    { icon: <BedIcon />, v: String(nightsTotal), l: T.nights },
-                    { icon: <TeamIcon />, v: "4", l: T.team },
-                    { icon: <TrophyIcon />, v: String(WAYPOINTS.length), l: T.events },
-                  ].map((c, i) => (
-                    <div key={i} className={`px-1 py-2 transition-all duration-500 ${finished ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${i < 3 ? "border-r border-black/[0.06]" : ""}`} style={{ transitionDelay: `${420 + i * 90}ms` }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden className="mx-auto text-neutral-300">{c.icon}</svg>
-                      <p className="mt-1 text-[12px] font-extrabold leading-none tabular-nums">{c.v}</p>
-                      <p className="mt-1 text-[6.5px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{c.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <SummaryCard finished={finished} flights={flights} nightsTotal={nightsTotal} T={T} />
             </div>
           )}
         </div>
       </div>
 
+      {/* Mobil: die Abschluss-Karte klappt unten auf — unter dem Start-Punkt und
+          bewusst ein Stück ÜBER die Kante zur nächsten Sektion. Darum `fixed`
+          statt absolut im Sticky: dessen overflow-hidden würde sie an der
+          Sektionsgrenze abschneiden. Beim Weiterscrollen tritt sie ab, sobald
+          die nächste Sektion das Bild übernimmt (siehe `exit`). */}
+      {box && mobile && (
+        <div
+          className="pointer-events-none fixed inset-x-3 bottom-4 z-50"
+          style={
+            finished
+              ? {
+                  transform: `translateY(${exit * 44}px)`,
+                  opacity: 1 - exit,
+                  // Nur der Auftritt wird animiert; das Ausblenden folgt dem Scroll direkt.
+                  transition: exit > 0 ? "none" : "transform .7s cubic-bezier(0.22,1,0.36,1), opacity .5s ease",
+                }
+              : {
+                  transform: "translateY(125%)",
+                  opacity: 0,
+                  transition: "transform .7s cubic-bezier(0.22,1,0.36,1), opacity .5s ease",
+                }
+          }
+        >
+          <SummaryCard finished={finished} flights={flights} nightsTotal={nightsTotal} T={T} />
+        </div>
+      )}
     </section>
   );
 }
