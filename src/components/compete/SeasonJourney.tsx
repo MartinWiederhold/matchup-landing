@@ -17,7 +17,7 @@ const PATH: [number, number][] = [
   [63, 93], [60, 85], [71, 75], [54, 67], [30, 61],
   [52, 51], [74, 45], [50, 37], [28, 31], [45, 23], [18, 15], [7, 9],
 ];
-const FINISH: [number, number] = [8, 11];         // Ziel-Trophy am Ende der Linie (oben-links)
+const FINISH: [number, number] = [4.5, 14.5];     // Ziel-Trophy am Ende der Linie (oben-links)
 const START = { pinX: 102, pinY: 92, cx: 0.30 };  // Weganfang = Strassenende unten-rechts; Karte links-mittig
 
 // Turniername nur bis „Open" (sonst zu lang für die schmale Karte).
