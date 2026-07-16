@@ -35,7 +35,7 @@ type Stop = { id: string; at: number; pinX: number; pinY: number; cx: number; no
 const STOPS: Stop[] = [
   { id: "gstaad",    at: 0.15, pinX: 54, pinY: 74, cx: 0.15, note: { de: "Erste Runde · Tour-Debüt", en: "Round 1 · tour debut" } },
   { id: "barcelona", at: 0.39, pinX: 32, pinY: 57, cx: 0.85, note: { de: "Achtelfinale · +45 Punkte", en: "Round of 16 · +45 points" } },
-  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, cx: 0.13, note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
+  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, cx: 0.38, note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
   { id: "rome",      at: 0.83, pinX: 31, pinY: 29, cx: 0.67, note: { de: "Hauptfeld · Karriere-Bestwert", en: "Main draw · career best" } },
 ];
 
@@ -224,9 +224,7 @@ export default function SeasonJourney() {
   /* Etappen-Korrekturen: Pill-Position + Verkehrsmittel.
    * Gstaad → Barcelona (698 km) ist realistisch ein Flug, nicht die Bahn. */
   const LEG_FIX: Record<number, { mode?: "Flug" | "Bahn" | "Auto"; dx?: number; dy?: number }> = {
-    0: { dx: 62, dy: 3 },              // „Auto · 139 km" weiter nach rechts
-    1: { mode: "Flug", dx: -37 },      // „Flug · 698 km" nach links
-    2: { dx: 32 },                     // „Bahn · 505 km" nach rechts
+    1: { mode: "Flug" },               // Gstaad → Barcelona: 698 km sind ein Flug
   };
   const legs = nodes.slice(1).map((n, i) => {
     const a = nodes[i];
@@ -314,21 +312,6 @@ export default function SeasonJourney() {
             </div>
           </div>
 
-          {/* Reise-Etappen als dezente Pills auf dem Weg */}
-          {box && legs.map((lg, i) => {
-            const m = px(lg.mid.x, lg.mid.y)!;
-            const active = p >= lg.at;
-            const md = MODE[lg.L.mode];
-            return (
-              <div key={`leg-${i}`} className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "opacity-100" : "opacity-0"}`} style={{ left: m.x, top: m.y }}>
-                <span className="flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[10px] font-semibold text-white/85 ring-1 ring-white/20 backdrop-blur-md">
-                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden className="opacity-90"><ModeIcon icon={md.icon} /></svg>
-                  {md[lang]} · {lg.L.km.toLocaleString(lang === "de" ? "de-CH" : "en-US")} km
-                </span>
-              </div>
-            );
-          })}
-
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
             const pin = px(START.pinX, START.pinY)!;
@@ -363,6 +346,19 @@ export default function SeasonJourney() {
               <div key={`card-${i}`}>
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.fromLeft ? "right" : "left", transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
                 <div className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-500" style={{ top: pin.y, left: pin.x, background: w.color, opacity: active ? 1 : 0 }} />
+                {/* Reise-Etappe zu DIESEM Turnier — sitzt auf der Leader-Line */}
+                {legs[i] && g.lineWidth > 70 && (() => {
+                  const md = MODE[legs[i].L.mode];
+                  return (
+                    <div className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "opacity-100" : "opacity-0"}`}
+                      style={{ top: pin.y, left: g.lineLeft + g.lineWidth / 2, transitionDelay: active ? "350ms" : "0ms" }}>
+                      <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#353fcc] px-2.5 py-1 text-[10px] font-semibold text-white/90 ring-1 ring-white/25">
+                        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden className="opacity-90"><ModeIcon icon={md.icon} /></svg>
+                        {md[lang]} · {legs[i].L.km.toLocaleString(lang === "de" ? "de-CH" : "en-US")} km
+                      </span>
+                    </div>
+                  );
+                })()}
                 <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CW }}>
                   <div className={`transition-all duration-500 ${active ? "translate-x-0 opacity-100" : "opacity-0 " + (g.fromLeft ? "-translate-x-4" : "translate-x-4")}`}>
                     <div className="rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:p-3">
