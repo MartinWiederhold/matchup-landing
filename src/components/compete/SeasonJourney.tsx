@@ -31,12 +31,14 @@ function shortName(name: string) {
 
 /* Nur echte ATP-Turniere aus dem Map-Kalender (steigende Prestige: 250 → 1000).
  * cx = Ziel-Position der Karte (Mitte, Anteil der Bühnenbreite) → Karten in die Flanken. */
-type Stop = { id: string; at: number; pinX: number; pinY: number; cx: number; note: { de: string; en: string } };
+/* cxM = abweichendes cx NUR für die mobile Ansicht (dort ist die Bühne schmaler,
+ * die Karten müssen weiter in die Flanken, sonst überlappen sie den Weg). */
+type Stop = { id: string; at: number; pinX: number; pinY: number; cx: number; cxM?: number; note: { de: string; en: string } };
 const STOPS: Stop[] = [
   { id: "gstaad",    at: 0.15, pinX: 54, pinY: 74, cx: 0.15, note: { de: "Erste Runde · Tour-Debüt", en: "Round 1 · tour debut" } },
   { id: "barcelona", at: 0.39, pinX: 32, pinY: 57, cx: 0.85, note: { de: "Achtelfinale · +45 Punkte", en: "Round of 16 · +45 points" } },
-  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, cx: 0.38, note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
-  { id: "rome",      at: 0.83, pinX: 31, pinY: 29, cx: 0.67, note: { de: "Hauptfeld · Karriere-Bestwert", en: "Main draw · career best" } },
+  { id: "madrid",    at: 0.61, pinX: 69, pinY: 44, cx: 0.38, cxM: 0.13, note: { de: "Viertelfinale · +180 Punkte", en: "Quarterfinal · +180 points" } },
+  { id: "rome",      at: 0.83, pinX: 31, pinY: 29, cx: 0.67, cxM: 0.87, note: { de: "Hauptfeld · Karriere-Bestwert", en: "Main draw · career best" } },
 ];
 
 type WP = Stop & { t: Tournament; color: string; tier: string; logo: string | null };
@@ -207,15 +209,19 @@ export default function SeasonJourney() {
 
   // Mobil kompakter: schmalere Karten, kleineres Emblem.
   const mobile = (box?.vw ?? 1024) < 640;
-  const CW = mobile ? 128 : 236;
+  const CW = mobile ? 140 : 236;
   const EMB = mobile ? 28 : 48;
   // Mobil passt das Bild in die Breite → x=102% läge ausserhalb; Pin reinholen.
-  const startX = mobile ? 93 : START.pinX;
+  // Der Kreis ist mobil kleiner (40px), darum passt er bündig an den rechten Rand
+  // und sitzt tiefer — dort, wo die Strasse unten aus dem Bild läuft.
+  const startX = mobile ? 95 : START.pinX;
+  const startY = mobile ? 96.5 : START.pinY;
+  const startR = mobile ? 20 : 40;      // Radius des START-Kreises
 
   // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
-  const startPx = px(startX, START.pinY);
+  const startPx = px(startX, startY);
   const markerPx = px(mx, my);
-  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 30 : 46));
+  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 26 : 46));
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
@@ -260,9 +266,9 @@ export default function SeasonJourney() {
             <img ref={imgRef} src="/compete/season-journey.jpg" alt="" onLoad={measure} className="absolute inset-0 h-full w-full object-cover" />
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
-            <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${startX}%`, top: `${START.pinY}%` }}>
-              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-12 w-12" : "h-20 w-20"}`}>
-                <svg width={mobile ? 22 : 38} height={mobile ? 22 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+            <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${startX}%`, top: `${startY}%` }}>
+              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-10 w-10" : "h-20 w-20"}`}>
+                <svg width={mobile ? 18 : 38} height={mobile ? 18 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
@@ -319,12 +325,12 @@ export default function SeasonJourney() {
 
           {/* START-Karte (Heimbasis) */}
           {box && (() => {
-            const pin = px(startX, START.pinY)!;
+            const pin = px(startX, startY)!;
             const g = cardGeom(pin.x, START.cx, box.vw, CW);
             return (
               <>
                 {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
-                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - 46) }} />
+                <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: Math.max(0, g.lineWidth - startR - 6) }} />
                 <div className="absolute -translate-y-1/2" style={{ top: pin.y, left: g.cardLeft, width: CW }}>
                   <div className="flex items-center gap-2 rounded-2xl bg-white/97 p-2 shadow-[0_18px_40px_-14px_rgba(0,0,0,0.55)] ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-3">
                     <span className="flex shrink-0 items-center justify-center rounded-full bg-[#353fcc] text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" style={{ width: EMB, height: EMB }}>
@@ -346,20 +352,23 @@ export default function SeasonJourney() {
           {box && WAYPOINTS.map((w, i) => {
             const pin = px(w.pinX, w.pinY)!;
             const active = p >= w.at;
-            const g = cardGeom(pin.x, w.cx, box.vw, CW);
+            const g = cardGeom(pin.x, mobile && w.cxM != null ? w.cxM : w.cx, box.vw, CW);
             return (
               <div key={`card-${i}`}>
                 <div className="absolute h-px bg-white/45" style={{ top: pin.y, left: g.lineLeft, width: g.lineWidth, transformOrigin: g.fromLeft ? "right" : "left", transform: `scaleX(${active ? 1 : 0})`, transition: "transform .6s ease .05s" }} />
                 <div className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-500" style={{ top: pin.y, left: pin.x, background: w.color, opacity: active ? 1 : 0 }} />
                 {/* Reise-Etappe zu DIESEM Turnier — sitzt auf der Leader-Line.
-                    Madrid (i=2) bleibt ohne Pill: die Linie ist dort zu kurz/zu voll. */}
-                {legs[i] && i !== 2 && g.lineWidth > 70 && (() => {
+                    Madrid (i=2) bleibt ohne Pill: die Linie ist dort zu kurz/zu voll.
+                    Mobil zusätzlich ohne Auto-Etappe (Zürich→Gstaad): die Pill lag
+                    quer über der Gstaad-Karte und dem Spieler. */}
+                {legs[i] && i !== 2 && g.lineWidth > (mobile ? 52 : 70)
+                  && !(mobile && legs[i].L.mode === "Auto") && (() => {
                   const md = MODE[legs[i].L.mode];
                   return (
                     <div className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${active ? "opacity-100" : "opacity-0"}`}
                       style={{ top: pin.y, left: g.lineLeft + g.lineWidth / 2, transitionDelay: active ? "350ms" : "0ms" }}>
-                      <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#353fcc] px-2.5 py-1 text-[10px] font-semibold text-white/90 ring-1 ring-white/25">
-                        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden className="opacity-90"><ModeIcon icon={md.icon} /></svg>
+                      <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#353fcc] px-1.5 py-[1px] text-[7.5px] font-semibold text-white/90 ring-1 ring-white/25 sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-[10px]">
+                        <svg width={mobile ? 8 : 12} height={mobile ? 8 : 12} viewBox="0 0 24 24" aria-hidden className="opacity-90"><ModeIcon icon={md.icon} /></svg>
                         {md[lang]} · {legs[i].L.km.toLocaleString(lang === "de" ? "de-CH" : "en-US")} km
                       </span>
                     </div>
@@ -373,7 +382,11 @@ export default function SeasonJourney() {
                         <div className="min-w-0">
                           <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.1em] sm:text-[9px] sm:tracking-[0.13em]" style={{ color: w.color }}>{w.tier}</p>
                           <p className="mt-0.5 truncate text-[11.5px] font-extrabold leading-tight text-neutral-900 sm:text-[14px]">{shortName(w.t.name)}</p>
-                          <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">{rangeLabel(w.t, lang)} · {SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · {w.t.city}</p>
+                          {/* Mobil nur das Datum — Belag + Stadt passten nicht in die
+                              schmale Karte und wurden ohnehin abgeschnitten. */}
+                          <p className="mt-0.5 truncate text-[9.5px] font-medium text-neutral-500 sm:text-[11px]">
+                            {rangeLabel(w.t, lang)}{!mobile && ` · ${SURFACE[w.t.surface]?.[lang] ?? w.t.surface} · ${w.t.city}`}
+                          </p>
                         </div>
                       </div>
                     </div>
