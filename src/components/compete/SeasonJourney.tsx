@@ -148,6 +148,45 @@ type Box = { l: number; t: number; w: number; h: number; vw: number };
 type Labels = { done: string; net: string; costs: string; prize: string; flights: string; nights: string; team: string; events: string };
 
 /* Saison-Abschluss — der Gold-Akzent greift die Trophy am Ziel auf. */
+/* Kompakte Variante (mobil, direkt neben der Trophy): nur der Kern —
+   Profil, Abschluss, Netto, Ranking. Kein Balken, keine Reise-Kacheln. */
+function SummaryCardCompact({ finished, T }: { finished: boolean; T: Labels }) {
+  return (
+    <>
+      <div className={`pointer-events-none absolute -inset-4 rounded-[28px] transition-opacity duration-1000 ${finished ? "opacity-100" : "opacity-0"}`}
+        style={{ background: "radial-gradient(60% 60% at 50% 50%, rgba(224,165,0,0.34), transparent 70%)" }} />
+
+      <div className="relative overflow-hidden rounded-[16px] bg-white text-neutral-900 shadow-[0_18px_44px_-12px_rgba(0,0,0,0.7)] ring-1 ring-black/[0.06]">
+        <div className="absolute inset-x-0 top-0 h-[2.5px] bg-gradient-to-r from-[#e0a500] via-[#ffdc7a] to-[#e0a500]" />
+
+        <div className="relative flex items-center gap-2 px-2.5 py-2.5">
+          <span className="relative shrink-0">
+            <img src="/compete/player-luca.png" alt="" loading="lazy" className="h-8 w-8 rounded-full object-cover"
+              style={{ boxShadow: "0 0 0 1.5px #fff, 0 0 0 3px #e0a500" }} />
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <span className="flex w-fit items-center gap-1 text-[6.5px] font-extrabold uppercase tracking-[0.12em] text-[#a97a00]">
+              <svg width="7" height="7" viewBox="0 0 24 24" aria-hidden><TrophyIcon /></svg>
+              {T.done}
+            </span>
+            <p className="mt-0.5 truncate text-[12px] font-extrabold leading-tight tracking-tight">Luca M.</p>
+            <p className="mt-px flex items-baseline gap-1 leading-none">
+              <span className="text-[14px] font-extrabold tracking-tight text-emerald-600">+4 200</span>
+              <span className="text-[6.5px] font-extrabold uppercase tracking-[0.1em] text-neutral-400">{T.net} CHF</span>
+            </p>
+          </div>
+
+          <div className="shrink-0 rounded-lg bg-neutral-50 px-1.5 py-1 text-center ring-1 ring-black/[0.05]">
+            <span className="block text-[10px] font-extrabold leading-none tabular-nums">#232</span>
+            <span className="mt-0.5 block text-[6px] font-extrabold leading-none text-emerald-600">+180</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function SummaryCard({ finished, flights, nightsTotal, T }: { finished: boolean; flights: number; nightsTotal: number; T: Labels }) {
   return (
     <>
@@ -245,7 +284,6 @@ export default function SeasonJourney() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [p, setP] = useState(0);
-  const [exit, setExit] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [team, setTeam] = useState<Record<string, { img: string; name: string }>>({});
 
@@ -277,11 +315,6 @@ export default function SeasonJourney() {
       const r = el.getBoundingClientRect();
       const max = el.offsetHeight - window.innerHeight;
       setP(max > 0 ? Math.min(1, Math.max(0, -r.top / max)) : 0);
-      /* Wie viele Pixel der NÄCHSTEN Sektion sind schon im Bild? Daran hängt das
-         Ausblenden der mobilen Abschluss-Karte: erst darf sie ein Stück über die
-         Kante ragen (bis 70px), danach tritt sie über 90px sanft ab. */
-      const over = window.innerHeight - r.bottom;
-      setExit(Math.min(1, Math.max(0, (over - 70) / 90)));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -315,13 +348,13 @@ export default function SeasonJourney() {
   // Der Kreis ist mobil kleiner (40px), darum passt er bündig an den rechten Rand
   // und sitzt tiefer — dort, wo die Strasse unten aus dem Bild läuft.
   const startX = mobile ? 95 : START.pinX;
-  const startY = mobile ? 96.5 : START.pinY;
-  const startR = mobile ? 20 : 40;      // Radius des START-Kreises
+  const startY = mobile ? 81.5 : START.pinY;   // mobil 15% höher als der Weganfang
+  const startR = mobile ? 28 : 40;      // Radius des START-Kreises
 
   // Marker erst zeigen, sobald er den START-Kreis verlassen hat.
   const startPx = px(startX, startY);
   const markerPx = px(mx, my);
-  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 26 : 46));
+  const insideStart = !!(startPx && markerPx && Math.hypot(markerPx.x - startPx.x, markerPx.y - startPx.y) < (mobile ? 34 : 46));
 
   // Reise-Etappen: Zürich → Gstaad → Barcelona → Madrid → Rom (echte leg()-Berechnung).
   const zurich = HOME_BASES[0];
@@ -367,8 +400,8 @@ export default function SeasonJourney() {
 
             {/* START-Knoten (grosser weisser Kreis + Pin, immer sichtbar) */}
             <span className="absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: `${startX}%`, top: `${startY}%` }}>
-              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-10 w-10" : "h-20 w-20"}`}>
-                <svg width={mobile ? 18 : 38} height={mobile ? 18 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
+              <span className={`relative flex items-center justify-center rounded-full bg-white ${mobile ? "h-14 w-14" : "h-20 w-20"}`}>
+                <svg width={mobile ? 26 : 38} height={mobile ? 26 : 38} viewBox="0 0 24 24" style={{ color: "#353fcc" }} aria-hidden>
                   <path fill="currentColor" d="M12 2C8.7 2 6 4.7 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6Zm0 8.2A2.2 2.2 0 1 1 12 5.8a2.2 2.2 0 0 1 0 4.4Z" />
                 </svg>
               </span>
@@ -377,7 +410,7 @@ export default function SeasonJourney() {
             {/* Marker = Tennisball (erst sichtbar, wenn ausserhalb des START-Kreises) */}
             <span className="absolute z-30 -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200" style={{ left: `${mx}%`, top: `${my}%`, opacity: insideStart ? 0 : 1 }}>
               <span className="absolute inset-0 -m-2.5 animate-ping rounded-full bg-white/30" style={{ animationDuration: "1.8s" }} />
-              <img src="/compete/tennis-ball.png" alt="" className="relative h-7 w-7 rounded-full shadow-[0_3px_12px_rgba(0,0,0,0.4)]" />
+              <img src="/compete/tennis-ball.png" alt="" className={`relative rounded-full shadow-[0_3px_12px_rgba(0,0,0,0.4)] ${mobile ? "h-5 w-5" : "h-7 w-7"}`} />
             </span>
 
             {/* Station-Pins */}
@@ -404,13 +437,27 @@ export default function SeasonJourney() {
                 </svg>
               </span>
             </span>
+
+            {/* Mobil: kompakte Abschluss-Karte direkt rechts neben der Trophy.
+                Sie sitzt IM Bild (Bühnen-Prozente), damit sie an der Trophy klebt
+                und mit dem Bild wegscrollt — anders als früher, wo sie unten am
+                Viewport festgetackert war. Desktop hat dafür den blauen Seitenrand. */}
+            {mobile && (
+              <div
+                className={`absolute z-40 w-[52%] -translate-y-1/2 transition-all duration-700 ${finished ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0"}`}
+                style={{ left: `${FINISH[0] + 12}%`, top: `${FINISH[1]}%` }}
+              >
+                <SummaryCardCompact finished={finished} T={T} />
+              </div>
+            )}
           </div>
         </div>
 
         {/* ── Overlay ── */}
         <div className="pointer-events-none absolute inset-0 z-40">
-          {/* Kopfzeile oben-rechts */}
-          <div className="absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white sm:right-8 sm:top-24">
+          {/* Kopfzeile oben-rechts. Mobil belegt sie denselben Streifen wie die
+              Abschluss-Karte an der Trophy → sie tritt beim Abschluss ab. */}
+          <div className={`absolute right-4 top-[76px] max-w-[min(52%,360px)] text-right text-white transition-opacity duration-500 sm:right-8 sm:top-24 sm:opacity-100 ${mobile && finished ? "opacity-0" : "opacity-100"}`}>
             <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-white/75 sm:text-[10px] sm:tracking-[0.28em]">{T.label}</span>
             <h2 className="mt-1.5 whitespace-pre-line text-[19px] font-bold leading-[1.05] tracking-tight sm:mt-2 sm:text-[38px]">{T.title}</h2>
             <div className="mt-3 flex items-center justify-end gap-2 sm:mt-5">
@@ -427,9 +474,7 @@ export default function SeasonJourney() {
           {box && (() => {
             const pin = px(startX, startY)!;
             const g = cardGeom(pin.x, START.cx, box.vw, CW);
-            /* Mobil liegt die Abschluss-Karte unten — genau über der START-Karte.
-               Sobald die Saison durch ist, tritt START ab. */
-            const fade = mobile && finished ? "opacity-0" : "opacity-100";
+            const fade = "opacity-100";
             return (
               <>
                 {/* Linie endet am LINKEN Rand des Start-Kreises (nicht in der Mitte) */}
@@ -538,32 +583,6 @@ export default function SeasonJourney() {
         </div>
       </div>
 
-      {/* Mobil: die Abschluss-Karte klappt unten auf — unter dem Start-Punkt und
-          bewusst ein Stück ÜBER die Kante zur nächsten Sektion. Darum `fixed`
-          statt absolut im Sticky: dessen overflow-hidden würde sie an der
-          Sektionsgrenze abschneiden. Beim Weiterscrollen tritt sie ab, sobald
-          die nächste Sektion das Bild übernimmt (siehe `exit`). */}
-      {box && mobile && (
-        <div
-          className="pointer-events-none fixed inset-x-3 bottom-4 z-50"
-          style={
-            finished
-              ? {
-                  transform: `translateY(${exit * 44}px)`,
-                  opacity: 1 - exit,
-                  // Nur der Auftritt wird animiert; das Ausblenden folgt dem Scroll direkt.
-                  transition: exit > 0 ? "none" : "transform .7s cubic-bezier(0.22,1,0.36,1), opacity .5s ease",
-                }
-              : {
-                  transform: "translateY(125%)",
-                  opacity: 0,
-                  transition: "transform .7s cubic-bezier(0.22,1,0.36,1), opacity .5s ease",
-                }
-          }
-        >
-          <SummaryCard finished={finished} flights={flights} nightsTotal={nightsTotal} T={T} />
-        </div>
-      )}
     </section>
   );
 }
