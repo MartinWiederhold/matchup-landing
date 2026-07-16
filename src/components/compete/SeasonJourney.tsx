@@ -83,8 +83,8 @@ const SVC = Object.fromEntries(SERVICES.map((s) => [s.key, s])) as Record<string
  * Kalender) verteilt neben dem Weg zwischen den Turnier-Kacheln. */
 /* Services hängen unter „ihrer" Turnier-Kachel (per Verbindungslinie). */
 const ATTACHED = [
-  { stop: "gstaad", key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3], at: 0.15 },
-  { stop: "barcelona", key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3], at: 0.39 },
+  { stop: "gstaad", key: "string", cat: "stringer", role: { de: "Besaiter", en: "Stringer" }, accent: "#38bdf8", days: [1, 3], at: 0.15, below: false },
+  { stop: "barcelona", key: "physio", cat: "physio", role: { de: "Physio", en: "Physio" }, accent: "#10b981", days: [0, 3], at: 0.39, below: true },
 ];
 const WEEKDAYS = { de: ["Mo", "Di", "Mi", "Do", "Fr"], en: ["Mo", "Tu", "We", "Th", "Fr"] };
 
@@ -385,13 +385,17 @@ export default function SeasonJourney() {
             const geom = cardGeom(pin.x, w.cx, box.vw, CW);
             const active = p >= svc.at;
             const TW = mobile ? 132 : 168;
+            const TH = 58;                 // ungefähre Kachelhöhe
+            const CARD_HALF = 38;          // halbe Höhe der Turnier-Karte
             const tileLeft = geom.cardLeft + 16;
-            const tileTop = pin.y - 126;
             const lineX = tileLeft + 24;
-            const cardTopEdge = pin.y - 38;
+            // Kachel über ODER unter der Turnier-Karte, Linie dazwischen
+            const tileTop = svc.below ? pin.y + CARD_HALF + 26 : pin.y - CARD_HALF - 26 - TH;
+            const lineTop = svc.below ? pin.y + CARD_HALF : tileTop + TH;
+            const lineH = svc.below ? tileTop - (pin.y + CARD_HALF) : pin.y - CARD_HALF - (tileTop + TH);
             return (
               <div key={svc.key} className={`transition-all duration-500 ${active ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`} style={{ transitionDelay: active ? "220ms" : "0ms" }}>
-                <div className="absolute w-px bg-white/45" style={{ left: lineX, top: tileTop + 58, height: Math.max(0, cardTopEdge - (tileTop + 58)) }} />
+                <div className="absolute w-px bg-white/45" style={{ left: lineX, top: lineTop, height: Math.max(0, lineH) }} />
                 <div className="absolute" style={{ left: tileLeft, top: tileTop, width: TW }}>
                   <ServiceTile hint={svc} person={team[svc.cat]} lang={lang} />
                 </div>
