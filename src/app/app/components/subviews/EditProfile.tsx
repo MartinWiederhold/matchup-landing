@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
@@ -13,6 +13,19 @@ import AvatarCropper from "../shared/AvatarCropper";
 import { compressImage } from "@/lib/utils/imageCompress";
 
 const MAX_PHOTOS = 4;
+
+/* Ortssuche (gleiche Quelle wie im Onboarding). */
+type NominatimResult = {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: { country_code?: string; city?: string; town?: string; village?: string; municipality?: string; suburb?: string; county?: string };
+};
+function cityFromResult(r: NominatimResult): string {
+  const a = r.address ?? {};
+  return a.city || a.town || a.village || a.municipality || a.suburb || a.county || r.display_name.split(",")[0];
+}
 
 const SPORTS: Sport[] = ["tennis", "padel", "pickleball"];
 const SKILLS: SkillLevel[] = ["beginner", "intermediate", "advanced", "competitive"];
@@ -43,6 +56,90 @@ export default function EditProfile() {
   );
   const [saving, setSaving] = useState(false);
   const { closeSubView } = useAppNav();
+
+  /* Standort: bisher nur im Onboarding per GPS gesetzt und danach nicht mehr
+     aenderbar — die Reverse-Geocodierung trifft ohne echtes GPS aber gern die
+     Nachbargemeinde. Darum hier korrigierbar: Suche oder erneut GPS. */
+  const [loc, setLoc] = useState<{ city: string | null; lat: number | null; lng: number | null; country: string }>({
+    city: profile.city,
+    lat: profile.latitude,
+    lng: profile.longitude,
+    country: profile.country,
+  });
+  const [locQuery, setLocQuery] = useState("");
+  const [locResults, setLocResults] = useState<NominatimResult[]>([]);
+  const [locBusy, setLocBusy] = useState(false);
+  const [locErr, setLocErr] = useState("");
+  const locSeq = useRef(0);
+
+  // Tippen → Nominatim, entprellt. Der Zaehler verwirft veraltete Antworten,
+  // sonst ueberholt eine langsame frühere Anfrage die aktuelle.
+  useEffect(() => {
+    const q = locQuery.trim();
+    if (q.length < 2) { setLocResults([]); return; }
+    const seq = ++locSeq.current;
+    const id = window.setTimeout(async () => {
+      setLocBusy(true);
+      try {
+        const cc = (loc.country || "CH").toLowerCase();
+        const base = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6";
+        const [local, global] = await Promise.all([
+          fetch(`${base}&countrycodes=${cc}&q=${encodeURIComponent(q)}`).then((r) => r.json()).catch(() => []),
+          fetch(`${base}&q=${encodeURIComponent(q)}`).then((r) => r.json()).catch(() => []),
+        ]);
+        if (seq !== locSeq.current) return;
+        const seen = new Set((local as NominatimResult[]).map((x) => x.place_id));
+        setLocResults([
+          ...(local as NominatimResult[]),
+          ...(global as NominatimResult[]).filter((x) => !seen.has(x.place_id)),
+        ].slice(0, 6));
+      } catch {
+        if (seq === locSeq.current) setLocResults([]);
+      } finally {
+        if (seq === locSeq.current) setLocBusy(false);
+      }
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [locQuery, loc.country]);
+
+  function pickPlace(r: NominatimResult) {
+    setLoc({
+      city: cityFromResult(r),
+      lat: Number(r.lat),
+      lng: Number(r.lon),
+      country: (r.address?.country_code || "ch").toUpperCase(),
+    });
+    setLocQuery("");
+    setLocResults([]);
+    setLocErr("");
+  }
+
+  function useGps() {
+    if (!navigator.geolocation) { setLocErr(t("profile.locationGpsDenied")); return; }
+    setLocBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`);
+          const data = await res.json();
+          const a = data.address ?? {};
+          setLoc({
+            city: a.city || a.town || a.village || a.municipality || loc.city,
+            lat: latitude,
+            lng: longitude,
+            country: (a.country_code || "ch").toUpperCase(),
+          });
+          setLocErr("");
+        } catch {
+          setLoc((v) => ({ ...v, lat: latitude, lng: longitude }));
+        } finally {
+          setLocBusy(false);
+        }
+      },
+      () => { setLocErr(t("profile.locationGpsDenied")); setLocBusy(false); },
+    );
+  }
 
   function toggle<T>(arr: T[], v: T): T[] {
     return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -124,6 +221,10 @@ export default function EditProfile() {
         goals,
         club_id: clubId,
         club_name_manual: clubId ? null : clubName,
+        city: loc.city,
+        latitude: loc.lat,
+        longitude: loc.lng,
+        country: loc.country,
       })
       .eq("id", profile.id);
     await refreshProfile();
@@ -236,13 +337,65 @@ export default function EditProfile() {
           />
         </Field>
 
+        {/* Standort — steht vor dem Club, weil die Club-Suche auf den
+            Koordinaten aufbaut. */}
+        <Field label={t("profile.locationLabel")}>
+          <div className="flex items-center gap-2 rounded-2xl bg-black/[0.04] px-4 py-3">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" /><circle cx="12" cy="10" r="2.6" />
+            </svg>
+            <span className="flex-1 truncate text-[15px] font-semibold text-neutral-900">{loc.city ?? "—"}</span>
+            <button
+              type="button"
+              onClick={useGps}
+              disabled={locBusy}
+              className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-neutral-700 ring-1 ring-black/10 transition-transform active:scale-95 disabled:opacity-50"
+            >
+              GPS
+            </button>
+          </div>
+
+          <input
+            value={locQuery}
+            onChange={(e) => setLocQuery(e.target.value)}
+            placeholder={t("profile.locationSearch")}
+            className="mt-2 w-full rounded-2xl bg-black/[0.04] px-4 py-3 text-[15px] outline-none placeholder:text-neutral-400 focus:ring-1 focus:ring-matchup"
+          />
+          {locErr && <p className="mt-1.5 px-1 text-xs text-red-500">{locErr}</p>}
+
+          {/* Trefferliste klappt weich auf (grid-rows), wie das Profil-Sheet. */}
+          <div className={`grid transition-all duration-300 ease-out ${locQuery.trim().length >= 2 ? "mt-2 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden">
+              {locBusy && locResults.length === 0 ? (
+                <p className="px-1 py-2 text-xs text-neutral-400">{t("profile.locationSearching")}</p>
+              ) : locResults.length === 0 ? (
+                <p className="px-1 py-2 text-xs text-neutral-400">{t("profile.locationNoResults")}</p>
+              ) : (
+                <div className="overflow-hidden rounded-2xl ring-1 ring-black/[0.06]">
+                  {locResults.map((r, i) => (
+                    <button
+                      key={r.place_id}
+                      type="button"
+                      onClick={() => pickPlace(r)}
+                      className={`block w-full px-4 py-3 text-left transition-colors active:bg-black/[0.06] ${i > 0 ? "border-t border-black/[0.06]" : ""}`}
+                    >
+                      <span className="block text-[14px] font-semibold text-neutral-900">{cityFromResult(r)}</span>
+                      <span className="mt-0.5 block truncate text-[11px] text-neutral-400">{r.display_name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </Field>
+
         <Field label={t("profile.club")}>
           <ClubPicker
             clubId={clubId}
             clubName={clubName}
-            country={profile.country}
-            lat={profile.latitude}
-            lng={profile.longitude}
+            country={loc.country}
+            lat={loc.lat}
+            lng={loc.lng}
             onChange={(id, name) => {
               setClubId(id);
               setClubName(name);

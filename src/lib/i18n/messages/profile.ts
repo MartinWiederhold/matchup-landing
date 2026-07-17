@@ -54,6 +54,12 @@ export const profile = {
 
     // EditProfile
     editTitle: "Profil bearbeiten",
+    locationLabel: "Standort",
+    locationSearch: "Stadt oder PLZ suchen",
+    locationUseGps: "Aktuellen Standort verwenden",
+    locationGpsDenied: "Standort nicht verfügbar — bitte Stadt suchen.",
+    locationNoResults: "Kein Ort gefunden.",
+    locationSearching: "Suche…",
     photoAlt: "Foto {index}",
     photosUploading: "Lädt…",
     mainPhoto: "Hauptbild",
@@ -176,6 +182,12 @@ export const profile = {
 
     // EditProfile
     editTitle: "Edit profile",
+    locationLabel: "Location",
+    locationSearch: "Search city or postal code",
+    locationUseGps: "Use current location",
+    locationGpsDenied: "Location unavailable — please search for a city.",
+    locationNoResults: "No place found.",
+    locationSearching: "Searching…",
     photoAlt: "Photo {index}",
     photosUploading: "Loading…",
     mainPhoto: "Main photo",

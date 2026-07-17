@@ -56,6 +56,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [likeCount, setLikeCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [navHidden, setNavHidden] = useState(false);
+  const [subIn, setSubIn] = useState(false);   // Subview eingefahren?
   const lastScroll = useRef(0);
   const online = useOnline();
   // iOS: dvh-Höhe „setzt" sich erst nach einem Repaint → exakte Pixelhöhe per JS,
@@ -168,11 +169,32 @@ export default function AppShell({ profile }: { profile: Profile }) {
     lastScroll.current = y;
   }
 
+  /* Subviews (z.B. „+ Finden") wurden bisher hart ein-/ausgehaengt. Jetzt fahren
+     sie ein — und beim Schliessen wieder raus, bevor sie unmounten. Der Ref
+     haelt den aktuellen Stack, damit closeSubView stabil bleibt und trotzdem
+     weiss, ob es der letzte Eintrag ist. */
+  const stackRef = useRef<SubViewState[]>([]);
+  useEffect(() => { stackRef.current = stack; }, [stack]);
+  useEffect(() => {
+    // Zuruecksetzen ist wichtig: der Tab-Wechsel leert den Stack direkt (ohne
+    // closeSubView). Bliebe subIn dann true, waere der naechste Subview sofort
+    // „drin" und wuerde gar nicht mehr einfahren.
+    if (!inSubview) { setSubIn(false); return; }
+    const id = requestAnimationFrame(() => setSubIn(true));
+    return () => cancelAnimationFrame(id);
+  }, [inSubview]);
+
   const openSubView = useCallback(
     (sv: SubViewState) => setStack((s) => [...s, sv]),
     [],
   );
-  const closeSubView = useCallback(() => setStack((s) => s.slice(0, -1)), []);
+  const closeSubView = useCallback(() => {
+    // Nur der letzte Subview wird ausgeblendet — bei einem inneren Pop bleibt der
+    // Rahmen stehen, dort wuerde ein Ausfahren nur flackern.
+    if (stackRef.current.length > 1) { setStack((s) => s.slice(0, -1)); return; }
+    setSubIn(false);
+    window.setTimeout(() => setStack([]), 220);
+  }, []);
 
   const refreshBadges = useCallback(async () => {
     // Offene Anfragen = eingehende Likes von Personen, mit denen noch KEIN Match
@@ -229,7 +251,14 @@ export default function AppShell({ profile }: { profile: Profile }) {
             transition: "top 0.16s ease-out, bottom 0.16s ease-out",
           }}
         >
-          <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white">
+          <div
+            className="relative flex h-full w-full max-w-[430px] flex-col bg-black pt-[env(safe-area-inset-top)] text-white"
+            style={{
+              transform: subIn ? "translateY(0) scale(1)" : "translateY(22px) scale(0.985)",
+              opacity: subIn ? 1 : 0,
+              transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease-out",
+            }}
+          >
             {!online && (
               <div className="shrink-0 bg-yellow-900 px-4 py-2 text-center text-xs text-yellow-200">
                 {t("app.offline")}
