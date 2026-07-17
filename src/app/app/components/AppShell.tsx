@@ -184,17 +184,35 @@ export default function AppShell({ profile }: { profile: Profile }) {
     return () => cancelAnimationFrame(id);
   }, [inSubview]);
 
-  const openSubView = useCallback(
-    (sv: SubViewState) => setStack((s) => [...s, sv]),
-    [],
-  );
-  const closeSubView = useCallback(() => {
-    // Nur der letzte Subview wird ausgeblendet — bei einem inneren Pop bleibt der
-    // Rahmen stehen, dort wuerde ein Ausfahren nur flackern.
+  /* Jeder geoeffnete Subview bekommt einen History-Eintrag (pushState). Sonst
+     verlaesst die Browser-Zurueck-Taste die ganze /app-SPA und landet auf der
+     Landing-Seite. Mit dem Eintrag faengt der popstate-Listener „Zurueck" ab und
+     schliesst stattdessen genau eine Subview-Ebene → man ist wieder im Home-Tab. */
+  const openSubView = useCallback((sv: SubViewState) => {
+    setStack((s) => [...s, sv]);
+    try { window.history.pushState({ muSub: true }, ""); } catch { /* ignore */ }
+  }, []);
+
+  // Ausgeblendeten Top-Eintrag entfernen — letzter Eintrag mit Ausfahr-Animation,
+  // innere Ebenen (Stack > 1) direkt, dort wuerde ein Ausfahren nur flackern.
+  const popTop = useCallback(() => {
     if (stackRef.current.length > 1) { setStack((s) => s.slice(0, -1)); return; }
     setSubIn(false);
     window.setTimeout(() => setStack([]), 220);
   }, []);
+
+  // In-App-Schliessen laeuft ueber die History (history.back → popstate → popTop),
+  // damit der pushState-Eintrag mitentfernt wird und beides synchron bleibt.
+  const closeSubView = useCallback(() => {
+    if (stackRef.current.length === 0) return;
+    try { window.history.back(); } catch { popTop(); }
+  }, [popTop]);
+
+  useEffect(() => {
+    const onPop = () => { if (stackRef.current.length > 0) popTop(); };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [popTop]);
 
   const refreshBadges = useCallback(async () => {
     // Offene Anfragen = eingehende Likes von Personen, mit denen noch KEIN Match

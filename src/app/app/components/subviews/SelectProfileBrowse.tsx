@@ -132,7 +132,7 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
         }
       />
       <div className="flex-1 overflow-y-auto">
-        <h1 className="px-5 pt-4 text-[40px] font-extrabold leading-[0.95] tracking-tight text-neutral-900">Select<br />Profile</h1>
+        <h1 className="px-5 pt-4 text-[34px] font-extrabold leading-[0.95] tracking-tight text-neutral-900">Select Profile</h1>
 
         {rows === null ? (
           <p className="p-8 text-center text-sm text-neutral-400">…</p>
