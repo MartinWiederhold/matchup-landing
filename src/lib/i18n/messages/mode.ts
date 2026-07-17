@@ -132,6 +132,11 @@ export const mode = {
     plannedTournaments: "Geplante Turniere",
     mapEmptyTitle: "Noch keine Turniere geplant",
     mapEmptySub: "Öffne die Weltkarte und stelle deine Saison zusammen.",
+    // Turnier-Meldung (externe Weiterleitung)
+    registerCta: "Zur Meldung",
+    registerOfficial: "Offizielle Turnier-Website",
+    registerSearch: "Turnier-Website suchen",
+    registerEntryHint: "Meldung läuft extern über den Veranstalter. Meldeschluss: {date}.",
     // Team-Chat
     chatTab: "Chat",
     teamChatTitle: "Team-Chat",
@@ -352,6 +357,11 @@ export const mode = {
     plannedTournaments: "Planned tournaments",
     mapEmptyTitle: "No tournaments planned yet",
     mapEmptySub: "Open the world map and build your season.",
+    // Tournament registration (external redirect)
+    registerCta: "Register",
+    registerOfficial: "Official tournament website",
+    registerSearch: "Find tournament website",
+    registerEntryHint: "Entry is handled externally by the organiser. Deadline: {date}.",
     chatTab: "Chat",
     teamChatTitle: "Team chat",
     teamChatEmpty: "No team linked yet",

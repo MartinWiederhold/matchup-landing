@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { tournamentDeadlines, kindShort, deadlineClock } from "@/lib/deadlines";
+import { urlFor, type Tournament } from "@/lib/tournaments";
 import { flagEmoji } from "@/lib/flags";
 import { loadProvidersNear, loadRequestedIds, createRequest, type ServiceProvider, type ServiceCategory } from "@/lib/services";
 import { useAppNav } from "../appNav";
@@ -73,6 +74,10 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
   const deadlines = tournamentDeadlines({ start: tourn.start_date, tier: tourn.tier });
   const net = prize - cost;
 
+  // Externe Meldung: offizielle Turnier-Website (oder nie-toter Such-Fallback).
+  const reg = urlFor({ id: tourn.id, name: tourn.name, start: tourn.start_date } as unknown as Tournament);
+  const entry = deadlines.find((d) => d.kind === "entry");
+
   return (
     <div className="flex h-full flex-col bg-white text-neutral-900">
       <SubViewHeader light title={t("services.workspace")} />
@@ -85,6 +90,26 @@ export default function TourTournament({ tournamentId }: { tournamentId: string 
             <p className="text-[12px] text-neutral-500">{tourn.tier} · {tourn.surface} · {fmt(tourn.start_date)}–{fmt(tourn.end_date)}{tourn.city ? ` · ${tourn.city}` : ""}</p>
           </div>
         </div>
+
+        {/* Meldung — externe Weiterleitung zur offiziellen Turnier-Website */}
+        <a
+          href={reg.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 flex items-center gap-3 rounded-2xl bg-gradient-to-br from-matchup to-indigo-600 p-4 text-white shadow-sm transition-transform active:scale-[0.99]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /><path d="M4 4v16" /></svg>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-extrabold leading-tight">{t("mode.registerCta")}</p>
+            <p className="truncate text-[11.5px] text-white/80">
+              {reg.official ? t("mode.registerOfficial") : t("mode.registerSearch")}
+              {entry ? ` · ${t("mode.deadlines")}: ${fmt(entry.date)}` : ""}
+            </p>
+          </div>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-white/70" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M7 7h10v10" /></svg>
+        </a>
 
         {/* P&L */}
         <div className="mt-4 grid grid-cols-3 gap-2">
