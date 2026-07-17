@@ -117,7 +117,7 @@ export default function SubViewRenderer({
     case "tournament-finder":
       return <TournamentFinder />;
     case "select-profile":
-      return <SelectProfileBrowse />;
+      return <SelectProfileBrowse sport={subView.sport} />;
     default:
       return null;
   }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n";
 import { sportLabel } from "@/lib/utils/formatters";
+import type { Sport } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -20,7 +21,9 @@ const SKILL: Record<string, string> = {
   competitive: "Turnierspieler", pro: "Profi",
 };
 
-export default function SelectProfileBrowse() {
+/** sport: zeigt nur Spieler dieser Sportart — gesetzt, wenn die Ansicht aus einer
+ *  Sport-Karte („Tennis Circle" …) statt über „Finden" geöffnet wurde. */
+export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   const t = useT();
   const { profile } = useAppNav();
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -30,21 +33,22 @@ export default function SelectProfileBrowse() {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
+    let q = supabase
       .from("profiles")
       .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm")
       .eq("is_paused", false).eq("is_banned", false).neq("id", profile.id)
-      .not("profile_image", "is", null)
-      .order("last_active", { ascending: false })
+      .not("profile_image", "is", null);
+    if (sport) q = q.contains("sports", [sport]);
+    q.order("last_active", { ascending: false })
       .limit(40)
       .then(({ data }) => setRows((data as Row[]) ?? []));
-  }, [profile.id]);
+  }, [profile.id, sport]);
 
   const levelLabel = (s: string | null) => (s ? SKILL[s] ?? s : "");
 
   return (
     <div className="flex h-full flex-col bg-white text-neutral-900">
-      <SubViewHeader light title={t("discover.findPartner")} />
+      <SubViewHeader light title={sport ? sportLabel(sport) : t("discover.findPartner")} />
       <div className="flex-1 overflow-y-auto">
         <h1 className="px-5 pt-4 text-[40px] font-extrabold leading-[0.95] tracking-tight text-neutral-900">Select<br />Profile</h1>
 

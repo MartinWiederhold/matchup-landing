@@ -269,13 +269,10 @@ export default function DiscoverTab() {
           weekMatches={weekGames}
           onFind={() => openSubView({ type: "people-browse" })}
           onCreateGame={(sport) => openSubView({ type: "create-game", sport })}
-          onSelect={(sport) => {
-            const next = { ...filters, sports: [sport] };
-            // Filter synchron persistieren, damit die Uebersicht ihn beim Mounten liest.
-            try { window.localStorage.setItem("mu_discover_filters", JSON.stringify(next)); } catch { /* ignore */ }
-            setFilters(next);
-            openSubView({ type: "people-browse" });
-          }}
+          // Sport-Karte öffnet dieselbe Ansicht wie „Finden" (select-profile),
+          // nur auf die Sportart vorgefiltert — vorher landete sie in der
+          // abweichend gestalteten people-browse-Übersicht.
+          onSelect={(sport) => openSubView({ type: "select-profile", sport })}
         />
 
         {/* Dein nächstes Spiel */}

@@ -42,7 +42,8 @@ export type SubViewState =
   | { type: "my-team" }
   | { type: "list-provider" }
   | { type: "tournament-finder" }
-  | { type: "select-profile" };
+  // sport: optionaler Vorfilter, wenn die Ansicht aus einer Sport-Karte geöffnet wird.
+  | { type: "select-profile"; sport?: Sport };
 
 interface AppNavContextType {
   profile: Profile;
