@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
+import { COMPETE_EARLY_ACCESS_OPEN } from "@/lib/tour";
 import WaitlistScreen from "../WaitlistScreen";
 
 /**
@@ -12,6 +13,8 @@ export default function EarthTab() {
   const t = useT();
 
   useEffect(() => {
+    // TEMP: bei offenem Early Access direkt zur Karte (kein Code nötig).
+    if (COMPETE_EARLY_ACCESS_OPEN) { window.location.href = "/map"; return; }
     try {
       if (localStorage.getItem("mu_earth_unlocked") === "1") window.location.href = "/map";
     } catch { /* ignore */ }
