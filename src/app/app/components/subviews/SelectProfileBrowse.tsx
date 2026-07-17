@@ -5,15 +5,20 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n";
 import { sportLabel } from "@/lib/utils/formatters";
-import type { Sport } from "@/lib/types";
+import { haversineKm } from "@/lib/utils/haversine";
+import type { Sport, FilterState } from "@/lib/types";
+import { defaultFilters } from "@/lib/types";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
+import { FilterIcon } from "../shared/icons";
+import FilterSheet from "../tabs/FilterSheet";
 
 type Row = {
   id: string; first_name: string | null; age: number | null; city: string | null;
   skill_level: string | null; sports: string[] | null; bio: string | null;
   profile_image: string | null; additional_images: string[] | null;
   match_score: number | null; height_cm: number | null;
+  gender: string | null; latitude: number | null; longitude: number | null;
 };
 
 const SKILL: Record<string, string> = {
@@ -31,6 +36,25 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   const [connected, setConnected] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  /* Filter — dieselbe Logik wie in der Discover-Uebersicht (FilterSheet), damit
+     sich der Nutzer nicht umgewoehnen muss. Kommt die Ansicht aus einer
+     Sport-Karte, ist die Sportart vorbelegt; sonst der zuletzt genutzte Filter
+     aus dem localStorage. */
+  const [filters, setFilters] = useState<FilterState>(() => {
+    let base = defaultFilters;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("mu_discover_filters");
+        if (raw) base = { ...defaultFilters, ...JSON.parse(raw) };
+      } catch { /* ignore */ }
+    }
+    return sport ? { ...base, sports: [sport] } : base;
+  });
+  const [showFilter, setShowFilter] = useState(false);
+  useEffect(() => {
+    try { window.localStorage.setItem("mu_discover_filters", JSON.stringify(filters)); } catch { /* ignore */ }
+  }, [filters]);
 
   /* Bottom-Sheet: `sel` haelt den Inhalt, `sheetIn` steuert die Animation. Beim
      Schliessen bleibt `sel` gesetzt, bis die Ausblend-Animation durch ist —
@@ -55,22 +79,58 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   }
 
   useEffect(() => {
+    setRows(null);
     let q = supabase
       .from("profiles")
-      .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm")
+      .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender,latitude,longitude")
       .eq("is_paused", false).eq("is_banned", false).neq("id", profile.id)
       .not("profile_image", "is", null);
-    if (sport) q = q.contains("sports", [sport]);
+    if (filters.sports.length) q = q.overlaps("sports", filters.sports);
+    if (filters.skillLevels.length) q = q.in("skill_level", filters.skillLevels);
+    if (filters.gender) q = q.eq("gender", filters.gender);
+    q = q.gte("age", filters.ageMin).lte("age", filters.ageMax);
     q.order("last_active", { ascending: false })
-      .limit(40)
-      .then(({ data }) => setRows((data as Row[]) ?? []));
-  }, [profile.id, sport]);
+      .limit(60)
+      .then(({ data }) => {
+        let list = (data as Row[]) ?? [];
+        // Distanz nur clientseitig (Koordinaten liegen nicht als Geo-Index vor).
+        // 201 = „weltweit" → kein Limit; sonst Haversine gegen den eigenen Standort.
+        const myLat = profile.latitude, myLng = profile.longitude;
+        if (filters.radius < 201 && myLat != null && myLng != null) {
+          list = list.filter((r) =>
+            r.latitude != null && r.longitude != null &&
+            haversineKm(myLat, myLng, r.latitude, r.longitude) <= filters.radius,
+          );
+        }
+        setRows(list.slice(0, 40));
+      });
+  }, [profile.id, profile.latitude, profile.longitude, filters]);
 
   const levelLabel = (s: string | null) => (s ? SKILL[s] ?? s : "");
 
+  // Punkt am Filter-Icon, sobald irgendein Filter vom Standard abweicht.
+  const filterActive =
+    filters.sports.length > 0 || filters.skillLevels.length > 0 || filters.gender !== null ||
+    filters.ageMin !== defaultFilters.ageMin || filters.ageMax !== defaultFilters.ageMax ||
+    filters.radius !== defaultFilters.radius;
+
   return (
     <div className="flex h-full flex-col bg-white text-neutral-900">
-      <SubViewHeader light title={sport ? sportLabel(sport) : t("discover.findPartner")} />
+      <SubViewHeader
+        light
+        title={sport ? sportLabel(sport) : t("discover.findPartner")}
+        rightActions={
+          <button
+            type="button"
+            onClick={() => setShowFilter(true)}
+            aria-label={t("discover.filter")}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-black/[0.04] text-neutral-700 transition-transform active:scale-95"
+          >
+            <FilterIcon size={18} />
+            {filterActive && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-matchup ring-2 ring-white" />}
+          </button>
+        }
+      />
       <div className="flex-1 overflow-y-auto">
         <h1 className="px-5 pt-4 text-[40px] font-extrabold leading-[0.95] tracking-tight text-neutral-900">Select<br />Profile</h1>
 
@@ -232,6 +292,14 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
+      )}
+
+      {showFilter && (
+        <FilterSheet
+          filters={filters}
+          onApply={(f) => { setFilters(f); setShowFilter(false); }}
+          onClose={() => setShowFilter(false)}
+        />
       )}
     </div>
   );
