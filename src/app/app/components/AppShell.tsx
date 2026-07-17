@@ -56,6 +56,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
   const [likeCount, setLikeCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [navHidden, setNavHidden] = useState(false);
+  const [navCompact, setNavCompact] = useState(false); // Tab-Bar beim Runterscrollen schmaler
   const [subIn, setSubIn] = useState(false);   // Subview eingefahren?
   const lastScroll = useRef(0);
   const online = useOnline();
@@ -153,6 +154,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
     setStack([]);
     setActiveTab(t);
     setNavHidden(false);
+    setNavCompact(false);
     lastScroll.current = 0;
     // Beim Tab-Wechsel nach oben, damit der neue Tab von oben startet.
     window.scrollTo(0, 0);
@@ -168,6 +170,22 @@ export default function AppShell({ profile }: { profile: Profile }) {
     else if (y < lastScroll.current - 6) setNavHidden(false);
     lastScroll.current = y;
   }
+
+  // In der Tab-Ansicht scrollt das DOKUMENT (nicht der Container) → am window
+  // lauschen. Runterscrollen: Bar zieht sich leicht zusammen; oben/hochscrollen:
+  // wieder volle Breite. Kein Ausblenden, nur die dezente Kontraktion.
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > last + 4 && y > 40) setNavCompact(true);
+      else if (y < last - 4 || y < 40) setNavCompact(false);
+      last = y;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   /* Subviews (z.B. „+ Finden") wurden bisher hart ein-/ausgehaengt. Jetzt fahren
      sie ein — und beim Schliessen wieder raus, bevor sie unmounten. Der Ref
@@ -308,6 +326,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
             onSelect={selectTab}
             badges={{ matches: unreadCount + likeCount }}
             hidden={navHidden}
+            compact={navCompact}
             center={isTour ? { icon: "M6 9a6 6 0 0 0 12 0V4H6zM6 6H3v1a3 3 0 0 0 3 3M18 6h3v1a3 3 0 0 1-3 3M9 21h6M12 15v6", label: t("mode.plannerTitle"), onClick: () => openSubView({ type: "tour-planner" }) } : undefined}
           />
         </div>
