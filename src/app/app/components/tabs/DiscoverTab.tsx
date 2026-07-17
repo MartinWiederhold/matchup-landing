@@ -229,7 +229,7 @@ export default function DiscoverTab() {
           </div>
           <button
             type="button"
-            onClick={() => openSubView({ type: "people-browse" })}
+            onClick={() => openSubView({ type: "select-profile" })}
             aria-label={t("discover.find")}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-neutral-900 ring-1 ring-black/10"
           >
