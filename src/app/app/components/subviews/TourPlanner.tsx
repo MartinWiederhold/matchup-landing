@@ -93,13 +93,15 @@ export default function TourPlanner() {
         rightActions={<button type="button" onClick={() => openSubView({ type: "tour-schedule" })} className="text-[13px] font-bold text-matchup">+ {t("mode.addEvent")}</button>}
       />
 
-      {/* Sub-Tabs */}
-      <div className="flex gap-2 px-4 pb-2 pt-1">
-        {(["season", "calendar"] as const).map((k) => (
-          <button key={k} type="button" onClick={() => setTab(k)} className={`rounded-lg px-4 py-1.5 text-[13px] font-semibold ${tab === k ? "bg-neutral-900 text-white" : "bg-black/[0.05] text-neutral-500"}`}>
-            {t(k === "season" ? "mode.tabSeason" : "mode.tabCalendar")}
-          </button>
-        ))}
+      {/* Sub-Tabs (Play-Segment-Stil) */}
+      <div className="px-4 pb-2 pt-1">
+        <div className="flex gap-1.5 rounded-full bg-black/[0.05] p-1">
+          {(["season", "calendar"] as const).map((k) => (
+            <button key={k} type="button" onClick={() => setTab(k)} className={`flex-1 rounded-full py-1.5 text-[13px] font-bold transition-colors ${tab === k ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500"}`}>
+              {t(k === "season" ? "mode.tabSeason" : "mode.tabCalendar")}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 pb-28">
