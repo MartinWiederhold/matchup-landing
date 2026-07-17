@@ -129,14 +129,14 @@ export default function TourHome() {
 
       {/* Aktives Turnier / This week */}
       {activeT && (
-        <div className="mt-3 flex items-center gap-2.5 rounded-2xl border-l-[3px] border-emerald-500 bg-black/[0.035] p-3.5">
+        <button type="button" onClick={() => openSubView({ type: "tour-tournament", tournamentId: activeT.id })} className="mt-3 flex w-full items-center gap-2.5 rounded-2xl border-l-[3px] border-emerald-500 bg-black/[0.035] p-3.5 text-left">
           <span className="text-[20px]">{flagEmoji(activeT.country)}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13.5px] font-bold text-neutral-900">{activeT.name}</p>
             <p className="text-[11px] text-neutral-500">{activeT.tier} · {activeT.surface}</p>
           </div>
           <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-600">{t("mode.activeTournament")}</span>
-        </div>
+        </button>
       )}
 
       {/* Tour Planner Einstieg */}
@@ -358,7 +358,7 @@ export default function TourHome() {
           tournaments.map((tr, i) => {
             const next = alerts.find((a) => a.tournament.id === tr.id);
             return (
-              <a key={tr.id} href="/map" className={`flex items-center gap-3 px-2.5 py-3 ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
+              <button key={tr.id} type="button" onClick={() => openSubView({ type: "tour-tournament", tournamentId: tr.id })} className={`flex w-full items-center gap-3 px-2.5 py-3 text-left ${i > 0 ? "border-t border-black/[0.06]" : ""}`}>
                 <span className="text-[17px]">{flagEmoji(tr.country)}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-bold text-neutral-900">{tr.name}</p>
@@ -369,7 +369,7 @@ export default function TourHome() {
                     {kindShort(next.kind, locale)} · {daysLabel(next.daysLeft)}
                   </span>
                 )}
-              </a>
+              </button>
             );
           })
         )}

@@ -18,7 +18,7 @@ const URG_DOT: Record<Urgency, string> = { red: "bg-red-500", amber: "bg-amber-5
 export default function TourDeadlines() {
   const t = useT();
   const { locale } = useLocale();
-  const { profile } = useAppNav();
+  const { profile, openSubView } = useAppNav();
   const [alerts, setAlerts] = useState<Alert<Tourn & { start: string }>[] | null>(null);
   const [pr, setPr] = useState<ProtectedRanking | null>(null);
 
@@ -56,14 +56,14 @@ export default function TourDeadlines() {
         ) : (
           <div className="space-y-2">
             {alerts.map((a, i) => (
-              <a key={i} href="/map" className="flex items-center gap-3 rounded-2xl bg-black/[0.035] p-3.5">
+              <button key={i} type="button" onClick={() => openSubView({ type: "tour-tournament", tournamentId: a.tournament.id })} className="flex w-full items-center gap-3 rounded-2xl bg-black/[0.035] p-3.5 text-left">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${URG_DOT[a.urgency]}`} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-bold text-neutral-900">{kindShort(a.kind, locale)} · {a.tournament.city ?? a.tournament.name}</p>
                   <p className="text-[11.5px] text-neutral-500">{a.tournament.name} · {a.tournament.tier} · {dateFmt(a.date)}{deadlineClock(a) ? ` · ${deadlineClock(a)}` : ""}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-bold ${URG_BG[a.urgency]}`}>{daysLabel(a.daysLeft)}</span>
-              </a>
+              </button>
             ))}
           </div>
         )}
