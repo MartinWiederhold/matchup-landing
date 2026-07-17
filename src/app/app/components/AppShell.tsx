@@ -12,8 +12,9 @@ import MatchesTab from "./tabs/MatchesTab";
 import GamesTab from "./tabs/GamesTab";
 import ProfileTab from "./tabs/ProfileTab";
 import TourProfileTab from "./tabs/TourProfileTab";
-import TourMatchesTab from "./tabs/TourMatchesTab";
-import TourChatTab from "./tabs/TourChatTab";
+import CompeteInbox from "./tabs/CompeteInbox";
+import CompeteMap from "./tabs/CompeteMap";
+import CompeteRanking from "./tabs/CompeteRanking";
 import EarthTab from "./tabs/EarthTab";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
@@ -43,14 +44,23 @@ export default function AppShell({ profile }: { profile: Profile }) {
     return () => window.removeEventListener(TOUR_UNLOCK_EVENT, sync);
   }, []);
   const isTour = profile.mode === "tour" && unlocked;
-  const tabs: TabDef[] = TAB_DEFS
-    // Earth-Tab nur im Play-Modus (Tour behält 4 Tabs + zentralen Planner-Button).
-    .filter((tab) => !(isTour && tab.key === "earth"))
-    .map((tab) => {
-      // Im Tour-Modus wird der Games-Slot zum Team-Chat.
-      if (isTour && tab.key === "games") return { key: tab.key, label: t("mode.chatTab"), icon: "M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" };
-      return { key: tab.key, label: t(tab.labelKey), icon: tab.icon };
-    });
+  /* Compete nutzt dieselben 5 Slots wie Play, nur mit anderem Inhalt/Icon/Label:
+     Home · Inbox(Matches+Team) · Map(Mitte) · Trophy(Ranking) · Profil. Dadurch
+     sitzt die Karte automatisch mittig — ohne Sonder-Button. */
+  const TOUR_TABS: Partial<Record<TabKey, { label: string; icon: string }>> = {
+    discover: { label: t("mode.tabHome"), icon: "M3 11l9-8 9 8M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" },
+    // Inbox: Ergebnisse + Team-Chat zusammen
+    matches: { label: t("mode.tabInbox"), icon: "M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" },
+    // Map (Mitte): Saison-Weltkarte
+    earth: { label: t("mode.tabMap"), icon: "M9 20l-5.45-2.72A1 1 0 0 1 3 16.38V5.62a1 1 0 0 1 1.45-.9L9 7m0 13 6-3m-6 3V7m6 10 4.55 2.28A1 1 0 0 0 21 18.38V7.62a1 1 0 0 0-.55-.9L15 4m0 13V4m0 0L9 7" },
+    // Trophy: Ranking & Meldechancen
+    games: { label: t("mode.tabRanking"), icon: "M6 3h12v5a6 6 0 0 1-12 0V3zM6 5H3v1a3 3 0 0 0 3 3M18 5h3v1a3 3 0 0 0-3 3M9 21h6M12 14v7" },
+  };
+  const tabs: TabDef[] = TAB_DEFS.map((tab) => {
+    const tour = isTour ? TOUR_TABS[tab.key] : undefined;
+    if (tour) return { key: tab.key, label: tour.label, icon: tour.icon };
+    return { key: tab.key, label: t(tab.labelKey), icon: tab.icon };
+  });
   const [activeTab, setActiveTab] = useState<TabKey>("discover");
   const [stack, setStack] = useState<SubViewState[]>([]);
   const [likeCount, setLikeCount] = useState(0);
@@ -313,10 +323,12 @@ export default function AppShell({ profile }: { profile: Profile }) {
             </div>
           )}
           <div className="pb-28">
+            {/* Compete: Home · Inbox · Map(Mitte) · Trophy · Profil.
+                Play: Discover · Matches · Earth · Games · Profil. */}
             {activeTab === "discover" && <DiscoverTab />}
-            {activeTab === "earth" && <EarthTab />}
-            {activeTab === "matches" && (isTour ? <TourMatchesTab /> : <MatchesTab />)}
-            {activeTab === "games" && (isTour ? <TourChatTab /> : <GamesTab />)}
+            {activeTab === "earth" && (isTour ? <CompeteMap /> : <EarthTab />)}
+            {activeTab === "matches" && (isTour ? <CompeteInbox /> : <MatchesTab />)}
+            {activeTab === "games" && (isTour ? <CompeteRanking /> : <GamesTab />)}
             {activeTab === "profile" && (isTour ? <TourProfileTab /> : <ProfileTab />)}
           </div>
 
@@ -327,7 +339,6 @@ export default function AppShell({ profile }: { profile: Profile }) {
             badges={{ matches: unreadCount + likeCount }}
             hidden={navHidden}
             compact={navCompact}
-            center={isTour ? { icon: "M6 9a6 6 0 0 0 12 0V4H6zM6 6H3v1a3 3 0 0 0 3 3M18 6h3v1a3 3 0 0 1-3 3M9 21h6M12 15v6", label: t("mode.plannerTitle"), onClick: () => openSubView({ type: "tour-planner" }) } : undefined}
           />
         </div>
       )}
