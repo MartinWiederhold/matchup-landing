@@ -113,6 +113,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      case "deletePost": {
+        const id = String(body.id);
+        // Angehängtes Bild best effort aus dem Bucket entfernen.
+        const { data: post } = await svc
+          .from("community_posts")
+          .select("image_url")
+          .eq("id", id)
+          .maybeSingle();
+        const url = post?.image_url as string | undefined;
+        if (url && url.includes("/storage/v1/object/public/")) {
+          const parts = url.split("/storage/v1/object/public/");
+          const slash = parts[1].indexOf("/");
+          const bucket = parts[1].substring(0, slash);
+          const path = parts[1].substring(slash + 1);
+          await svc.storage.from(bucket).remove([path]);
+        }
+        // Kommentare/Likes hängen per FK am Post — erst weg, dann der Post.
+        await svc.from("community_comments").delete().eq("post_id", id);
+        await svc.from("community_likes").delete().eq("post_id", id);
+        const { error } = await svc.from("community_posts").delete().eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
       case "updateEvent": {
         const id = String(body.id);
         const patch = (body.patch || {}) as Record<string, unknown>;

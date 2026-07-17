@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { href: "/admin/waitlist", label: "Waitlist", Icon: UsersIcon },
   { href: "/admin/dissolutions", label: "Auflösungen", Icon: FlagIcon },
   { href: "/admin/reports", label: "Reports", Icon: FlagIcon },
+  { href: "/admin/posts", label: "Community-Posts", Icon: MessageIcon },
   { href: "/admin/support", label: "Support", Icon: MessageIcon },
   { href: "/admin/users", label: "Alle User", Icon: UsersIcon },
   { href: "/admin/banned", label: "Gesperrte", Icon: BanIcon },
