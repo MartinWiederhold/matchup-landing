@@ -13,7 +13,7 @@ import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, Po
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
-import { setMode as persistMode, tourUnlocked, acceptInvite } from "@/lib/tour";
+import { setMode as persistMode, tourUnlocked, lockTour, acceptInvite } from "@/lib/tour";
 import { useAuth } from "@/lib/auth";
 import WimbledonWidget from "../../mockup/WimbledonWidget";
 import PostComposer from "../shared/PostComposer";
@@ -210,6 +210,9 @@ export default function DiscoverTab() {
   }
   function changeMode(m: "play" | "tour") {
     if (m === mode) return;
+    // Zurueck zu Play → Compete wieder sperren, damit der Code beim naechsten
+    // Wechsel erneut abgefragt wird (Freischaltung ist bewusst nicht dauerhaft).
+    if (m === "play") lockTour();
     if (m === "tour" && !tourUnlocked()) { setShowTourGate(true); return; }
     applyMode(m);
   }

@@ -3,11 +3,13 @@ import type { TourProfile } from "@/lib/types";
 
 /* Tour ist vorerst gesperrt (Early Access). Freischaltung via WaitlistScreen-Code.
  *
- * Der Schlüssel trägt bewusst ein _v2: die v1-Flag wurde noch mit dem alten Code
- * „5080" gesetzt, den es nicht mehr gibt. Alte Freischaltungen sollen darum nicht
- * weitergelten — sonst bliebe Compete auf Testgeräten offen. */
-const UNLOCK_KEY = "mu_tour_unlocked_v2";
-/** unlockTour() feuert dieses Event, damit die Shell sofort nachzieht (statt Reload). */
+ * BEWUSST NICHT persistent: die Freischaltung lebt nur im Speicher dieser Sitzung
+ * (kein localStorage). So sieht jeder beim Wechsel zu Compete IMMER wieder die
+ * Warteliste und muss den Code 50805080 erneut eingeben — und Besucher können
+ * ihre Mail eintragen (landet in web.waitlist → Admin). Beim Reload und beim
+ * Zurueckwechseln zu Play (lockTour) wird wieder gesperrt. */
+let unlockedThisSession = false;
+/** unlockTour()/lockTour() feuern dieses Event, damit die Shell sofort nachzieht. */
 export const TOUR_UNLOCK_EVENT = "mu-tour-unlock";
 
 /* Compete/Earth hinter der Warteliste — Freischaltung nur mit Code 50805080.
@@ -16,23 +18,16 @@ export const COMPETE_EARLY_ACCESS_OPEN = false;
 
 export function tourUnlocked(): boolean {
   if (COMPETE_EARLY_ACCESS_OPEN) return true;
-  try {
-    return localStorage.getItem(UNLOCK_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return unlockedThisSession;
 }
 export function unlockTour(): void {
-  try {
-    localStorage.setItem(UNLOCK_KEY, "1");
-  } catch {
-    /* ignore */
-  }
-  try {
-    window.dispatchEvent(new Event(TOUR_UNLOCK_EVENT));
-  } catch {
-    /* ignore */
-  }
+  unlockedThisSession = true;
+  try { window.dispatchEvent(new Event(TOUR_UNLOCK_EVENT)); } catch { /* ignore */ }
+}
+/** Wieder sperren (z.B. beim Zurueckwechseln zu Play) → Compete fragt erneut. */
+export function lockTour(): void {
+  unlockedThisSession = false;
+  try { window.dispatchEvent(new Event(TOUR_UNLOCK_EVENT)); } catch { /* ignore */ }
 }
 
 /** Lädt das Tour-Profil des Users (oder null, wenn noch keins existiert). */
