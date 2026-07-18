@@ -160,7 +160,7 @@ export default function CompeteRanking() {
                       <p className="truncate text-[11px] text-neutral-500">{meta.label} · {fmtRange(tr.start, tr.end)}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-[15px] font-extrabold text-neutral-900">+{num(pts)}</p>
+                      <p className="text-[15px] font-extrabold text-neutral-900">+{num(Math.round(pts))}</p>
                       <p className="text-[10px] text-neutral-400">{prizeFor(tr) ? `${num(Math.round(prizeFor(tr) / 1000))}k ${t("mode.prizePool")}` : ""}</p>
                     </div>
                   </button>

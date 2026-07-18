@@ -34,7 +34,7 @@ export default function CompeteInbox() {
       </div>
 
       <div className="mt-1">
-        {sub === "results" ? <TourMatchesTab /> : <TourChatTab />}
+        {sub === "results" ? <TourMatchesTab embedded /> : <TourChatTab />}
       </div>
     </div>
   );

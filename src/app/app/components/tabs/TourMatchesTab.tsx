@@ -9,7 +9,7 @@ import { useAppNav } from "../appNav";
 type Match = { id: string; title: string; event_date: string; tournament_id: string | null; won: boolean | null; score: string | null; round: string | null; opponent: string | null };
 type Tourn = { id: string; name: string; surface: string | null; country: string | null; tier: string | null };
 
-export default function TourMatchesTab() {
+export default function TourMatchesTab({ embedded = false }: { embedded?: boolean }) {
   const t = useT();
   const { locale } = useLocale();
   const { profile, openSubView } = useAppNav();
@@ -60,11 +60,13 @@ export default function TourMatchesTab() {
 
   return (
     <div className="overflow-y-auto pb-28">
-      {/* Kopf */}
-      <div className="flex items-center justify-between px-4 pb-1 pt-3">
-        <h1 className="text-[18px] font-extrabold tracking-tight text-neutral-900">{t("mode.matchesTitle")}</h1>
-        <button type="button" onClick={() => openSubView({ type: "tour-schedule", addKind: "match" })} className="rounded-full bg-black/[0.05] px-3 py-1.5 text-[12px] font-bold text-matchup">+ {t("mode.logMatch")}</button>
-      </div>
+      {/* Kopf — im Inbox-Tab ausgeblendet (dort ist „Matches" schon das Segment) */}
+      {!embedded && (
+        <div className="flex items-center justify-between px-4 pb-1 pt-3">
+          <h1 className="text-[18px] font-extrabold tracking-tight text-neutral-900">{t("mode.matchesTitle")}</h1>
+          <button type="button" onClick={() => openSubView({ type: "tour-schedule", addKind: "match" })} className="rounded-full bg-black/[0.05] px-3 py-1.5 text-[12px] font-bold text-matchup">+ {t("mode.logMatch")}</button>
+        </div>
+      )}
 
       {/* Record */}
       <div className="grid grid-cols-3 gap-2 px-4 pb-3">
