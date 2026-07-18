@@ -1,0 +1,190 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useT, useLocale } from "@/lib/i18n";
+import { getRackets } from "@/data/seed/rackets";
+import { recommend, type Recommendation } from "@/domain/recommendations/scoreV1";
+import { defaultProfile, type PlayerProfile } from "@/domain/advisory/playerProfile";
+import type { Axis } from "@/domain/equipment/racket";
+
+/* Frageflow: eine Entscheidung pro Screen, „Weiss ich nicht" → sinnvoller Default,
+ * Autosave in der Session. Kein E-Mail-/Lead-Gate vor dem Ergebnis (Doc-Prinzip). */
+type Q = { field: keyof PlayerProfile; qKey: string; options: { value: string; labelKey: string }[] };
+const QUESTIONS: Q[] = [
+  { field: "level", qKey: "q_level", options: [
+    { value: "beginner", labelKey: "q_level_beginner" }, { value: "intermediate", labelKey: "q_level_intermediate" },
+    { value: "advanced", labelKey: "q_level_advanced" }, { value: "competitive", labelKey: "q_level_competitive" } ] },
+  { field: "swingStyle", qKey: "q_swing", options: [
+    { value: "compact", labelKey: "q_swing_compact" }, { value: "moderate", labelKey: "q_swing_moderate" }, { value: "full", labelKey: "q_swing_full" } ] },
+  { field: "goal", qKey: "q_goal", options: [
+    { value: "power", labelKey: "q_goal_power" }, { value: "control", labelKey: "q_goal_control" }, { value: "spin", labelKey: "q_goal_spin" },
+    { value: "comfort", labelKey: "q_goal_comfort" }, { value: "allround", labelKey: "q_goal_allround" } ] },
+  { field: "playStyle", qKey: "q_playstyle", options: [
+    { value: "baseline", labelKey: "q_playstyle_baseline" }, { value: "allcourt", labelKey: "q_playstyle_allcourt" },
+    { value: "servevolley", labelKey: "q_playstyle_servevolley" }, { value: "defensive", labelKey: "q_playstyle_defensive" } ] },
+  { field: "armSensitivity", qKey: "q_arm", options: [
+    { value: "none", labelKey: "q_arm_none" }, { value: "some", labelKey: "q_arm_some" }, { value: "high", labelKey: "q_arm_high" } ] },
+  { field: "problem", qKey: "q_problem", options: [
+    { value: "none", labelKey: "q_problem_none" }, { value: "flies-long", labelKey: "q_problem_flies_long" }, { value: "no-control", labelKey: "q_problem_no_control" },
+    { value: "arm-pain", labelKey: "q_problem_arm_pain" }, { value: "too-heavy", labelKey: "q_problem_too_heavy" }, { value: "no-spin", labelKey: "q_problem_no_spin" } ] },
+];
+const STORE = "mu_racket_finder_v1";
+
+export default function RacketFinder() {
+  const t = useT();
+  const { locale } = useLocale();
+  const [step, setStep] = useState(0); // 0..QUESTIONS.length-1 ; === length → Ergebnis
+  const [answers, setAnswers] = useState<Partial<PlayerProfile>>({});
+
+  useEffect(() => {
+    try { const raw = sessionStorage.getItem(STORE); if (raw) setAnswers(JSON.parse(raw)); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try { sessionStorage.setItem(STORE, JSON.stringify(answers)); } catch { /* ignore */ }
+  }, [answers]);
+
+  const total = QUESTIONS.length;
+  const axisLabel = (a: Axis) => t(`beratung.axis_${a}`);
+
+  function choose(field: keyof PlayerProfile, value: string) {
+    setAnswers((a) => ({ ...a, [field]: value }));
+    setStep((s) => s + 1);
+  }
+  function skip() {
+    const q = QUESTIONS[step];
+    setAnswers((a) => ({ ...a, [q.field]: defaultProfile[q.field] }));
+    setStep((s) => s + 1);
+  }
+  function restart() { setAnswers({}); setStep(0); try { sessionStorage.removeItem(STORE); } catch { /* ignore */ } }
+
+  // ── Ergebnis ──────────────────────────────────────────────────────────
+  if (step >= total) {
+    const profile: PlayerProfile = { ...defaultProfile, ...answers, schemaVersion: 1 };
+    const { recommendations, excludedCount } = recommend(profile, getRackets(), 5);
+    return (
+      <div className="mx-auto max-w-[640px]">
+        <div className="mb-5 flex items-end justify-between">
+          <div>
+            <h3 className="text-2xl font-extrabold tracking-tight text-neutral-900">{t("beratung.finderResultTitle")}</h3>
+            <p className="mt-1 text-sm text-neutral-500">{t("beratung.finderResultSub")}</p>
+          </div>
+          <button type="button" onClick={restart} className="shrink-0 rounded-full bg-black/[0.05] px-4 py-2 text-[13px] font-bold text-neutral-700 transition-colors hover:bg-black/[0.08]">
+            {t("beratung.finderRestart")}
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {recommendations.map((rec, i) => (
+            <RecCard key={rec.racket.id} rec={rec} rank={i + 1} locale={locale} axisLabel={axisLabel} t={t} />
+          ))}
+        </div>
+
+        {excludedCount > 0 && (
+          <p className="mt-4 text-[12px] text-neutral-400">{t("beratung.finderExcludedNote", { n: excludedCount })}</p>
+        )}
+        <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("beratung.finderDemoNote")}</p>
+      </div>
+    );
+  }
+
+  // ── Fragen ────────────────────────────────────────────────────────────
+  const q = QUESTIONS[step];
+  const pct = Math.round((step / total) * 100);
+  const current = answers[q.field];
+  return (
+    <div className="mx-auto max-w-[560px]">
+      {/* Fortschritt */}
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-neutral-400">
+          <button type="button" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} className="disabled:opacity-0">← {t("beratung.finderBack")}</button>
+          <span>{t("beratung.finderStep", { n: step + 1, total })}</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+          <div className="h-full rounded-full bg-matchup transition-all duration-300" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      <h3 className="mb-5 text-[22px] font-extrabold leading-tight tracking-tight text-neutral-900">{t(`beratung.${q.qKey}`)}</h3>
+
+      <div className="grid gap-2.5">
+        {q.options.map((o) => {
+          const active = current === o.value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => choose(q.field, o.value)}
+              className={`flex items-center justify-between rounded-2xl px-5 py-4 text-left text-[15px] font-semibold transition-all active:scale-[0.99] ${
+                active ? "bg-matchup text-white" : "bg-black/[0.035] text-neutral-900 hover:bg-black/[0.06]"
+              }`}
+            >
+              {t(`beratung.${o.labelKey}`)}
+              <span className={`text-lg ${active ? "opacity-100" : "opacity-20"}`}>›</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button type="button" onClick={skip} className="mt-4 w-full py-2 text-center text-[13px] font-semibold text-neutral-400 transition-colors hover:text-neutral-600">
+        {t("beratung.finderDontKnow")}
+      </button>
+    </div>
+  );
+}
+
+function ConfBadge({ conf, t }: { conf: Recommendation["confidence"]; t: (k: string) => string }) {
+  const cls = conf === "high" ? "bg-emerald-500/10 text-emerald-600" : conf === "medium" ? "bg-amber-500/10 text-amber-600" : "bg-black/[0.06] text-neutral-500";
+  return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${cls}`}>{t("beratung.finderConfidence")}: {t(`beratung.conf_${conf}`)}</span>;
+}
+
+function RecCard({ rec, rank, locale, axisLabel, t }: {
+  rec: Recommendation; rank: number; locale: string;
+  axisLabel: (a: Axis) => string; t: (k: string, v?: Record<string, string | number>) => string;
+}) {
+  const r = rec.racket;
+  const summary = r.editorial.summary[locale === "en" ? "en" : "de"];
+  return (
+    <div className="rounded-[24px] bg-black/[0.035] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">#{rank} · {r.brand}</p>
+          <h4 className="mt-0.5 text-[17px] font-extrabold tracking-tight text-neutral-900">{r.model}</h4>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="text-[26px] font-extrabold leading-none tracking-tight text-matchup">{rec.matchScore}</div>
+          <div className="text-[9px] font-bold uppercase tracking-wide text-neutral-400">{t("beratung.finderMatch")}</div>
+        </div>
+      </div>
+
+      <div className="mt-2"><ConfBadge conf={rec.confidence} t={t} /></div>
+
+      <p className="mt-3 text-[13.5px] leading-relaxed text-neutral-600">{summary}</p>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] text-neutral-500">
+        <span>{r.specs.headSizeSqIn} in² · {r.specs.unstrungWeightG} g</span>
+        <span className="text-right">RA {r.specs.stiffnessRa} · {r.specs.stringPattern}</span>
+      </div>
+
+      {rec.topAxes.length > 0 && (
+        <div className="mt-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("beratung.finderWhy")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {rec.topAxes.map((a) => (
+              <span key={a} className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{axisLabel(a)}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {rec.watchAxes.length > 0 && (
+        <div className="mt-2.5">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("beratung.finderWatch")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {rec.watchAxes.map((a) => (
+              <span key={a} className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-700">{axisLabel(a)}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
