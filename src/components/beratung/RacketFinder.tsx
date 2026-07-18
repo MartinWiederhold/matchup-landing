@@ -9,6 +9,7 @@ import { recommendStrings } from "@/domain/recommendations/stringScoreV1";
 import { defaultProfile, type PlayerProfile } from "@/domain/advisory/playerProfile";
 import type { Axis } from "@/domain/equipment/racket";
 import type { StringAxis } from "@/domain/equipment/string";
+import RacketComparison from "./RacketComparison";
 
 /* Frageflow: eine Entscheidung pro Screen, „Weiss ich nicht" → sinnvoller Default,
  * Autosave in der Session. Kein E-Mail-/Lead-Gate vor dem Ergebnis (Doc-Prinzip). */
@@ -38,6 +39,7 @@ export default function RacketFinder() {
   const { locale } = useLocale();
   const [step, setStep] = useState(0); // 0..QUESTIONS.length-1 ; === length → Ergebnis
   const [answers, setAnswers] = useState<Partial<PlayerProfile>>({});
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     try { const raw = sessionStorage.getItem(STORE); if (raw) setAnswers(JSON.parse(raw)); } catch { /* ignore */ }
@@ -86,6 +88,26 @@ export default function RacketFinder() {
 
         {excludedCount > 0 && (
           <p className="mt-4 text-[12px] text-neutral-400">{t("beratung.finderExcludedNote", { n: excludedCount })}</p>
+        )}
+
+        {/* ── Vergleich der Top 3 (aufklappbar) ── */}
+        {recommendations.length >= 2 && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setShowCompare((v) => !v)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-full bg-black/[0.05] py-2.5 text-[13px] font-bold text-neutral-700 transition-colors hover:bg-black/[0.08]"
+            >
+              {showCompare ? t("beratung.compareHide") : t("beratung.compareShow")}
+              <svg viewBox="0 0 24 24" className={`h-4 w-4 transition-transform ${showCompare ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+            {showCompare && (
+              <>
+                <p className="mt-3 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">{t("beratung.compareTitle")}</p>
+                <RacketComparison rackets={recommendations.slice(0, 3).map((r) => r.racket)} axisLabel={axisLabel} t={t} />
+              </>
+            )}
+          </div>
         )}
 
         {/* ── Passende Besaitung (Saite + Spannungsbereich) ── */}
