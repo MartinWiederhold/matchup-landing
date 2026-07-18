@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n";
 import { sportLabel } from "@/lib/utils/formatters";
 import { haversineKm } from "@/lib/utils/haversine";
+import { ensureMatch } from "@/lib/matchmaking";
 import type { Sport, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -30,12 +31,37 @@ const SKILL: Record<string, string> = {
  *  Sport-Karte („Tennis Circle" …) statt über „Finden" geöffnet wurde. */
 export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   const t = useT();
-  const { profile } = useAppNav();
+  const { profile, refreshBadges } = useAppNav();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [sel, setSel] = useState<Row | null>(null);
-  const [connected, setConnected] = useState(false);
+  // Bereits angefragte User (aus der likes-Tabelle) — bleibt so über Sitzungen.
+  const [requested, setRequested] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  // Schon gesendete Verbindungs-Anfragen laden → Button zeigt „Angefragt".
+  useEffect(() => {
+    supabase
+      .from("likes")
+      .select("to_user_id")
+      .eq("from_user_id", profile.id)
+      .then(({ data }) => setRequested(new Set((data ?? []).map((l) => l.to_user_id as string))));
+  }, [profile.id]);
+
+  // Echte Verbindungs-Anfrage: schreibt in likes (der andere sieht sie), bei
+  // Gegen-Like entsteht ein Match. Optimistisch, damit der Button sofort umspringt.
+  async function connect(target: Row) {
+    setRequested((prev) => new Set(prev).add(target.id));
+    await supabase.from("likes").upsert(
+      { from_user_id: profile.id, to_user_id: target.id },
+      { onConflict: "from_user_id,to_user_id" },
+    );
+    const { data: reverse } = await supabase
+      .from("likes").select("id")
+      .eq("from_user_id", target.id).eq("to_user_id", profile.id).maybeSingle();
+    if (reverse) await ensureMatch(profile.id, target.id);
+    refreshBadges();
+  }
 
   /* Filter — dieselbe Logik wie in der Discover-Uebersicht (FilterSheet), damit
      sich der Nutzer nicht umgewoehnen muss. Kommt die Ansicht aus einer
@@ -71,7 +97,7 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   }, [sel]);
 
   function openSheet(p: Row) {
-    setSel(p); setConnected(false); setExpanded(false); setLightbox(null); setDrag(0);
+    setSel(p); setExpanded(false); setLightbox(null); setDrag(0);
   }
   function closeSheet() {
     setSheetIn(false);
@@ -222,20 +248,26 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
                   className={`mt-4 flex gap-2.5 transition-all duration-[400ms] ease-out ${sheetIn ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
                   style={{ transitionDelay: `${100 + rowsData.length * 40}ms` }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setConnected(true)}
-                    className={`flex-1 rounded-full py-3.5 text-[15px] font-bold transition-all duration-300 active:scale-[0.97] ${connected ? "bg-emerald-500/20 text-emerald-300" : "bg-white text-neutral-900"}`}
-                  >
-                    <span className="inline-flex items-center justify-center gap-1.5">
-                      {connected && (
-                        <svg viewBox="0 0 16 16" className="anim-pop h-3.5 w-3.5" fill="none" aria-hidden="true">
-                          <path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                      {connected ? t("services.requested") : t("discover.connect")}
-                    </span>
-                  </button>
+                  {(() => {
+                    const isReq = requested.has(sel.id);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => { if (!isReq) void connect(sel); }}
+                        disabled={isReq}
+                        className={`flex-1 rounded-full py-3.5 text-[15px] font-bold transition-all duration-300 active:scale-[0.97] ${isReq ? "bg-emerald-500/20 text-emerald-300" : "bg-white text-neutral-900"}`}
+                      >
+                        <span className="inline-flex items-center justify-center gap-1.5">
+                          {isReq && (
+                            <svg viewBox="0 0 16 16" className="anim-pop h-3.5 w-3.5" fill="none" aria-hidden="true">
+                              <path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                          {isReq ? t("discover.requested") : t("discover.connect")}
+                        </span>
+                      </button>
+                    );
+                  })()}
                   {(sel.bio || gallery.length > 0) && (
                     <button
                       type="button"
