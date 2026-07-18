@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useT, useLocale } from "@/lib/i18n";
 import { getRackets } from "@/data/seed/rackets";
 import { getStrings } from "@/data/seed/strings";
@@ -184,7 +185,12 @@ export default function RacketFinder() {
           <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("beratung.stringDisclaimer")}</p>
         </div>
 
-        <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("beratung.finderDemoNote")}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link href="/beratung/methodik" className="text-[12px] font-bold text-matchup underline underline-offset-2">
+            {t("beratung.finderMethodikLink")}
+          </Link>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("beratung.finderDemoNote")}</p>
       </div>
     );
   }
