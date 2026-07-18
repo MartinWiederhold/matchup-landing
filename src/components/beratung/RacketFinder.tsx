@@ -7,6 +7,7 @@ import { getStrings } from "@/data/seed/strings";
 import { recommend, type Recommendation } from "@/domain/recommendations/scoreV1";
 import { recommendStrings } from "@/domain/recommendations/stringScoreV1";
 import { defaultProfile, type PlayerProfile } from "@/domain/advisory/playerProfile";
+import { getProblemAdvice } from "@/domain/advisory/problemSolver";
 import type { Axis } from "@/domain/equipment/racket";
 import type { StringAxis } from "@/domain/equipment/string";
 import RacketComparison from "./RacketComparison";
@@ -68,6 +69,8 @@ export default function RacketFinder() {
     const { recommendations, excludedCount } = recommend(profile, getRackets(), 5);
     const strings = recommendStrings(profile, getStrings(), 3);
     const sAxisLabel = (a: StringAxis) => t(`beratung.axis_${a}`);
+    const advice = getProblemAdvice(profile.problem);
+    const L = (x: { de: string; en: string }) => (locale === "en" ? x.en : x.de);
     return (
       <div className="mx-auto max-w-[640px]">
         <div className="mb-5 flex items-end justify-between">
@@ -79,6 +82,31 @@ export default function RacketFinder() {
             {t("beratung.finderRestart")}
           </button>
         </div>
+
+        {/* Problem-Solver: risikoarme Massnahmen ZUERST (vor Neukauf) */}
+        {advice && (
+          <div className="mb-5 rounded-[24px] border border-matchup/20 bg-matchup/[0.05] p-5">
+            <p className="text-[15px] font-extrabold tracking-tight text-neutral-900">{t("beratung.psTitle")}</p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-matchup">{t("beratung.psFirstTry")}</p>
+            <ul className="mt-1.5 space-y-1.5">
+              {advice.firstTry.map((s, i) => (
+                <li key={i} className="flex gap-2 text-[13.5px] leading-snug text-neutral-700">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-matchup text-[10px] font-bold text-white">{i + 1}</span>
+                  {L(s)}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("beratung.psThenConsider")}</p>
+            <ul className="mt-1.5 space-y-1">
+              {advice.thenConsider.map((s, i) => (
+                <li key={i} className="flex gap-2 text-[13px] leading-snug text-neutral-500">
+                  <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-neutral-400" />{L(s)}
+                </li>
+              ))}
+            </ul>
+            {advice.medical && <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("beratung.psMedical")}</p>}
+          </div>
+        )}
 
         <div className="space-y-3">
           {recommendations.map((rec, i) => (
