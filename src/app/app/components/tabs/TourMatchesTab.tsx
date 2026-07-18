@@ -68,11 +68,30 @@ export default function TourMatchesTab({ embedded = false }: { embedded?: boolea
         </div>
       )}
 
-      {/* Record */}
-      <div className="grid grid-cols-3 gap-2 px-4 pb-3">
-        <div className="rounded-2xl bg-emerald-500/10 py-3 text-center"><div className="text-[22px] font-extrabold text-emerald-600">{wins}</div><div className="text-[10px] font-bold uppercase tracking-wide text-emerald-600/80">{t("mode.wins")}</div></div>
-        <div className="rounded-2xl bg-red-500/10 py-3 text-center"><div className="text-[22px] font-extrabold text-red-600">{losses}</div><div className="text-[10px] font-bold uppercase tracking-wide text-red-600/80">{t("mode.losses")}</div></div>
-        <div className="rounded-2xl bg-black/[0.05] py-3 text-center"><div className="text-[22px] font-extrabold text-neutral-900">{winRate}%</div><div className="text-[10px] font-bold uppercase tracking-wide text-neutral-400">{t("mode.winRate")}</div></div>
+      {/* Record — Dashboard-Karte (Win-Rate als Held + W/L + Balken), mockup2-Stil */}
+      <div className="px-4 pb-3 pt-2">
+        <div className="rounded-2xl bg-black/[0.035] p-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-400">{t("mode.winRate")}</p>
+              <p className="mt-0.5 text-[30px] font-extrabold leading-none tracking-tight text-neutral-900">{winRate}<span className="text-[18px] text-neutral-400">%</span></p>
+            </div>
+            <div className="flex gap-5 text-right">
+              <div>
+                <p className="text-[20px] font-extrabold leading-none text-neutral-900">{wins}</p>
+                <p className="mt-1 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-wide text-neutral-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t("mode.wins")}</p>
+              </div>
+              <div>
+                <p className="text-[20px] font-extrabold leading-none text-neutral-900">{losses}</p>
+                <p className="mt-1 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-wide text-neutral-400"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />{t("mode.losses")}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+            <div className="h-full bg-emerald-500" style={{ width: `${winRate}%` }} />
+            <div className="h-full bg-red-400" style={{ width: `${decided.length ? 100 - winRate : 0}%` }} />
+          </div>
+        </div>
       </div>
 
       {/* Sub-Tabs (Play-Segment-Stil) */}

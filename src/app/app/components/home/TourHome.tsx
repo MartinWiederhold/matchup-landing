@@ -171,18 +171,26 @@ export default function TourHome() {
         </>
       )}
 
-      {/* Setup-CTA, wenn noch kein Tour-Profil */}
+      {/* Setup-CTA, wenn noch kein Tour-Profil — Stadion-Hero wie auf der Landing */}
       {!hasTour && (
-        <div className="mt-4 rounded-[24px] bg-gradient-to-br from-matchup to-indigo-500 p-5 text-white">
-          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/15">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor"><path d="M5 16l-2-9 5.5 4L12 5l3.5 6L21 7l-2 9zM5 20h14" /></svg>
+        <button
+          type="button"
+          onClick={() => openSubView({ type: "tour-profile-edit" })}
+          className="mt-4 block w-full overflow-hidden rounded-[24px] text-left"
+        >
+          <div className="relative min-h-[220px] w-full">
+            <img src="/compete/compete-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "center 45%" }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25" />
+            <div className="relative flex min-h-[220px] flex-col justify-end p-5 text-white">
+              <h3 className="text-[22px] font-extrabold leading-tight tracking-tight">{t("mode.setupTitle")}</h3>
+              <p className="mt-1.5 max-w-[300px] text-[13px] leading-relaxed text-white/85">{t("mode.setupSub")}</p>
+              <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-matchup">
+                {t("mode.setupCta")}
+                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </span>
+            </div>
           </div>
-          <h3 className="text-[19px] font-bold leading-tight tracking-tight">{t("mode.setupTitle")}</h3>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-white/85">{t("mode.setupSub")}</p>
-          <button type="button" onClick={() => openSubView({ type: "tour-profile-edit" })} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-[13px] font-bold text-matchup">
-            {t("mode.setupCta")}
-          </button>
-        </div>
+        </button>
       )}
 
       {/* Ranking-Karte */}
