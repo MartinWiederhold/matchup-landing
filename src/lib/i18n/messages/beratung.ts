@@ -25,6 +25,14 @@ export const beratung = {
     // Achsen-Labels
     axis_power: "Power", axis_control: "Kontrolle", axis_spin: "Spin", axis_comfort: "Komfort",
     axis_stability: "Stabilität", axis_maneuverability: "Handlichkeit", axis_forgiveness: "Fehlerverzeihung",
+    axis_durability: "Haltbarkeit", axis_tensionMaintenance: "Spannungshaltung", axis_feel: "Gefühl",
+    // Saiten-/Spannungs-Sektion
+    stringSectionTitle: "Passende Besaitung",
+    stringSectionSub: "Auf Basis deiner Angaben — Saite und Spannung als Startpunkt.",
+    tensionLabel: "Empfohlene Spannung",
+    tensionRange: "{min}–{max} kg",
+    stringDisclaimer: "Spannung ist ein Startbereich, kein fixer Wert — vom Belag, Ballgefühl und Besaiter abhängig. Kein medizinischer Rat: bei Arm-/Schulterbeschwerden fachlichen Rat einholen.",
+    mat_polyester: "Polyester", mat_multifilament: "Multifilament", mat_natural_gut: "Naturdarm", mat_synthetic_gut: "Synthetikdarm",
     // Fragen + Optionen
     q_level: "Wie schätzt du dein Spielniveau ein?",
     q_level_beginner: "Anfänger", q_level_intermediate: "Fortgeschritten", q_level_advanced: "Erfahren", q_level_competitive: "Turnier/Wettkampf",
@@ -327,6 +335,13 @@ export const beratung = {
     conf_high: "high", conf_medium: "medium", conf_low: "low",
     axis_power: "Power", axis_control: "Control", axis_spin: "Spin", axis_comfort: "Comfort",
     axis_stability: "Stability", axis_maneuverability: "Maneuverability", axis_forgiveness: "Forgiveness",
+    axis_durability: "Durability", axis_tensionMaintenance: "Tension keeping", axis_feel: "Feel",
+    stringSectionTitle: "Matching string setup",
+    stringSectionSub: "Based on your answers — string and tension as a starting point.",
+    tensionLabel: "Recommended tension",
+    tensionRange: "{min}–{max} kg",
+    stringDisclaimer: "Tension is a starting range, not a fixed value — depends on surface, feel and stringer. Not medical advice: for arm/shoulder issues, consult a professional.",
+    mat_polyester: "Polyester", mat_multifilament: "Multifilament", mat_natural_gut: "Natural gut", mat_synthetic_gut: "Synthetic gut",
     q_level: "How would you rate your level?",
     q_level_beginner: "Beginner", q_level_intermediate: "Intermediate", q_level_advanced: "Advanced", q_level_competitive: "Competitive",
     q_swing: "How do you swing?",

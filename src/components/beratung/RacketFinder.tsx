@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { getRackets } from "@/data/seed/rackets";
+import { getStrings } from "@/data/seed/strings";
 import { recommend, type Recommendation } from "@/domain/recommendations/scoreV1";
+import { recommendStrings } from "@/domain/recommendations/stringScoreV1";
 import { defaultProfile, type PlayerProfile } from "@/domain/advisory/playerProfile";
 import type { Axis } from "@/domain/equipment/racket";
+import type { StringAxis } from "@/domain/equipment/string";
 
 /* Frageflow: eine Entscheidung pro Screen, „Weiss ich nicht" → sinnvoller Default,
  * Autosave in der Session. Kein E-Mail-/Lead-Gate vor dem Ergebnis (Doc-Prinzip). */
@@ -61,6 +64,8 @@ export default function RacketFinder() {
   if (step >= total) {
     const profile: PlayerProfile = { ...defaultProfile, ...answers, schemaVersion: 1 };
     const { recommendations, excludedCount } = recommend(profile, getRackets(), 5);
+    const strings = recommendStrings(profile, getStrings(), 3);
+    const sAxisLabel = (a: StringAxis) => t(`beratung.axis_${a}`);
     return (
       <div className="mx-auto max-w-[640px]">
         <div className="mb-5 flex items-end justify-between">
@@ -82,7 +87,54 @@ export default function RacketFinder() {
         {excludedCount > 0 && (
           <p className="mt-4 text-[12px] text-neutral-400">{t("beratung.finderExcludedNote", { n: excludedCount })}</p>
         )}
-        <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("beratung.finderDemoNote")}</p>
+
+        {/* ── Passende Besaitung (Saite + Spannungsbereich) ── */}
+        <div className="mt-8">
+          <h3 className="text-2xl font-extrabold tracking-tight text-neutral-900">{t("beratung.stringSectionTitle")}</h3>
+          <p className="mt-1 text-sm text-neutral-500">{t("beratung.stringSectionSub")}</p>
+
+          {/* Empfohlener Spannungs-BEREICH */}
+          <div className="mt-4 flex items-center gap-4 rounded-[24px] bg-gradient-to-br from-matchup to-indigo-600 p-5 text-white">
+            <div className="flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">{t("beratung.tensionLabel")}</p>
+              <p className="mt-1 text-[30px] font-extrabold leading-none tracking-tight">
+                {t("beratung.tensionRange", { min: strings.tensionKg.min, max: strings.tensionKg.max })}
+              </p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16M8 3v18M16 3v18" /></svg>
+            </span>
+          </div>
+
+          <div className="mt-3 space-y-3">
+            {strings.recommendations.map((s, i) => (
+              <div key={s.product.id} className="rounded-[24px] bg-black/[0.035] p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">#{i + 1} · {s.product.brand} · {t(`beratung.mat_${s.product.material.replace("-", "_")}`)}</p>
+                    <h4 className="mt-0.5 text-[17px] font-extrabold tracking-tight text-neutral-900">{s.product.name}</h4>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-[26px] font-extrabold leading-none tracking-tight text-matchup">{s.matchScore}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-neutral-400">{t("beratung.finderMatch")}</div>
+                  </div>
+                </div>
+                <div className="mt-2"><ConfBadge conf={s.confidence} t={t} /></div>
+                <p className="mt-3 text-[13.5px] leading-relaxed text-neutral-600">{s.product.editorial.summary[locale === "en" ? "en" : "de"]}</p>
+                {s.topAxes.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {s.topAxes.map((a) => (
+                      <span key={a} className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{sAxisLabel(a)}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("beratung.stringDisclaimer")}</p>
+        </div>
+
+        <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("beratung.finderDemoNote")}</p>
       </div>
     );
   }
