@@ -52,18 +52,11 @@ export default function Header() {
     { label: t("header.compete"), href: "/compete" },
   ];
 
-  // Unter „Mehr"-Dropdown: Events (Link), dann Shop & Advice (Coming soon).
+  // Unter „Mehr"-Dropdown: Events, Shop, Advice — alle drei noch nicht live → Warteliste.
   const moreItems: NavFeature[] = [
-    { label: t("header.events"), href: "/events" },
+    { label: t("header.events"), href: "/events", waitlist: true },
     { label: t("header.shop"), href: "/shop", waitlist: true },
     { label: t("header.beratung"), href: "/beratung", waitlist: true },
-  ];
-
-  // Im Hamburger alles flach + „About".
-  const mobileNavItems: NavFeature[] = [
-    ...primaryItems,
-    ...moreItems,
-    { label: t("header.about"), href: "/about" },
   ];
 
   function openWaitlist(item: NavFeature) {
@@ -173,27 +166,40 @@ export default function Header() {
 
       {open && (
         <nav className="flex flex-col gap-1 border-t border-white/10 px-4 pb-6 pt-3 lg:hidden">
-          {mobileNavItems.map((item) =>
-            item.waitlist ? (
+          {/* Play & Compete (die zwei Modi) untereinander */}
+          {primaryItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {/* Events · Shop · Advice nebeneinander (alle drei noch Warteliste) */}
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {moreItems.map((item) => (
               <button
                 key={item.href}
                 type="button"
                 onClick={() => openWaitlist(item)}
-                className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+                className="flex items-center justify-center rounded-2xl bg-white/[0.06] px-2 py-3.5 text-center text-[13px] font-semibold tracking-wide text-white/90 ring-1 ring-white/10 transition-colors active:bg-white/[0.12]"
               >
                 {item.label}
               </button>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
-              >
-                {item.label}
-              </Link>
-            ),
-          )}
+            ))}
+          </div>
+
+          {/* About */}
+          <Link
+            href="/about"
+            onClick={() => setOpen(false)}
+            className="mt-1 block w-full py-3 text-left text-sm font-semibold tracking-wide text-white/90"
+          >
+            {t("header.about")}
+          </Link>
 
           <div className="mt-1 flex items-center justify-between py-2">
             <span className="text-sm font-semibold tracking-wide text-white/60">
