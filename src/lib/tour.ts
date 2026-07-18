@@ -10,10 +10,9 @@ const UNLOCK_KEY = "mu_tour_unlocked_v2";
 /** unlockTour() feuert dieses Event, damit die Shell sofort nachzieht (statt Reload). */
 export const TOUR_UNLOCK_EVENT = "mu-tour-unlock";
 
-/* TEMPORÄR: Compete/Earth offen zum Testen (kein Code 50805080 nötig).
- * VOR LAUNCH wieder auf false setzen → dann greift die Warteliste wie gehabt.
- * Genutzt in tourUnlocked() und EarthTab. */
-export const COMPETE_EARLY_ACCESS_OPEN = true;
+/* Compete/Earth hinter der Warteliste — Freischaltung nur mit Code 50805080.
+ * (Zum offenen Testen ggf. temporär auf true; Genutzt in tourUnlocked() und EarthTab.) */
+export const COMPETE_EARLY_ACCESS_OPEN = false;
 
 export function tourUnlocked(): boolean {
   if (COMPETE_EARLY_ACCESS_OPEN) return true;
