@@ -153,9 +153,9 @@ const EXISTING_PEOPLE: { name: string; img: string }[] = [
   { name: "Laila", img: "https://i.pravatar.cc/160?img=16" },
   { name: "Fernando", img: "https://i.pravatar.cc/160?img=13" },
   { name: "Sofia", img: "https://i.pravatar.cc/160?img=1" },
-  { name: "Jonas", img: "https://i.pravatar.cc/160?img=3" },
+  { name: "Luca", img: "/seed/pm1.jpg" },
   { name: "Mara", img: "https://i.pravatar.cc/160?img=10" },
-  { name: "Leo", img: "https://i.pravatar.cc/160?img=8" },
+  { name: "Emma", img: "/seed/pf1.jpg" },
   { name: "Nina", img: "https://i.pravatar.cc/160?img=20" },
 ];
 // Abwechselnd: neues Foto, dann ein bestehendes, … bis alle neuen drin sind; Rest hinten dran.
