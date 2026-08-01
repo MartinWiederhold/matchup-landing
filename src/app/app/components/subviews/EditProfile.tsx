@@ -12,7 +12,7 @@ import ClubPicker from "../shared/ClubPicker";
 import AvatarCropper from "../shared/AvatarCropper";
 import { compressImage } from "@/lib/utils/imageCompress";
 
-const MAX_PHOTOS = 4;
+const MAX_PHOTOS = 6; // 1 Hauptbild + bis zu 5 Galeriebilder
 
 /* Ortssuche (gleiche Quelle wie im Onboarding). */
 type NominatimResult = {
@@ -148,16 +148,44 @@ export default function EditProfile() {
   // index === photos.length  → neues Bild hinzufügen; sonst ersetzen
   function openPicker(index: number) {
     pickIdx.current = index;
+    // Beim "+"-Hinzufügen (es existiert schon ein Hauptbild) Mehrfachauswahl erlauben.
+    if (fileInput.current) fileInput.current.multiple = index >= photos.length && photos.length >= 1;
     fileInput.current?.click();
   }
 
   function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     e.target.value = ""; // erlaubt erneutes Wählen derselben Datei
-    if (!file || pickIdx.current === null) return;
-    // Nur das Profilbild (Index 0) im Kreis-Cropper justieren; Galeriebilder direkt.
-    if (pickIdx.current === 0) setCropFile(file);
-    else void uploadBlob(file, true);
+    const idx = pickIdx.current;
+    if (!files.length || idx === null) return;
+    // Hauptbild (Index 0) im Kreis-Cropper justieren; immer nur eine Datei.
+    if (idx === 0) { setCropFile(files[0]); return; }
+    // Bestehenden Galerie-Slot ersetzen: nur die erste Datei.
+    if (idx < photos.length) { void uploadBlob(files[0], true); return; }
+    // Galerie erweitern: mehrere Bilder auf einmal (bis zum Limit).
+    void uploadGallery(files);
+  }
+
+  /** Lädt mehrere Galeriebilder in einem Rutsch hoch (bis MAX_PHOTOS erreicht ist). */
+  async function uploadGallery(files: File[]) {
+    const batch = files.slice(0, Math.max(0, MAX_PHOTOS - photos.length));
+    if (!batch.length) return;
+    setUploadingIdx(photos.length); // Spinner auf der Add-Kachel
+    for (let i = 0; i < batch.length; i++) {
+      try {
+        const blob = await compressImage(batch[i]);
+        const path = `${profile.id}/avatar_${Date.now()}_g${i}.jpg`;
+        const { error } = await supabase.storage
+          .from("web-avatars")
+          .upload(path, blob, { contentType: "image/jpeg" });
+        if (error) continue;
+        const { data: { publicUrl } } = supabase.storage.from("web-avatars").getPublicUrl(path);
+        setPhotos((prev) => (prev.length < MAX_PHOTOS ? [...prev, publicUrl] : prev));
+      } catch {
+        // still – einzelner Upload fehlgeschlagen, nächstes Bild versuchen
+      }
+    }
+    setUploadingIdx(null);
   }
 
   async function uploadCropped(blob: Blob) {
