@@ -101,6 +101,7 @@ Nicht gegatet: `/locked`, `/api/unlock`, `/api/qr/scan`, `/api/sync`, `/api/news
 - Arbeitsbranch: `feature/matchup-webapp`. Direkt auf `main` nur nach Ansage.
 - Commit-Nachrichten auf Deutsch, Präfix nach Typ: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `security:`.
 - Ein Commit = eine abgeschlossene Sache. Nicht committen, solange `tsc`/Build/Tests rot sind.
+- Das GitHub-Remote heißt `matchup-landing` (`MartinWiederhold/matchup-landing`), der lokale Ordner `matchup-web`. Bei Repo-Suchen immer `matchup-landing` verwenden.
 
 ## Umgebung
 

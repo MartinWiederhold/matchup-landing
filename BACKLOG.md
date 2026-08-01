@@ -14,7 +14,8 @@
 **Risiko:** niedrig. Rein visuell.
 
 ### MU-002 · Onboarding-Foto-Upload: Mehrfachauswahl · S · offen
-**Problem:** Im Onboarding lassen sich Fotos nur einzeln hinzufügen, im Profil-Editor dagegen mehrere auf einmal (bis 5 Galeriebilder).
+**Erledigt (Teil 1):** Der Profil-Editor beherrscht die Mehrfachauswahl bereits (Commit `a67e02c`, `MAX_PHOTOS=6` = 1 Hauptbild + 5 Galeriebilder).
+**Offen:** Nur noch die Übernahme in den **Onboarding-Foto-Schritt** — dort lassen sich Fotos bislang nur einzeln hinzufügen.
 **Lösung:** Die Mehrfachauswahl-Logik aus `EditProfile` in den Onboarding-Foto-Schritt übernehmen. Hauptbild weiterhin über den Kreis-Cropper.
 **Dateien:** `src/app/app/components/Onboarding/` (Foto-Schritt), `subviews/EditProfile` als Vorlage
 **Fertig wenn:** Im Onboarding lassen sich mehrere Bilder auf einmal wählen, max. 5 Galeriebilder plus Hauptbild, Upload landet in `web-avatars/<userId>/`.
@@ -36,6 +37,21 @@
 **Problem:** Discover nutzt teils Seed-Profile (`is_seed=true`), die Story-Row hat hardcodierte Demo-Avatare, Events haben Fallback-Demo-Einträge.
 **Lösung:** Bestandsaufnahme aller Stellen; Schalter, um Seed-Inhalte in Produktion auszublenden; Entscheidung je Stelle dokumentieren.
 **Fertig wenn:** Es gibt eine Liste aller Demo-/Seed-Quellen und eine bewusste Entscheidung pro Stelle.
+
+### MU-006 · Lizenz der Seed-Profilfotos klären · S · offen · **Priorität 1**
+**Problem:** `public/seed/pm1.jpg` und `pf1.jpg` sind Pexels-Fotos mit erkennbaren Personen, eingesetzt als Fake-Profilfotos in einer Partnersuche-App. Die Pexels-Lizenz schließt Darstellungen aus, die eine Billigung suggerieren oder Personen in ungewollte Kontexte setzen; dazu kommt die DSGVO-Frage bei identifizierbaren Personen ohne Einwilligung.
+**Optionen:** KI-generierte Porträts, Illustrationen/Avatare, oder Seed-Profile ohne Gesicht und sichtbar als Beispiel gekennzeichnet.
+**Fertig wenn:** Kein Foto einer realen identifizierbaren Person mehr als Seed-Profil live.
+
+### MU-007 · CHECK-Constraint für `profiles.additional_images` · S · offen
+**Problem:** Das Limit von 5 Galeriebildern wird nur clientseitig erzwungen. In der DB ist `additional_images` ein `text[]` ohne Längenbeschränkung.
+**Lösung:** CHECK-Constraint (`array_length <= 5`) als Migration unter `supabase/`. Vorher prüfen, ob bestehende Zeilen das verletzen.
+**Fertig wenn:** DB lehnt mehr als 5 Galeriebilder ab; bestehende Daten bleiben gültig.
+
+### MU-008 · Events-Migration in `supabase/` dokumentieren · S · offen
+**Hinweis:** `web_events.sql` wurde direkt über die Management-API auf Prod ausgeführt (nicht per Datei/Migrations-Runner).
+**Lösung:** Am Dateikopf einen Kommentar ergänzen: „ausgeführt am `<Datum>`, Stand verifiziert". Damit später nachvollziehbar bleibt, was schon live ist.
+**Fertig wenn:** Der Dateikopf dokumentiert Ausführungsdatum + Verifikationsstand.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
@@ -74,3 +90,5 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 - ✅ Advice: Schläger-Finder, Saiten-/Spannungs-Finder, Vergleich, Problem-Solver, Methodik (13 Tests grün)
 - ✅ Falscher Link `www.generali-open.at` (NXDOMAIN) → `generali-open.at` korrigiert
 - ✅ Test-Account `claude-compete-test` gelöscht
+- ✅ Event-Detailseite `/events/[id]` mit SEO-Metadata (`fcfdf39`)
+- ✅ Profilgalerie mit Mehrfachauswahl im Profil-Editor (`a67e02c`)
