@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
@@ -324,7 +325,7 @@ export default function EventsExperience() {
 /* ---------- Karte ---------- */
 function EventCard({ event, onOpen }: { event: EventItem; onOpen: () => void }) {
   const t = useT();
-  const count = event.participants?.length ?? 0;
+  const count = event.participants_count ?? event.participants?.length ?? 0;
   const full = count >= event.max_participants;
   return (
     <article className="flex flex-col overflow-hidden rounded-3xl border border-neutral-200">
@@ -365,13 +366,22 @@ function EventCard({ event, onOpen }: { event: EventItem; onOpen: () => void }) 
           {t("events.participants", { count, max: event.max_participants })}
           {full ? t("events.fullSuffix") : ""}
         </p>
-        <button
-          type="button"
-          onClick={onOpen}
-          className="mt-6 inline-block w-fit rounded-full border border-black px-7 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
-        >
-          {t("events.learnMore")}
-        </button>
+        {event.id.startsWith("fallback-") ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="mt-6 inline-block w-fit rounded-full border border-black px-7 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
+          >
+            {t("events.learnMore")}
+          </button>
+        ) : (
+          <Link
+            href={`/events/${event.id}`}
+            className="mt-6 inline-block w-fit rounded-full border border-black px-7 py-3 text-sm font-bold tracking-wide text-black transition-colors hover:bg-black hover:text-white"
+          >
+            {t("events.learnMore")}
+          </Link>
+        )}
       </div>
     </article>
   );
@@ -392,7 +402,7 @@ function EventDetailModal({
   const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const count = event.participants?.length ?? 0;
+  const count = event.participants_count ?? event.participants?.length ?? 0;
   const joined = !!userId && (event.participants?.some((p) => p.user_id === userId) ?? false);
   const full = count >= event.max_participants;
   const isSeed = event.id.startsWith("fallback-");

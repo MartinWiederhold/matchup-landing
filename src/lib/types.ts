@@ -29,7 +29,7 @@ export interface Profile {
   goals: string[]; // PostgreSQL array
   bio: string | null; // max 300 chars
   profile_image: string | null; // URL zu avatars-Bucket
-  additional_images: string[]; // bis zu 3 weitere URLs
+  additional_images: string[]; // bis zu 5 weitere URLs (Galerie)
   visibility_gender: string[]; // ['male'], ['female'], ['male','female']
   visibility_age_min: number; // default 18
   visibility_age_max: number; // default 99
@@ -453,9 +453,10 @@ export interface EventItem {
   longitude: number | null;
   event_date: string | null; // ISO timestamp
   max_participants: number;
+  participants_count?: number; // öffentliche Zählung (Spalte, per Trigger gepflegt)
   status: string;
   created_at: string;
-  // Eingebettet / clientseitig:
+  // Eingebettet / clientseitig (nur eigene Zeile dank RLS):
   participants?: { id: string; user_id: string }[];
   _distance?: number;
 }

@@ -30,6 +30,7 @@ export const events = {
     fullSuffix: " · ausgebucht",
     full: "ausgebucht",
     learnMore: "Mehr erfahren",
+    backToAll: "Alle Events",
     by: "von {name}",
     // Detail-Modal Aktionen
     seedNote:
@@ -94,6 +95,7 @@ export const events = {
     fullSuffix: " · sold out",
     full: "sold out",
     learnMore: "Learn more",
+    backToAll: "All events",
     by: "by {name}",
     // Detail modal actions
     seedNote:

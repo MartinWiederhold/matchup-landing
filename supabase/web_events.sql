@@ -22,6 +22,7 @@ create table if not exists web.events (
   longitude         double precision,
   event_date        timestamptz,
   max_participants  int not null default 20 check (max_participants > 0),
+  participants_count int not null default 0, -- öffentliche Zählung, per Trigger gepflegt
   status            text not null default 'active',
   created_at        timestamptz default now()
 );
@@ -56,8 +57,10 @@ drop policy if exists web_ep_anon_read   on web.event_participants;
 drop policy if exists web_ep_auth_read    on web.event_participants;
 drop policy if exists web_ep_auth_insert  on web.event_participants;
 drop policy if exists web_ep_auth_delete  on web.event_participants;
-create policy web_ep_anon_read   on web.event_participants for select to anon          using (true);
-create policy web_ep_auth_read   on web.event_participants for select to authenticated using (true);
+-- Datenschutz: Teilnehmer-Zeilen sind NICHT öffentlich. Anon bekommt keine Zeile
+-- (Zählung läuft über web.events.participants_count). Eingeloggte sehen nur die
+-- eigene Teilnahme (für den Beitreten/Verlassen-Status), nicht die anderer.
+create policy web_ep_auth_read   on web.event_participants for select to authenticated using (user_id = auth.uid());
 create policy web_ep_auth_insert on web.event_participants for insert to authenticated with check (user_id = auth.uid());
 create policy web_ep_auth_delete on web.event_participants for delete to authenticated using (user_id = auth.uid());
 
@@ -102,6 +105,23 @@ end $$;
 drop trigger if exists trg_web_event_capacity on web.event_participants;
 create trigger trg_web_event_capacity before insert on web.event_participants
   for each row execute function web.enforce_event_capacity();
+
+-- 5b) Teilnehmerzahl spiegeln (Trigger) -------------------------------------
+--     Hält web.events.participants_count aktuell, damit die Zahl öffentlich
+--     lesbar ist, ohne die einzelnen Teilnehmer-Zeilen preiszugeben.
+create or replace function web.sync_event_participants_count() returns trigger
+  language plpgsql security definer set search_path=web as $$
+begin
+  if (TG_OP = 'INSERT') then
+    update web.events set participants_count = participants_count + 1 where id = new.event_id;
+  elsif (TG_OP = 'DELETE') then
+    update web.events set participants_count = greatest(0, participants_count - 1) where id = old.event_id;
+  end if;
+  return null;
+end $$;
+drop trigger if exists trg_web_ep_count on web.event_participants;
+create trigger trg_web_ep_count after insert or delete on web.event_participants
+  for each row execute function web.sync_event_participants_count();
 
 -- 6) Konto-Löschung erweitern -----------------------------------------------
 create or replace function web.delete_my_account()
