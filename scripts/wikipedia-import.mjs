@@ -328,41 +328,35 @@ for (const src of RUN_SOURCES) {
         if (!iso) { st.drop++; dropReasonBump("land_unbekannt"); dropped.push({ page: src.page, week: currentWeek, city: f.city, country: f.countryRaw, reason: "land_unbekannt: " + f.countryRaw }); continue; }
         if (!f.monday) { st.drop++; dropReasonBump("kein_datum"); dropped.push({ page: src.page, week: currentWeek, city: f.city, country: f.countryRaw, reason: "kein_datum (Week of nicht parsebar)" }); continue; }
 
-        // Stamm-Datensatz (so, wie er in web.tour_tournaments ginge).
+        // IDENTITÄTSZEILE — nur diese drei Felder gehen DIREKT in den Stamm
+        // (definieren, welches Turnier gemeint ist; erfüllen die NOT-NULL-Constraints).
+        // status/valid_from/Timestamps kommen aus DB-Defaults. Alle ÜBRIGEN Felder
+        // werden ausschließlich als Claims geschrieben und später durch
+        // scripts/resolve-tournaments.mjs (Domain-Regel) in den Stamm aufgelöst.
         const record = {
           source_ref: f.sourceRef,
           tournament_monday: f.monday,
           series: src.series === "ITF" ? "itf_wtt" : "challenger",
-          category: f.category,
-          name: f.name,
-          city: f.city,
-          country: iso,
-          surface: f.surface,
-          indoor: f.indoor,
-          prize_money: null,
-          prize_currency: null,
-          status: "planned",
         };
 
-        // Claims je befülltem Feld (beobachtet).
+        // Claims je Feld (Herkunft). Identitätsfelder werden zusätzlich als Claim
+        // geführt (vollständige Provenance), obwohl der Stamm sie direkt gesetzt bekommt.
         const claims = [];
         const claim = (field, value, source, confidence) =>
           claims.push({ field_name: field, field_value: String(value), source, source_url: url, confidence });
         claim("tournament_monday", record.tournament_monday, src.source, CONF_OBSERVED);
         claim("series", record.series, src.source, CONF_OBSERVED);
-        if (record.category != null) claim("category", record.category, src.source, CONF_OBSERVED);
-        if (record.name != null) claim("name", record.name, src.source, CONF_OBSERVED);
-        if (record.city != null) claim("city", record.city, src.source, CONF_OBSERVED);
-        claim("country", record.country, src.source, CONF_OBSERVED);
-        if (record.surface != null) claim("surface", record.surface, src.source, CONF_OBSERVED);
-        if (record.indoor != null) claim("indoor", record.indoor, src.source, CONF_OBSERVED);
+        if (f.category != null) claim("category", f.category, src.source, CONF_OBSERVED);
+        if (f.name != null) claim("name", f.name, src.source, CONF_OBSERVED);
+        if (f.city != null) claim("city", f.city, src.source, CONF_OBSERVED);
+        if (iso != null) claim("country", iso, src.source, CONF_OBSERVED);
+        if (f.surface != null) claim("surface", f.surface, src.source, CONF_OBSERVED);
+        if (f.indoor != null) claim("indoor", f.indoor, src.source, CONF_OBSERVED);
 
         // Preisgeld: ABGELEITET aus der Kategorie (nicht beobachtet) → eigene Quelle, geringere confidence.
-        if (record.category && PRIZE_USD[record.category] != null) {
-          record.prize_money = PRIZE_USD[record.category];
-          record.prize_currency = "USD";
-          claim("prize_money", record.prize_money, "abgeleitet_aus_kategorie", CONF_DERIVED);
-          claim("prize_currency", record.prize_currency, "abgeleitet_aus_kategorie", CONF_DERIVED);
+        if (f.category && PRIZE_USD[f.category] != null) {
+          claim("prize_money", PRIZE_USD[f.category], "abgeleitet_aus_kategorie", CONF_DERIVED);
+          claim("prize_currency", "USD", "abgeleitet_aus_kategorie", CONF_DERIVED);
         }
 
         kept.push({ record, claims });
@@ -455,7 +449,10 @@ if (unknownCountries.size === 0) md.push(`Keine — alle vorkommenden Ländernam
 for (const [name, n] of [...unknownCountries.entries()].sort((a, b) => b[1] - a[1])) md.push(`- \`${name}\` — ${n}×`);
 md.push("");
 
-md.push(`## 4. Stichprobe: 10 vollständige Datensätze (so, wie sie geschrieben würden)`);
+md.push(`## 4. Stichprobe: 10 Datensätze — Identitätszeile (Stamm) + Claims (Herkunft)`);
+md.push("");
+md.push(`Der Import schreibt in \`tour_tournaments\` NUR die Identitätsfelder; alle übrigen Felder`);
+md.push(`stehen als Claims und werden später von \`scripts/resolve-tournaments.mjs\` in den Stamm aufgelöst.`);
 md.push("");
 // Mischung aus ITF + Challenger.
 const sample = [

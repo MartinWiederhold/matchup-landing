@@ -1,6 +1,6 @@
 # Wikipedia-Import — TROCKENLAUF (nichts geschrieben)
 
-> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T16:15:28.750Z
+> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T18:52:44.855Z
 > Ziel: web.tour_tournaments + web.tour_tournament_claims. **Kein DB-Zugriff** in diesem Lauf.
 
 ## 1. Je Seite
@@ -35,7 +35,10 @@
 
 - `Peru due to safety concerns. It was then later rescheduled for 17` — 1×
 
-## 4. Stichprobe: 10 vollständige Datensätze (so, wie sie geschrieben würden)
+## 4. Stichprobe: 10 Datensätze — Identitätszeile (Stamm) + Claims (Herkunft)
+
+Der Import schreibt in `tour_tournaments` NUR die Identitätsfelder; alle übrigen Felder
+stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in den Stamm aufgelöst.
 
 ### itf:m-itf-ind-2024-009
 ```json
@@ -43,16 +46,7 @@
 {
   "source_ref": "itf:m-itf-ind-2024-009",
   "tournament_monday": "2024-12-30",
-  "series": "itf_wtt",
-  "category": "M25",
-  "name": null,
-  "city": "Indore",
-  "country": "IN",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 25000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "itf_wtt"
 }
 // tour_tournament_claims
 [
@@ -128,16 +122,7 @@
 {
   "source_ref": "itf:m-itf-ina-2024-007",
   "tournament_monday": "2024-12-30",
-  "series": "itf_wtt",
-  "category": "M25",
-  "name": null,
-  "city": "Bali",
-  "country": "ID",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 25000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "itf_wtt"
 }
 // tour_tournament_claims
 [
@@ -213,16 +198,7 @@
 {
   "source_ref": "itf:m-itf-fra-2025-001",
   "tournament_monday": "2025-01-06",
-  "series": "itf_wtt",
-  "category": "M25",
-  "name": null,
-  "city": "Hazebrouck",
-  "country": "FR",
-  "surface": "hard",
-  "indoor": true,
-  "prize_money": 25000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "itf_wtt"
 }
 // tour_tournament_claims
 [
@@ -298,16 +274,7 @@
 {
   "source_ref": "itf:m-itf-ind-2025-001",
   "tournament_monday": "2025-01-06",
-  "series": "itf_wtt",
-  "category": "M25",
-  "name": null,
-  "city": "Bhopal",
-  "country": "IN",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 25000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "itf_wtt"
 }
 // tour_tournament_claims
 [
@@ -383,16 +350,7 @@
 {
   "source_ref": "itf:m-itf-usa-2025-001",
   "tournament_monday": "2025-01-06",
-  "series": "itf_wtt",
-  "category": "M25",
-  "name": null,
-  "city": "Ithaca",
-  "country": "US",
-  "surface": "hard",
-  "indoor": true,
-  "prize_money": 25000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "itf_wtt"
 }
 // tour_tournament_claims
 [
@@ -468,16 +426,7 @@
 {
   "source_ref": "atp:canberra-tennis-international-2025",
   "tournament_monday": "2024-12-30",
-  "series": "challenger",
-  "category": "Challenger 125",
-  "name": "Canberra Tennis International",
-  "city": "Canberra",
-  "country": "AU",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 125000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "challenger"
 }
 // tour_tournament_claims
 [
@@ -560,16 +509,7 @@
 {
   "source_ref": "atp:open-nouvelle-caledonie-2025",
   "tournament_monday": "2024-12-30",
-  "series": "challenger",
-  "category": "Challenger 100",
-  "name": "Open Nouvelle-Calédonie",
-  "city": "Nouméa",
-  "country": "NC",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 100000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "challenger"
 }
 // tour_tournament_claims
 [
@@ -652,16 +592,7 @@
 {
   "source_ref": "atp:nonthaburi-challenger-2025",
   "tournament_monday": "2024-12-30",
-  "series": "challenger",
-  "category": "Challenger 75",
-  "name": "Nonthaburi Challenger",
-  "city": "Nonthaburi",
-  "country": "TH",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 75000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "challenger"
 }
 // tour_tournament_claims
 [
@@ -744,16 +675,7 @@
 {
   "source_ref": "atp:nonthaburi-challenger-ii-2025",
   "tournament_monday": "2025-01-06",
-  "series": "challenger",
-  "category": "Challenger 75",
-  "name": "Nonthaburi Challenger II",
-  "city": "Nonthaburi",
-  "country": "TH",
-  "surface": "hard",
-  "indoor": false,
-  "prize_money": 75000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "challenger"
 }
 // tour_tournament_claims
 [
@@ -836,16 +758,7 @@
 {
   "source_ref": "atp:lexus-nottingham-challenger-2025",
   "tournament_monday": "2025-01-06",
-  "series": "challenger",
-  "category": "Challenger 75",
-  "name": "Lexus Nottingham Challenger",
-  "city": "Nottingham",
-  "country": "GB",
-  "surface": "hard",
-  "indoor": true,
-  "prize_money": 75000,
-  "prize_currency": "USD",
-  "status": "planned"
+  "series": "challenger"
 }
 // tour_tournament_claims
 [
