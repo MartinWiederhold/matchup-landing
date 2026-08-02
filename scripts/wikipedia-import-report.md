@@ -1,6 +1,6 @@
 # Wikipedia-Import — TROCKENLAUF (nichts geschrieben)
 
-> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T19:43:10.503Z
+> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T20:45:41.566Z
 > Ziel: web.tour_tournaments + web.tour_tournament_claims. **Kein DB-Zugriff** in diesem Lauf.
 
 ## 1. Je Seite
