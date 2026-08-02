@@ -1,6 +1,6 @@
 # Turnier-Auflösung — TROCKENLAUF (nichts geschrieben)
 
-> Erzeugt von `scripts/resolve-tournaments.mjs` · Lauf: 2026-08-02T18:53:22.181Z · Regel: resolveClaimField v1
+> Erzeugt von `scripts/resolve-tournaments.mjs` · Lauf: 2026-08-02T19:51:26.751Z · Regel: resolveClaimField v1
 > Nur NICHT-Identitätsfelder werden aufgelöst; source_ref/tournament_monday/series bleiben unberührt.
 
 ## 1. Überblick

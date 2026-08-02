@@ -210,6 +210,7 @@ function weekToMonday(week, src) {
 // Muster des Coverage-Parsers, erweitert um source_ref.
 function mapCell(rawCell, week, src) {
   const segs = rawCell.split(/<br\s*\/?>/i).map((s) => s.trim());
+  const monday = week ? weekToMonday(week, src) : null; // für tournament_monday UND Challenger-source_ref
 
   // Ort + Land (erstes <br>-Segment mit Komma, keine Draw-/Singles-Zeile).
   // WICHTIG: Wikilinks ZUERST auf den Anzeigetext reduzieren, DANN am LETZTEN Komma
@@ -257,13 +258,16 @@ function mapCell(rawCell, week, src) {
     if (lm) {
       name = cleanText(lm[2] || lm[1]) || null;
       const target = lm[1].trim();
-      const y = (target.match(/^(\d{4})\s/) || [])[1] || String(src.year);
-      sourceRef = "atp:" + slug(target.replace(/^\d{4}\s/, "")) + "-" + y;
+      // source_ref per TURNIERMONTAG (nicht per Namens-Suffix): atp:<seitenkennung>-<YYYY-MM-DD>.
+      // Das roemische Suffix (II/III/IV) ist Wikipedia-Konvention und unzuverlaessig (kann
+      // fehlen/sich aendern/vertippt sein, vgl. "Bari Challlenger"); der Montag ist eindeutig
+      // und stabil — zwei Ausgaben desselben Challengers laufen nie in derselben Woche.
+      if (monday) sourceRef = "atp:" + slug(target.replace(/^\d{4}\s/, "")) + "-" + monday;
+      else refReason = "kein_datum_fuer_sourceref";
     } else refReason = "kein_challenger_wikilink";
   }
 
-  return { city, countryRaw, surface, indoor: indoorVal, category, sourceRef, name, refReason,
-    monday: week ? weekToMonday(week, src) : null };
+  return { city, countryRaw, surface, indoor: indoorVal, category, sourceRef, name, refReason, monday };
 }
 
 // ---------------------------------------------------------------------------
@@ -497,5 +501,6 @@ const out = md.join("\n");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 writeFileSync(join(__dirname, "wikipedia-import-report.md"), out, "utf8");
 writeFileSync(join(homedir(), "Downloads", "wikipedia-import-report.md"), out, "utf8");
-console.log(`\n${WRITE ? "SCHARF" : "TROCKENLAUF"} · importierbar=${kept.length} verworfen=${dropped.length}`);
+const distinctRefs = new Set(kept.map((k) => k.record.source_ref)).size;
+console.log(`\n${WRITE ? "SCHARF" : "TROCKENLAUF"} · importierbar=${kept.length} (distinkt=${distinctRefs}) verworfen=${dropped.length}`);
 console.log(`Bericht: scripts/wikipedia-import-report.md (+ ~/Downloads)`);

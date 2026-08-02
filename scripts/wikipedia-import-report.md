@@ -1,6 +1,6 @@
 # Wikipedia-Import — TROCKENLAUF (nichts geschrieben)
 
-> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T18:52:44.855Z
+> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-02T19:43:10.503Z
 > Ziel: web.tour_tournaments + web.tour_tournament_claims. **Kein DB-Zugriff** in diesem Lauf.
 
 ## 1. Je Seite
@@ -16,9 +16,9 @@
 | ITF | 2026 | 2026 ITF (April–June) | 178 | 176 | 2 | – |
 | ITF | 2026 | 2026 ITF (July–September) | 73 | 73 | 0 | – |
 | ITF | 2026 | 2026 ITF (October–December) | 0 | 0 | 0 | Seite fehlt (missing) |
-| Challenger | 2026 | 2026 Challenger | 253 | 253 | 0 | – |
+| Challenger | 2026 | 2026 Challenger | 263 | 263 | 0 | – |
 
-**Summe:** 1480 importierbar, 3 verworfen. Claims gesamt: 13790.
+**Summe:** 1490 importierbar, 3 verworfen. Claims gesamt: 13890.
 
 ## 2. Verworfene Zeilen nach Grund
 
@@ -420,11 +420,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 ]
 ```
 
-### atp:canberra-tennis-international-2025
+### atp:canberra-tennis-international-2024-12-30
 ```json
 // tour_tournaments
 {
-  "source_ref": "atp:canberra-tennis-international-2025",
+  "source_ref": "atp:canberra-tennis-international-2024-12-30",
   "tournament_monday": "2024-12-30",
   "series": "challenger"
 }
@@ -503,11 +503,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 ]
 ```
 
-### atp:open-nouvelle-caledonie-2025
+### atp:open-nouvelle-caledonie-2024-12-30
 ```json
 // tour_tournaments
 {
-  "source_ref": "atp:open-nouvelle-caledonie-2025",
+  "source_ref": "atp:open-nouvelle-caledonie-2024-12-30",
   "tournament_monday": "2024-12-30",
   "series": "challenger"
 }
@@ -586,11 +586,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 ]
 ```
 
-### atp:nonthaburi-challenger-2025
+### atp:nonthaburi-challenger-2024-12-30
 ```json
 // tour_tournaments
 {
-  "source_ref": "atp:nonthaburi-challenger-2025",
+  "source_ref": "atp:nonthaburi-challenger-2024-12-30",
   "tournament_monday": "2024-12-30",
   "series": "challenger"
 }
@@ -669,11 +669,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 ]
 ```
 
-### atp:nonthaburi-challenger-ii-2025
+### atp:nonthaburi-challenger-ii-2025-01-06
 ```json
 // tour_tournaments
 {
-  "source_ref": "atp:nonthaburi-challenger-ii-2025",
+  "source_ref": "atp:nonthaburi-challenger-ii-2025-01-06",
   "tournament_monday": "2025-01-06",
   "series": "challenger"
 }
@@ -752,11 +752,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 ]
 ```
 
-### atp:lexus-nottingham-challenger-2025
+### atp:lexus-nottingham-challenger-2025-01-06
 ```json
 // tour_tournaments
 {
-  "source_ref": "atp:lexus-nottingham-challenger-2025",
+  "source_ref": "atp:lexus-nottingham-challenger-2025-01-06",
   "tournament_monday": "2025-01-06",
   "series": "challenger"
 }
@@ -841,9 +841,9 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 |---|---|---|---|
 | itf:m-itf-ind-2024-009 | 2024-12-30 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-ina-2024-007 | 2024-12-30 | itf_wtt | wikipedia_itf_2025_q1 |
-| atp:canberra-tennis-international-2025 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
-| atp:open-nouvelle-caledonie-2025 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
-| atp:nonthaburi-challenger-2025 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
+| atp:canberra-tennis-international-2024-12-30 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
+| atp:open-nouvelle-caledonie-2024-12-30 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
+| atp:nonthaburi-challenger-2024-12-30 | 2024-12-30 | challenger | wikipedia_challenger_2025 |
 | itf:m-itf-fra-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-ind-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-usa-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
@@ -852,9 +852,9 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-esp-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tun-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tur-2025-001 | 2025-01-06 | itf_wtt | wikipedia_itf_2025_q1 |
-| atp:nonthaburi-challenger-ii-2025 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
-| atp:lexus-nottingham-challenger-2025 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
-| atp:oeiras-indoors-2025 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
+| atp:nonthaburi-challenger-ii-2025-01-06 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
+| atp:lexus-nottingham-challenger-2025-01-06 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
+| atp:oeiras-indoors-2025-01-06 | 2025-01-06 | challenger | wikipedia_challenger_2025 |
 | itf:m-itf-ind-2025-002 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-chi-2025-001 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-fra-2025-002 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
@@ -864,9 +864,9 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-esp-2025-002 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tun-2025-002 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tur-2025-002 | 2025-01-13 | itf_wtt | wikipedia_itf_2025_q1 |
-| atp:oeiras-indoors-ii-2025 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
-| atp:nonthaburi-challenger-iii-2025 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
-| atp:challenger-de-tigre-2025 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
+| atp:oeiras-indoors-ii-2025-01-13 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
+| atp:nonthaburi-challenger-iii-2025-01-13 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
+| atp:challenger-de-tigre-2025-01-13 | 2025-01-13 | challenger | wikipedia_challenger_2025 |
 | itf:m-itf-ger-2025-002 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-gbr-2025-001 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-lux-2025-001 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
@@ -876,10 +876,10 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-esp-2025-003 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tun-2025-003 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tur-2025-003 | 2025-01-20 | itf_wtt | wikipedia_itf_2025_q1 |
-| atp:open-quimper-bretagne-2025 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
-| atp:oeiras-indoors-iii-2025 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
-| atp:punta-open-2025 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
-| atp:bw-open-2025 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
+| atp:open-quimper-bretagne-2025-01-20 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
+| atp:oeiras-indoors-iii-2025-01-20 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
+| atp:punta-open-2025-01-20 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
+| atp:bw-open-2025-01-20 | 2025-01-20 | challenger | wikipedia_challenger_2025 |
 | itf:m-itf-gbr-2025-002 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tur-2025-004 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-egy-2025-001 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
@@ -887,10 +887,10 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-mex-2025-001 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-tun-2025-004 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
 | itf:m-itf-usa-2025-002 | 2025-01-27 | itf_wtt | wikipedia_itf_2025_q1 |
-| atp:koblenz-open-2025 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
-| atp:brasil-tennis-challenger-2025 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
-| atp:queensland-international-2025 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
-| atp:cleveland-open-2025 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
+| atp:koblenz-open-2025-01-27 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
+| atp:brasil-tennis-challenger-2025-01-27 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
+| atp:queensland-international-2025-01-27 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
+| atp:cleveland-open-2025-01-27 | 2025-01-27 | challenger | wikipedia_challenger_2025 |
 | itf:m-itf-vie-2025-002 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-ind-2025-010 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-esp-2025-031 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
@@ -898,6 +898,10 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-egy-2025-025 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-tun-2025-055 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-per-2025-001 | 2025-12-01 | itf_wtt | wikipedia_itf_2025_q4 |
+| atp:copenhagen-challenger-2025-12-07 | 2025-12-07 | challenger | wikipedia_challenger_2026 |
+| atp:la-paz-challenger-2025-12-07 | 2025-12-07 | challenger | wikipedia_challenger_2026 |
+| atp:monastir-open-2025-12-07 | 2025-12-07 | challenger | wikipedia_challenger_2026 |
+| atp:rio-de-janeiro-challenger-2025-12-07 | 2025-12-07 | challenger | wikipedia_challenger_2026 |
 | itf:m-itf-nzl-2025-002 | 2025-12-08 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-esp-2025-046 | 2025-12-08 | itf_wtt | wikipedia_itf_2025_q4 |
 | itf:m-itf-tur-2025-042 | 2025-12-08 | itf_wtt | wikipedia_itf_2025_q4 |
@@ -920,11 +924,11 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-esp-2026-001 | 2026-01-05 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-nor-2026-001 | 2026-01-05 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-egy-2026-002 | 2026-01-05 | itf_wtt | wikipedia_itf_2026_q1 |
-| atp:bengaluru-open-2026 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
-| atp:canberra-tennis-international-2026 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
-| atp:bnc-tennis-open-2026 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
-| atp:nonthaburi-challenger-2026 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
-| atp:lexus-nottingham-challenger-2026 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
+| atp:bengaluru-open-2026-01-05 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
+| atp:canberra-tennis-international-2026-01-05 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
+| atp:bnc-tennis-open-2026-01-05 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
+| atp:nonthaburi-challenger-2026-01-05 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
+| atp:lexus-nottingham-challenger-2026-01-05 | 2026-01-05 | challenger | wikipedia_challenger_2026 |
 | itf:m-itf-ind-2026-001 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-tur-2026-002 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-tun-2026-002 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
@@ -934,19 +938,19 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-fra-2026-001 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-ger-2026-002 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-egy-2026-003 | 2026-01-12 | itf_wtt | wikipedia_itf_2026_q1 |
-| atp:nonthaburi-challenger-ii-2026 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
-| atp:challenger-aat-2026 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
-| atp:glasgow-challenger-2026 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
+| atp:nonthaburi-challenger-ii-2026-01-12 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
+| atp:challenger-aat-2026-01-12 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
+| atp:glasgow-challenger-2026-01-12 | 2026-01-12 | challenger | wikipedia_challenger_2026 |
 | itf:m-itf-tur-2026-003 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-chi-2026-002 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-ind-2026-002 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-esp-2026-007 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-fra-2026-005 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-tun-2026-003 | 2026-01-19 | itf_wtt | wikipedia_itf_2026_q1 |
-| atp:oeiras-indoors-2026 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
-| atp:itajai-open-2026 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
-| atp:soma-bay-open-2026 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
-| atp:phan-thiet-challenger-2026 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
+| atp:oeiras-indoors-2026-01-19 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
+| atp:itajai-open-2026-01-19 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
+| atp:soma-bay-open-2026-01-19 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
+| atp:phan-thiet-challenger-2026-01-19 | 2026-01-19 | challenger | wikipedia_challenger_2026 |
 | itf:m-itf-gbr-2026-002 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-ger-2026-004 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-ind-2026-003 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
@@ -956,14 +960,14 @@ stehen als Claims und werden später von `scripts/resolve-tournaments.mjs` in de
 | itf:m-itf-tun-2026-004 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-usa-2026-002 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
 | itf:m-itf-mex-2026-001 | 2026-01-26 | itf_wtt | wikipedia_itf_2026_q1 |
-| atp:bahrain-ministry-of-interior-tennis-challenger-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
-| atp:open-quimper-bretagne-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
-| atp:challenger-concepcion-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
-| atp:san-diego-open-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
-| atp:oeiras-indoors-ii-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
-| atp:phan-thiet-challenger-ii-2026 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:bahrain-ministry-of-interior-tennis-challenger-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:open-quimper-bretagne-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:challenger-concepcion-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:san-diego-open-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:oeiras-indoors-ii-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
+| atp:phan-thiet-challenger-ii-2026-01-26 | 2026-01-26 | challenger | wikipedia_challenger_2026 |
 
-_123 Datensätze im Dez/Jan. Prüfpunkt: Dezember-Wochen auf einer Q1-/Challenger-Jahresseite müssen ins VORJAHR fallen._
+_127 Datensätze im Dez/Jan. Prüfpunkt: Dezember-Wochen auf einer Q1-/Challenger-Jahresseite müssen ins VORJAHR fallen._
 
 ## 5. Hinweise
 
