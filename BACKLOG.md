@@ -53,6 +53,13 @@
 **Lösung:** Am Dateikopf einen Kommentar ergänzen: „ausgeführt am `<Datum>`, Stand verifiziert". Damit später nachvollziehbar bleibt, was schon live ist.
 **Fertig wenn:** Der Dateikopf dokumentiert Ausführungsdatum + Verifikationsstand.
 
+### MU-014 · Challenger-Fristen in `src/lib/deadlines.ts` sind geraten · S · offen · **Vor Launch**
+**Problem:** `deadlines.ts` rät Entry = Montag − 21 Tage und Withdrawal = Freitag davor. Für ATP Challenger gilt das ATP-Regelwerk, nicht die ITF-Regel. Keine Quelle belegt diese Werte.
+**Risiko:** Spieler verpasst eine Meldefrist. Teuerster möglicher Fehler des Produkts.
+**Lösung:** Entweder die echte ATP-Regel belegen und eintragen, oder in der UI „Frist unbekannt, bitte im Spielerportal prüfen" anzeigen. Muster: `src/domain/tour/deadlines.ts` gibt für Challenger bewusst `null` (+ `"regel_unbekannt"`) zurück.
+**Fertig wenn:** Keine geratene Challenger-Frist mehr sichtbar, oder Regel mit Quelle belegt.
+**Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange offen.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-010 · Geteilte Unterkunft zwischen Spielern · L · offen
