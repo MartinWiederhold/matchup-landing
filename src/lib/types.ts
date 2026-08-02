@@ -461,6 +461,51 @@ export interface EventItem {
   _distance?: number;
 }
 
+// ── Eigener Turnier-Datenstamm (web.tour_tournaments / web.tour_tournament_claims) ──
+// Passend zu supabase/web_tour_tournaments.sql. Nur Typen — keine Queries hier.
+
+/** Aufgelöster Turnierstamm, eine Zeile je Turnier (web.tour_tournaments). */
+export interface TourTournament {
+  id: string;
+  source_ref: string; // stabile, quellenübergreifende ID (z. B. "itf:m-itf-tun-2025-032") — NOT NULL, UNIQUE
+  tournament_monday: string; // date (ISO yyyy-mm-dd) — Bezugspunkt für alle Fristen
+  series: "itf_wtt" | "challenger";
+  category: string | null; // M15/M25/Challenger NN — frei (kein starrer CHECK)
+  category_recognized: boolean; // generiert: liegt category im bekannten Katalog?
+  name: string | null; // bei ITF oft leer
+  city: string | null;
+  country: string | null; // ISO 3166-1 alpha-2
+  latitude: number | null;
+  longitude: number | null;
+  surface: "clay" | "hard" | "grass" | "carpet" | null;
+  indoor: boolean | null; // true=Halle, false=Freiluft, null=unbekannt
+  // numeric-Spalte: PostgREST liefert numeric als String → hier ehrlich als string.
+  // Die Umwandlung in number passiert später an der Abfragestelle, nicht im Typ.
+  prize_money: string | null;
+  prize_currency: string | null; // ISO 4217
+  website: string | null;
+  status: "planned" | "confirmed" | "cancelled" | "moved";
+  valid_from: string; // ISO timestamp
+  valid_to: string | null; // null = aktiv (Soft-Delete)
+  created_at: string;
+  updated_at: string;
+}
+
+/** Einzelbehauptung je Feld + Quelle (web.tour_tournament_claims). Nur service_role sichtbar. */
+export interface TourTournamentClaim {
+  id: string;
+  tournament_id: string; // FK → tour_tournaments.id
+  field_name: string; // Feld des Stamms, z. B. "city", "surface", "category"
+  field_value: string; // Wert immer als Text (feldübergreifend serialisiert)
+  source: string; // Quellbezeichner, z. B. "wikipedia_itf_2026_q1"
+  source_url: string | null;
+  observed_at: string; // ISO timestamp — Erfassungszeitpunkt
+  // numeric-Spalte: PostgREST liefert numeric als String → hier ehrlich als string
+  // (number wäre eine Lüge im Typ). Coercion später an der Abfragestelle.
+  confidence: string; // 0..1
+  created_at: string;
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
