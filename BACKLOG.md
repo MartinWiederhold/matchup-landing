@@ -79,6 +79,13 @@
 ### MU-013 · Reise-Affiliate ausbauen · M · offen
 **Warum:** Reise ist der größte Kostenblock der Zielgruppe und damit die volumenstärkste Monetarisierung. Travelpayouts ist bereits angebunden (`lib/travelpayouts.ts`, `/api/prices`).
 
+### MU-015 · Saisonplaner-Kosten auf Reiseketten-Domain umstellen · M · offen
+**Problem:** `computePlan`/`leg` in `src/lib/tournaments.ts` berechnet über `leg(prev, t)` bei gleichem Ort trotzdem eine Anreise (`Math.round(0*0.35)+20` = 20 €). Folge: **Der /map-Saisonplaner stellt Turnier-Cluster teurer dar, als sie sind, und verzerrt genau den Vergleich, um den es geht** — „drei Wochen am selben Ort" (Monastir/Antalya/Sharm, real *einmal* Anreise) gegen „drei verschiedene Orte". Für die Zielgruppe (Futures-Spieler mit knappem Budget) ist das die zentrale Entscheidung; ein zu teuer gerechneter Cluster kann sie in die falsche, teurere Planung lenken. Zusätzlich: Beträge als Float auf ganze Euro gerundet (unnötiger Rundungsfehler), und alles wird als € dargestellt, obwohl das Modell keine echte Währung führt (kein Wechselkurs, kein Datenstand).
+**Kein Launch-Blocker:** Es werden **keine** echten Fremdwährungen still zusammenaddiert (das Modell kennt keine Währungen; `ExpensesView` summiert bereits je Währung getrennt) — daher nicht analog MU-014, sondern eine Genauigkeits-/Vergleichbarkeits-Schwäche.
+**Lösung:** `computePlan` auf `src/domain/tour/costs.ts` (reine, getestete Reiseketten-Domain) umstellen: **Cluster-Dedup** (Anreise nur bei Ortswechsel), **Integer-Cent** statt Float, **getrennte Summen je Währung**. Distanz-/Modus-Schätzung von `leg` kann als Anreise-Kostensatz einfließen, aber ohne Anreise bei gleichem Ort.
+**Dateien:** `src/lib/tournaments.ts` (`computePlan`/`leg`/`PlanCost`), `src/app/map/SeasonPlanner.tsx` (Anzeige), Muster: `src/domain/tour/costs.ts` + Test.
+**Fertig wenn:** Ein Cluster von drei Wochen am selben Ort wird im Planer nachweislich günstiger dargestellt als drei verschiedene Orte; keine Float-Zwischenwerte; mehrere Währungen (falls je eingeführt) getrennt ausgewiesen.
+
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
