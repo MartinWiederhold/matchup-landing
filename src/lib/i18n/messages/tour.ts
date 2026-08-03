@@ -61,6 +61,9 @@ export const tour = {
     filterCountry: "Land",
     filterCategory: "Kategorie",
     filterReset: "Filter zurücksetzen",
+    filterCountriesMore: "Weitere Länder ({n})",
+    filterCountriesFewer: "Weniger anzeigen",
+    filterEmpty: "leer",
     resultCount: "{n} Turniere",
     empty: "Keine Turniere für diese Auswahl. Filter anpassen oder zurücksetzen.",
 
@@ -141,6 +144,9 @@ export const tour = {
     filterCountry: "Country",
     filterCategory: "Category",
     filterReset: "Reset filters",
+    filterCountriesMore: "More countries ({n})",
+    filterCountriesFewer: "Show fewer",
+    filterEmpty: "empty",
     resultCount: "{n} tournaments",
     empty: "No tournaments for this selection. Adjust or reset the filters.",
 

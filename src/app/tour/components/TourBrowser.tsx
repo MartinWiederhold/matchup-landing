@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { isTargetRegion } from "@/domain/tour/region";
 import type { TourTournament } from "@/lib/types";
 import TournamentCard from "./TournamentCard";
 
@@ -13,6 +14,29 @@ const COLUMNS =
   "id, source_ref, tournament_monday, series, category, category_recognized, name, city, country, latitude, longitude, surface, indoor, prize_money, prize_currency, website, status, valid_from, valid_to, created_at, updated_at";
 
 type LoadState = "loading" | "error" | "done";
+
+// Basis-Stil der Filter-Chips (unverändertes Muster).
+const chipClass = (active: boolean) =>
+  `rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+    active ? "border-matchup bg-matchup text-white" : "border-black/15 text-neutral-600 hover:border-black/30"
+  }`;
+
+/**
+ * Ein Filter-Chip mit dezenter Trefferzahl. Bei 0 Treffern (kann nur bei einer
+ * ausgewählten Option auftreten) steht statt der Zahl ein „leer"-Hinweis, damit
+ * die Option abwählbar bleibt und als tot erkennbar ist.
+ */
+function FilterChip({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
+  const t = useT();
+  return (
+    <button type="button" className={chipClass(active)} onClick={onClick}>
+      {label}
+      <span className={`ml-1 font-normal ${active ? "text-white/70" : "text-neutral-400"}`}>
+        {count > 0 ? count : t("tour.filterEmpty")}
+      </span>
+    </button>
+  );
+}
 
 export default function TourBrowser() {
   const { user, loading: authLoading } = useAuth();
@@ -23,6 +47,7 @@ export default function TourBrowser() {
   const [state, setState] = useState<LoadState>("loading");
   const [countryFilter, setCountryFilter] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
+  const [showRest, setShowRest] = useState(false); // Aufklapper „Weitere Länder"
 
   // Turniere laden, sobald ein eingeloggter Nutzer feststeht (RLS: nur authenticated).
   useEffect(() => {
@@ -73,6 +98,47 @@ export default function TourBrowser() {
     [rows, countryFilter, categoryFilter],
   );
 
+  // Trefferzahl je Land: berücksichtigt die KATEGORIE-Auswahl (leer = alle), aber NICHT
+  // die Länder-Auswahl — sonst zählt der Chip etwas anderes als das, was der Klick bewirkt.
+  const countByCountry = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) {
+      if (r.country == null) continue;
+      if (categoryFilter.size > 0 && !(r.category != null && categoryFilter.has(r.category))) continue;
+      m.set(r.country, (m.get(r.country) ?? 0) + 1);
+    }
+    return m;
+  }, [rows, categoryFilter]);
+
+  // Spiegelbildlich: Trefferzahl je Kategorie berücksichtigt die LÄNDER-Auswahl, nicht die eigene.
+  const countByCategory = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) {
+      if (r.category == null) continue;
+      if (countryFilter.size > 0 && !(r.country != null && countryFilter.has(r.country))) continue;
+      m.set(r.category, (m.get(r.category) ?? 0) + 1);
+    }
+    return m;
+  }, [rows, countryFilter]);
+
+  // Sichtbar ist eine Option mit Treffern ODER wenn sie aktuell ausgewählt ist
+  // (dann bleibt sie trotz 0 Treffern sichtbar, damit sie abwählbar ist).
+  const visibleCategories = useMemo(
+    () => categories.filter((c) => (countByCategory.get(c) ?? 0) > 0 || categoryFilter.has(c)),
+    [categories, countByCategory, categoryFilter],
+  );
+  const visibleCountries = useMemo(
+    () => countries.filter((c) => (countByCountry.get(c) ?? 0) > 0 || countryFilter.has(c)),
+    [countries, countByCountry, countryFilter],
+  );
+
+  // Länder der Zielregion zuerst; der Rest liegt hinter dem Aufklapper.
+  // Ausgewählte Rest-Länder bleiben immer sichtbar (sonst nicht abwählbar).
+  const regionCountries = useMemo(() => visibleCountries.filter((c) => isTargetRegion(c)), [visibleCountries]);
+  const restAll = useMemo(() => visibleCountries.filter((c) => !isTargetRegion(c)), [visibleCountries]);
+  const restSelected = useMemo(() => restAll.filter((c) => countryFilter.has(c)), [restAll, countryFilter]);
+  const restCollapsible = useMemo(() => restAll.filter((c) => !countryFilter.has(c)), [restAll, countryFilter]);
+
   function toggle(set: Set<string>, value: string, setter: (s: Set<string>) => void) {
     const next = new Set(set);
     if (next.has(value)) next.delete(value); else next.add(value);
@@ -99,11 +165,6 @@ export default function TourBrowser() {
   }
 
   // ── Daten ──────────────────────────────────────────────────────────────
-  const chip = (active: boolean) =>
-    `rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-      active ? "border-matchup bg-matchup text-white" : "border-black/15 text-neutral-600 hover:border-black/30"
-    }`;
-
   return (
     <div className="mt-8">
       {/* Filter */}
@@ -111,22 +172,36 @@ export default function TourBrowser() {
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.filterCategory")}</p>
           <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <button key={c} type="button" className={chip(categoryFilter.has(c))} onClick={() => toggle(categoryFilter, c, setCategoryFilter)}>
-                {c}
-              </button>
+            {visibleCategories.map((c) => (
+              <FilterChip key={c} label={c} count={countByCategory.get(c) ?? 0} active={categoryFilter.has(c)} onClick={() => toggle(categoryFilter, c, setCategoryFilter)} />
             ))}
           </div>
         </div>
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.filterCountry")}</p>
+          {/* Höhe durch max-h-40-Scrollbox gedeckelt: der Aufklapper fügt nur scrollbaren
+              Inhalt hinzu, die Filterleiste springt dadurch nicht in der Höhe. */}
           <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
-            {countries.map((c) => (
-              <button key={c} type="button" className={chip(countryFilter.has(c))} onClick={() => toggle(countryFilter, c, setCountryFilter)}>
-                {countryName(c)}
-              </button>
+            {/* Zielregion zuerst, danach bereits ausgewählte Rest-Länder (immer sichtbar) */}
+            {regionCountries.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active={countryFilter.has(c)} onClick={() => toggle(countryFilter, c, setCountryFilter)} />
+            ))}
+            {restSelected.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active onClick={() => toggle(countryFilter, c, setCountryFilter)} />
+            ))}
+            {showRest && restCollapsible.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active={countryFilter.has(c)} onClick={() => toggle(countryFilter, c, setCountryFilter)} />
             ))}
           </div>
+          {restCollapsible.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowRest((v) => !v)}
+              className="mt-2 text-[12px] font-semibold text-matchup hover:underline"
+            >
+              {showRest ? t("tour.filterCountriesFewer") : t("tour.filterCountriesMore", { n: restCollapsible.length })}
+            </button>
+          )}
         </div>
         {(countryFilter.size > 0 || categoryFilter.size > 0) && (
           <button
