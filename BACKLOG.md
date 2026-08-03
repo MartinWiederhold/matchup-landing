@@ -60,6 +60,15 @@
 **Fertig wenn:** Keine geratene Challenger-Frist mehr sichtbar, oder Regel mit Quelle belegt.
 **Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange offen.
 
+### MU-016 · Rangprognose ohne 52-Wochen-Verfall in `src/lib/tournaments.ts` · M · offen · **Vor Launch**
+**Problem:** `projectSeasonPoints` rechnet in `CompeteRanking` `totalProjected = curPoints + projPoints`. Der 52-Wochen-Verfall fehlt vollständig — Punkte, die der Spieler verteidigen muss, werden nicht abgezogen. `CompeteRanking` zeigt damit eine systematisch zu hohe Projektion, und der Fehler wächst mit dem Erfolg der Vorsaison.
+**Wirkung:** Ein Spieler plant seine Saison auf einer Rangprognose, die nicht eintreten kann. Das ist die Kernzahl des Wettkampf-Modus.
+**Ursache:** Es gibt keine Punktehistorie je Turnier mit Erzielungsdatum. `tour_profiles` hält nur einen aktuellen Gesamtwert (`points`/`ranking`).
+**Lösung (zwei Wege, Entscheidung offen):**
+- a) Datenstruktur für Punkte je Turnier schaffen und echten Verfall rechnen.
+- b) Bis dahin die Projektion ehrlich kennzeichnen: „ohne Verfall gerechnet, tatsächlicher Rang wird niedriger liegen".
+**Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange die Projektion den Verfall verschweigt.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-010 · Geteilte Unterkunft zwischen Spielern · L · offen
