@@ -91,6 +91,39 @@ export const tour = {
     challengerUnknownText:
       "Für ATP-Challenger gilt nicht die ITF-Regel. Die genauen Fristen haben wir noch nicht hinterlegt — bitte im offiziellen Spielerportal prüfen.",
 
+    // Turnier-Entscheider (src/domain/tour/decide.ts) — sachlicher, ruhiger Ton.
+    decide: {
+      title: "Einschätzung",
+      confidenceLabel: "Verlässlichkeit",
+      confidenceHigh: "belastbar",
+      confidenceMedium: "eingeschränkt belastbar",
+      confidenceLow: "kaum belastbar",
+      lueckenTitle: "Grenzen dieser Einschätzung",
+      cls: {
+        frist_verstrichen: "Nicht mehr meldbar",
+        frist_laeuft_bald_ab: "Meldefrist läuft bald ab",
+        planbar: "Meldefrist offen",
+        zu_weit_entfernt: "Zeitlich noch weit entfernt",
+        fristen_unbekannt: "Meldefristen noch nicht hinterlegt",
+      },
+      reason: {
+        turnier_bereits_vorbei: "Turnierwoche liegt in der Vergangenheit",
+        meldefrist_verstrichen: "Meldeschluss ist bereits verstrichen",
+        meldefrist_in_wenigen_tagen: "Meldeschluss in wenigen Tagen",
+        meldefrist_reichlich_zeit: "Bis zum Meldeschluss ist noch reichlich Zeit",
+        turnier_weit_entfernt: "Das Turnier liegt noch weit in der Zukunft",
+        fristenregel_unbekannt: "Meldefristen für Challenger sind noch nicht hinterlegt",
+        anreise_entfaellt_gleicher_ort: "Keine erneute Anreise — gleicher Ort wie die Vorstation",
+        anreise_noetig_ortswechsel: "Ortswechsel gegenüber der Vorstation — Anreise nötig",
+        kosten_unbekannt: "Kostensätze sind nicht hinterlegt",
+      },
+      luecke: {
+        keine_punktehistorie: "Ohne Berücksichtigung deiner Ranglistenpunkte",
+        keine_cutoff_prognose: "Ohne Prognose zur Zulassung (Cut-off)",
+        freeze_variante_ungeprueft: "Freeze-Frist beruht auf einer noch nicht verifizierten Lesart",
+      },
+    },
+
     country: country_de,
   },
   en: {
@@ -135,6 +168,39 @@ export const tour = {
     challengerUnknownTitle: "Deadlines unknown",
     challengerUnknownText:
       "ATP Challenger does not follow the ITF rule. We have not recorded the exact deadlines yet — please check the official player portal.",
+
+    // Tournament decider (src/domain/tour/decide.ts) — factual, calm tone.
+    decide: {
+      title: "Assessment",
+      confidenceLabel: "Reliability",
+      confidenceHigh: "reliable",
+      confidenceMedium: "limited reliability",
+      confidenceLow: "little to go on",
+      lueckenTitle: "Limits of this assessment",
+      cls: {
+        frist_verstrichen: "No longer open for entry",
+        frist_laeuft_bald_ab: "Entry deadline closing soon",
+        planbar: "Entry window open",
+        zu_weit_entfernt: "Still far in the future",
+        fristen_unbekannt: "Entry deadlines not recorded yet",
+      },
+      reason: {
+        turnier_bereits_vorbei: "The tournament week is in the past",
+        meldefrist_verstrichen: "The entry deadline has already passed",
+        meldefrist_in_wenigen_tagen: "Entry deadline within a few days",
+        meldefrist_reichlich_zeit: "Plenty of time until the entry deadline",
+        turnier_weit_entfernt: "The tournament is still far in the future",
+        fristenregel_unbekannt: "Entry deadlines for Challenger are not recorded yet",
+        anreise_entfaellt_gleicher_ort: "No additional travel — same location as the previous stop",
+        anreise_noetig_ortswechsel: "Different location from the previous stop — travel required",
+        kosten_unbekannt: "Cost rates are not recorded",
+      },
+      luecke: {
+        keine_punktehistorie: "Without taking your ranking points into account",
+        keine_cutoff_prognose: "Without a cut-off (acceptance) forecast",
+        freeze_variante_ungeprueft: "Freeze deadline is based on a reading we have not verified yet",
+      },
+    },
 
     country: country_en,
   },
