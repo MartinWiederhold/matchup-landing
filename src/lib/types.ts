@@ -520,6 +520,21 @@ export interface TourSeasonPlanEntry {
   updated_at: string; // ISO timestamp
 }
 
+/** Kostensätze eines Nutzers (web.tour_cost_rates): Eingabe für src/domain/tour/costs.ts.
+ *  Beträge in ganzzahligen Minor Units (Cent) — integer kommt via PostgREST als number
+ *  (anders als numeric, das als string käme). NULL = „unbekannt", nicht null Euro.
+ *  RLS: nur eigene Zeile; höchstens ein Satz je Nutzer (user_id ist PK). */
+export interface TourCostRates {
+  user_id: string; // FK → profiles.id (PK, 1:1)
+  arrival_minor: number | null; // Anreise zu neuem Ort, in Cent
+  per_night_minor: number | null; // pro Übernachtung, in Cent
+  food_per_day_minor: number | null; // Verpflegung pro Tag, in Cent
+  coach_per_week_minor: number | null; // optional: Coach-Anteil pro Woche, in Cent
+  currency: string | null; // ISO 4217; gesetzt, sobald ein Betrag gesetzt ist (CHECK)
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
