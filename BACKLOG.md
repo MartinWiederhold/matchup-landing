@@ -81,6 +81,7 @@
 **Problem:** `schengenProjection` (`src/lib/schengen.ts`) zählt nur Turnierfenster (`start_date` bis `end_date`), nicht den durchgehenden Aufenthalt. Wer zwischen zwei Turnieren im Schengen-Raum bleibt — bei Clustern der Normalfall — sammelt ungezählte Tage.
 **Wirkung:** Die Anzeige ist systematisch zu optimistisch. Bei einer Regel, deren Verletzung eine Einreisesperre nach sich zieht, ist das die gefährliche Richtung. Ein Spieler erfährt es an der Grenze.
 **Lösung:** Entweder Aufenthalte durchgehend zählen (Nutzer trägt Ein- und Ausreise ein), oder die Anzeige klar als Untergrenze kennzeichnen („mindestens X Tage, tatsächlicher Aufenthalt kann höher liegen").
+**Stand (e58a504):** `/tour` hat einen EIGENEN Zähler, der auf bestätigten, durchgehenden Aufenthalten rechnet (`src/domain/tour/schengen.ts`, `web.tour_stays`, Route `/tour/schengen`) — dort ist die Untererfassung behoben. Das Ticket bleibt trotzdem offen: Es betrifft den Zähler im **/app-Compete** (`src/lib/schengen.ts`), der weiterhin auf Turnierfenstern rechnet und unterschätzt.
 **Sperre:** `COMPETE_EARLY_ACCESS_OPEN` nicht auf `true`, solange die Anzeige eine Untererfassung als Restkontingent darstellt.
 
 ### MU-019 · Visa-Regeln ignorieren die Nationalität · M · offen · **Vor Launch**
