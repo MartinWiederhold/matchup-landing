@@ -77,6 +77,18 @@
 - b) Ein geplanter Aufräum-Lauf (Edge Function oder Cron mit Service-Rolle), der Objekte ohne passende `tour_expenses`-Zeile entfernt — deckt /app-Löschungen und Abbrüche beim Upload.
 **Sperre:** Nicht mit echten Nutzern starten, solange b) fehlt.
 
+### MU-018 · Schengen-Zähler unterschätzt den Aufenthalt · M · offen · **Vor Launch**
+**Problem:** `schengenProjection` (`src/lib/schengen.ts`) zählt nur Turnierfenster (`start_date` bis `end_date`), nicht den durchgehenden Aufenthalt. Wer zwischen zwei Turnieren im Schengen-Raum bleibt — bei Clustern der Normalfall — sammelt ungezählte Tage.
+**Wirkung:** Die Anzeige ist systematisch zu optimistisch. Bei einer Regel, deren Verletzung eine Einreisesperre nach sich zieht, ist das die gefährliche Richtung. Ein Spieler erfährt es an der Grenze.
+**Lösung:** Entweder Aufenthalte durchgehend zählen (Nutzer trägt Ein- und Ausreise ein), oder die Anzeige klar als Untergrenze kennzeichnen („mindestens X Tage, tatsächlicher Aufenthalt kann höher liegen").
+**Sperre:** `COMPETE_EARLY_ACCESS_OPEN` nicht auf `true`, solange die Anzeige eine Untererfassung als Restkontingent darstellt.
+
+### MU-019 · Visa-Regeln ignorieren die Nationalität · M · offen · **Vor Launch**
+**Problem:** `countryRegime` in `src/lib/visa.ts` entscheidet nur nach Zielland. „USA → ESTA $21" gilt nur für Spieler mit Visa-Waiver-Pass. Für alle anderen ist die Auskunft falsch. Zusätzlich sind die Gebühren hartkodiert, undatiert und ohne Quellenbeleg (UK ETA lag zuvor bei £10).
+**Wirkung:** Betrifft besonders Spieler aus Afrika, Südasien und Lateinamerika — genau die Gruppe mit den größten Visa-Hürden.
+**Lösung:** Nationalität einbeziehen, oder die Aussage auf das reduzieren, was ohne sie stimmt („Einreisebestimmungen prüfen", mit Amtslink). Gebühren mit Datenstand versehen oder weglassen.
+**Sperre:** Nicht mit echten Nutzern starten, solange eine nationalitätsabhängige Aussage als allgemeingültig erscheint.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-010 · Geteilte Unterkunft zwischen Spielern · L · offen
