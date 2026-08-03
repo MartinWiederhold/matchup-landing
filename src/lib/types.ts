@@ -535,6 +535,22 @@ export interface TourCostRates {
   updated_at: string; // ISO timestamp
 }
 
+/** Ein tatsächlicher Aufenthalt (web.tour_stays): Eingabe für src/domain/tour/schengen.ts.
+ *  NUR confirmed=true zählt in die 90/180-Rechnung. exit_date NULL = offener Aufenthalt
+ *  (bis zum Stichtag gezählt). RLS: nur eigene Zeilen. */
+export interface TourStay {
+  id: string;
+  user_id: string; // FK → profiles.id (Eigentümer)
+  country: string; // ISO 3166-1 alpha-2
+  entry_date: string; // ISO date (Einreisetag, zählt voll)
+  exit_date: string | null; // ISO date (Ausreisetag, zählt voll) oder null = offen
+  confirmed: boolean; // true erst nach bewusster Bestätigung; Vorschläge sind false
+  source_ref: string | null; // Herkunftsschlüssel eines Saisonplan-Vorschlags (Idempotenz), null = manuell
+  note: string | null;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
