@@ -1,13 +1,13 @@
 "use client";
 
 import { useT, useLocale } from "@/lib/i18n";
-import type { TourTournament } from "@/lib/types";
-import TourDeadlineBlock from "./TourDeadlineBlock";
-import TourDecideBlock from "./TourDecideBlock";
-import AddToSeasonButton from "./AddToSeasonButton";
+import type { SeasonEntry, SeasonStatus } from "@/lib/tourSeason";
+import TourDeadlineBlock from "../../components/TourDeadlineBlock";
+import TourDecideBlock from "../../components/TourDecideBlock";
 
-// Turniermontag ist ein Kalendertag → in UTC formatieren, damit sich das Datum
-// nicht durch die lokale Zeitzone verschiebt.
+const STATUSES: SeasonStatus[] = ["planned", "entered", "confirmed", "cancelled"];
+
+// Turniermontag ist ein Kalendertag → in UTC formatieren (keine Zeitzonen-Verschiebung).
 function fmtMonday(iso: string, locale: string) {
   return new Intl.DateTimeFormat(locale === "de" ? "de-CH" : "en-GB", {
     weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
@@ -15,23 +15,24 @@ function fmtMonday(iso: string, locale: string) {
 }
 
 /**
- * Turnierkarte im Kalender (/tour). Fristen- und Einschätzungsblock kommen aus den
- * geteilten Komponenten (identisch zur Saison-Ansicht). Der Aufnehmen-Knopf wird
- * nur gerendert, wenn ein eingeloggter Nutzer feststeht (userId + onSeasonChange).
+ * Eine Saisonkarte: Turnierkopf + Fristen + Einschätzung (MIT prevPlace, damit
+ * „Anreise entfällt" bei gleichem Ort wie die Vorstation greift) + Status-Auswahl
+ * + Entfernen. Soft-gelöschte Turniere bleiben in der Saison, werden aber erklärt.
  */
-export default function TournamentCard({
-  tournament: x,
-  userId,
-  inSeason,
-  onSeasonChange,
+export default function SeasonCard({
+  entry,
+  prevPlace,
+  onRemove,
+  onStatusChange,
 }: {
-  tournament: TourTournament;
-  userId?: string | null;
-  inSeason?: boolean;
-  onSeasonChange?: (id: string, next: boolean) => void;
+  entry: SeasonEntry;
+  prevPlace: string | null;
+  onRemove: () => void;
+  onStatusChange: (status: SeasonStatus) => void;
 }) {
   const t = useT();
   const { locale } = useLocale();
+  const x = entry.tournament;
 
   const countryName = (() => {
     if (!x.country) return t("tour.fieldMissing");
@@ -43,6 +44,13 @@ export default function TournamentCard({
 
   return (
     <article className="rounded-2xl border border-black/[0.08] bg-white p-5">
+      {/* Soft-gelöscht: Planzeile bleibt, wird aber erklärt (kein stiller Verlust). */}
+      {entry.tournamentInactive && (
+        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">
+          {t("tour.tournamentInactive")}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[17px] font-bold tracking-tight text-neutral-900">
@@ -76,17 +84,31 @@ export default function TournamentCard({
       </div>
 
       <TourDeadlineBlock tournament={x} />
-      {/* Kalender-Liste: OHNE prevPlace (keine Reisekette) → decide ohne cost-Teil. */}
-      <TourDecideBlock tournament={x} />
+      {/* Saison: MIT prevPlace → „Anreise entfällt, gleicher Ort" bzw. „Ortswechsel". */}
+      <TourDecideBlock tournament={x} prevPlace={prevPlace} />
 
-      {userId && onSeasonChange && (
-        <AddToSeasonButton
-          tournamentId={x.id}
-          userId={userId}
-          inSeason={!!inSeason}
-          onChange={(next) => onSeasonChange(x.id, next)}
-        />
-      )}
+      {/* Status ändern + Entfernen */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.06] pt-3">
+        <label className="flex items-center gap-2 text-[12px] text-neutral-500">
+          {t("tour.statusLabel")}
+          <select
+            value={entry.status}
+            onChange={(e) => onStatusChange(e.target.value as SeasonStatus)}
+            className="rounded-full border border-black/15 px-3 py-1.5 text-[12px] font-semibold text-neutral-700 transition-colors hover:border-black/30"
+          >
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{t(`tour.status_${s}`)}</option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-[12px] font-semibold text-neutral-500 transition-colors hover:text-neutral-800"
+        >
+          {t("tour.seasonRemove")}
+        </button>
+      </div>
     </article>
   );
 }

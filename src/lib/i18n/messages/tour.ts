@@ -127,6 +127,32 @@ export const tour = {
       },
     },
 
+    // Navigation zwischen den /tour-Seiten
+    navCalendar: "Turnierkalender",
+    navSeason: "Meine Saison",
+
+    // Aufnehmen-Knopf (Turnierkalender)
+    addToSeason: "Zur Saison hinzufügen",
+    inSeason: "In deiner Saison",
+    seasonSaveError: "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
+
+    // Saison-Seite (/tour/season)
+    seasonSeoTitle: "Meine Saison",
+    seasonSeoDescription: "Deine geplanten Turniere mit Fristen und Einschätzung.",
+    seasonTitle: "Meine Saison",
+    seasonSubtitle: "Deine aufgenommenen Turniere, geordnet nach Turnierwoche — mit Fristen und Einschätzung.",
+    seasonCount: "{n} Turniere in deiner Saison",
+    seasonEmptyTitle: "Noch keine Turniere",
+    seasonEmptyText: "Nimm im Turnierkalender Turniere in deine Saison auf.",
+    seasonEmptyCta: "Zum Turnierkalender",
+    seasonRemove: "Aus Saison entfernen",
+    statusLabel: "Status",
+    status_planned: "Geplant",
+    status_entered: "Gemeldet",
+    status_confirmed: "Bestätigt",
+    status_cancelled: "Abgesagt",
+    tournamentInactive: "Dieses Turnier ist nicht mehr verfügbar. Es bleibt in deiner Saison, bis du es entfernst.",
+
     country: country_de,
   },
   en: {
@@ -207,6 +233,32 @@ export const tour = {
         freeze_variante_ungeprueft: "Freeze deadline is based on a reading we have not verified yet",
       },
     },
+
+    // Navigation between the /tour pages
+    navCalendar: "Tournament calendar",
+    navSeason: "My season",
+
+    // Add-to-season button (tournament calendar)
+    addToSeason: "Add to season",
+    inSeason: "In your season",
+    seasonSaveError: "Couldn't save. Please try again.",
+
+    // Season page (/tour/season)
+    seasonSeoTitle: "My season",
+    seasonSeoDescription: "Your planned tournaments with deadlines and assessment.",
+    seasonTitle: "My season",
+    seasonSubtitle: "Your saved tournaments, ordered by tournament week — with deadlines and assessment.",
+    seasonCount: "{n} tournaments in your season",
+    seasonEmptyTitle: "No tournaments yet",
+    seasonEmptyText: "Add tournaments to your season from the tournament calendar.",
+    seasonEmptyCta: "Go to tournament calendar",
+    seasonRemove: "Remove from season",
+    statusLabel: "Status",
+    status_planned: "Planned",
+    status_entered: "Entered",
+    status_confirmed: "Confirmed",
+    status_cancelled: "Cancelled",
+    tournamentInactive: "This tournament is no longer available. It stays in your season until you remove it.",
 
     country: country_en,
   },

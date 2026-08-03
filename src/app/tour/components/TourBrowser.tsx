@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { isTargetRegion } from "@/domain/tour/region";
+import { loadSeasonTournamentIds } from "@/lib/tourSeason";
 import type { TourTournament } from "@/lib/types";
 import TournamentCard from "./TournamentCard";
 
@@ -48,6 +49,7 @@ export default function TourBrowser() {
   const [countryFilter, setCountryFilter] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
   const [showRest, setShowRest] = useState(false); // Aufklapper „Weitere Länder"
+  const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set()); // aufgenommene Turniere
 
   // Turniere laden, sobald ein eingeloggter Nutzer feststeht (RLS: nur authenticated).
   useEffect(() => {
@@ -70,6 +72,25 @@ export default function TourBrowser() {
       });
     return () => { cancel = true; };
   }, [authLoading, user]);
+
+  // Bereits aufgenommene Turniere laden (für den Zustand des Aufnehmen-Knopfs).
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancel = false;
+    loadSeasonTournamentIds()
+      .then((ids) => { if (!cancel) setSeasonIds(ids); })
+      .catch(() => { /* Knopf startet dann als „nicht aufgenommen"; kein harter Fehler der Liste */ });
+    return () => { cancel = true; };
+  }, [authLoading, user]);
+
+  // Optimistisches Umschalten aus der Karte übernehmen (kein Neuladen der Liste).
+  const handleSeasonChange = useCallback((id: string, next: boolean) => {
+    setSeasonIds((prev) => {
+      const s = new Set(prev);
+      if (next) s.add(id); else s.delete(id);
+      return s;
+    });
+  }, []);
 
   // Länder-Klartext (für Sortierung der Filter-Chips).
   const countryName = (code: string) => {
@@ -224,7 +245,15 @@ export default function TourBrowser() {
             <p className="mt-6 rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
           ) : (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {filtered.map((x) => <TournamentCard key={x.id} tournament={x} />)}
+              {filtered.map((x) => (
+                <TournamentCard
+                  key={x.id}
+                  tournament={x}
+                  userId={user?.id ?? null}
+                  inSeason={seasonIds.has(x.id)}
+                  onSeasonChange={handleSeasonChange}
+                />
+              ))}
             </div>
           )}
         </>
