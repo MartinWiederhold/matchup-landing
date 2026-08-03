@@ -1,0 +1,104 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useT, useLocale } from "@/lib/i18n";
+import { SCHENGEN_AREA } from "@/domain/tour/schengen";
+import type { TourStay } from "@/lib/types";
+import type { StayPatch } from "@/lib/tourStays";
+
+const inputCls =
+  "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
+
+// Kalendertag in UTC formatieren (keine Zeitzonen-Verschiebung).
+function fmtDate(iso: string, locale: string) {
+  return new Intl.DateTimeFormat(locale === "de" ? "de-CH" : "en-GB", {
+    day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
+  }).format(new Date(iso + "T00:00:00Z"));
+}
+
+/**
+ * Eine Aufenthaltszeile — Anzeige oder Bearbeiten. Vorschläge (isSuggestion) haben
+ * zusätzlich „Bestätigen"; bestätigte Aufenthalte sind änder- und löschbar.
+ */
+export default function StayRow({
+  stay,
+  isSuggestion,
+  onConfirm,
+  onSave,
+  onRemove,
+}: {
+  stay: TourStay;
+  isSuggestion: boolean;
+  onConfirm?: () => void;
+  onSave: (patch: StayPatch) => void;
+  onRemove: () => void;
+}) {
+  const t = useT();
+  const { locale } = useLocale();
+
+  const countryName = (code: string) => {
+    const n = t(`tour.country.${code}`);
+    return n.startsWith("tour.country.") ? code : n;
+  };
+  const countries = useMemo(
+    () => [...SCHENGEN_AREA].sort((a, b) => countryName(a).localeCompare(countryName(b), locale)),
+    [locale], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  const [editing, setEditing] = useState(false);
+  const [country, setCountry] = useState(stay.country);
+  const [entry, setEntry] = useState(stay.entry_date);
+  const [exit, setExit] = useState(stay.exit_date ?? "");
+  const [note, setNote] = useState(stay.note ?? "");
+
+  function startEdit() {
+    setCountry(stay.country); setEntry(stay.entry_date); setExit(stay.exit_date ?? ""); setNote(stay.note ?? "");
+    setEditing(true);
+  }
+  function save() {
+    if (!country || !entry) return;
+    onSave({ country, entry_date: entry, exit_date: exit.trim() === "" ? null : exit, note: note.trim() === "" ? null : note.trim() });
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <div className="rounded-xl border border-black/[0.08] bg-white p-3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls}>
+            {countries.map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
+          </select>
+          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("tour.schengenNote")} className={inputCls} />
+          <input type="date" value={entry} onChange={(e) => setEntry(e.target.value)} className={inputCls} />
+          <input type="date" value={exit} onChange={(e) => setExit(e.target.value)} className={inputCls} />
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <button type="button" onClick={save} className="rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700">{t("tour.schengenEditSave")}</button>
+          <button type="button" onClick={() => setEditing(false)} className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.schengenCancel")}</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-[14px] font-semibold text-neutral-900">
+          {countryName(stay.country)}
+          {!isSuggestion && <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">{t("tour.schengenCounts")}</span>}
+        </p>
+        <p className="text-[12px] text-neutral-500">
+          {fmtDate(stay.entry_date, locale)} – {stay.exit_date ? fmtDate(stay.exit_date, locale) : t("tour.schengenRunning")}
+          {stay.note ? ` · ${stay.note}` : ""}
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        {isSuggestion && onConfirm && (
+          <button type="button" onClick={onConfirm} className="rounded-full bg-matchup px-3 py-1.5 text-[12px] font-bold text-white hover:bg-matchup/90">{t("tour.schengenConfirm")}</button>
+        )}
+        <button type="button" onClick={startEdit} className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.schengenEdit")}</button>
+        <button type="button" onClick={onRemove} className="text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.schengenDelete")}</button>
+      </div>
+    </div>
+  );
+}

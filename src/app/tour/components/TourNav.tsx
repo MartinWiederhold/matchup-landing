@@ -15,7 +15,8 @@ export default function TourNav() {
   const isSeason = path?.startsWith("/tour/season") ?? false;
   const isCosts = path?.startsWith("/tour/costs") ?? false;
   const isExpenses = path?.startsWith("/tour/expenses") ?? false;
-  const isCalendar = !isSeason && !isCosts && !isExpenses; // /tour selbst
+  const isSchengen = path?.startsWith("/tour/schengen") ?? false;
+  const isCalendar = !isSeason && !isCosts && !isExpenses && !isSchengen; // /tour selbst
 
   const cls = (active: boolean) =>
     `text-[13px] font-semibold transition-colors ${active ? "text-matchup" : "text-neutral-500 hover:text-neutral-800"}`;
@@ -33,6 +34,9 @@ export default function TourNav() {
       </Link>
       <Link href="/tour/expenses" className={cls(isExpenses)} aria-current={isExpenses ? "page" : undefined}>
         {t("tour.navExpenses")}
+      </Link>
+      <Link href="/tour/schengen" className={cls(isSchengen)} aria-current={isSchengen ? "page" : undefined}>
+        {t("tour.navSchengen")}
       </Link>
     </nav>
   );
