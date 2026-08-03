@@ -69,6 +69,14 @@
 - b) Bis dahin die Projektion ehrlich kennzeichnen: „ohne Verfall gerechnet, tatsächlicher Rang wird niedriger liegen".
 **Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange die Projektion den Verfall verschweigt.
 
+### MU-017 · Verwaiste Belegfotos im Bucket `tour-receipts` · M · offen · **Vor Launch**
+**Problem:** Wird eine Ausgabe gelöscht, bleibt die Belegdatei im Bucket `tour-receipts` liegen. Der naheliegende Weg über einen DB-Trigger ist auf Supabase NICHT möglich: direktes Löschen in `storage.objects` wird abgelehnt (`42501`, „Use the Storage API instead") — ein solcher Trigger würde außerdem den gesamten Löschvorgang abbrechen und /tour wie /app beschädigen. Belegt und wieder entfernt bei der Einrichtung des Buckets (`supabase/web_tour_receipts.sql`).
+**Wirkung:** Gelöschte Belege leben als Datei weiter. Auf einem Bon stehen Ort, Uhrzeit und oft Kartenstellen. Besonders relevant, weil /app (`ExpensesView`) Ausgaben löscht, ohne den Beleg zu kennen.
+**Lösung (zwei Teile):**
+- a) /tour löscht beim Entfernen einer Ausgabe die Datei über die Storage-API mit (`storage.from('tour-receipts').remove([...])`) — deckt den Normalfall, kommt mit der Datenschicht.
+- b) Ein geplanter Aufräum-Lauf (Edge Function oder Cron mit Service-Rolle), der Objekte ohne passende `tour_expenses`-Zeile entfernt — deckt /app-Löschungen und Abbrüche beim Upload.
+**Sperre:** Nicht mit echten Nutzern starten, solange b) fehlt.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-010 · Geteilte Unterkunft zwischen Spielern · L · offen
