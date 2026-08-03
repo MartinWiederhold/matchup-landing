@@ -506,6 +506,20 @@ export interface TourTournamentClaim {
   created_at: string;
 }
 
+/** Ein Saisonplan-Eintrag (web.tour_season_plan): Nutzer nimmt ein Turnier aus
+ *  web.tour_tournaments auf. RLS: nur eigene Zeilen. Getrennt von web.tour_plan. */
+export interface TourSeasonPlanEntry {
+  id: string;
+  user_id: string; // FK → profiles.id (Eigentümer)
+  tournament_id: string; // FK → tour_tournaments.id (on delete restrict)
+  // Status der NUTZER-Beziehung zum Turnier (nicht der Turnier-Lebenszyklus):
+  // planned|entered|confirmed|cancelled = geplant|gemeldet|bestätigt|abgesagt
+  status: "planned" | "entered" | "confirmed" | "cancelled";
+  note: string | null; // freie Notiz des Nutzers
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
