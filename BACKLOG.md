@@ -111,6 +111,19 @@
 Attribution in beiden Fällen sicherstellen.
 **Sperre:** Nicht mit echten Nutzern starten, solange die Karte auf der CARTO-Quelle läuft.
 
+### MU-026 · Team-Mitglieder sehen mehr als ihre Rolle rechtfertigt · M · offen · **Vor Launch**
+**Problem:** Die RLS-Policies auf `tour_profiles`, `tour_events` und `tour_messages` prüfen nur `status='active'`, nicht die Rolle. Nur die Finanzdaten (`tour_expenses`, `tour_prize`) sind auf `role='agent'` beschränkt. Ein als Hitting Partner oder Physio eingeladenes Mitglied kann damit die volle `tour_profiles`-Zeile lesen: Pässe, Steuersitz, ESTA-Status, Saisonbudget, Verletzungsdaten — sowie alle Termine inklusive Gegner, Ergebnis und Notizen.
+**Verschärfend:** Die UI (`TourPlayerView`) zeigt einem Coach nur Termine. Der Schutz liegt allein in der Policy, nicht in der Oberfläche — ein direkter API-Aufruf liefert das volle Profil. Wer die UI prüft, hält das System für sicherer als es ist.
+**Wirkung:** Pässe und Steuerdaten sind eine andere Datenklasse als Turnierergebnisse. Ein Spieler lädt jemanden zum Terminabgleich ein und gibt ihm seinen Steuersitz.
+**Lösung:** Policies je Rolle differenzieren. Mindestens: sensible Profilfelder (Pässe, Steuersitz, ESTA, Budget) nur für Rolle `agent` oder gar nicht; `tour_events`-Sicht für Nicht-Agenten auf die Felder beschränken, die die UI ohnehin zeigt. Zusätzlich dem Spieler in der UI zeigen, worauf jede Rolle Zugriff hat.
+**Sperre:** Nicht mit echten Nutzern starten, solange eine Rolle mehr sieht, als der Spieler ihr bewusst gibt.
+
+### MU-027 · Team-Einladungslink ohne Ablauf und ohne Widerrufsspur · M · offen · **Vor Launch**
+**Problem:** `invite_token` in `tour_team` hat kein Ablaufdatum. Der Link `/app?team=<token>` ist login-los erreichbar, der erste eingeloggte Nutzer der ihn öffnet bindet ihn. Wer den Link weiterleitet oder in einer Gruppe teilt, verschenkt Zugriff an die falsche Person.
+**Wirkung:** Gleiches Muster wie MU-020 beim Kalender-Token. Hier wiegt es schwerer, weil es Zugriff auf fremde Daten gibt, nicht nur Leserechte auf einen Feed.
+**Lösung:** Ablaufdatum je Einladung, Token nach Annahme entwerten, und dem Spieler anzeigen, wann ein Link erzeugt wurde und ob er noch offen ist.
+**Sperre:** Nicht mit echten Nutzern starten, solange ein einmal erzeugter Einladungslink unbegrenzt gültig bleibt.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-021 · Kalendertermine ohne Zeitzone · M · offen
