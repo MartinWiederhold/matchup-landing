@@ -1,20 +1,18 @@
 # Ranglistenpunkte je Runde — Recherche-Bericht
 
-> **STATUS (bekannte Lücke, nicht übersehen):** ITF verifiziert. **ATP Kapitel 9 (PIF ATP
-> Rankings, Jahrgänge 2024/2025/2026) ist host-seitig blockiert — HTTP 403 (Akamai/WAF), sowohl
-> per Fetch-Dienst als auch per `curl`.** Der Zugang wird **manuell beschafft** (Nutzer legt die
-> PDFs lokal ab, dann werden die Zahlen lokal ausgelesen). Bis dahin bleiben die Challenger-Tiers
-> (50/75/100/125/175) und die M15/M25-Hauptfeldpunkte in §3 offen — bewusst nicht geschätzt.
+> **STATUS: VOLLSTÄNDIG (ATP + ITF verifiziert).** Die ATP-Kapitel-9-PDFs (2024, 2025 in zwei
+> Fassungen, 2026) wurden vom Nutzer lokal abgelegt (der Host blockte automatisierten Zugriff mit
+> HTTP 403) und **spaltenerkennend ausgelesen** (`pdfplumber`, Geometrie über die x-Positionen der
+> Kopfzeile — nicht reine Textextraktion). §3 ist damit befüllt: alle fünf Challenger-Tiers und die
+> M15/M25-Hauptfeldpunkte (ATP-Ranking), je Zahl mit Jahrgang + gedruckter Seite. Der kritische
+> Punkt (Spaltenzuordnung R64 vs. Q) ist per Geometrie eindeutig geklärt (§3c). Nur ITF-**2026-WTR-
+> Quali**-Punkte bleiben unbestätigt (Standalone-PDF existiert nicht, siehe §2b) — für den
+> Hauptfeld-Rechner irrelevant, da Hauptfeld = ATP-Punkte (§2c).
 
 > **Zweck:** Belegte Punktetabellen (Runde → Punkte) für den geplanten /tour-Punkte-Rechner
 > (erzielte Punkte aus Matchergebnis + Kategorie, 52-Wochen-Verfall). Nur belegte Zahlen —
-> nichts geschätzt, abgeleitet oder interpoliert.
->
-> **Status: UNVOLLSTÄNDIG.** Die ITF-Zahlen sind aus der offiziellen ITF-PDF verifiziert.
-> Die **ATP-Regelwerk-PDFs (Primärquelle für ALLE Challenger-Tiers und für die M15/M25-
-> HAUPTFELD-Punkte) sind nicht erreichbar** (HTTP 403). Diese Tabellen sind daher unten
-> ausdrücklich als „Quelle nicht erreichbar" markiert und NICHT befüllt. Auf Sekundärquellen
-> (Wikipedia, Blogs) wurde bewusst NICHT ausgewichen (Vorgabe).
+> nichts geschätzt, abgeleitet oder interpoliert. Auf Sekundärquellen (Wikipedia, Blogs) wurde
+> bewusst **nicht** ausgewichen; jede ATP-Zahl stammt aus dem jeweiligen Kapitel-9-PDF.
 
 ---
 
@@ -32,6 +30,10 @@ Die ATP-URLs sind über die Websuche als offizielle Dokumente auf `atptour.com` 
 (u. a. verlinkt von der Wikipedia-Seite „ATP Challenger Tour 175"), liefern aber sowohl über
 den Fetch-Dienst als auch über `curl` mit Browser-User-Agent eine **403-WAF-Blockseite**
 (6 KB HTML) statt der PDF. Der Zugang ist host-/WAF-seitig gesperrt, nicht URL-abhängig.
+
+**Auflösung:** Die drei (bzw. vier mit der 23dec-Fassung) PDFs wurden **manuell im Browser
+gespeichert** und lokal mit `pdfplumber` ausgelesen (§3). Die 403-Blockade betraf nur den
+automatisierten Abruf, nicht die Dokumente selbst.
 
 ---
 
@@ -105,44 +107,123 @@ für 2024–2026 gültig:
 
 ---
 
-## 3. ATP Challenger Tour + M15/M25 (ATP-Ranking) — QUELLE NICHT ERREICHBAR
+## 3. ATP Challenger Tour + M15/M25 (ATP-Ranking) — VERIFIZIERT
 
-Die Punkte je Runde für **Challenger 50 / 75 / 100 / 125 / 175** sowie die **Hauptfeld-Punkte
-für M15/M25 im ATP-Ranking** stehen im ATP-Regelwerk, Kapitel 9 „PIF ATP Rankings". Dieses PDF
-ist **nicht erreichbar** (HTTP 403, siehe §1). Es wurde bewusst **nichts** aus Sekundärquellen
-oder aus dem Gedächtnis eingetragen.
+**Quelle:** ATP Rulebook, Kapitel 9 „PIF ATP Rankings", Abschnitt **„5) Singles Point table"**.
+Vier Fassungen lokal ausgelesen:
 
-| Kategorie | W | F | SF | QF | R16 | R32/R1 | Quali | Feldgröße-abhängig? |
+| Jahrgang | Datei | Einzel-Punktetabelle auf (gedruckte Seite) |
+|---|---|---|
+| 2024 | `2024-rulebook-chapter-9_pif-atp-rankings_27feb.pdf` | **S. 254** (Challenger + ITF zusammen) |
+| 2025 (10feb) | `2025-rulebook-chapter-9_pif-atp-rankings_10feb.pdf` | **S. 265** |
+| 2025 (23dec) | `2025-rulebook-chapter-9_pif-atp-rankings_23dec.pdf` | **S. 265** (identisch zur 10feb-Fassung) |
+| 2026 | `2026-rulebook-chapter-9_pif-atp-rankings_22dec25.pdf` | **S. 272–273** (Ch 175–75 auf 272, Ch 50 + M25/M15 auf 273) |
+
+**Methode (spaltenerkennend, nicht Textfluss):** Aus der Kopfzeile wurden die x-Positionen jeder
+Spalte bestimmt (`W=247, F=271, SF=292, QF=312, R16=332, R32=352, R64=371, R128=391, Q=416,
+Q3=431, Q2=449` PDF-Punkte). Jede Zahl einer Datenzeile wurde per Geometrie der nächstliegenden
+Spalte zugeordnet (Toleranz ±12 pt) — nicht über die Reihenfolge im Textstrom. Die x-Positionen
+sind über **alle vier** Fassungen identisch.
+
+### 3a. Challenger Tour — Herren-Einzel (ATP-Ranglistenpunkte)
+
+**Über alle vier Fassungen (2024, 2025-10feb, 2025-23dec, 2026) Zahl für Zahl identisch.**
+
+| Tier | W | F | SF | QF | R16 | 1. Rd (R32) | Quali Q | Quali Q2 |
 |---|---|---|---|---|---|---|---|---|
-| Challenger 175 | — Quelle nicht erreichbar — | | | | | | | ? |
-| Challenger 125 | — Quelle nicht erreichbar — | | | | | | | ? |
-| Challenger 100 | — Quelle nicht erreichbar — | | | | | | | ? |
-| Challenger 75 | — Quelle nicht erreichbar — | | | | | | | ? |
-| Challenger 50 | — Quelle nicht erreichbar — | | | | | | | ? |
-| M25 (ATP-Ranking, Hauptfeld) | — Quelle nicht erreichbar — | | | | | | | ? |
-| M15 (ATP-Ranking, Hauptfeld) | — Quelle nicht erreichbar — | | | | | | | ? |
+| Challenger 175 | 175 | 90 | 50 | 25 | 13 | **0** | 6 | 3 |
+| Challenger 125 | 125 | 64 | 35 | 16 | 8 | **0** | 5 | 3 |
+| Challenger 100 | 100 | 50 | 25 | 14 | 7 | **0** | 4 | 2 |
+| Challenger 75 | 75 | 44 | 22 | 12 | 6 | **0** | 4 | 2 |
+| Challenger 50 | 50 | 25 | 14 | 8 | 4 | **0** | 3 | 1 |
 
-**Offene Fragen, die nur die ATP-PDF beantwortet** (bewusst NICHT geraten):
-- Genaue Punkte je Runde für alle fünf Challenger-Tiers und für M15/M25 (Hauptfeld).
-- **Feldgrößen-Abhängigkeit:** Challenger haben 32er- **und** 48er-Draws (mit zusätzlicher R32-
-  Runde). Ob und wie die Punkte je Feldgröße differieren — ungeklärt, weil Quelle fehlt.
-- **Qualifikationspunkte** im ATP-Ranking für diese Kategorien.
-- **Fassungen 2024 / 2025 / 2026:** Es existieren getrennte Kapitel-9-PDFs je Jahr (URLs in §1).
-  Der Rechner muss historische Ergebnisse verarbeiten, also sind **alle drei Jahrgänge** zu
-  belegen. Insbesondere: Die Challenger-Tier-Struktur (50/75/100/125/175) wurde 2023 eingeführt;
-  ob sich Punktwerte zwischen 2024, 2025 und 2026 unterscheiden, ist **offen** bis zur PDF.
+- **Fundstelle je Zahl:** 2024 S. 254 · 2025 S. 265 · 2026 S. 272–273 (Ch 50 auf 273). Werte
+  jahrgangsübergreifend gleich → eine Zeile deckt alle drei relevanten Jahre.
+- **1. Runde = 0:** Die Tabelle listet keine R32/R64/R128-Punkte für Challenger. Niedrigste
+  Hauptfeld-Punkte = R16. Erstrundenverlust gibt **0** (Regel §3d, G.2).
+- **Keine Feldgrößen-Abhängigkeit:** anders als ATP Tour 250/500 (dort getrennte „–48 Draw" /
+  „–32 Draw"-Zeilen) hat Challenger **eine** Zeile je Tier. Die frühere offene Frage (32er vs.
+  48er-Draw) ist damit beantwortet: **keine** Punkt-Differenzierung nach Draw-Größe.
+- **Quali Q / Q2:** Spaltenüberschrift der Quali-Blöcke ist „Q Q3 Q2". Challenger füllt **Q** und
+  **Q2** (Q3 leer). Diese Quali-Punkte gibt es **nur bei Challenger, nicht bei ITF** (Regel §3d,
+  G.3) und **zusätzlich** zu den Hauptfeld-Punkten.
+
+### 3b. ITF Men's WTT (M15/M25) — Herren-Einzel im **ATP-Ranking** (Hauptfeld)
+
+Dies sind die **ATP-Ranglistenpunkte** fürs Hauptfeld dieser ITF-Turniere (nicht die ITF-WTR-
+Punkte aus §2 — die gibt es im Hauptfeld nicht). Bestätigt §2c: **Hauptfeld = ATP-Punkte.**
+
+| Kategorie | Jahrgang | W | F | SF | QF | R16 | 1. Rd | Quali |
+|---|---|---|---|---|---|---|---|---|
+| M25 / M25+H | **2024 + 2025** | 25 | 16 | 8 | 3 | 1 | **0** | – |
+| M25 / M25+H | **2026** | 25 | **14** | **7** | 3 | 1 | **0** | – |
+| M15 / M15+H | 2024 + 2025 + 2026 | 15 | 8 | 4 | 2 | 1 | **0** | – (unverändert) |
+
+- **Fundstelle:** M25/M15 2024 S. 254 · 2025 S. 265 · 2026 S. 273.
+- **2026-Änderung M25 (bestätigt):** Finalist (F) **16 → 14**, Halbfinale (SF) **8 → 7**. W/QF/R16
+  unverändert. Quelle: 2024 S. 254 (16/8) vs. 2026 S. 273 (14/7).
+- **M15 unverändert** über alle drei Jahre (2024 S. 254 = 2026 S. 273: W15 F8 SF4 QF2 R16-1).
+- **Quali = „–":** Für ITF sind die Quali-Spalten leer — Qualifikanten bekommen bei ITF **keinen**
+  Bonus (Regel §3d, G.3-Ausnahme). +H (Hospitality) ändert die **ATP-Punkte nicht**; die Tabelle
+  führt M25 und M25+H in **einer** Zeile.
+
+### 3c. Der kritische Punkt — Spaltenzuordnung R64 vs. Q (eindeutig geklärt)
+
+Die Frage war: Challenger 175 hat im Textfluss sieben Werte `175 90 50 25 13 6 3` — ist der letzte
+(3) ein **R64**-Wert oder ein **Quali**-Wert? **Antwort per Geometrie: es sind Quali-Punkte, kein
+R64.** Die zwei letzten Werte liegen bei x=416 und x=451:
+
+| Wert | x-Position im PDF | nächste Kopfspalte (x) | → Spalte |
+|---|---|---|---|
+| 175 | 241 | W (247) | W |
+| 90 | 266 | F (271) | F |
+| 50 | 292 | SF (292) | SF |
+| 25 | 313 | QF (312) | QF |
+| 13 | 334 | R16 (332) | R16 |
+| 6 | 416 | **Q (416)** | **Q** |
+| 3 | 451 | **Q2 (449)** | **Q2** |
+
+Die Spalten **R32 (352), R64 (371), R128 (391) sind leer** — dort steht in der Zeile kein Wert.
+Der Sprung von x=334 (R16) direkt auf x=416 (Q) überspringt die drei mittleren Spalten. Damit ist
+`6` = **Q** und `3` = **Q2**, **nicht** R64. Das ist plausibel: Challenger-Hauptfelder sind 32er-
+(teils 48er-)Draws ohne R64/R128, und der Erstrundenverlust gibt 0 (G.2) — es *kann* dort keinen
+R64-Wert geben. **Identisch geprüft für alle Tiers und alle vier Fassungen** (die Quali-Werte
+liegen durchgängig bei x≈416/451, nie bei x≈371). Nicht geraten — aus den tatsächlichen
+Spaltenpositionen abgelesen.
+
+### 3d. Regelfakten (mit Fundstelle, Jahrgang + gedruckte Seite)
+
+Aus dem Fließtext des Kapitels 9 (wörtlich geprüft), relevant für den Rechner:
+
+1. **Kein Punkt für Erstrundenverlust bei Challenger und ITF.** Wortlaut: *„No points are awarded
+   for a first round loss at ATP Tour 500 & 250 events, ATP Challenger Tour or ITF Men's WTT
+   events."* — **Regel 9.03 G.2**, 2024 **S. 254**, 2026 **S. 272**.
+2. **Qualifikanten: Bonuspunkte bei Challenger, KEINE bei ITF.** Wortlaut: *„Players qualifying for
+   the main draw through the qualifying competition shall receive qualifying points in addition to
+   any points earned, as per the following table, **with the exception of ITF Men's WTT events**."*
+   — **Regel 9.03 G.3**, 2024 **S. 254**, 2026 **S. 272**. (Deckt sich mit §3a: Challenger hat
+   Q/Q2-Werte, ITF nicht.)
+3. **Zählende Ergebnisse: 2024/2025 „best seven", 2026 „best six".** 2024/2025: *„… his best seven
+   (7) results from the United Cup, all ATP Tour 500, ATP Tour 250, ATP Challenger Tour and …"* —
+   2024 **S. 250**. 2026: *„… his best six (6) results …"* — 2026 **S. 268**. (Zählregel, Abschnitt
+   9.03 A/B — die Zahl der zählenden Nicht-Pflicht-Turniere sinkt 2026 von 7 auf 6.)
+4. **ITF-Turniere kommen erst am zweiten Montag nach der Turnierwoche ins System.** Wortlaut:
+   *„ITF tournaments … are only entered into the system on the second Monday following the
+   tournament's week."* — **Regel 9.01 E**, 2024 **S. 249**, 2026 **S. 267**. (Wichtig für die
+   zeitliche Verbuchung im Rechner: ITF-Punkte werden ~2 Wochen verzögert wirksam.)
 
 ---
 
-## 4. Was zur Fertigstellung fehlt
+## 4. Was noch offen ist
 
-1. **Zugang zu den ATP-Kapitel-9-PDFs** (2024, 2025, 2026). Die Dateien sind öffentlich, aber
-   die WAF von `atptour.com` blockiert automatisierten Zugriff (403). Nutzer legt die PDFs lokal
-   ab → dann werden die Zahlen wie bei der ITF-PDF lokal ausgelesen und §3 vollständig befüllt
-   (alle fünf Challenger-Tiers + M15/M25-Hauptfeld, Feldgrößen 32/48, Jahrgänge 2024/25/26).
-2. **2026-ITF-WTR-Ranglistenpunkte** (Quali): standalone `itf-points-tables-2026.pdf` existiert
+1. ~~Zugang zu den ATP-Kapitel-9-PDFs~~ — **erledigt.** Alle vier Fassungen (2024, 2025×2, 2026)
+   lokal ausgelesen, §3 vollständig befüllt (fünf Challenger-Tiers + M15/M25-Hauptfeld, alle drei
+   Jahrgänge, Regelfakten mit Fundstelle). Feldgrößen-Frage beantwortet: keine 32/48-Differenzierung
+   bei Challenger.
+2. **2026-ITF-WTR-Ranglistenpunkte** (nur Quali): standalone `itf-points-tables-2026.pdf` existiert
    nicht (404); im `2026-wtt-regulations.pdf` war nur die Preisgeld-Tabelle extrahierbar. Ob die
-   Quali-Punkte 2026 unverändert sind: **offen** (Primärquelle noch nicht sauber lesbar).
+   ITF-**WTR**-Quali-Punkte (§2a) 2026 unverändert sind: **offen**. **Für den Hauptfeld-Rechner
+   irrelevant** — im Hauptfeld zählen ATP-Punkte (§3b), die für 2026 vollständig belegt sind.
 
 ## 5. Offene Produktfrage (NICHT selbst entschieden)
 
