@@ -155,6 +155,11 @@ Attribution in beiden Fällen sicherstellen.
 **Dateien:** `src/lib/tournaments.ts` (`computePlan`/`leg`/`PlanCost`), `src/app/map/SeasonPlanner.tsx` (Anzeige), Muster: `src/domain/tour/costs.ts` + Test.
 **Fertig wenn:** Ein Cluster von drei Wochen am selben Ort wird im Planer nachweislich günstiger dargestellt als drei verschiedene Orte; keine Float-Zwischenwerte; mehrere Währungen (falls je eingeführt) getrennt ausgewiesen.
 
+### MU-028 · Preisgeld-Ableitung ohne Jahres-Staffelung · M · offen
+**Problem:** `PRIZE_USD` in `scripts/wikipedia-import.mjs` (Zeile 90–95) leitet das Preisgeld aus der Kategorie ab, mit festen, JAHRES-UNABHÄNGIGEN Werten. M25 steht dort auf 25000 USD; laut 2026-WTT-Regelwerk sind es 2026 aber 30000. Die Struktur kann Jahresänderungen grundsätzlich nicht abbilden.
+**Wirkung:** Alle 2026er M25-Turniere tragen einen um 5000 USD zu niedrigen Preisgeld-Claim. Bei jeder künftigen ITF-Preisgeldreform wiederholt sich der Fehler still. Entschärfend: Der Wert ist als Ableitung mit niedriger confidence markiert, nicht als Beobachtung.
+**Lösung:** `PRIZE_USD` nach Jahr staffeln (Kategorie + Jahr → Betrag), mit Quellenangabe je Jahrgang. Danach die betroffenen Claims neu berechnen — der Import ist idempotent, ein erneuter Lauf reicht. Belegt in `scripts/punkte-tabellen-report.md` §2b.
+
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
