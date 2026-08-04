@@ -15,7 +15,7 @@ Ausführliche Doku: `MATCHUP-WEBAPP-PRODUKT.md` (Inhalt/Features) und `MATCHUP-W
 ## Stack
 
 Next.js 16 (App Router, Turbopack) · React 19 · Tailwind CSS v4 · TypeScript strict ·
-Supabase (Postgres, **Schema `web`**) · Leaflet + MapLibre GL · tesseract.js · Vitest · Vercel
+Supabase (Postgres, **Schema `web`**) · Leaflet 1.9.4 (Karten; `maplibre-gl` ist installiert, aber ungenutzt) · tesseract.js · Vitest · Vercel
 
 ## Befehle
 

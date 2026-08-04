@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-// MapLibre nutzt window/document → nur im Browser laden (kein SSR).
+// Leaflet nutzt window/document → nur im Browser laden (kein SSR).
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (

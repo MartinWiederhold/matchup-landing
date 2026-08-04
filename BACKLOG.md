@@ -3,6 +3,12 @@
 > Format: `MU-xxx` · Aufwand S/M/L · Status: `offen` | `in Arbeit` | `erledigt`
 > Regel: Ein Ticket = ein Claude-Code-Prompt. Was größer ist, wird vorher geteilt.
 > Nach Änderungen diese Datei aktualisieren und im Claude-Projekt neu hochladen.
+>
+> **Nummerierung:** Neue Tickets bekommen die nächste freie Nummer; alte werden NIE
+> umnummeriert (eine Nummer kann in Commits, Verläufen oder Notizen außerhalb des Repos
+> stehen). **Doppelt vergeben:** `MU-020`, `MU-021` und `MU-022` existieren je zweimal —
+> einmal in Priorität 3 (Advice, älter) und einmal im Compete/Tour-Kontext (Kalender/Karte).
+> Bewusst so belassen; im Zweifel die Sektion/den Titel zur Unterscheidung nennen.
 
 ## Priorität 1 — vor Launch
 
@@ -96,6 +102,12 @@
 **Lösung:** Token rotieren können (neuer Token, alter ungültig), plus Möglichkeit, den Feed ganz abzuschalten. Optional ein Ablaufdatum.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal geteilter Feed nicht widerrufbar ist.
 
+### MU-024 · Kachelquelle der Karte rechtlich ungeklärt · M · offen · **Vor Launch**
+**Problem:** Die Karte nutzt den schlüssellosen öffentlichen CARTO-Basemap-CDN (`basemaps.cartocdn.com`). Kein API-Schlüssel, keine Abrechnung konfiguriert. Ob diese Nutzung bei kommerziellem Betrieb und wachsender Abrufmenge zulässig bleibt, steht nirgends im Repo und wurde nie geprüft.
+**Wirkung:** Fällt der Zugang weg oder wird abgerechnet, ist die Karte in /app und /tour gleichzeitig betroffen. Bei einer bezahlten App kommt die Frage spätestens bei der ersten Prüfung.
+**Lösung:** CARTO-Nutzungsbedingungen prüfen. Falls kommerziell nicht gedeckt: Alternative mit klarer Lizenz wählen (z. B. selbst gehostete OSM-Kacheln oder ein Anbieter mit kostenlosem Kontingent und Vertrag). Attribution in beiden Fällen sicherstellen.
+**Sperre:** Nicht mit echten Nutzern starten, solange die Lizenzlage ungeklärt ist.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-021 · Kalendertermine ohne Zeitzone · M · offen
@@ -137,6 +149,11 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 
 ### MU-022 · Racket-/String-Daten aus Supabase statt Seed-Dateien · M · offen
 `getRackets()` / `getStrings()` sind bereits als Abstraktion angelegt — Umstellung ohne UI-Änderung möglich.
+
+### MU-025 · Turnierlogos sind Website-Favicons · S · offen
+**Problem:** `tournamentLogo()` in `src/lib/tournaments.ts` leitet das Logo aus Googles Favicon-Dienst ab. Gezeigt wird das Favicon der Turnier-Website, nie das echte Turnierlogo; fehlt die URL, fällt der Marker auf einen Stern zurück.
+**Wirkung:** Kosmetisch. Das dokumentierte Generali-Open-Problem.
+**Lösung:** Logos kuratiert hinterlegen oder sauberer Fallback (Landesflagge oder Monogramm) statt Favicon-Rateversuch.
 
 ## Erledigt
 

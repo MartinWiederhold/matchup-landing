@@ -30,7 +30,7 @@ Dazu öffentliche Marketing- und SEO-Seiten sowie eine Beratungsplattform (`/ber
 
 - Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS v4, TypeScript strict
 - Supabase (Postgres, Schema `web`, RLS auf allen Tabellen)
-- Leaflet + MapLibre GL (Karten), tesseract.js (Beleg-OCR)
+- Leaflet 1.9.4 (Karten; `maplibre-gl` ist installiert, aber ungenutzt), tesseract.js (Beleg-OCR)
 - Vitest, Vercel, SendGrid
 
 Details und Fallstricke: `MATCHUP-WEBAPP-TECHNIK.md`.
