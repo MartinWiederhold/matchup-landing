@@ -2,42 +2,61 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n";
 
 /**
- * Schlichte Navigation zwischen den /tour-Seiten. Eigene Adressen statt Tabs,
- * damit sie am Laptop merk- und teilbar sind. Die aktuelle Seite ist über
- * `usePathname()` erkennbar (Akzentfarbe + aria-current).
+ * Navigation zwischen den /tour-Seiten. Eigene Adressen statt Tabs, damit sie am
+ * Laptop merk- und teilbar sind. Die aktuelle Seite ist über `usePathname()`
+ * erkennbar (Akzentfarbe + aria-current).
+ *
+ * Auf dem Handy EINZEILIG horizontal scrollbar (kein Umbruch auf zwei Zeilen —
+ * das kostet vertikalen Platz und wirkt wie eine untergeordnete Ebene, obwohl alle
+ * Einträge gleichrangig sind). Scrollbalken versteckt, Wischen funktioniert. Beim
+ * Laden wird die aktive Seite nach links gescrollt, falls sie weiter rechts liegt.
  */
 export default function TourNav() {
   const t = useT();
-  const path = usePathname();
-  const isSeason = path?.startsWith("/tour/season") ?? false;
-  const isCosts = path?.startsWith("/tour/costs") ?? false;
-  const isExpenses = path?.startsWith("/tour/expenses") ?? false;
-  const isSchengen = path?.startsWith("/tour/schengen") ?? false;
-  const isCalendar = !isSeason && !isCosts && !isExpenses && !isSchengen; // /tour selbst
+  const path = usePathname() ?? "";
+  const navRef = useRef<HTMLElement>(null);
+  const activeRef = useRef<HTMLAnchorElement>(null);
 
-  const cls = (active: boolean) =>
-    `text-[13px] font-semibold transition-colors ${active ? "text-matchup" : "text-neutral-500 hover:text-neutral-800"}`;
+  // Unterrouten; /tour (Turnierkalender) ist aktiv, wenn keine davon passt.
+  const SUB = ["/tour/season", "/tour/costs", "/tour/expenses", "/tour/schengen", "/tour/calendar"];
+  const items = [
+    { href: "/tour", label: t("tour.navCalendar"), active: !SUB.some((p) => path.startsWith(p)) },
+    { href: "/tour/season", label: t("tour.navSeason"), active: path.startsWith("/tour/season") },
+    { href: "/tour/costs", label: t("tour.navCosts"), active: path.startsWith("/tour/costs") },
+    { href: "/tour/expenses", label: t("tour.navExpenses"), active: path.startsWith("/tour/expenses") },
+    { href: "/tour/schengen", label: t("tour.navSchengen"), active: path.startsWith("/tour/schengen") },
+    { href: "/tour/calendar", label: t("tour.navEvents"), active: path.startsWith("/tour/calendar") },
+  ];
+
+  // Aktive Seite sichtbar machen — nur horizontal (kein vertikaler Seiten-Sprung).
+  useEffect(() => {
+    const nav = navRef.current;
+    const act = activeRef.current;
+    if (!nav || !act) return;
+    const delta = act.getBoundingClientRect().left - nav.getBoundingClientRect().left;
+    nav.scrollLeft += delta - 16; // aktive Seite ~16px vom linken Rand
+  }, [path]);
 
   return (
-    <nav className="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-b border-black/[0.08] pb-3">
-      <Link href="/tour" className={cls(isCalendar)} aria-current={isCalendar ? "page" : undefined}>
-        {t("tour.navCalendar")}
-      </Link>
-      <Link href="/tour/season" className={cls(isSeason)} aria-current={isSeason ? "page" : undefined}>
-        {t("tour.navSeason")}
-      </Link>
-      <Link href="/tour/costs" className={cls(isCosts)} aria-current={isCosts ? "page" : undefined}>
-        {t("tour.navCosts")}
-      </Link>
-      <Link href="/tour/expenses" className={cls(isExpenses)} aria-current={isExpenses ? "page" : undefined}>
-        {t("tour.navExpenses")}
-      </Link>
-      <Link href="/tour/schengen" className={cls(isSchengen)} aria-current={isSchengen ? "page" : undefined}>
-        {t("tour.navSchengen")}
-      </Link>
+    <nav
+      ref={navRef}
+      className="mt-6 flex gap-6 overflow-x-auto whitespace-nowrap border-b border-black/[0.08] pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {items.map((it) => (
+        <Link
+          key={it.href}
+          href={it.href}
+          ref={it.active ? activeRef : undefined}
+          aria-current={it.active ? "page" : undefined}
+          className={`shrink-0 text-[13px] font-semibold transition-colors ${it.active ? "text-matchup" : "text-neutral-500 hover:text-neutral-800"}`}
+        >
+          {it.label}
+        </Link>
+      ))}
     </nav>
   );
 }
