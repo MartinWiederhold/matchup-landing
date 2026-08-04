@@ -30,7 +30,7 @@ Dazu öffentliche Marketing- und SEO-Seiten sowie eine Beratungsplattform (`/ber
 
 - Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS v4, TypeScript strict
 - Supabase (Postgres, Schema `web`, RLS auf allen Tabellen)
-- Leaflet 1.9.4 (Karten; `maplibre-gl` ist installiert, aber ungenutzt), tesseract.js (Beleg-OCR)
+- Karten: `/app/map` nutzt Leaflet 1.9.4 mit CARTO-Kacheln (kommerziell nicht gedeckt, siehe MU-024); die neue Route `/tour/map` nutzt MapLibre GL JS 5.24.0 mit OpenFreeMap. tesseract.js (Beleg-OCR)
 - Vitest, Vercel, SendGrid
 
 Details und Fallstricke: `MATCHUP-WEBAPP-TECHNIK.md`.
@@ -38,6 +38,8 @@ Details und Fallstricke: `MATCHUP-WEBAPP-TECHNIK.md`.
 ## Status
 
 Play und Tour sind vollständig gebaut. Die gesamte Seite liegt hinter einem Pre-Launch-Gate; Tour zusätzlich hinter einem Early-Access-Gate (`COMPETE_EARLY_ACCESS_OPEN=false`).
+
+Unter `/tour` entsteht ein eigener Compete-Bereich, der den Tour-Modus in `/app` später ersetzen soll. Aktueller Umfang: Turnierkalender, Meine Saison, Kosten, Ausgaben, Schengen, Termine, Karte — auf eigenem Datenstamm (`web.tour_tournaments`, 1489 Turniere mit Provenance) und eigenen Domain-Bausteinen unter `src/domain/tour/`. `/app` bleibt bis zur vollständigen Ablösung unberührt.
 
 ## Wann etwas „fertig" ist
 
