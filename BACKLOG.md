@@ -102,11 +102,14 @@
 **Lösung:** Token rotieren können (neuer Token, alter ungültig), plus Möglichkeit, den Feed ganz abzuschalten. Optional ein Ablaufdatum.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal geteilter Feed nicht widerrufbar ist.
 
-### MU-024 · Kachelquelle der Karte rechtlich ungeklärt · M · offen · **Vor Launch**
-**Problem:** Die Karte nutzt den schlüssellosen öffentlichen CARTO-Basemap-CDN (`basemaps.cartocdn.com`). Kein API-Schlüssel, keine Abrechnung konfiguriert. Ob diese Nutzung bei kommerziellem Betrieb und wachsender Abrufmenge zulässig bleibt, steht nirgends im Repo und wurde nie geprüft.
-**Wirkung:** Fällt der Zugang weg oder wird abgerechnet, ist die Karte in /app und /tour gleichzeitig betroffen. Bei einer bezahlten App kommt die Frage spätestens bei der ersten Prüfung.
-**Lösung:** CARTO-Nutzungsbedingungen prüfen. Falls kommerziell nicht gedeckt: Alternative mit klarer Lizenz wählen (z. B. selbst gehostete OSM-Kacheln oder ein Anbieter mit kostenlosem Kontingent und Vertrag). Attribution in beiden Fällen sicherstellen.
-**Sperre:** Nicht mit echten Nutzern starten, solange die Lizenzlage ungeklärt ist.
+### MU-024 · CARTO-Kacheln kommerziell nicht gedeckt · M · offen · **Vor Launch**
+**Problem (geklärt):** Die Karte nutzt den schlüssellosen CARTO-Basemap-CDN (`basemaps.cartocdn.com`) ohne API-Schlüssel und ohne Vertrag. CARTOs eigene `LICENSE.md` sagt wörtlich, dass der Zugang zu den Basemap-Tile-Diensten auf **Enterprise-Kunden und Non-Profit-Grants** beschränkt ist und **nicht** zur freien öffentlichen Nutzung steht; die CARTO-Doku bestätigt, dass kommerzielle Nutzung eine **Enterprise-Lizenz** erfordert. Die aktuelle schlüssellose Nutzung in `/map` ist damit **nicht gedeckt** — die Lizenzlage ist nicht mehr offen, sondern negativ.
+**Wirkung:** Fällt der Zugang weg oder wird abgerechnet, ist die Karte in /app und /tour gleichzeitig betroffen. Bei einer bezahlten App ist das ein Lizenzverstoß, kein offener Prüfpunkt.
+**Lösung:** Wechsel auf eine Kachelquelle mit klarer, kommerziell erlaubter Lizenz.
+- **Erste Wahl: OpenFreeMap** — kein Schlüssel, keine Abrufgrenze, kommerziell erlaubt, Vektorkacheln für MapLibre (`maplibre-gl` ist bereits installiert). **Risiko:** spendenfinanziert, kein Vertrag/SLA — Verfügbarkeit nicht garantiert.
+- **Rückfall: Protomaps selbst gehostet** — PMTiles auf Objektspeicher, unbegrenzt, nur Speicher- und Transferkosten, Leaflet-tauglich (kein Anbieter-Risiko, dafür Betriebsaufwand).
+Attribution in beiden Fällen sicherstellen.
+**Sperre:** Nicht mit echten Nutzern starten, solange die Karte auf der CARTO-Quelle läuft.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
