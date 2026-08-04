@@ -90,7 +90,18 @@
 **Lösung:** Nationalität einbeziehen, oder die Aussage auf das reduzieren, was ohne sie stimmt („Einreisebestimmungen prüfen", mit Amtslink). Gebühren mit Datenstand versehen oder weglassen.
 **Sperre:** Nicht mit echten Nutzern starten, solange eine nationalitätsabhängige Aussage als allgemeingültig erscheint.
 
+### MU-020 · Kalender-Token lässt sich nicht zurückziehen · M · offen · **Vor Launch**
+**Problem:** `ensureCalendarToken` erzeugt einen Token einmalig und rotiert nie. `web.tour_calendar` hat kein Ablauffeld, kein Code-Pfad löscht oder erneuert die Zeile. Die Feed-URL `/api/tour/calendar/<token>.ics` ist login-los.
+**Wirkung:** Wer die URL einmal hat — geteiltes Gerät, Screenshot, ein Kalenderdienst der Feeds protokolliert — sieht dauerhaft alle Termine mit Titel und Notiz. Ein Widerruf ist die Grundfunktion jedes Freigabe-Links und fehlt.
+**Lösung:** Token rotieren können (neuer Token, alter ungültig), plus Möglichkeit, den Feed ganz abzuschalten. Optional ein Ablaufdatum.
+**Sperre:** Nicht mit echten Nutzern starten, solange ein einmal geteilter Feed nicht widerrufbar ist.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
+
+### MU-021 · Kalendertermine ohne Zeitzone · M · offen
+**Problem:** `web.tour_events.event_time` ist `time without time zone`, der ICS-Export liefert `DTSTART` ohne `TZID`. Ein Termin „14:00" erscheint in jeder Kalender-App als lokale 14 Uhr des Betrachters.
+**Wirkung:** Betrifft genau die Zielgruppe — wer zwischen Monastir, Antalya und Spanien pendelt, trägt einen Termin in einer Zeitzone ein und sieht ihn in einer anderen zur falschen Zeit. Bei einem Matchtermin ist das kein Schönheitsfehler.
+**Lösung:** Zeitzone je Termin führen (aus dem Turnierland ableitbar) und im ICS als `TZID` ausgeben. Alternativ die Konvention ausdrücklich benennen, damit der Nutzer sie kennt.
 
 ### MU-010 · Geteilte Unterkunft zwischen Spielern · L · offen
 **Warum:** Laut Marktanalyse von **keiner** existierenden App abgedeckt und einer der stärksten Sparhebel für Spieler (Zimmer/Apartments teilen).
