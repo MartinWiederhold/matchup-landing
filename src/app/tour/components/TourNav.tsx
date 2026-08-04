@@ -22,7 +22,7 @@ export default function TourNav() {
   const activeRef = useRef<HTMLAnchorElement>(null);
 
   // Unterrouten; /tour (Turnierkalender) ist aktiv, wenn keine davon passt.
-  const SUB = ["/tour/season", "/tour/costs", "/tour/expenses", "/tour/schengen", "/tour/calendar"];
+  const SUB = ["/tour/season", "/tour/costs", "/tour/expenses", "/tour/schengen", "/tour/calendar", "/tour/map"];
   const items = [
     { href: "/tour", label: t("tour.navCalendar"), active: !SUB.some((p) => path.startsWith(p)) },
     { href: "/tour/season", label: t("tour.navSeason"), active: path.startsWith("/tour/season") },
@@ -30,6 +30,7 @@ export default function TourNav() {
     { href: "/tour/expenses", label: t("tour.navExpenses"), active: path.startsWith("/tour/expenses") },
     { href: "/tour/schengen", label: t("tour.navSchengen"), active: path.startsWith("/tour/schengen") },
     { href: "/tour/calendar", label: t("tour.navEvents"), active: path.startsWith("/tour/calendar") },
+    { href: "/tour/map", label: t("tour.navMap"), active: path.startsWith("/tour/map") },
   ];
 
   // Aktive Seite sichtbar machen — nur horizontal (kein vertikaler Seiten-Sprung).

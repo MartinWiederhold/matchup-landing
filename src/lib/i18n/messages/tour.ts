@@ -319,6 +319,19 @@ export const tour = {
     calNeedTitle: "Titel ist nötig.",
     calSaveError: "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
 
+    // Karten-Seite (/tour/map)
+    navMap: "Karte",
+    mapSeoTitle: "Karte",
+    mapSeoDescription: "Deine Saison als Reiseweg auf der Weltkarte.",
+    mapTitle: "Karte",
+    mapSubtitle: "Deine Saison als Reiseweg — Stationen in Reihenfolge der Turnierwochen.",
+    mapEmptyTitle: "Noch keine Turniere in der Saison",
+    mapEmptyText: "Nimm im Turnierkalender Turniere auf, dann erscheinen sie hier auf der Karte.",
+    mapEmptyCta: "Zum Turnierkalender",
+    mapNoCoordsTitle: "Ohne Koordinaten (nicht auf der Karte)",
+    mapNoCoordsText: "Diesen Turnieren fehlen Koordinaten — sie stehen hier statt auf der Karte.",
+    mapAllNoCoords: "Keines deiner Saisonturniere hat Koordinaten — daher keine Karte.",
+
     // Aufnehmen-Knopf (Turnierkalender)
     addToSeason: "Zur Saison hinzufügen",
     inSeason: "In deiner Saison",
@@ -613,6 +626,19 @@ export const tour = {
     calDelete: "Delete",
     calNeedTitle: "Title is required.",
     calSaveError: "Couldn't save. Please try again.",
+
+    // Map page (/tour/map)
+    navMap: "Map",
+    mapSeoTitle: "Map",
+    mapSeoDescription: "Your season as a travel route on the world map.",
+    mapTitle: "Map",
+    mapSubtitle: "Your season as a travel route — stops in order of tournament weeks.",
+    mapEmptyTitle: "No tournaments in your season yet",
+    mapEmptyText: "Add tournaments from the tournament calendar, then they appear here on the map.",
+    mapEmptyCta: "Go to tournament calendar",
+    mapNoCoordsTitle: "Without coordinates (not on the map)",
+    mapNoCoordsText: "These tournaments have no coordinates — they are listed here instead of on the map.",
+    mapAllNoCoords: "None of your season tournaments have coordinates — so no map.",
 
     // Add-to-season button (tournament calendar)
     addToSeason: "Add to season",
