@@ -1,0 +1,550 @@
+# Geocodierung Turniere — SCHARFER LAUF
+
+> Erzeugt von `scripts/geocode-tournaments.mjs`. Quelle: **Nominatim / OpenStreetMap**
+> Richtlinie: https://operations.osmfoundation.org/policies/nominatim/ · Attribution "© OpenStreetMap contributors".
+> Koordinaten sind eine **Ableitung** aus Stadt+Land → Claim-Quelle `nominatim`, confidence 0.6 (< Beobachtung 0.9).
+
+## Zusammenfassung
+
+| | Anzahl |
+|---|---:|
+| Turniere ohne Koordinaten | 255 |
+| Distinkte Orte (Stadt+Land) | 124 |
+| **abgefragt (fertig)** | 124 |
+| noch offen (--limit) | 0 |
+| aufgeloest | 0 |
+| mehrdeutig | 121 |
+| nicht gefunden | 3 |
+| falsches Land | 0 |
+| Fehler/keine Antwort | 0 |
+| Netz-Abfragen in diesem Lauf | 0 (Cache: 124) |
+
+**Wuerde geschrieben:** 0 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 0 Orte / 0 Turniere.
+
+**Geschrieben:** 0 Claims ok, 0 Fehler (von 0).
+
+## Stichprobe: 10 aufgeloeste Orte (zur Pruefung)
+
+| Ort | Land | lat | lon | Turniere | OSM |
+|---|---|---:|---:|---:|---|
+
+## Mehrdeutige Orte (NICHT uebernommen — bitte pruefen)
+
+- **Las Vegas, US** (2 Turniere) — 2 verschiedene Orte:
+  - 36.1674, -115.1484 · Las Vegas, Clark County, Nevada, United States
+  - 35.5939, -105.2239 · Las Vegas, San Miguel County, New Mexico, United States
+- **Savannah, US** (2 Turniere) — 5 verschiedene Orte:
+  - 32.0790, -81.0921 · Savannah, Chatham County, Georgia, United States
+  - 35.2248, -88.2492 · Savannah, Hardin County, West Tennessee, Tennessee, United States
+  - 39.9414, -94.8299 · Savannah, Andrew County, Missouri, 64485, United States
+  - 43.0673, -76.7597 · Town of Savannah, Wayne County, New York, United States
+  - 40.9653, -82.3652 · Savannah, Clear Creek Township, Ashland County, Ohio, 44874, United States
+- **Tigre, AR** (3 Turniere) — 3 verschiedene Orte:
+  - -34.4235, -58.5818 · Tigre, Luis García, Tigre, Partido de Tigre, Buenos Aires, 1648, Argentina
+  - -33.0305, -60.5950 · Tigre, Villa Gobernador Gálvez, Municipio de Villa Gobernador Gálvez, Gran Rosario, Departamento Rosario, Santa Fe, S2124, Argentina
+  - -42.4612, -71.7706 · Tigre, Departamento Cushamen, Chubut, Argentina
+- **São Paulo, BR** (4 Turniere) — 3 verschiedene Orte:
+  - -23.5507, -46.6334 · São Paulo, Southeast Region, Brazil
+  - -1.2043, -47.1584 · São Paulo, Capanema, Pará, North Region, 68700-540, Brazil
+  - -22.0703, -48.4334 · São Paulo, Southeast Region, Brazil
+- **Sunrise, US** (2 Turniere) — 5 verschiedene Orte:
+  - 26.1667, -80.2788 · Sunrise, Broward County, Florida, United States
+  - 60.8710, -149.4736 · Sunrise, Kenai Peninsula Borough, Alaska, United States
+  - 45.5469, -92.8549 · Sunrise, Sunrise Township, Chisago County, Minnesota, United States
+  - 42.3302, -104.7055 · Sunrise, Platte County, Wyoming, 82215, United States
+  - 38.1926, -79.8137 · Sunrise, Bath County, Virginia, United States
+- **Lakewood, US** (3 Turniere) — 5 verschiedene Orte:
+  - 39.7086, -105.0847 · Lakewood, Jefferson County, Colorado, United States
+  - 33.8503, -118.1172 · Lakewood, Los Angeles County, California, United States
+  - 41.4820, -81.7982 · Lakewood, Cuyahoga County, Ohio, 44107, United States
+  - 47.1718, -122.5185 · Lakewood, Pierce County, Washington, United States
+  - 40.0941, -74.2150 · Lakewood Township, Ocean County, New Jersey, 08701, United States
+- **Metepec, MX** (1 Turniere) — 2 verschiedene Orte:
+  - 19.2511, -99.5937 · Metepec, State of Mexico, Mexico
+  - 20.2587, -98.3447 · Metepec, Hidalgo, Mexico
+- **Carnac, FR** (2 Turniere) — 2 verschiedene Orte:
+  - 47.5837, -3.0794 · Carnac, Lorient, Morbihan, Brittany, Metropolitan France, 56340, France
+  - 43.8322, 3.9879 · Carnas, Le Vigan, Gard, Occitania, Metropolitan France, 30260, France
+- **Louisville, US** (2 Turniere) — 5 verschiedene Orte:
+  - 38.2542, -85.7594 · Louisville, Jefferson County, Kentucky, United States
+  - 39.9778, -105.1319 · Louisville, Boulder County, Colorado, 80027, United States
+  - 33.0015, -82.4112 · Louisville, Jefferson County, Georgia, 30434, United States
+  - 38.7723, -88.5025 · Louisville, Louisville Township, Clay County, Illinois, United States
+  - 33.1235, -89.0532 · Louisville, Winston County, Mississippi, 39339, United States
+- **Norman, US** (1 Turniere) — 5 verschiedene Orte:
+  - 35.2226, -97.4395 · Norman, Cleveland County, Oklahoma, United States
+  - 47.3194, -96.4626 · Norman County, Minnesota, United States
+  - 34.4566, -93.6816 · Norman, Montgomery County, Arkansas, 71960, United States
+  - 35.1706, -79.7228 · Norman, Richmond County, North Carolina, 28367, United States
+  - 40.4788, -98.7921 · Norman, Kearney County, Nebraska, United States
+- **Frankfurt, DE** (2 Turniere) — 2 verschiedene Orte:
+  - 50.1106, 8.6821 · Frankfurt, Hesse, Germany
+  - 52.3412, 14.5495 · Frankfurt (Oder), Brandenburg, Germany
+- **Gwangju, KR** (2 Turniere) — 2 verschiedene Orte:
+  - 35.1558, 126.8306 · Gwangju, Jeonnam-Gwangju Special Metropolitan City, South Korea
+  - 37.4291, 127.2552 · Gwangju-si, Gyeonggi, South Korea
+- **Querétaro, MX** (1 Turniere) — 2 verschiedene Orte:
+  - 20.8052, -99.8837 · Querétaro, Mexico
+  - 20.5923, -100.3917 · Santiago de Querétaro, Municipio de Querétaro, Querétaro, 76000, Mexico
+- **Córdoba, AR** (2 Turniere) — 2 verschiedene Orte:
+  - -31.4167, -64.1834 · Cordoba, Municipio de Córdoba, Pedanía Capital, Departamento Capital, Córdoba, X5000, Argentina
+  - -32.0222, -63.9699 · Córdoba, Argentina
+- **Tarragona, ES** (2 Turniere) — 2 verschiedene Orte:
+  - 41.1172, 1.2546 · Tarragona, Tarragonès, Tarragona, Catalonia, Spain
+  - 41.0527, 0.6268 · Tarragona, Catalonia, Spain
+- **Nansha, CN** (2 Turniere) — 4 verschiedene Orte:
+  - 22.8048, 113.5199 · Nansha District, Guangzhou City, Guangdong, China
+  - 9.5453, 112.8870 · Nansha District, Sansha, Hainan, 573299, China
+  - 32.1735, 120.2183 · Nansha, Taizhou, Jiangsu, 225300, China
+  - 23.2281, 102.8243 · Nansha, Yuanyang County, Honghe, Yunnan, China
+- **Lima, PE** (6 Turniere) — 2 verschiedene Orte:
+  - -12.0460, -77.0306 · Lima, Province of Lima, Lima Metropolitan Area, Lima, 15001, Peru
+  - -12.2001, -76.2851 · Lima, Peru
+- **Morelia, MX** (2 Turniere) — 3 verschiedene Orte:
+  - 19.6546, -101.2624 · Morelia, Michoacán, Mexico
+  - 16.3086, -91.8673 · Morelia, Chiapas, Mexico
+  - 31.9053, -112.9131 · Morelia, General Plutarco Elías Calles, Sonora, Mexico
+- **La Paz, BO** (2 Turniere) — 2 verschiedene Orte:
+  - -16.4955, -68.1336 · La Paz, Provincia Pedro Domingo Murillo, La Paz, Bolivia
+  - -15.0000, -68.3333 · La Paz, Bolivia
+- **Knoxville, US** (2 Turniere) — 5 verschiedene Orte:
+  - 35.9604, -83.9210 · Knoxville, Knox County, East Tennessee, Tennessee, United States
+  - 41.3184, -93.0971 · Knoxville, Knoxville Township, Marion County, Iowa, United States
+  - 32.7218, -83.9954 · Knoxville, Crawford County, Georgia, United States
+  - 35.3817, -93.3640 · Knoxville, Johnson County, Arkansas, 72845, United States
+  - 40.9084, -90.2848 · Knoxville, Knox County, Illinois, United States
+- **Murcia, ES** (2 Turniere) — 2 verschiedene Orte:
+  - 37.9348, -1.1131 · Murcia, Área Metropolitana de Murcia, Region of Murcia, Spain
+  - 38.0647, -1.6722 · Region of Murcia, Spain
+- **Trnava, SK** (1 Turniere) — 2 verschiedene Orte:
+  - 48.3768, 17.5858 · Trnava, District of Trnava, Region of Trnava, Slovakia
+  - 48.8167, 21.9335 · Trnava pri Laborci, District of Michalovce, Region of Košice, Slovakia
+- **Kiseljak, BA** (2 Turniere) — 2 verschiedene Orte:
+  - 43.9432, 18.0775 · Kiseljak, Kiseljak municipality, Central Bosnia Canton, Federation of Bosnia and Herzegovina, 71250, Bosnia and Herzegovina
+  - 44.5340, 19.0489 · Kiseljak, City of Zvornik, Republika Srpska, Bosnia and Herzegovina
+- **Haren, NL** (1 Turniere) — 2 verschiedene Orte:
+  - 53.1710, 6.6061 · Haren, Groningen, Netherlands
+  - 51.7997, 5.5836 · Haren, Oss, North Brabant, Netherlands
+- **Hinode, JP** (2 Turniere) — 4 verschiedene Orte:
+  - 35.7423, 139.2575 · Hinode, Nishitama District, Tokyo, Japan
+  - 35.6442, 139.9289 · Hinode, Urayasu, Chiba Prefecture, 279-0013, Japan
+  - 33.2781, 130.2959 · Hinode, Saga, Saga Prefecture, 849-0925, Japan
+  - 36.2478, 139.4073 · Hinode, Oizumi, Ora County, Gunma Prefecture, 370-0517, Japan
+- **Vancouver, CA** (1 Turniere) — 2 verschiedene Orte:
+  - 49.2609, -123.1140 · Vancouver, Metro Vancouver Regional District, British Columbia, Canada
+  - 49.5929, -125.7026 · Vancouver Island, British Columbia, Canada
+- **Villahermosa, MX** (2 Turniere) — 3 verschiedene Orte:
+  - 17.9885, -92.9366 · Villahermosa, Centro, Tabasco, Mexico
+  - 16.7209, -93.2586 · Villahermosa (Reymundo Enríquez), Ocozocoautla de Espinosa, Chiapas, Mexico
+  - 16.2602, -93.5042 · Villahermosa, Villaflores, Chiapas, Mexico
+- **Coquimbo, CL** (2 Turniere) — 2 verschiedene Orte:
+  - -30.7547, -70.9006 · Coquimbo Region, Chile
+  - -29.9532, -71.3380 · Coquimbo, Provincia de Elqui, Coquimbo Region, Chile
+- **Wuning, CN** (11 Turniere) — 2 verschiedene Orte:
+  - 29.2778, 115.0476 · Wuning County, Jiujiang, Jiangxi, China
+  - 37.3673, 121.5560 · Wuning, Muping District, Yantai, Shandong, 264100, China
+- **Hillcrest, ZA** (6 Turniere) — 5 verschiedene Orte:
+  - -29.7756, 30.7656 · Hillcrest, eThekwini Metropolitan Municipality, KwaZulu-Natal, 3651, South Africa
+  - -25.7581, 28.2418 · Hillcrest, Tshwane Ward 56, Pretoria, City of Tshwane Metropolitan Municipality, Gauteng, 0083, South Africa
+  - -33.6600, 18.9953 · Hillcrest, Drakenstein Ward 7, Wellington, Drakenstein Local Municipality, Cape Winelands District Municipality, Western Cape, 7654, South Africa
+  - -31.5783, 28.8065 · Hillcrest, King Sabata Dalindyebo Ward 9, Mthatha, King Sabata Dalindyebo Local Municipality, O.R. Tambo District Municipality, Eastern Cape, 7142, South Africa
+  - -34.0465, 18.3655 · Hillcrest, Cape Town Ward 74, Hout Bay, City of Cape Town, Western Cape, 7872, South Africa
+- **Swan Hill, AU** (2 Turniere) — 4 verschiedene Orte:
+  - -35.3391, 143.5588 · Swan Hill, Victoria, 3585, Australia
+  - -33.8951, 120.5596 · Swan Hill, Western Australia, Australia
+  - -30.3773, 150.5278 · Swan Hill, Barraba, New South Wales, 2347, Australia
+  - -24.6031, 145.9395 · Swan Hill, Mount Enniskillen, Queensland, 4472, Australia
+- **Fairfield, US** (1 Turniere) — 5 verschiedene Orte:
+  - 39.7886, -82.6419 · Fairfield County, Ohio, United States
+  - 38.2494, -122.0400 · Fairfield, Solano County, California, United States
+  - 41.1412, -73.2637 · Fairfield, Greater Bridgeport Planning Region, Connecticut, United States
+  - 31.7244, -96.1649 · Fairfield, Freestone County, Texas, 75840, United States
+  - 34.4092, -81.1131 · Fairfield County, South Carolina, United States
+- **Luzhou, CN** (2 Turniere) — 3 verschiedene Orte:
+  - 28.5298, 105.5383 · Luzhou, Sichuan, China
+  - 36.2622, 113.0848 · Luzhou District, Changzhi City, Shanxi, China
+  - 23.3688, 114.5196 · Luzhou, Huicheng District, Huizhou, Guangdong, China
+- **Jingshan, CN** (2 Turniere) — 4 verschiedene Orte:
+  - 31.0161, 113.1281 · Jingshan City, Jingmen, Jingshan, Hubei, 431800, China
+  - 30.3775, 119.8606 · Jingshan, Yuhang District, Hangzhou City, Zhejiang, 311116, China
+  - 31.3150, 118.4469 · Jingshan Subdistrict, Jinghu District, Wuhu, Anhui, China
+  - 39.9254, 116.4043 · Jingshan Subdistrict, 首都功能核心区, Dongcheng District, Beijing, 100010, China
+- **Naples, US** (5 Turniere) — 4 verschiedene Orte:
+  - 26.1422, -81.7943 · Naples, Collier County, Florida, United States
+  - 33.2032, -94.6802 · Naples, Morris County, Texas, 75568, United States
+  - 42.6161, -77.4030 · Town of Naples, Ontario County, New York, 14512, United States
+  - 43.9695, -70.6051 · Naples, Cumberland County, Maine, 04055, United States
+- **Jinan, CN** (2 Turniere) — 2 verschiedene Orte:
+  - 36.6520, 117.1138 · Jinan, Shandong, China
+  - 31.7518, 116.5342 · Jin'an District, Lu'an, Anhui, China
+- **Rosbach, DE** (1 Turniere) — 2 verschiedene Orte:
+  - 50.2991, 8.6967 · Rosbach vor der Höhe, Wetteraukreis, Hesse, 61191, Germany
+  - 50.7963, 7.6107 · Rosbach, Sieg, Rüddel, Windeck, Rhein-Sieg-Kreis, North Rhine-Westphalia, Germany
+- **Cervia, IT** (2 Turniere) — 2 verschiedene Orte:
+  - 44.2610, 12.3495 · Cervia, Ravenna, Emilia-Romagna, 48015, Italy
+  - 45.4370, 11.2844 · Cervia, Brognoligo, Monteforte d'Alpone, Verona, Veneto, 37032, Italy
+- **Villavicencio, CO** (1 Turniere) — 2 verschiedene Orte:
+  - 4.1115, -73.4968 · Villavicencio, Meta, RAP (Especial) Central, Colombia
+  - 4.8112, -75.6841 · Villavicencio, AMCO, Area Metropolitana Centro Occidente, Pereira, Risaralda, RAP Eje Cafetero, Colombia
+- **Rio de Janeiro, BR** (2 Turniere) — 2 verschiedene Orte:
+  - -22.9110, -43.2094 · Rio de Janeiro, Southeast Region, Brazil
+  - -22.2753, -42.4194 · Rio de Janeiro, Southeast Region, Brazil
+- **Lincoln, US** (2 Turniere) — 5 verschiedene Orte:
+  - 40.8089, -96.7078 · Lincoln, Lancaster County, Nebraska, United States
+  - 33.7877, -82.4508 · Lincoln County, Georgia, 30817, United States
+  - 39.0605, -90.9594 · Lincoln County, Missouri, United States
+  - 35.4866, -81.2063 · Lincoln County, North Carolina, United States
+  - 38.9208, -103.4885 · Lincoln County, Colorado, United States
+- **San Luis Potosí, MX** (2 Turniere) — 2 verschiedene Orte:
+  - 22.5000, -100.4949 · San Luis Potosí, Mexico
+  - 22.1516, -100.9764 · San Luis Potosí City, Municipio de San Luis Potosí, San Luis Potosí, 78000, Mexico
+- **Curitiba, BR** (2 Turniere) — 2 verschiedene Orte:
+  - -25.4296, -49.2713 · Curitiba, Paraná, South Region, Brazil
+  - -9.6604, -37.7896 · Canindé de São Francisco, Sergipe, Northeast Region, 49820-000, Brazil
+- **Poreč, HR** (2 Turniere) — 2 verschiedene Orte:
+  - 45.2272, 13.5957 · Grad Poreč, Istria County, Croatia
+  - 45.3668, 17.9199 · Poreč, Grad Kutjevo, Požega-Slavonia County, Croatia
+- **Irvine, US** (1 Turniere) — 4 verschiedene Orte:
+  - 33.6857, -117.8260 · Irvine, Orange County, California, United States
+  - 37.7006, -83.9738 · Irvine, Estill County, Kentucky, United States
+  - 29.4055, -82.2512 · Irvine, Marion County, Florida, 34686, United States
+  - 41.8392, -79.2684 · Irvine, Brokenstraw Township, Warren County, Pennsylvania, 16329, United States
+- **Ollersbach, AT** (2 Turniere) — 2 verschiedene Orte:
+  - 48.1874, 15.8441 · Ollersbach, Neulengbach, Bezirk St. Pölten, Lower Austria, 3061, Austria
+  - 48.3906, 16.8208 · Ollersbach, Ollersdorf, Angern an der March, Bezirk Gänserndorf, Lower Austria, Austria
+- **Opatija, HR** (2 Turniere) — 2 verschiedene Orte:
+  - 45.3349, 14.3068 · Grad Opatija, Primorje-Gorski Kotar County, Croatia
+  - 45.5442, 15.9911 · Opatija, Municipality of Pokupsko, Zagreb County, Croatia
+- **Messina, IT** (2 Turniere) — 2 verschiedene Orte:
+  - 38.1938, 15.5542 · Messina, Sicily, Italy
+  - 38.0481, 15.0038 · Messina, Sicily, Italy
+- **Huntsville, US** (1 Turniere) — 5 verschiedene Orte:
+  - 34.7298, -86.5859 · Huntsville, Madison County, Alabama, United States
+  - 30.7235, -95.5508 · Huntsville, Walker County, Texas, United States
+  - 36.0884, -93.7375 · Huntsville, Madison County, Arkansas, United States
+  - 39.4406, -92.5452 · Huntsville, Randolph County, Missouri, 65259, United States
+  - 36.4092, -84.4907 · Huntsville, Scott County, East Tennessee, Tennessee, United States
+- **Tyler, US** (2 Turniere) — 4 verschiedene Orte:
+  - 32.3513, -95.3011 · Tyler, Smith County, Texas, United States
+  - 30.7564, -94.3985 · Tyler County, Texas, United States
+  - 39.4553, -80.8682 · Tyler County, West Virginia, United States
+  - 44.2783, -96.1348 · Tyler, Lincoln County, Minnesota, United States
+- **Guiyang, CN** (1 Turniere) — 2 verschiedene Orte:
+  - 26.5878, 106.7087 · Guiyang, Guizhou, China
+  - 25.8728, 112.6287 · Guiyang County, Chenzhou, Hunan, 424400, China
+- **Quinta do Lago, PT** (2 Turniere) — 3 verschiedene Orte:
+  - 37.8037, -8.6849 · Quinta do Lago, Cercal, Santiago do Cacém, Setúbal, 7555-019, Portugal
+  - 38.8252, -9.2635 · Quinta do Lago, Almornos, Aruil de Baixo, Almargem do Bispo, Sintra, Lisbon, Portugal
+  - 37.0462, -8.0190 · Quinta do Lago, Almancil, Loulé, Faro, 8135-024, Portugal
+- **Montauban, FR** (1 Turniere) — 2 verschiedene Orte:
+  - 44.0176, 1.3550 · Montauban, Tarn-et-Garonne, Occitania, Metropolitan France, 82000, France
+  - 42.7918, 0.6081 · Montauban-de-Luchon, Saint-Gaudens, Haute-Garonne, Occitania, Metropolitan France, 31110, France
+- **Yokohama, JP** (2 Turniere) — 2 verschiedene Orte:
+  - 35.4503, 139.6344 · Yokohama, Kanagawa Prefecture, 231-0017, Japan
+  - 41.0831, 141.2478 · Yokohama, Kamikita County, Aomori Prefecture, Japan
+- **Perth, AU** (2 Turniere) — 2 verschiedene Orte:
+  - -31.9559, 115.8606 · Perth, Western Australia, 6000, Australia
+  - -41.5730, 147.1720 · Perth, Tasmania, 7300, Australia
+- **Vale do Lobo, PT** (4 Turniere) — 2 verschiedene Orte:
+  - 40.6048, -8.2416 · Vale do Lobo, São João do Monte e Mosteirinho, Tondela, Viseu, 3475-072, Portugal
+  - 39.6707, -8.5206 · Vale do Lobo, Tacoaria, Seiça, Ourém, Santarém, Portugal
+- **Columbus, US** (3 Turniere) — 5 verschiedene Orte:
+  - 39.9623, -83.0007 · Columbus, Sharon, Franklin County, Ohio, United States
+  - 32.4611, -84.9880 · Columbus, Muscogee County, Georgia, United States
+  - 34.2814, -78.6666 · Columbus County, North Carolina, United States
+  - 39.2014, -85.9214 · Columbus, Bartholomew County, Indiana, United States
+  - 33.4957, -88.4273 · Columbus, Lowndes County, Mississippi, 39703, United States
+- **Champaign, US** (4 Turniere) — 2 verschiedene Orte:
+  - 40.1165, -88.2431 · Champaign, Champaign County, Illinois, United States
+  - 40.1727, -83.7702 · Champaign County, Ohio, United States
+- **Orlando, US** (6 Turniere) — 2 verschiedene Orte:
+  - 28.5421, -81.3790 · Orlando, Orange County, Florida, United States
+  - 36.1489, -97.3781 · Orlando, Logan County, Oklahoma, United States
+- **Yerba Buena, AR** (2 Turniere) — 2 verschiedene Orte:
+  - -26.8122, -65.2982 · Yerba Buena, Departamento Yerba Buena, Tucumán, T4107, Argentina
+  - -29.0060, -65.4630 · Yerba Buena, Municipio de Ancasti, Departamento Ancasti, Catamarca, K4701, Argentina
+- **San Diego, US** (8 Turniere) — 2 verschiedene Orte:
+  - 32.7174, -117.1628 · San Diego, San Diego County, California, United States
+  - 27.7639, -98.2389 · San Diego, Duval County, Texas, United States
+- **Allershausen, DE** (1 Turniere) — 2 verschiedene Orte:
+  - 48.4334, 11.6001 · Allershausen, Allershausen (VGem), Landkreis Freising, Bavaria, 85391, Germany
+  - 51.6508, 9.6511 · Allershausen, Uslar, Landkreis Northeim, Lower Saxony, Germany
+- **Sherbrooke, CA** (2 Turniere) — 4 verschiedene Orte:
+  - 45.4033, -71.8890 · Sherbrooke, Estrie, Quebec, Canada
+  - 53.5761, -113.5476 · Sherbrooke, Western Mature Area, Edmonton, Alberta, T5L 2L4, Canada
+  - 46.4219, -63.7602 · Sherbrooke, Rural Municipality of Sherbrooke, Prince County, Prince Edward Island, Canada
+  - 45.1439, -61.9806 · Sherbrooke, St. Mary's District Municipality, Guysborough County, Nova Scotia, B0J 3C0, Canada
+- **Bolzano, IT** (2 Turniere) — 2 verschiedene Orte:
+  - 46.6559, 11.2302 · South Tyrol, Trentino – Alto Adige/Südtirol, Italy
+  - 46.1639, 12.1868 · Bolzano Bellunese, Belluno, Veneto, 32100, Italy
+- **Luanda, AO** (3 Turniere) — 2 verschiedene Orte:
+  - -8.8273, 13.2440 · Luanda, Municipality of Luanda, Luanda Province, Angola
+  - -9.5180, 13.5357 · Luanda Province, Angola
+- **Maia, PT** (2 Turniere) — 2 verschiedene Orte:
+  - 41.2373, -8.6300 · Maia, Porto, Portugal
+  - 37.8267, -25.3939 · Maia, Ribeira Grande, Azores, Portugal
+- **Salta, AR** (1 Turniere) — 2 verschiedene Orte:
+  - -25.2270, -64.5912 · Salta, Argentina
+  - -24.7893, -65.4103 · Salta, Capital, Salta, Argentina
+- **Bistrița, RO** (2 Turniere) — 4 verschiedene Orte:
+  - 47.1327, 24.4964 · Bistrița, Bistrița-Năsăud, 420048, Romania
+  - 47.0958, 25.9468 · Bistrița, Romania
+  - 45.1736, 24.0467 · Bistrița, Costești, Vâlcea, 247116, Romania
+  - 44.5851, 22.7876 · Bistrița, Hinova, Mehedinți, 227246, Romania
+- **Luján, AR** (2 Turniere) — 5 verschiedene Orte:
+  - -34.5662, -59.1153 · Luján, Partido de Luján, Buenos Aires, 6700, Argentina
+  - -32.3645, -65.9330 · Luján, Municipio de Luján, Ayacucho, San Luis, Argentina
+  - -38.7068, -62.2995 · Luján, Bahía Blanca, Cuartel II, Partido de Bahía Blanca, Buenos Aires, Argentina
+  - -31.2458, -61.4678 · Luján, Rafaela, Municipio de Rafaela, Departamento Castellanos, Santa Fe, S2300, Argentina
+  - -36.9019, -60.3122 · Luján, Partido de Olavarría, Buenos Aires, Argentina
+- **Metzingen, DE** (2 Turniere) — 3 verschiedene Orte:
+  - 48.5397, 9.2831 · Metzingen, VVG der Stadt Metzingen, Landkreis Reutlingen, Baden-Württemberg, 72555, Germany
+  - 53.1302, 10.9581 · Metzingen, Göhrde, Samtgemeinde Elbtalaue, Landkreis Lüchow-Dannenberg, Lower Saxony, 29473, Germany
+  - 52.6768, 10.3748 · Metzingen, Eldingen, Samtgemeinde Lachendorf, Landkreis Celle, Lower Saxony, Germany
+- **Cary, US** (2 Turniere) — 5 verschiedene Orte:
+  - 35.7883, -78.7812 · Cary, Wake County, North Carolina, United States
+  - 42.2091, -88.2400 · Cary, McHenry County, Illinois, 60013, United States
+  - 32.8060, -90.9268 · Cary, Sharkey County, Mississippi, 39054, United States
+  - 44.4772, -90.2568 · Town of Cary, Wood County, Wisconsin, 54466, United States
+  - 39.7070, -86.8231 · Cary, Putnam County, Indiana, United States
+- **Lajeado, BR** (1 Turniere) — 3 verschiedene Orte:
+  - -29.4672, -51.9624 · Lajeado, Rio Grande do Sul, South Region, Brazil
+  - -9.7549, -48.3564 · Lajeado, Tocantins, North Region, 77645-000, Brazil
+  - -23.5362, -46.4100 · Lajeado, São Paulo, Southeast Region, Brazil
+- **Maringá, BR** (2 Turniere) — 4 verschiedene Orte:
+  - -23.4253, -51.9382 · Maringá, Paraná, South Region, Brazil
+  - -23.2275, -46.8797 · Maringá, Jundiaí, São Paulo, Southeast Region, 13210-090, Brazil
+  - -19.7610, -47.8841 · Maringá, Uberaba, Minas Gerais, Southeast Region, 38040-450, Brazil
+  - -22.3259, -44.5769 · Maringá, Bocaina de Minas, Minas Gerais, Southeast Region, 27553-970, Brazil
+- **Lexington, US** (3 Turniere) — 5 verschiedene Orte:
+  - 38.0464, -84.4970 · Lexington, Fayette County, Kentucky, United States
+  - 37.7840, -79.4428 · Lexington, Virginia, United States
+  - 42.4473, -71.2245 · Lexington, Middlesex County, Massachusetts, United States
+  - 35.8240, -80.2534 · Lexington, Davidson County, North Carolina, 27792, United States
+  - 33.8987, -81.2751 · Lexington County, South Carolina, United States
+- **Brownsburg, US** (1 Turniere) — 4 verschiedene Orte:
+  - 39.8444, -86.3969 · Brownsburg, Hendricks County, Indiana, 46112, United States
+  - 38.2679, -80.0753 · Brownsburg, Pocahontas County, West Virginia, 24954, United States
+  - 37.9285, -79.3192 · Brownsburg, Rockbridge County, Virginia, 24415, United States
+  - 40.3182, -74.9202 · Brownsburg, Upper Makefield Township, Bucks County, Pennsylvania, 18977, United States
+- **Chacabuco, AR** (1 Turniere) — 5 verschiedene Orte:
+  - -32.7415, -65.2061 · Chacabuco, San Luis, Argentina
+  - -34.6424, -60.4709 · Chacabuco, Partido de Chacabuco, Buenos Aires, 6740, Argentina
+  - -34.8057, -58.2924 · Chacabuco, San Juan Bautista, Partido de Florencio Varela, Buenos Aires, Argentina
+  - -31.5301, -68.5672 · Barrio Chacabuco, Desamparados, San Juan, Capital, San Juan, Argentina
+  - -31.0904, -59.3248 · Chacabuco, Junta de Gobierno de Yeso Oeste, Distrito Yeso, Departamento La Paz, Entre Ríos Province, Argentina
+- **Antofagasta, CL** (2 Turniere) — 2 verschiedene Orte:
+  - -23.6464, -70.3980 · Antofagasta, Provincia de Antofagasta, Antofagasta Region, Chile
+  - -23.6041, -69.0843 · Antofagasta Region, Chile
+- **Timaru, NZ** (2 Turniere) — 2 verschiedene Orte:
+  - -44.3930, 171.2510 · Timaru, Timaru District, Canterbury, 7910, New Zealand
+  - -44.5403, 169.3126 · Timaru River, Queenstown-Lakes District, Otago, New Zealand
+- **Wichita, US** (2 Turniere) — 3 verschiedene Orte:
+  - 37.6922, -97.3375 · Wichita, Sedgwick County, Kansas, United States
+  - 33.9517, -98.7089 · Wichita County, Texas, United States
+  - 38.4482, -101.3353 · Wichita County, Kansas, United States
+- **Rochester, US** (2 Turniere) — 5 verschiedene Orte:
+  - 43.1573, -77.6152 · City of Rochester, Monroe County, New York, United States
+  - 44.0234, -92.4630 · Rochester, Olmsted County, Minnesota, United States
+  - 43.3051, -70.9754 · Rochester, Strafford County, New Hampshire, United States
+  - 42.6806, -83.1338 · Rochester, Oakland County, Michigan, 48307, United States
+  - 41.0649, -86.2160 · Rochester, Fulton County, Indiana, 46975, United States
+- **Harlingen, US** (1 Turniere) — 2 verschiedene Orte:
+  - 26.1908, -97.6961 · Harlingen, Cameron County, Texas, 78550, United States
+  - 40.4476, -74.6624 · Harlingen, Montgomery Township, Somerset County, New Jersey, 08502, United States
+- **Newport, US** (2 Turniere) — 5 verschiedene Orte:
+  - 41.4900, -71.3138 · Newport, Newport County, Rhode Island, 02840, United States
+  - 39.0889, -84.4920 · Newport, Campbell County, Kentucky, 41071, United States
+  - 44.6368, -124.0534 · Newport, Lincoln County, Oregon, United States
+  - 44.9367, -72.2056 · Newport, Orleans County, Vermont, 05855, United States
+  - 35.6067, -91.2830 · Newport, Jackson County, Arkansas, United States
+- **Tunis, TN** (2 Turniere) — 2 verschiedene Orte:
+  - 36.8002, 10.1858 · Tunis, Tunisia
+  - 33.8439, 9.4001 · Tunisia
+- **Edwardsville, US** (2 Turniere) — 5 verschiedene Orte:
+  - 38.8114, -89.9532 · Edwardsville, Madison County, Illinois, United States
+  - 39.0611, -94.8197 · Edwardsville, Wyandotte County, Kansas, 66113, United States
+  - 33.7073, -85.5091 · Edwardsville, Cleburne County, Alabama, 36261, United States
+  - 41.2678, -75.9085 · Edwardsville, Luzerne County, Pennsylvania, United States
+  - 39.3370, -84.0274 · Edwardsville, Harlan Township, Warren County, Ohio, United States
+- **Sumter, US** (1 Turniere) — 4 verschiedene Orte:
+  - 28.6690, -82.0764 · Sumter County, Florida, United States
+  - 32.0485, -84.1862 · Sumter County, Georgia, United States
+  - 32.5235, -88.1838 · Sumter County, Alabama, United States
+  - 33.9204, -80.3415 · Sumter, Sumter County, South Carolina, United States
+- **Hagen, DE** (2 Turniere) — 3 verschiedene Orte:
+  - 51.3583, 7.4733 · Hagen, North Rhine-Westphalia, Germany
+  - 53.9467, 9.8274 · Hagen, Amt Bad Bramstedt-Land, Kreis Segeberg, Schleswig-Holstein, Germany
+  - 53.3577, 8.6456 · Hagen im Bremischen, Landkreis Cuxhaven, Lower Saxony, 27628, Germany
+- **Buenos Aires, AR** (3 Turniere) — 2 verschiedene Orte:
+  - -34.6096, -58.3888 · Buenos Aires, Comuna 1, Autonomous City of Buenos Aires, Argentina
+  - -36.3790, -60.3856 · Buenos Aires, Argentina
+- **Ithaca, US** (1 Turniere) — 4 verschiedene Orte:
+  - 42.4374, -76.5484 · Town of Ithaca, Tompkins County, New York, United States
+  - 43.2917, -84.6075 · Ithaca, Gratiot County, Michigan, United States
+  - 39.9373, -84.5533 · Ithaca, Darke County, Ohio, United States
+  - 41.1583, -96.5405 · Ithaca, Wahoo Township, Saunders County, Nebraska, United States
+- **Claremont, US** (1 Turniere) — 5 verschiedene Orte:
+  - 34.0967, -117.7198 · Claremont, Los Angeles County, California, 91711, United States
+  - 43.3728, -72.3383 · Claremont, Sullivan County, New Hampshire, United States
+  - 37.2279, -76.9641 · Claremont, Surry County, Virginia, 23899, United States
+  - 45.6719, -98.0157 · Claremont, Claremont Township, Brown County, South Dakota, United States
+  - 37.9185, -81.0507 · Claremont, Fayette County, West Virginia, 25936, United States
+- **Slobozia, RO** (2 Turniere) — 4 verschiedene Orte:
+  - 44.5636, 27.3618 · Slobozia, Ialomița, 920058, Romania
+  - 44.5214, 25.2381 · Slobozia, Argeș, Romania
+  - 43.8562, 25.9101 · Slobozia, Giurgiu, 087210, Romania
+  - 46.4749, 27.3111 · Slobozia, Stănișești, Bacău, 607592, Romania
+- **Mistelbach, AT** (1 Turniere) — 2 verschiedene Orte:
+  - 48.5695, 16.5720 · Mistelbach, Bezirk Mistelbach, Lower Austria, Austria
+  - 48.6656, 14.9328 · Mistelbach, Großschönau, Bezirk Gmünd, Lower Austria, 3922, Austria
+- **Wuxi, CN** (2 Turniere) — 2 verschiedene Orte:
+  - 31.5777, 120.2953 · Wuxi City, Jiangsu, 214000, China
+  - 31.5059, 109.3448 · Wuxi County, Chongqing, China
+- **Pensacola, US** (2 Turniere) — 2 verschiedene Orte:
+  - 30.4213, -87.2169 · Pensacola, Escambia County, Florida, United States
+  - 36.4558, -95.1290 · Pensacola, Mayes County, Oklahoma, United States
+- **Łódź, PL** (2 Turniere) — 2 verschiedene Orte:
+  - 51.7687, 19.4570 · Łódź, Łódź Voivodeship, Poland
+  - 52.2585, 16.7440 · Łódź, gmina Stęszew, Poznań County, Greater Poland Voivodeship, Poland
+- **São Leopoldo, BR** (1 Turniere) — 2 verschiedene Orte:
+  - -29.7544, -51.1516 · São Leopoldo, Rio Grande do Sul, South Region, Brazil
+  - -4.3819, -69.7073 · São Leopoldo, Benjamin Constant, Amazonas, North Region, Brazil
+- **Criciúma, BR** (1 Turniere) — 2 verschiedene Orte:
+  - -28.6790, -49.3696 · Criciúma, Santa Catarina, South Region, Brazil
+  - -20.2176, -41.6192 · Criciúma, Ibatiba, Espírito Santo, Southeast Region, Brazil
+- **Santa Fe, AR** (1 Turniere) — 2 verschiedene Orte:
+  - -30.3155, -61.1645 · Santa Fe, Argentina
+  - -31.6187, -60.7020 · Santa Fe, Departamento La Capital, Santa Fe, S3000, Argentina
+- **Villa María, AR** (4 Turniere) — 5 verschiedene Orte:
+  - -32.4106, -63.2436 · Villa María, Municipio de Villa María, Pedanía Villa María, Departamento General San Martín, Córdoba, X5900, Argentina
+  - -38.9684, -68.0632 · Villa María, Neuquén, Municipio de Neuquén, Departamento Confluencia, Neuquén, Argentina
+  - -33.3488, -60.2326 · Villa María, San Nicolás de los Arroyos, Partido de San Nicolás, Buenos Aires, Argentina
+  - -27.4451, -58.9977 · Villa María, Resistencia, Municipio de Resistencia, Departamento San Fernando, Chaco, Argentina
+  - -34.5320, -59.1209 · Villa María, Luján, Partido de Luján, Buenos Aires, 6700, Argentina
+- **Cleveland, US** (2 Turniere) — 5 verschiedene Orte:
+  - 41.4997, -81.6937 · Cleveland, Cuyahoga County, Ohio, United States
+  - 35.2302, -97.3109 · Cleveland County, Oklahoma, United States
+  - 33.7440, -90.7248 · Cleveland, Bolivar County, Mississippi, 38732, United States
+  - 33.8847, -92.1725 · Cleveland County, Arkansas, United States
+  - 35.1595, -84.8766 · Cleveland, Bradley County, East Tennessee, Tennessee, United States
+- **Durham, US** (1 Turniere) — 4 verschiedene Orte:
+  - 35.9967, -78.9018 · Durham, Durham County, North Carolina, United States
+  - 43.1214, -70.9177 · Durham, Strafford County, New Hampshire, 03824, United States
+  - 38.4851, -97.2282 · Durham, Marion County, Kansas, 67438, United States
+  - 41.4818, -72.6812 · Durham, Lower Connecticut River Valley Planning Region, Connecticut, 06422, United States
+- **Doboj, BA** (2 Turniere) — 3 verschiedene Orte:
+  - 44.7325, 18.0850 · Doboj, City of Doboj, Republika Srpska, Bosnia and Herzegovina
+  - 44.1141, 18.1176 · Doboj, Kakanj, Kakanj municipality, Zenica-Doboj Canton, Federation of Bosnia and Herzegovina, 72240, Bosnia and Herzegovina
+  - 43.1521, 17.8346 · Doboj, Lokve, City of Čapljina, Herzegovina-Neretva Canton, Federation of Bosnia and Herzegovina, 88367, Bosnia and Herzegovina
+- **Sunderland, GB** (1 Turniere) — 2 verschiedene Orte:
+  - 54.9059, -1.3829 · Sunderland, Tyne and Wear, North East, England, SR1 3HW, United Kingdom
+  - 53.9969, -2.8762 · Sunderland, Lancaster, Lancashire, England, LA3 3HR, United Kingdom
+- **Little Rock, US** (2 Turniere) — 5 verschiedene Orte:
+  - 34.7465, -92.2896 · Little Rock, Big Rock Township, Pulaski County, Arkansas, United States
+  - 43.4440, -95.8832 · Little Rock, Lyon County, Iowa, United States
+  - 41.7177, -88.5770 · Little Rock, Little Rock Township, Kendall County, Illinois, United States
+  - 32.5260, -89.0253 · Little Rock, Newton County, Mississippi, 39337, United States
+  - 34.4766, -79.4031 · Little Rock, Dillon County, South Carolina, United States
+- **Fayetteville, US** (1 Turniere) — 5 verschiedene Orte:
+  - 36.0626, -94.1574 · Fayetteville, Washington County, Arkansas, United States
+  - 35.0526, -78.8783 · Fayetteville, Cumberland County, North Carolina, United States
+  - 33.4487, -84.4549 · Fayetteville, Fayette County, Georgia, United States
+  - 29.9052, -96.6751 · Fayetteville, Fayette County, Texas, United States
+  - 38.3775, -89.7954 · Fayetteville, Saint Clair County, Illinois, United States
+- **Phoenix, US** (2 Turniere) — 5 verschiedene Orte:
+  - 33.4484, -112.0741 · Phoenix, Maricopa County, Arizona, United States
+  - 41.6147, -87.6324 · Phoenix, Thornton Township, Cook County, Illinois, United States
+  - 43.2309, -76.3002 · Village of Phoenix, Town of Schroeppel, Oswego County, New York, United States
+  - 42.2740, -122.8153 · Phoenix, Jackson County, Oregon, 97535, United States
+  - 39.5164, -76.6178 · Phoenix, Baltimore County, Maryland, 21030, United States
+- **Austin, US** (1 Turniere) — 5 verschiedene Orte:
+  - 30.2711, -97.7437 · Austin, Travis County, Texas, United States
+  - 29.8916, -96.2443 · Austin County, Texas, United States
+  - 43.6680, -92.9746 · Austin, Mower County, Minnesota, 55912, United States
+  - 39.4930, -117.0714 · Austin, Lander County, Nevada, United States
+  - 34.9984, -91.9838 · Austin, Lonoke County, Arkansas, 72007, United States
+- **Castelo Branco, PT** (2 Turniere) — 3 verschiedene Orte:
+  - 39.9768, -7.4461 · Castelo Branco, Portugal
+  - 41.2773, -6.7559 · Castelo Branco, Mogadouro, Bragança, Portugal
+  - 38.5474, -28.7283 · Castelo Branco, Horta, Azores, Portugal
+- **Dallas, US** (2 Turniere) — 4 verschiedene Orte:
+  - 32.7763, -96.7969 · Dallas, Dallas County, Texas, United States
+  - 41.6744, -94.0394 · Dallas County, Iowa, United States
+  - 37.6833, -93.0219 · Dallas County, Missouri, United States
+  - 32.3118, -87.1047 · Dallas County, Alabama, United States
+- **Bakersfield, US** (2 Turniere) — 3 verschiedene Orte:
+  - 35.3739, -119.0195 · Bakersfield, Kern County, California, United States
+  - 44.7821, -72.8016 · Bakersfield, Franklin County, Vermont, 05441, United States
+  - 36.5226, -92.1427 · Bakersfield, Ozark County, Missouri, United States
+- **Sofia, BG** (3 Turniere) — 2 verschiedene Orte:
+  - 42.6977, 23.3217 · Sofia, Sredec, Stolichna, Sofia-City, Bulgaria
+  - 42.6419, 23.9736 · Sofia, Bulgaria
+- **Winnipeg, CA** (2 Turniere) — 2 verschiedene Orte:
+  - 49.8955, -97.1385 · Winnipeg, Manitoba, Canada
+  - 52.1190, -97.9692 · Lake Winnipeg, Manitoba, Canada
+- **Suzhou, CN** (1 Turniere) — 3 verschiedene Orte:
+  - 31.3111, 120.6213 · Suzhou City, Jiangsu, China
+  - 33.6482, 116.9588 · Suzhou, Anhui, China
+  - 39.5785, 98.8123 · Suzhou District, Jiuquan Prefecture, Gansu, 735000, China
+- **Szczecin, PL** (2 Turniere) — 2 verschiedene Orte:
+  - 53.4298, 14.5929 · Szczecin, West Pomeranian Voivodeship, Poland
+  - 51.9201, 19.7176 · Szczecin, gmina Dmosin, Brzeziny County, Łódź Voivodeship, Poland
+- **Azul, AR** (1 Turniere) — 2 verschiedene Orte:
+  - -36.7775, -59.8634 · Azul, Partido de Azul, Buenos Aires, B7300, Argentina
+  - -22.7059, -62.3489 · Azul, Municipio de Santa Victoria Este, Rivadavia, Salta, Argentina
+- **Satu Mare, RO** (1 Turniere) — 4 verschiedene Orte:
+  - 47.7892, 22.8726 · Satu Mare, Romania
+  - 46.3414, 25.3838 · Satu Mare, Harghita, 537026, Romania
+  - 47.8314, 26.0024 · Satu Mare, Suceava, Romania
+  - 47.3581, 25.6103 · Satu Mare, Crucea, Suceava, 727153, Romania
+- **Anning, CN** (2 Turniere) — 3 verschiedene Orte:
+  - 24.8377, 102.4027 · Anning City, Kunming, Yunnan, 650300, China
+  - 36.1199, 103.6756 · Anning District, Lanzhou Prefecture, Gansu, 730079, China
+  - 27.9649, 102.1894 · Anning, Xichang City, Liangshan, Sichuan, China
+- **Villa Constitución, AR** (1 Turniere) — 2 verschiedene Orte:
+  - -33.2272, -60.3298 · Municipio de Villa Constitución, Departamento Constitución, Santa Fe, Argentina
+  - -34.6722, -58.4234 · Villa Constitución, Valentín Alsina, Partido de Lanús, Buenos Aires, Argentina
+- **Jiujiang, CN** (1 Turniere) — 5 verschiedene Orte:
+  - 29.3886, 115.3820 · Jiujiang, Jiangxi, China
+  - 29.6654, 115.9475 · Jiujiang, Xunyang District, Jiujiang, Jiangxi, China
+  - 31.3718, 118.3860 · Jiujiang District, Wuhu, Anhui, China
+  - 22.8343, 112.9882 · Jiujiang, Nanhai District, Foshan, Guangdong, 520203, China
+  - 30.6223, 103.9134 · Jiujiang, Shuangliu District, Chengdu, Sichuan, China
+- **Itajaí, BR** (1 Turniere) — 3 verschiedene Orte:
+  - -26.9047, -48.6553 · Itajaí, Santa Catarina, South Region, Brazil
+  - -14.9564, -40.1742 · Itajaí, Nova Canaã, Bahia, Northeast Region, Brazil
+  - -13.7573, -39.1528 · Itajaí, Ituberá, Bahia, Northeast Region, 45435-000, Brazil
+- **Cochabamba, BO** (1 Turniere) — 2 verschiedene Orte:
+  - -17.4012, -66.1676 · Cochabamba, Juan De La Rosa, Molle, Cochabamba, Cercado, Cochabamba, Bolivia
+  - -17.3330, -65.5011 · Cochabamba, Bolivia
+- **Tauranga, NZ** (1 Turniere) — 3 verschiedene Orte:
+  - -37.6859, 176.1675 · Tauranga, Tauranga City, Bay of Plenty, 3110, New Zealand
+  - -38.3236, 177.1223 · Tauranga River, Whakatāne District, Bay of Plenty, New Zealand
+  - -39.2852, 176.0102 · Tauranga, Rangitīkei District, Manawatū-Whanganui, New Zealand
+
+## Nicht gefunden
+
+- Nouméa, NC (2 Turniere)
+- Hong Kong, HK (2 Turniere)
+- Harmon, GU (2 Turniere)
+
+## Falsches Land (Treffer lag ausserhalb des angegebenen Landes)
+
+Keine.
+
+## Fehler / keine Antwort
+
+Keine.
+
+## Alle aufgeloesten Orte
+
+| Ort | Land | lat | lon | Turniere |
+|---|---|---:|---:|---:|
+
+## Hinweise
+
+- Trockenlauf ist Voreinstellung. Scharf: `--write`. Danach `resolve-tournaments.mjs --write` schreibt aus den Claims in den Stamm.
+- Idempotenz: Claims upsert onConflict (tournament_id,field_name,source,field_value) ignoreDuplicates; ROHtreffer in scripts/.geocode-cache.json gecacht.
+- Rate-Limit: >= 1100 ms je Netz-Anfrage, Einzel-Thread. Mehrdeutige/fehlende Orte werden gelistet, nicht geraten.
+- Mehrdeutigkeit: Treffer >50 km auseinander gelten als verschiedene Orte; nähere OSM-Knoten derselben Stadt werden zusammengeführt.

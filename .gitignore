@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Sicherung aus Setup-Import
 .backup-setup-import/
+scripts/.geocode-cache.json
