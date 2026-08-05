@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { useTourWorkspace } from "./useTourWorkspace";
+import SetupPanel from "./setup/SetupPanel";
 import NextDeadline from "./sections/NextDeadline";
 import SeasonOverview from "./sections/SeasonOverview";
 import SeasonList from "./sections/SeasonList";
 import MapPreview from "./sections/MapPreview";
 import RareStuff from "./sections/RareStuff";
+
+// Merker fürs Überspringen — bewusst NUR localStorage: die Entscheidung gilt für dieses
+// Gerät und diesen Browser. Wer am Laptop überspringt, sieht den Trichter am Handy wieder.
+// Für den Anfang in Ordnung; dokumentiert, damit es eine bewusste Grenze bleibt.
+const SKIP_KEY = "mu_tour_setup_skipped";
 
 /**
  * Die EINE Arbeitsfläche unter /tour. EIN Auth-Gate, EIN gebündelter Load
@@ -32,6 +38,12 @@ export default function TourWorkspace() {
   });
   const { status, data, reload } = useTourWorkspace(user?.id ?? null, asOf);
 
+  // Skip-Merker erst nach dem Mounten aus localStorage lesen (kein Hydration-Mismatch).
+  const [skipped, setSkipped] = useState(false);
+  useEffect(() => {
+    try { if (localStorage.getItem(SKIP_KEY) === "1") setSkipped(true); } catch { /* egal */ }
+  }, []);
+
   if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (!user) {
     return (
@@ -47,7 +59,21 @@ export default function TourWorkspace() {
   if (status === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (status === "error" || !data) return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
 
-  // Leere Saison → Hinweis + Verweis auf den Turnierkalender (Setup-Trichter folgt in Schritt 2).
+  // Einrichtung unvollständig und (auf diesem Gerät) nicht übersprungen → geführter Einstieg
+  // statt Arbeitsfläche. Ausstieg merkt sich das Überspringen und lädt die Fläche frisch.
+  if (!data.setup.complete && !skipped) {
+    return (
+      <SetupPanel
+        onExit={() => {
+          try { localStorage.setItem(SKIP_KEY, "1"); } catch { /* egal */ }
+          setSkipped(true);
+          reload();
+        }}
+      />
+    );
+  }
+
+  // Leere Saison (z. B. Einrichtung übersprungen) → Hinweis + Verweis auf den Turnierkalender.
   if (data.entries.length === 0) {
     return (
       <div className="mt-8 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
@@ -61,6 +87,7 @@ export default function TourWorkspace() {
   }
 
   return (
+    <>
     <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
       {/* Hauptspalte */}
       <div className="space-y-6">
@@ -76,5 +103,12 @@ export default function TourWorkspace() {
         <MapPreview entries={data.entries} />
       </div>
     </div>
+    {/* Re-Entry: die Einrichtung (drei Schritte) ist jederzeit wieder aufrufbar. */}
+    <div className="mt-6">
+      <Link href="/tour/setup" className="text-[12px] font-semibold text-neutral-400 transition-colors hover:text-neutral-700">
+        {t("tour.wsEditSetup")}
+      </Link>
+    </div>
+    </>
   );
 }

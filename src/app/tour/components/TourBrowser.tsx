@@ -39,7 +39,12 @@ function FilterChip({ label, count, active, onClick }: { label: string; count: n
   );
 }
 
-export default function TourBrowser() {
+/**
+ * `preset` (optional, aus dem Setup-Trichter): Voreinstellung der Filter aus dem Profil.
+ * Wird EINMAL beim Laden angewandt und bei 0 Treffern automatisch geweitet (sichtbar).
+ * Ohne Prop verhält sich der Browser unverändert.
+ */
+export default function TourBrowser({ preset = null }: { preset?: { category: string[]; country: string[] } | null }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const { locale } = useLocale();
@@ -50,6 +55,8 @@ export default function TourBrowser() {
   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
   const [showRest, setShowRest] = useState(false); // Aufklapper „Weitere Länder"
   const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set()); // aufgenommene Turniere
+  const [widened, setWidened] = useState<"country" | "all" | null>(null); // Auto-Weitung des Vorfilters
+  const [presetApplied, setPresetApplied] = useState(false); // Vorfilter nur einmal anwenden
 
   // Turniere laden, sobald ein eingeloggter Nutzer feststeht (RLS: nur authenticated).
   useEffect(() => {
@@ -82,6 +89,25 @@ export default function TourBrowser() {
       .catch(() => { /* Knopf startet dann als „nicht aufgenommen"; kein harter Fehler der Liste */ });
     return () => { cancel = true; };
   }, [authLoading, user]);
+
+  // Vorfilter aus dem Profil EINMAL anwenden, sobald die Turniere geladen sind. Ergibt der
+  // Filter 0 Treffer, wird er schrittweise geweitet (erst Land fallen lassen, dann Kategorie)
+  // und das über `widened` sichtbar gemacht — eine leere Liste wirkt wie ein Defekt.
+  useEffect(() => {
+    if (state !== "done" || !preset || presetApplied) return;
+    const cnt = (cat: Set<string>, ctry: Set<string>) =>
+      rows.filter(
+        (r) =>
+          (ctry.size === 0 || (r.country != null && ctry.has(r.country))) &&
+          (cat.size === 0 || (r.category != null && cat.has(r.category))),
+      ).length;
+    const cat = new Set(preset.category);
+    const ctry = new Set(preset.country);
+    if (cnt(cat, ctry) > 0) { setCategoryFilter(cat); setCountryFilter(ctry); setWidened(null); }
+    else if (cnt(cat, new Set()) > 0) { setCategoryFilter(cat); setCountryFilter(new Set()); setWidened("country"); }
+    else { setCategoryFilter(new Set()); setCountryFilter(new Set()); setWidened("all"); }
+    setPresetApplied(true);
+  }, [state, preset, presetApplied, rows]);
 
   // Optimistisches Umschalten aus der Karte übernehmen (kein Neuladen der Liste).
   const handleSeasonChange = useCallback((id: string, next: boolean) => {
@@ -164,6 +190,7 @@ export default function TourBrowser() {
     const next = new Set(set);
     if (next.has(value)) next.delete(value); else next.add(value);
     setter(next);
+    setWidened(null); // sobald der Nutzer selbst filtert, ist der „geweitet"-Hinweis überholt
   }
 
   // ── Auth-Gate ──────────────────────────────────────────────────────────
@@ -227,7 +254,7 @@ export default function TourBrowser() {
         {(countryFilter.size > 0 || categoryFilter.size > 0) && (
           <button
             type="button"
-            onClick={() => { setCountryFilter(new Set()); setCategoryFilter(new Set()); }}
+            onClick={() => { setCountryFilter(new Set()); setCategoryFilter(new Set()); setWidened(null); }}
             className="text-[12px] font-semibold text-matchup hover:underline"
           >
             {t("tour.filterReset")}
@@ -241,6 +268,7 @@ export default function TourBrowser() {
       {state === "done" && (
         <>
           <p className="mt-6 text-[13px] font-medium text-neutral-500">{t("tour.resultCount", { n: filtered.length })}</p>
+          {widened && <p className="mt-1 text-[12px] font-semibold text-amber-700">{t("tour.setupFilterWidened")}</p>}
           {filtered.length === 0 ? (
             <p className="mt-6 rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
           ) : (

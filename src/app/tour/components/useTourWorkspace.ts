@@ -10,6 +10,7 @@ import { loadExpenses, amountToMinor } from "@/lib/tourExpenses";
 import { loadPointsData } from "@/lib/tourPoints";
 import { loadStays } from "@/lib/tourStays";
 import { loadTourProfile } from "@/lib/tour";
+import { loadProfileBasics } from "@/lib/tourSetup";
 import { placeKey } from "./TourDecideBlock";
 import type { TourCostRates } from "@/lib/types";
 
@@ -29,6 +30,8 @@ export type WorkspaceData = {
   points: { total: number; limit: 6 | 7; expiringCount: number };
   schengen: { used: number; left: number };
   seasonStartMonday: string; // abgeleitet: frühester Plan-Montag, sonst Stichtag
+  // Einrichtungsstand (steuert, ob die Arbeitsfläche oder der Setup-Trichter erscheint).
+  setup: { step1Done: boolean; step2Done: boolean; step3Done: boolean; complete: boolean };
 };
 
 /**
@@ -48,13 +51,14 @@ export function useTourWorkspace(userId: string | null, asOf: string) {
     setStatus("loading");
     (async () => {
       try {
-        const [entries, rates, profile, exp, pts, stays] = await Promise.all([
+        const [entries, rates, profile, exp, pts, stays, basics] = await Promise.all([
           loadSeason(),
           loadCostRates(),
           loadTourProfile(userId),
           loadExpenses(userId),
           loadPointsData(userId),
           loadStays(userId),
+          loadProfileBasics(userId),
         ]);
         if (cancel) return;
 
@@ -98,6 +102,11 @@ export function useTourWorkspace(userId: string | null, asOf: string) {
         // Startdatum abgeleitet: frühester Plan-Montag (entries ist sortiert), sonst Stichtag.
         const seasonStartMonday = entries.length ? entries[0].tournament.tournament_monday : asOf;
 
+        // Einrichtungsstand aus den bereits geladenen Daten ableiten (keine Extra-Abfrage).
+        const step1Done = !!basics.gender && !!basics.city;
+        const step2Done = (profile?.season_budget ?? null) != null && rates != null;
+        const step3Done = entries.length > 0;
+
         setData({
           entries,
           rates,
@@ -107,6 +116,7 @@ export function useTourWorkspace(userId: string | null, asOf: string) {
           points: { total: scored.countingTotal, limit: scored.countingLimit, expiringCount: scored.expiringSoon.length },
           schengen: { used: usage.used, left: usage.left },
           seasonStartMonday,
+          setup: { step1Done, step2Done, step3Done, complete: step1Done && step2Done && step3Done },
         });
         setStatus("ready");
       } catch {
