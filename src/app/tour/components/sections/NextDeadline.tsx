@@ -1,0 +1,66 @@
+"use client";
+
+import Link from "next/link";
+import { useT, useLocale } from "@/lib/i18n";
+import { tourDeadlines } from "@/domain/tour/deadlines";
+import type { SeasonEntry } from "@/lib/tourSeason";
+
+const DAY = 86_400_000;
+
+// Fristzeitpunkt (14:00 GMT) in lokaler Zeitzone anzeigen, inkl. Zonen-Kürzel.
+function fmtDeadline(d: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale === "de" ? "de-CH" : "en-GB", {
+    weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
+  }).format(d);
+}
+
+/**
+ * Die WICHTIGSTE Zeile der Arbeitsfläche: die nächste noch offene Meldefrist über
+ * alle Saisonturniere. Fristen verfallen und sind nicht nachholbar — deshalb ganz oben.
+ * Nur ITF liefert bekannte Fristen; Challenger ist unbekannt (Domain) und trägt nichts bei.
+ */
+export default function NextDeadline({ entries }: { entries: SeasonEntry[] }) {
+  const t = useT();
+  const { locale } = useLocale();
+  const now = Date.now();
+
+  // Alle offenen Fristen (Entry + Withdrawal) in der Zukunft sammeln, früheste zuerst.
+  const cands: { entry: SeasonEntry; label: string; date: Date }[] = [];
+  for (const e of entries) {
+    const monday = new Date(e.tournament.tournament_monday + "T00:00:00Z");
+    const dl = tourDeadlines(monday, e.tournament.series);
+    if (dl.entry && dl.entry.getTime() > now) cands.push({ entry: e, label: t("tour.entry"), date: dl.entry });
+    if (dl.withdrawal && dl.withdrawal.getTime() > now) cands.push({ entry: e, label: t("tour.withdrawal"), date: dl.withdrawal });
+  }
+  cands.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const next = cands[0];
+
+  if (!next) {
+    return (
+      <section className="rounded-2xl border border-black/[0.08] bg-black/[0.02] px-5 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsNextDeadlineTitle")}</p>
+        <p className="mt-1 text-sm text-neutral-500">{t("tour.wsNextDeadlineNone")}</p>
+      </section>
+    );
+  }
+
+  const x = next.entry.tournament;
+  const days = Math.ceil((next.date.getTime() - now) / DAY);
+  const place = `${x.city || t("tour.fieldMissing")}${x.country ? ", " + x.country : ""}`;
+
+  return (
+    <section className="rounded-2xl border border-matchup/30 bg-matchup/[0.06] px-5 py-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-matchup">{t("tour.wsNextDeadlineTitle")}</p>
+        <span className="rounded-full bg-matchup px-2.5 py-0.5 text-[12px] font-bold text-white">{t("tour.wsDeadlineIn", { n: days })}</span>
+      </div>
+      <p className="mt-2 text-[17px] font-extrabold tracking-tight text-neutral-900">
+        {place} <span className="font-semibold text-neutral-500">· {next.label}</span>
+      </p>
+      <p className="mt-0.5 text-[13px] text-neutral-600">{fmtDeadline(next.date, locale)}</p>
+      <Link href="/tour/season" className="mt-3 inline-flex text-[13px] font-semibold text-matchup hover:underline">
+        {t("tour.wsDeadlineGo")} →
+      </Link>
+    </section>
+  );
+}

@@ -81,7 +81,7 @@ export default function SeasonView() {
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.seasonEmptyTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.seasonEmptyText")}</p>
         <Link
-          href="/tour"
+          href="/tour/browse"
           className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700"
         >
           {t("tour.seasonEmptyCta")}

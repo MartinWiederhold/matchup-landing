@@ -31,8 +31,18 @@ function markerHtml(count: number): string {
   return `<div style="position:relative;width:22px;height:22px;cursor:pointer;"><div style="width:22px;height:22px;border-radius:9999px;background:#4b3bf3;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);"></div>${badge}</div>`;
 }
 
-/** Prop-getrieben (anders als der /map-Monolith): bekommt die Koordinaten-Turniere fertig. */
-export default function TourMapView({ entries }: { entries: SeasonEntry[] }) {
+/**
+ * Prop-getrieben (anders als der /map-Monolith): bekommt die Koordinaten-Turniere fertig.
+ * `heightClass` ist additiv (Default = bisherige Höhe → /tour/map unverändert); die
+ * Arbeitsflächen-Vorschau reicht damit eine kleinere Höhe herein.
+ */
+export default function TourMapView({
+  entries,
+  heightClass = "h-[70vh] min-h-[380px]",
+}: {
+  entries: SeasonEntry[];
+  heightClass?: string;
+}) {
   const mapRef = useRef<HTMLDivElement>(null);
   const t = useT();
   const { locale } = useLocale();
@@ -131,5 +141,5 @@ export default function TourMapView({ entries }: { entries: SeasonEntry[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, locale]);
 
-  return <div ref={mapRef} className="h-[70vh] min-h-[380px] w-full overflow-hidden rounded-2xl border border-black/[0.08]" />;
+  return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-2xl border border-black/[0.08]`} />;
 }

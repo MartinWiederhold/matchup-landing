@@ -69,7 +69,7 @@ export default function TourMapClient() {
       <div className="mt-8 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.mapEmptyTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.mapEmptyText")}</p>
-        <Link href="/tour" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.mapEmptyCta")}</Link>
+        <Link href="/tour/browse" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.mapEmptyCta")}</Link>
       </div>
     );
   }

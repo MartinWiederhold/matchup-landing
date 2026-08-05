@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
-import TourNav from "../components/TourNav";
+import BackToWorkspace from "../components/BackToWorkspace";
 import SchengenView from "./components/SchengenView";
 
 // Server Component (Standard). Kein "— Matchup"-Suffix — das Root-Layout hängt es an.
@@ -26,7 +26,7 @@ export default async function SchengenPage() {
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-500">{t("tour.schengenSubtitle")}</p>
 
-      <TourNav />
+      <BackToWorkspace />
 
       {/* Auth-Gate + Daten laufen client-seitig (Session liegt im Browser). */}
       <SchengenView />

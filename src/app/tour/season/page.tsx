@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
-import TourNav from "../components/TourNav";
+import BackToWorkspace from "../components/BackToWorkspace";
 import SeasonView from "./components/SeasonView";
 
 // Server Component (Standard). Kein "— Matchup"-Suffix — das Root-Layout hängt es an.
@@ -26,7 +26,7 @@ export default async function SeasonPage() {
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-500">{t("tour.seasonSubtitle")}</p>
 
-      <TourNav />
+      <BackToWorkspace />
 
       {/* Auth-Gate + Daten laufen client-seitig (Session liegt im Browser). */}
       <SeasonView />
