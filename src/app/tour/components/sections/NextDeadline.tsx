@@ -37,7 +37,7 @@ export default function NextDeadline({ entries }: { entries: SeasonEntry[] }) {
 
   if (!next) {
     return (
-      <section className="rounded-2xl border border-black/[0.08] bg-black/[0.02] px-5 py-4">
+      <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-5 py-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsNextDeadlineTitle")}</p>
         <p className="mt-1 text-sm text-neutral-500">{t("tour.wsNextDeadlineNone")}</p>
       </section>
@@ -47,18 +47,18 @@ export default function NextDeadline({ entries }: { entries: SeasonEntry[] }) {
   const x = next.entry.tournament;
   const days = Math.ceil((next.date.getTime() - now) / DAY);
   const place = `${x.city || t("tour.fieldMissing")}${x.country ? ", " + x.country : ""}`;
+  // Wenige Tage → drängendere Färbung (Bernstein), aber kein Alarmrot, kein Blinken.
+  const urgent = days <= 7;
 
   return (
-    <section className="rounded-2xl border border-matchup/30 bg-matchup/[0.06] px-5 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-matchup">{t("tour.wsNextDeadlineTitle")}</p>
-        <span className="rounded-full bg-matchup px-2.5 py-0.5 text-[12px] font-bold text-white">{t("tour.wsDeadlineIn", { n: days })}</span>
-      </div>
-      <p className="mt-2 text-[17px] font-extrabold tracking-tight text-neutral-900">
-        {place} <span className="font-semibold text-neutral-500">· {next.label}</span>
+    <section className={`rounded-3xl px-5 py-5 text-white shadow-sm sm:px-7 sm:py-6 ${urgent ? "bg-amber-500" : "bg-matchup"}`}>
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/80">{t("tour.wsNextDeadlineTitle")}</p>
+      <p className="mt-2 text-4xl font-black leading-none tracking-tight sm:text-5xl">{t("tour.wsDeadlineIn", { n: days })}</p>
+      <p className="mt-4 text-[16px] font-bold tracking-tight">
+        {place} <span className="font-semibold text-white/70">· {next.label}</span>
       </p>
-      <p className="mt-0.5 text-[13px] text-neutral-600">{fmtDeadline(next.date, locale)}</p>
-      <Link href="/tour/season" className="mt-3 inline-flex text-[13px] font-semibold text-matchup hover:underline">
+      <p className="mt-0.5 text-[13px] text-white/70">{fmtDeadline(next.date, locale)}</p>
+      <Link href="/tour/season" className="mt-4 inline-flex rounded-full bg-white/15 px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-white/25">
         {t("tour.wsDeadlineGo")} →
       </Link>
     </section>

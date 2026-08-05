@@ -96,7 +96,7 @@ export default function ExpenseForm({
   }
 
   return (
-    <section className="rounded-2xl border border-black/[0.08] bg-black/[0.02] p-5">
+    <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
       <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">

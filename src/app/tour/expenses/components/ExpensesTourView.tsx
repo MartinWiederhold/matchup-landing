@@ -84,10 +84,10 @@ export default function ExpensesTourView() {
   if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function ExpensesTourView() {
 
       {/* Summen je Währung */}
       {totals.size > 0 && (
-        <section className="rounded-2xl border border-black/[0.08] bg-black/[0.02] p-5">
+        <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
           <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expTotals")}</h2>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[...totals.entries()].sort().map(([c, v]) => (
@@ -141,7 +141,7 @@ export default function ExpensesTourView() {
               const netLines = [...curs].sort().map((c) => ({ c, net: (prizeCur === c ? prizeCents : 0) - (cost.get(c) ?? 0) }));
 
               return (
-                <article key={uuid} className="rounded-2xl border border-black/[0.08] bg-white p-4">
+                <article key={uuid} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4">
                   <p className="truncate text-[14px] font-bold text-neutral-900">
                     {e.tournament.city || t("tour.fieldMissing")}
                     {e.tournament.country ? <span className="text-neutral-500">, {e.tournament.country}</span> : null}

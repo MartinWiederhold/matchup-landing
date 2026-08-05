@@ -61,7 +61,7 @@ export default function SeasonList({ data, onChanged }: { data: WorkspaceData; o
           const dld = nextDeadlineDays(e, now);
           const prevPlace = i > 0 ? placeKey(data.entries[i - 1].tournament) : null;
           return (
-            <details key={e.planId} className="group rounded-2xl border border-black/[0.08] bg-white">
+            <details key={e.planId} className="group rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
               <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <span className="text-[12px] font-semibold tabular-nums text-neutral-400">{fmtMondayShort(x.tournament_monday, locale)}</span>
                 <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-neutral-900">

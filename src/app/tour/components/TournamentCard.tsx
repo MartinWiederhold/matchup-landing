@@ -42,7 +42,7 @@ export default function TournamentCard({
   const hall = x.indoor === true ? t("tour.indoor") : x.indoor === false ? t("tour.outdoor") : null;
 
   return (
-    <article className="rounded-2xl border border-black/[0.08] bg-white p-5">
+    <article className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[17px] font-bold tracking-tight text-neutral-900">

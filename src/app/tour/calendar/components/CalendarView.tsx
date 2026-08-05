@@ -66,10 +66,10 @@ export default function CalendarView() {
   if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -134,7 +134,7 @@ export default function CalendarView() {
           {days.map((date) => (
             <div key={date}>
               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{fmtDay(date, locale)}</p>
-              <div className="divide-y divide-black/[0.06] rounded-2xl border border-black/[0.08] bg-white">
+              <div className="divide-y divide-black/[0.06] rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
                 {byDay.get(date)!.map((e) => (
                   <div key={e.id} className="flex items-start gap-3 p-4">
                     <span className="w-14 shrink-0 pt-0.5 text-[12px] font-semibold text-neutral-500">

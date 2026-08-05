@@ -43,7 +43,7 @@ export default function SeasonCard({
   const hall = x.indoor === true ? t("tour.indoor") : x.indoor === false ? t("tour.outdoor") : null;
 
   return (
-    <article className="rounded-2xl border border-black/[0.08] bg-white p-5">
+    <article className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
       {/* Soft-gelöscht: Planzeile bleibt, wird aber erklärt (kein stiller Verlust). */}
       {entry.tournamentInactive && (
         <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
+import { TOUR_MAIN, EYEBROW, PAGE_H1, PAGE_SUB } from "@/app/tour/components/tourUi";
 import BackToWorkspace from "../components/BackToWorkspace";
 import CostsView from "./components/CostsView";
 
@@ -19,12 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CostsPage() {
   const t = await getT();
   return (
-    <main className="mx-auto max-w-[1000px] px-4 py-10 sm:px-6 sm:py-14">
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
-      <h1 className="mt-3 text-[32px] font-extrabold leading-[1.05] tracking-tight text-neutral-900 sm:text-5xl">
+    <main className={TOUR_MAIN}>
+      <p className={EYEBROW}>Matchup Tour</p>
+      <h1 className={PAGE_H1}>
         {t("tour.costsTitle")}
       </h1>
-      <p className="mt-4 max-w-2xl text-lg leading-relaxed text-neutral-500">{t("tour.costsSubtitle")}</p>
+      <p className={PAGE_SUB}>{t("tour.costsSubtitle")}</p>
 
       <BackToWorkspace />
 

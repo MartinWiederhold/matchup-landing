@@ -63,7 +63,7 @@ export default function StayRow({
 
   if (editing) {
     return (
-      <div className="rounded-xl border border-black/[0.08] bg-white p-3">
+      <div className="rounded-xl bg-white shadow-sm ring-1 ring-black/5 p-3">
         <div className="grid gap-2 sm:grid-cols-2">
           <select value={country} onChange={(e) => setCountry(e.target.value)} className={inputCls}>
             {countries.map((c) => <option key={c} value={c}>{countryName(c)}</option>)}

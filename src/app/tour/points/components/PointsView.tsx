@@ -72,12 +72,12 @@ export default function PointsView() {
   if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
         <Link
           href="/app"
-          className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700"
+          className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
         >
           {t("tour.loginCta")}
         </Link>
@@ -91,12 +91,12 @@ export default function PointsView() {
 
   if (data.rows.length === 0 && data.issues.length === 0) {
     return (
-      <div className="mt-8 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-8 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.pointsEmptyTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.pointsEmptyText")}</p>
         <Link
           href="/tour/calendar"
-          className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700"
+          className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
         >
           {t("tour.pointsEmptyCta")}
         </Link>
@@ -117,7 +117,7 @@ export default function PointsView() {
   return (
     <div className="mt-8 space-y-8">
       {/* Punktestand + Zählgrenze */}
-      <div className="rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-6">
+      <div className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-6">
         <p className="text-[13px] font-medium text-neutral-500">{t("tour.pointsTotalLabel")}</p>
         <p className="mt-1 text-4xl font-extrabold tracking-tight text-neutral-900">{scored.countingTotal}</p>
         <p className="mt-1 text-[13px] text-neutral-500">{t("tour.pointsLimitLabel", { n: scored.countingLimit })}</p>

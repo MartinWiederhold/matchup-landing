@@ -4,6 +4,7 @@ import { useT } from "@/lib/i18n";
 import { minorToEuro } from "@/lib/tourCosts";
 import type { MoneyBag } from "@/domain/tour/costs";
 import type { WorkspaceData } from "../useTourWorkspace";
+import { CARD } from "../tourUi";
 
 /** MoneyBag (Minor Units je Währung) → Anzeige „49.50 EUR · 20 USD", oder „—" wenn leer. */
 function bagText(bag: MoneyBag): string {
@@ -15,9 +16,9 @@ function bagText(bag: MoneyBag): string {
 /** Eine Kachel im Überblick. */
 function Tile({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className="rounded-2xl border border-black/[0.08] bg-black/[0.02] px-4 py-4">
+    <div className={`${CARD} px-4 py-4`}>
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{label}</p>
-      <p className={`mt-1 text-2xl font-extrabold tracking-tight ${accent ? "text-matchup" : "text-neutral-900"}`}>{value}</p>
+      <p className={`mt-1 text-3xl font-extrabold tracking-tight ${accent ? "text-matchup" : "text-neutral-900"}`}>{value}</p>
       {sub && <p className="mt-0.5 text-[12px] text-neutral-500">{sub}</p>}
     </div>
   );

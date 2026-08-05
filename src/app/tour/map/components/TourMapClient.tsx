@@ -12,7 +12,7 @@ import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 const TourMapView = dynamic(() => import("./TourMapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[70vh] min-h-[380px] items-center justify-center rounded-2xl border border-black/[0.08] bg-black/[0.02] text-sm text-neutral-500">
+    <div className="flex h-[70vh] min-h-[380px] items-center justify-center rounded-2xl bg-black/[0.02] ring-1 ring-black/5 text-sm text-neutral-500">
       …
     </div>
   ),
@@ -53,10 +53,10 @@ export default function TourMapClient() {
   if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -66,10 +66,10 @@ export default function TourMapClient() {
   // Leere Saison → Hinweis + Verweis, keine leere Weltkarte.
   if (entries.length === 0) {
     return (
-      <div className="mt-8 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-8 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.mapEmptyTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.mapEmptyText")}</p>
-        <Link href="/tour/browse" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">{t("tour.mapEmptyCta")}</Link>
+        <Link href="/tour/browse" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.mapEmptyCta")}</Link>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function TourMapClient() {
         <section>
           <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.mapNoCoordsTitle")}</h2>
           <p className="mt-1 text-[12px] text-neutral-500">{t("tour.mapNoCoordsText")}</p>
-          <ul className="mt-2 divide-y divide-black/[0.06] rounded-2xl border border-black/[0.08] bg-white">
+          <ul className="mt-2 divide-y divide-black/[0.06] rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
             {noCoords.map((e) => (
               <li key={e.planId} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
                 <span className="text-[14px] font-semibold text-neutral-900">

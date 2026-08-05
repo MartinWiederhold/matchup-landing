@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
+import { CARD_SOFT } from "../tourUi";
 import ExpensesTourView from "../../expenses/components/ExpensesTourView";
 import SchengenView from "../../schengen/components/SchengenView";
 import CalendarView from "../../calendar/components/CalendarView";
@@ -32,12 +33,12 @@ export default function RareStuff() {
         {panels.map((p) => {
           const isOpen = open === p.key;
           return (
-            <div key={p.key} className="rounded-2xl border border-black/[0.08] bg-white">
+            <div key={p.key} className={CARD_SOFT}>
               <button
                 type="button"
                 onClick={() => toggle(p.key)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center justify-between px-4 py-3 text-left text-[14px] font-semibold text-neutral-800"
+                className="flex w-full items-center justify-between px-4 py-3 text-left text-[13px] font-semibold text-neutral-600"
               >
                 {p.label}
                 <span className={`text-neutral-300 transition-transform ${isOpen ? "rotate-180" : ""}`}>▾</span>

@@ -67,10 +67,10 @@ export default function CostsView() {
   }
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">
+        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">
           {t("tour.loginCta")}
         </Link>
       </div>
@@ -91,10 +91,10 @@ export default function CostsView() {
       />
 
       {entries.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-black/[0.08] bg-black/[0.02] px-6 py-10 text-center">
+        <div className="mt-8 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
           <h2 className="text-lg font-bold text-neutral-900">{t("tour.costsEmptyTitle")}</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.costsEmptyText")}</p>
-          <Link href="/tour/browse" className="mt-6 inline-flex rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700">
+          <Link href="/tour/browse" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">
             {t("tour.costsEmptyCta")}
           </Link>
         </div>

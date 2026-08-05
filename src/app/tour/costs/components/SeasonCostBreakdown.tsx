@@ -89,7 +89,7 @@ export default function SeasonCostBreakdown({
           const x = entries[i].tournament;
           const countryName = x.country ? (t(`tour.country.${x.country}`).startsWith("tour.country.") ? x.country : t(`tour.country.${x.country}`)) : t("tour.fieldMissing");
           return (
-            <article key={entries[i].planId} className="rounded-2xl border border-black/[0.08] bg-white p-4">
+            <article key={entries[i].planId} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-[15px] font-bold tracking-tight text-neutral-900">
                   {x.city || t("tour.fieldMissing")}
@@ -127,7 +127,7 @@ export default function SeasonCostBreakdown({
       </div>
 
       {/* Gesamt je Währung + Cluster-Effekt */}
-      <div className="mt-4 rounded-2xl border border-black/[0.08] bg-black/[0.02] p-5">
+      <div className="mt-4 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.costsTotal")}</span>
           <span className="flex flex-col items-end text-[18px] font-extrabold text-neutral-900">

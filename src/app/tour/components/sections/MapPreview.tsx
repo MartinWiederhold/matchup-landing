@@ -32,7 +32,7 @@ export default function MapPreview({ entries }: { entries: SeasonEntry[] }) {
 
   if (withCoords.length === 0) {
     return (
-      <section className="rounded-2xl border border-black/[0.08] bg-black/[0.02] px-5 py-6 text-center">
+      <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-5 py-6 text-center">
         <p className="text-sm text-neutral-500">{t("tour.wsMapNoCoords")}</p>
         <Link href="/tour/map" className="mt-2 inline-flex text-[13px] font-semibold text-matchup hover:underline">
           {t("tour.wsMapOpen")} →
