@@ -124,13 +124,13 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Ablaufdatum je Einladung, Token nach Annahme entwerten, und dem Spieler anzeigen, wann ein Link erzeugt wurde und ob er noch offen ist.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal erzeugter Einladungslink unbegrenzt gültig bleibt.
 
-### MU-029 · Turniere ohne Koordinaten — Karte funktionslos · M · offen · **Vor Launch**
-**Problem:** Alle 1489 Zeilen in `web.tour_tournaments` haben `latitude` und `longitude` auf `null`. Der Wikipedia-Import befüllt die Spalten nie — die Kalendertabellen enthalten keine Koordinaten, und eine Geocodierung findet nicht statt.
-**Wirkung:** `/tour/map` und die Kartenvorschau auf `/tour` zeigen für JEDEN Nutzer „keine Turniere mit Koordinaten". Die Karte ist seit ihrem Bau funktionslos, ohne dass es auffiel. Auch die Cluster-Erkennung auf der Karte kann so nie greifen.
-**Lösung:** Geocodierung Stadt plus Land nach Koordinaten. Quelle mit klarer Lizenz wählen — Nominatim (OSM) erlaubt kommerzielle Nutzung bei maximal einer Anfrage pro Sekunde und mit Attribution, was für einen einmaligen Lauf über ~600 verschiedene Orte ausreicht. Ergebnisse als Claims mit Quelle speichern, wie die übrigen Felder.
-**Sperre:** Nicht mit echten Nutzern starten, solange die Karte funktionslos ist.
-
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
+
+### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
+**Ausgangslage:** Alle 1489 Zeilen in `web.tour_tournaments` hatten `latitude`/`longitude` auf `null`; der Wikipedia-Import befüllte die Spalten nie, eine Geocodierung fand nicht statt. `/tour/map` und die Kartenvorschau zeigten für JEDEN Nutzer „keine Turniere mit Koordinaten".
+**Stand (Commit 99f275c):** 1234 von 1489 Turnieren haben jetzt Koordinaten aus **Nominatim (OSM)** — geschrieben als Claims mit Quelle `nominatim` und confidence 0.6, dann in den Stamm aufgelöst. **Die Karte ist funktional.** Skript `scripts/geocode-tournaments.mjs` (Trockenlauf als Default, Rate-Limit ≥1 s/Anfrage, Roh-Cache, idempotent geprüft); Bericht `scripts/geocoding-report.md`.
+**Restumfang:** 255 Turniere an 124 Orten fehlen noch — **121 mehrdeutige** Ortsnamen (echte Doppelnamen wie Las Vegas NV/NM, Savannah 5×, Tigre) und **3 nicht gefundene** (Nouméa, Hong Kong, Harmon/Guam). Alle mit Kandidaten-Koordinaten in `scripts/geocoding-report.md` gelistet. **32 der 124 Orte liegen in der Zielregion** (Europa/TR/TN/EG/MA), der Rest überwiegend USA, Südamerika, Asien.
+**Lösung (Rest):** je offenem Ort die richtige Koordinate manuell als Claim setzen (bei Doppelnamen anhand der Kandidatenliste im Bericht) und mit `scripts/resolve-tournaments.mjs --write` auflösen. Nicht mehr launch-blockierend — die Karte ist nutzbar, nur unvollständig.
 
 ### MU-021 · Kalendertermine ohne Zeitzone · M · offen
 **Problem:** `web.tour_events.event_time` ist `time without time zone`, der ICS-Export liefert `DTSTART` ohne `TZID`. Ein Termin „14:00" erscheint in jeder Kalender-App als lokale 14 Uhr des Betrachters.
