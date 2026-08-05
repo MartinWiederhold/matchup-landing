@@ -124,6 +124,12 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Ablaufdatum je Einladung, Token nach Annahme entwerten, und dem Spieler anzeigen, wann ein Link erzeugt wurde und ob er noch offen ist.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal erzeugter Einladungslink unbegrenzt gültig bleibt.
 
+### MU-029 · Turniere ohne Koordinaten — Karte funktionslos · M · offen · **Vor Launch**
+**Problem:** Alle 1489 Zeilen in `web.tour_tournaments` haben `latitude` und `longitude` auf `null`. Der Wikipedia-Import befüllt die Spalten nie — die Kalendertabellen enthalten keine Koordinaten, und eine Geocodierung findet nicht statt.
+**Wirkung:** `/tour/map` und die Kartenvorschau auf `/tour` zeigen für JEDEN Nutzer „keine Turniere mit Koordinaten". Die Karte ist seit ihrem Bau funktionslos, ohne dass es auffiel. Auch die Cluster-Erkennung auf der Karte kann so nie greifen.
+**Lösung:** Geocodierung Stadt plus Land nach Koordinaten. Quelle mit klarer Lizenz wählen — Nominatim (OSM) erlaubt kommerzielle Nutzung bei maximal einer Anfrage pro Sekunde und mit Attribution, was für einen einmaligen Lauf über ~600 verschiedene Orte ausreicht. Ergebnisse als Claims mit Quelle speichern, wie die übrigen Felder.
+**Sperre:** Nicht mit echten Nutzern starten, solange die Karte funktionslos ist.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-021 · Kalendertermine ohne Zeitzone · M · offen
