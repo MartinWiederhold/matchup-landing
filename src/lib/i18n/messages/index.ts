@@ -25,6 +25,7 @@ import { support } from "./support";
 import { waitlist } from "./waitlist";
 import { seo } from "./seo";
 import { tour } from "./tour";
+import { catalog } from "./catalog";
 
 type Namespace = { de: Record<string, unknown>; en: Record<string, unknown> };
 
@@ -54,6 +55,7 @@ const namespaces: Record<string, Namespace> = {
   waitlist,
   seo,
   tour,
+  catalog,
 };
 
 function build(locale: Locale): Record<string, unknown> {

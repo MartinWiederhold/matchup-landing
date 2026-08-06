@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import BeratungTabs from "@/components/shop/BeratungTabs";
 import { getT } from "@/lib/i18n/server";
 
@@ -60,6 +61,18 @@ export default async function BeratungPage() {
           <p className="mt-5 text-center text-xs text-neutral-500">
             {t("beratung.privacyNote")}
           </p>
+
+          {/* Verweis auf den Schläger-Katalog (steht als eigene Seite daneben) */}
+          <Link
+            href="/beratung/katalog"
+            className="mt-8 flex items-center justify-between gap-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-colors hover:bg-black/[0.02]"
+          >
+            <span>
+              <span className="block text-base font-bold tracking-tight text-neutral-900">{t("catalog.title")}</span>
+              <span className="mt-1 block text-sm leading-relaxed text-neutral-500">{t("catalog.subtitle")}</span>
+            </span>
+            <span aria-hidden className="shrink-0 text-2xl text-matchup">→</span>
+          </Link>
         </div>
       </section>
 
