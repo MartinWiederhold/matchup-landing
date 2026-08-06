@@ -394,18 +394,29 @@ if (WRITE) {
   const { createClient } = await import("@supabase/supabase-js");
   const svc = createClient(url, key, { db: { schema: "web" }, auth: { persistSession: false, autoRefreshToken: false } });
 
-  let okR = 0, okC = 0, errN = 0;
+  let okR = 0, okC = 0, errRacket = 0, errClaim = 0;
+  // Fehlergründe VOLLSTÄNDIG erfassen (nicht nur das erste Vorkommen): je Meldung
+  // Häufigkeit + Beispiel-ID. Getrennt nach Stamm- und Claim-Phase. Landet in stderr
+  // UND im Bericht (§6), damit keine Fehler-Lücke offen bleibt.
+  const errDist = new Map(); // msg -> { n, exampleId }
+  const bump = (msg, id) => { const e = errDist.get(msg) || { n: 0, exampleId: id }; e.n++; errDist.set(msg, e); };
   for (const { record, claims } of parsed) {
     const { data, error } = await svc.from("rackets")
       .upsert(record, { onConflict: "shop_product_id" }).select("id").single();
-    if (error || !data) { errN++; continue; }
+    if (error || !data) {
+      errRacket++;
+      bump("rackets: " + (error?.message || "kein data zurück"), record.shop_product_id);
+      continue;
+    }
     okR++;
     const rows = claims.map((c) => ({ ...c, racket_id: data.id }));
     const { error: ce } = await svc.from("racket_claims")
       .upsert(rows, { onConflict: "racket_id,field_name,source,field_value", ignoreDuplicates: true });
-    if (ce) errN++; else okC += rows.length;
+    if (ce) { errClaim++; bump("racket_claims: " + ce.message, record.shop_product_id); } else okC += rows.length;
   }
-  writeSummary = { okR, okC, errN };
+  for (const [msg, e] of errDist) console.error(`WRITE-FEHLER ×${e.n} (z. B. id ${e.exampleId}): ${msg}`);
+  writeSummary = { okR, okC, errRacket, errClaim,
+    errDist: [...errDist.entries()].map(([msg, e]) => ({ msg, n: e.n, exampleId: e.exampleId })) };
 }
 
 // ---------------------------------------------------------------------------
@@ -431,7 +442,7 @@ md.push(`| Vollständig (kein verfolgtes Feld fehlt) | ${complete.length} |`);
 md.push(`| Unvollständig | ${incomplete.length} |`);
 md.push(`| Ohne currentProduct (keine Testwerte) | ${parsed.filter((r) => !r.hasCurrentProduct).length} |`);
 md.push(`| Claims gesamt | ${totalClaims} |`);
-if (writeSummary) md.push(`| **Geschrieben** | ${writeSummary.okR} Schläger, ${writeSummary.okC} Claims, ${writeSummary.errN} Fehler |`);
+if (writeSummary) md.push(`| **Geschrieben** | ${writeSummary.okR} Schläger, ${writeSummary.okC} Claims (Fehler: ${writeSummary.errRacket} Stamm / ${writeSummary.errClaim} Claims) |`);
 md.push("");
 
 md.push(`### Produkte je Kategorieseite`);
@@ -467,6 +478,15 @@ if (fetchErrors.length) {
   md.push(`## 3b. Abruf-Fehler`);
   md.push("");
   for (const e of fetchErrors) md.push(`- ${e.id} · ${e.url} · ${e.error}`);
+  md.push("");
+}
+
+if (writeSummary && writeSummary.errDist.length) {
+  md.push(`## 3c. Schreibfehler nach Grund (scharfer Lauf)`);
+  md.push("");
+  md.push(`| Häufigkeit | Beispiel-id | Meldung |`);
+  md.push(`|---:|---|---|`);
+  for (const e of writeSummary.errDist.sort((a, b) => b.n - a.n)) md.push(`| ${e.n} | ${e.exampleId} | ${e.msg} |`);
   md.push("");
 }
 

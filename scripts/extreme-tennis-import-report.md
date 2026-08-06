@@ -1,7 +1,7 @@
-# extreme-tennis.fr → web.rackets — TROCKENLAUF (nichts geschrieben)
+# extreme-tennis.fr → web.rackets — SCHARFER LAUF
 
-> Erzeugt von `scripts/extreme-tennis-import.mjs` · Lauf: 2026-08-06T15:16:24.905Z
-> Ziel: web.rackets + web.racket_claims. **Kein DB-Zugriff** in diesem Lauf.
+> Erzeugt von `scripts/extreme-tennis-import.mjs` · Lauf: 2026-08-06T18:02:18.291Z
+> Ziel: web.rackets + web.racket_claims. 
 > Netz-Abrufe: 0 · Cache-Treffer: 408
 
 ## 1. Übersicht
@@ -15,6 +15,7 @@
 | Unvollständig | 207 |
 | Ohne currentProduct (keine Testwerte) | 132 |
 | Claims gesamt | 7613 |
+| **Geschrieben** | 402 Schläger, 7613 Claims (Fehler: 0 Stamm / 0 Claims) |
 
 ### Produkte je Kategorieseite
 
