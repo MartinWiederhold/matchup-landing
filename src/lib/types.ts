@@ -600,3 +600,65 @@ export interface TourProfile {
   created_at?: string;
   updated_at?: string;
 }
+
+// ── Schläger-Katalog (web.rackets / web.racket_claims) ──────────────────────
+// Passend zu supabase/web_rackets.sql. Nur Typen — keine Queries hier.
+// ACHSEN-BEFUND: Die 7 Testwerte (puissance … stabilite) sind eine ANDERE
+// Taxonomie als die Finder-Achsen in src/domain/equipment/racket.ts, auf denen
+// scoreV1 rechnet. Keine 1:1-Zuordnung → dieser Katalog liefert zunächst nur
+// Anzeigedaten, keine Finder-Eingaben. Eine Brücke wäre ein späterer Schritt.
+// PostgREST: integer kommt als number, numeric als string (deshalb unten getrennt).
+
+/** Aufgelöster Schläger-Stamm, eine Zeile je Shop-Produkt (web.rackets).
+ *  Name bewusst „CatalogRacket" — grenzt den Shop-Katalog vom Finder-Domänentyp
+ *  `Racket` in src/domain/equipment/racket.ts ab (andere Taxonomie, s. o.). */
+export interface CatalogRacket {
+  id: string;
+  shop_product_id: number; // PrestaShop id_product — NOT NULL, UNIQUE (integer → number)
+  name: string | null;
+  brand: string | null;
+  sku: string | null;
+  // 7 Testwerte 0–100 (integer → number). NULL = im Shop nicht gepflegt.
+  puissance: number | null; // Power
+  controle: number | null; // Kontrolle
+  confort: number | null; // Komfort
+  prise_deffet: number | null; // Spin (Prise d'effet)
+  tolerance: number | null; // Toleranz
+  maniabilite: number | null; // Handling
+  stabilite: number | null; // Stabilität
+  // Gesamtscore — numeric-Spalte → PostgREST liefert String. Coercion an der Abfragestelle.
+  score: string | null;
+  price_minor: number | null; // Preis in Cent (integer → number). NULL = unbekannt.
+  price_currency: string | null; // ISO 4217; gesetzt, sobald price_minor gesetzt ist (CHECK)
+  // Technik — ALLE nullable, NULL = „nicht gepflegt". integer → number, numeric → string.
+  weight_g: number | null; // Gewicht unbesaitet, Gramm
+  balance_cm: string | null; // Balance, cm (numeric)
+  head_size_sqcm: number | null; // Kopfgröße, cm² (Tamis)
+  string_pattern: string | null; // Besaitungsbild, z. B. "16x19"
+  stiffness_ra: number | null; // Steifigkeit, RA (Rigidité)
+  inertia: string | null; // Inertie (numeric)
+  profile: string | null; // Profil, z. B. "23/26/21 mm"
+  twistweight: string | null; // Twistweight (numeric)
+  length_cm: string | null; // Länge, cm (numeric)
+  recoil_weight: string | null; // Recoil Weight (numeric)
+  plow_through: string | null; // Plow-Through (numeric)
+  product_url: string | null; // kanonische Produktseiten-Adresse
+  valid_from: string; // ISO timestamp
+  valid_to: string | null; // null = aktiv (Soft-Delete)
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
+/** Einzelbehauptung je Feld + Quelle (web.racket_claims). Nur service_role sichtbar. */
+export interface CatalogRacketClaim {
+  id: string;
+  racket_id: string; // FK → rackets.id
+  field_name: string; // Feld des Stamms, z. B. "puissance", "weight_g"
+  field_value: string; // Wert immer als Text (feldübergreifend serialisiert)
+  source: string; // Quellbezeichner, z. B. "extreme-tennis:24005"
+  source_url: string | null;
+  observed_at: string; // ISO timestamp — Erfassungszeitpunkt
+  // numeric-Spalte → PostgREST liefert String. Coercion später an der Abfragestelle.
+  confidence: string; // 0..1
+  created_at: string;
+}
