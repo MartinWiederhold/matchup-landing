@@ -43,6 +43,7 @@ next-env.d.ts
 # Sicherung aus Setup-Import
 .backup-setup-import/
 scripts/.geocode-cache.json
+scripts/.et-cache/
 /e2e/artifacts/
 /e2e/.playwright/
 /test-results/
