@@ -35,7 +35,9 @@ const SETUPS: Setup[] = [
     brand: "Babolat",
     img: "/beratung/pros/alcaraz.jpg",
     accent: "from-orange-400 to-red-500",
-    strings: ["Babolat RPM Blast 1.30 (Längs & Quer)"],
+    // 2025 von RPM Blast auf RPM Team gewechselt (weicher, ellbogenfreundlicher) —
+    // konsistent mit /shop/setup/alcaraz. Quelle: alcaraz-setup.md.
+    strings: ["Babolat RPM Team 1.30 (Längs & Quer)"],
     tension: "ca. 25 kg / 55 lbs",
     traits: ["Maximaler Spin", "Kontrolle", "Haltbarkeit"],
     instruction:
