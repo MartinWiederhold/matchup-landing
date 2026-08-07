@@ -1,14 +1,15 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useT } from "@/lib/i18n";
+import { useCart, type Cat } from "./cart";
+import { ProductVisual } from "./productVisual";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Daten
    ────────────────────────────────────────────────────────────────────────── */
-
-type Cat = "tennis" | "padel" | "pickleball" | "gear" | "apparel";
 
 type Product = {
   id: number;
@@ -64,181 +65,31 @@ const COLLECTIONS: {
   { titleKey: "shop.collectionGearTitle", metaKey: "shop.collectionGearMeta", cat: "gear", img: "/tennis/tennis-3.jpg" },
 ];
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Platzhalter-Grafik für Produktbilder (noch keine echten Produktfotos)
-   ────────────────────────────────────────────────────────────────────────── */
-
-function productImage(cat: Cat, brand: string, name = ""): string | undefined {
-  if (cat === "tennis")
-    return brand === "Yonex" ? "/shop/tennis-racket.png" : "/shop/babolat-racket.png";
-  if (cat === "padel") return "/shop/padel-racket.png";
-  if (cat === "pickleball") return "/shop/pickleball-paddle.png";
-  // Bekleidung & Zubehör: nach Produktname
-  const n = name.toLowerCase();
-  if (n.includes("herren")) return "/shop/pullover-herren.png";
-  if (n.includes("damen") || n.includes("frau")) return "/shop/pullover-frau.png";
-  if (n.includes("grip")) return "/shop/grips.png";
-  if (n.includes("ball") || n.includes("bälle")) return "/shop/balls.png";
-  if (n.includes("bag") || n.includes("tasche")) return "/shop/bag.png";
-  return undefined;
-}
-
-// Vollformat-Fotos (Lifestyle/Produktfoto mit eigenem Hintergrund) -> object-cover
-const COVER_IMAGES = new Set([
-  "/shop/pullover-herren.png",
-  "/shop/pullover-frau.png",
-  "/shop/bag.png",
-]);
-
-function ProductVisual({
-  cat,
-  brand,
-  name,
-  dense,
-}: {
-  cat: Cat;
-  brand: string;
-  name?: string;
-  dense?: boolean;
-}) {
-  const img = productImage(cat, brand, name);
-  const cover = img ? COVER_IMAGES.has(img) : false;
-
-  // Vollformat-Foto (Pullover, Tasche): randlos füllen
-  if (img && cover) {
-    return (
-      <div className="relative h-full w-full bg-neutral-100">
-        <Image
-          src={img}
-          alt={brand}
-          fill
-          sizes={dense ? "64px" : "(max-width:1024px) 50vw, 25vw"}
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-200 ${
-        dense ? "p-2" : "p-5"
-      }`}
-    >
-      {img ? (
-        <Image
-          src={img}
-          alt={brand}
-          fill
-          sizes={dense ? "64px" : "(max-width:1024px) 50vw, 25vw"}
-          className={`object-contain ${dense ? "p-1" : "p-5"} transition-transform duration-500 group-hover:scale-105`}
-        />
-      ) : (
-        <RacketGlyph cat={cat} className="h-2/3 w-2/3 text-neutral-300" />
-      )}
-      {!dense && (
-        <span className="absolute bottom-3 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-          {brand}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function RacketGlyph({ cat, className }: { cat: Cat; className?: string }) {
-  if (cat === "gear") {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-        <circle cx="32" cy="30" r="18" stroke="currentColor" strokeWidth="2.5" />
-        <path d="M20 30h24M32 18v24M24 22l16 16M40 22L24 38" stroke="currentColor" strokeWidth="1.2" />
-      </svg>
-    );
-  }
-  if (cat === "pickleball") {
-    return (
-      <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-        <rect x="18" y="6" width="28" height="36" rx="8" stroke="currentColor" strokeWidth="2.5" />
-        <path d="M30 42h4v16h-4z" stroke="currentColor" strokeWidth="2.5" />
-        <circle cx="27" cy="20" r="1.6" fill="currentColor" />
-        <circle cx="37" cy="20" r="1.6" fill="currentColor" />
-        <circle cx="32" cy="28" r="1.6" fill="currentColor" />
-      </svg>
-    );
-  }
-  // tennis & padel — Schläger
-  const rx = cat === "padel" ? 13 : 11;
-  return (
-    <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
-      <ellipse cx="32" cy="22" rx={rx} ry={cat === "padel" ? 15 : 14} stroke="currentColor" strokeWidth="2.5" />
-      <path d="M30 37h4l1 21h-6z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
-      {cat === "tennis" && (
-        <path
-          d="M24 22h16M32 9v26M27 12l10 20M37 12L27 32"
-          stroke="currentColor"
-          strokeWidth="1"
-        />
-      )}
-      {cat === "padel" && (
-        <g>
-          <circle cx="27" cy="18" r="1.4" fill="currentColor" />
-          <circle cx="37" cy="18" r="1.4" fill="currentColor" />
-          <circle cx="32" cy="25" r="1.4" fill="currentColor" />
-          <circle cx="27" cy="28" r="1.4" fill="currentColor" />
-          <circle cx="37" cy="28" r="1.4" fill="currentColor" />
-        </g>
-      )}
-    </svg>
-  );
-}
-
 const BookmarkIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path
-      d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
+    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" strokeWidth="1.5" />
   </svg>
 );
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Hauptkomponente
+   Hauptkomponente — Warenkorb liegt jetzt im geteilten Context (cart.tsx);
+   Sticky-Button + Drawer rendert das Shop-Layout über CartUI. Bedienung und
+   Darstellung des Shops bleiben unverändert.
    ────────────────────────────────────────────────────────────────────────── */
 
 export default function ShopExperience() {
   const t = useT();
+  const { add } = useCart();
   const [filter, setFilter] = useState<Cat | "all">("all");
-  const [cart, setCart] = useState<{ id: number; qty: number }[]>([]);
-  const [cartOpen, setCartOpen] = useState(false);
   const hscroll = useRef<HTMLDivElement>(null);
 
   const shown = filter === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.cat === filter);
   const favorites = PRODUCTS.filter((p) => p.badge);
 
-  const cartItems = useMemo(
-    () =>
-      cart
-        .map((c) => {
-          const p = PRODUCTS.find((x) => x.id === c.id);
-          return p ? { ...p, qty: c.qty } : null;
-        })
-        .filter(Boolean) as (Product & { qty: number })[],
-    [cart],
-  );
-  const count = cart.reduce((s, c) => s + c.qty, 0);
-  const total = cartItems.reduce((s, c) => s + c.price * c.qty, 0);
-
+  // Produkt → Korbzeile. id namespaced ("shop-N"), damit sie nicht mit Alcaraz kollidiert.
   function addToCart(id: number) {
-    setCart((prev) => {
-      const ex = prev.find((c) => c.id === id);
-      return ex
-        ? prev.map((c) => (c.id === id ? { ...c, qty: c.qty + 1 } : c))
-        : [...prev, { id, qty: 1 }];
-    });
-    setCartOpen(true);
-  }
-  function removeFromCart(id: number) {
-    setCart((prev) => prev.filter((c) => c.id !== id));
+    const p = PRODUCTS.find((x) => x.id === id);
+    if (p) add({ id: `shop-${p.id}`, brand: p.brand, name: p.name, price: p.price, cat: p.cat });
   }
   function selectFilter(cat: Cat | "all") {
     setFilter(cat);
@@ -250,18 +101,6 @@ export default function ShopExperience() {
 
   return (
     <>
-      {/* Mini-Warenkorb-Trigger (sticky) */}
-      <button
-        type="button"
-        onClick={() => setCartOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
-      >
-        {t("shop.cart")}
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-black">
-          {count}
-        </span>
-      </button>
-
       {/* HERO */}
       <section className="relative flex h-[68vh] min-h-[460px] items-center justify-center overflow-hidden">
         <Image
@@ -287,6 +126,22 @@ export default function ShopExperience() {
               ↓
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* DEZENTER HINWEIS: Alcaraz-Setup-Seite */}
+      <section className="px-4 pt-8 sm:px-6 lg:px-12">
+        <div className="mx-auto max-w-[1400px]">
+          <Link
+            href="/shop/setup/alcaraz"
+            className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-neutral-50 px-5 py-3.5 text-sm transition-colors hover:border-neutral-400"
+          >
+            <span className="text-neutral-700">
+              <span className="font-semibold text-neutral-900">{t("shop.setupHintTitle")}</span>
+              <span className="ml-2 text-neutral-500">{t("shop.setupHintText")}</span>
+            </span>
+            <span aria-hidden className="shrink-0 font-semibold">→</span>
+          </Link>
         </div>
       </section>
 
@@ -382,81 +237,6 @@ export default function ShopExperience() {
           </div>
         </div>
       </section>
-
-
-      {/* CART DRAWER */}
-      <div
-        onClick={() => setCartOpen(false)}
-        className={`fixed inset-0 z-[60] bg-black/35 transition-opacity ${
-          cartOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      />
-      <aside
-        className={`fixed bottom-0 right-0 top-0 z-[61] flex w-full max-w-[400px] flex-col bg-white transition-transform duration-300 ${
-          cartOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h3 className="text-lg font-bold tracking-tight">{t("shop.cartTitle", { count })}</h3>
-          <button
-            type="button"
-            onClick={() => setCartOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-sm transition-colors hover:bg-neutral-100"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-6">
-          {cartItems.length === 0 ? (
-            <p className="py-16 text-center text-sm text-neutral-400">
-              {t("shop.cartEmpty")}
-            </p>
-          ) : (
-            cartItems.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center gap-4 border-b border-neutral-100 py-4"
-              >
-                <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded">
-                  <ProductVisual cat={c.cat} brand={c.brand} name={c.name} dense />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[10px] uppercase tracking-[0.06em] text-neutral-500">
-                    {c.brand}
-                  </div>
-                  <div className="my-0.5 text-[13px] font-medium">
-                    {c.name}
-                    {c.qty > 1 && ` (${c.qty}×)`}
-                  </div>
-                  <div className="text-sm font-semibold">{c.price * c.qty} €</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFromCart(c.id)}
-                  className="text-neutral-400 transition-colors hover:text-black"
-                >
-                  ✕
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-        {cartItems.length > 0 && (
-          <div className="border-t border-neutral-200 px-6 py-5">
-            <div className="mb-4 flex justify-between text-[15px]">
-              <span>{t("shop.cartSum")}</span>
-              <span className="font-bold">{total} €</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => alert(t("shop.checkoutAlert"))}
-              className="h-12 w-full rounded-full bg-black text-sm font-medium text-white transition-colors hover:bg-neutral-800"
-            >
-              {t("shop.checkout")}
-            </button>
-          </div>
-        )}
-      </aside>
     </>
   );
 }

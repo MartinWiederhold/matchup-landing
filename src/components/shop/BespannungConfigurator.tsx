@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import type { TFunction } from "@/lib/i18n";
 
@@ -637,6 +638,17 @@ function SetupDetail({
       <p className="mt-4 text-sm leading-relaxed text-neutral-600">
         {instruction(t, setup.id)}
       </p>
+
+      {/* Nur Alcaraz: Verweis auf die komplette Setup-Seite im Shop */}
+      {setup.id === "alcaraz" && (
+        <Link
+          href="/shop/setup/alcaraz"
+          className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-neutral-900 ring-1 ring-neutral-200 transition-colors hover:bg-neutral-100"
+        >
+          <span>{t("beratung.alcarazShopCta")}</span>
+          <span aria-hidden className="text-neutral-400">→</span>
+        </Link>
+      )}
 
       <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-5 sm:flex-row">
         <div className="text-center sm:text-left">

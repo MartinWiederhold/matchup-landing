@@ -50,8 +50,13 @@ export const shop = {
     cartTitle: "Warenkorb ({count})",
     cartEmpty: "Dein Warenkorb ist leer",
     cartSum: "Summe",
+    priceOnRequest: "Preis auf Anfrage",
+    cartUnpricedNote: "Zzgl. Artikel ohne Festpreis (Preis auf Anfrage).",
     checkout: "Zur Kasse",
     checkoutAlert: "Checkout-Demo — danke für deinen Einkauf! 🎾",
+    // Dezenter Hinweis auf die Alcaraz-Setup-Seite
+    setupHintTitle: "Pro-Setup: Carlos Alcaraz",
+    setupHintText: "Sein komplettes Equipment — einzeln oder als Set in den Warenkorb.",
   },
   en: {
     notifyPlaceholder: "Your email address",
@@ -102,7 +107,12 @@ export const shop = {
     cartTitle: "Cart ({count})",
     cartEmpty: "Your cart is empty",
     cartSum: "Total",
+    priceOnRequest: "Price on request",
+    cartUnpricedNote: "Plus items without a fixed price (price on request).",
     checkout: "Checkout",
     checkoutAlert: "Checkout demo — thanks for your purchase! 🎾",
+    // Subtle pointer to the Alcaraz setup page
+    setupHintTitle: "Pro setup: Carlos Alcaraz",
+    setupHintText: "His full equipment — add items individually or as a set.",
   },
 };

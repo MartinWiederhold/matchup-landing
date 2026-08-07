@@ -233,6 +233,7 @@ export const beratung = {
     rowBrand: "Schläger-Marke",
     priceIncludes: "inkl. Premium-Saite & Bespannung",
     orderWithSetup: "Mit diesem Setup bestellen →",
+    alcarazShopCta: "Komplettes Alcaraz-Setup im Shop ansehen",
 
     // Bestell-Bestätigung
     orderCreated: "Besaitungs-Auftrag erstellt",
@@ -562,6 +563,7 @@ export const beratung = {
     rowBrand: "Racket brand",
     priceIncludes: "incl. premium string & stringing",
     orderWithSetup: "Order with this setup →",
+    alcarazShopCta: "See the full Alcaraz setup in the shop",
 
     // Order confirmation
     orderCreated: "Stringing order created",
