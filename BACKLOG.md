@@ -166,6 +166,14 @@ Attribution in beiden Fällen sicherstellen.
 **Wirkung:** Alle 2026er M25-Turniere tragen einen um 5000 USD zu niedrigen Preisgeld-Claim. Bei jeder künftigen ITF-Preisgeldreform wiederholt sich der Fehler still. Entschärfend: Der Wert ist als Ableitung mit niedriger confidence markiert, nicht als Beobachtung.
 **Lösung:** `PRIZE_USD` nach Jahr staffeln (Kategorie + Jahr → Betrag), mit Quellenangabe je Jahrgang. Danach die betroffenen Claims neu berechnen — der Import ist idempotent, ein erneuter Lauf reicht. Belegt in `scripts/punkte-tabellen-report.md` §2b.
 
+### MU-030 · Spieler-Setups im Konfigurator ohne Datenstand und Quelle · M · offen
+**Problem:** Die zwölf Spieler-Setups im Konfigurator (`src/components/shop/BespannungConfigurator.tsx`) tragen weder Datenstand noch Quellenangabe. Tour-Setups ändern sich saisonal — belegt am Fall **Alcaraz**, dessen Saite von RPM Blast auf RPM Team wechselte und an zwei Stellen unterschiedlich stand (behoben mit `3ad5897`). Für die übrigen elf ist die Aktualität unbekannt: keine Quelle, kein Datum.
+**Wirkung:** Ein Nutzer besaitet nach einer Angabe, die zwei Jahre alt sein kann, und hält sie für aktuell. Das widerspricht der Haltung im Projekt — Begründung, Datenstand, Confidence.
+**Lösung:** Je Setup eine Quellenangabe und einen Datenstand führen und anzeigen. Setups ohne belegte Quelle als solche kennzeichnen. **Ohne Quelle nichts ändern** — raten wäre schlimmer als eine alte Angabe mit Datum.
+**Einzelfälle:**
+- **Federer** ist seit 2022 zurückgetreten. Bei „Spiele wie die Profis" führt ein vier Jahre altes Setup in die Irre. Entweder entfernen oder als Referenz kennzeichnen — Produktentscheidung.
+- **Fritz** zeigt „Racket brand: Head" neben einer Solinco-Saite. Das ist auf der Tour üblich und kein Fehler, liest sich aber wie ein Widerspruch. Beschriftungsfrage.
+
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
