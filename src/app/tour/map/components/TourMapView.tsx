@@ -39,9 +39,20 @@ function markerHtml(count: number): string {
 export default function TourMapView({
   entries,
   heightClass = "h-[70vh] min-h-[380px]",
+  focus = null,
+  focusZoom = 6,
+  showRoute = true,
 }: {
   entries: SeasonEntry[];
   heightClass?: string;
+  // Additive Erweiterungen für den Saisonplaner (Defaults erhalten das bisherige
+  // Verhalten → /tour/map bleibt unverändert):
+  //  - focus: Zentrum, wenn es (noch) keine Stationen gibt (Schritt 1: Wohnort).
+  //  - showRoute: Reiseweg-Linie zeichnen. Für Kandidaten-Punkte (Schritt 2) aus,
+  //    damit lose Turniere nicht wie eine geplante Route wirken.
+  focus?: { lat: number; lng: number } | null;
+  focusZoom?: number;
+  showRoute?: boolean;
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const t = useT();
@@ -86,7 +97,7 @@ export default function TourMapView({
       container: mapRef.current,
       style: OPENFREEMAP_STYLE,
       attributionControl: false, // eigene Attribution erzwingen (Style trägt keine inline)
-      center: line[0],
+      center: line[0] ?? (focus ? [focus.lng, focus.lat] : undefined),
       zoom: 3,
     });
     // PFLICHT-Attribution (OSM). Der positron-Style trägt sie nicht inline → explizit setzen.
@@ -96,8 +107,8 @@ export default function TourMapView({
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
-      // Reiseweg-Linie
-      if (line.length > 1) {
+      // Reiseweg-Linie (im Planer-Kandidatenmodus aus)
+      if (showRoute && line.length > 1) {
         map.addSource("route", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line } } });
         map.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#4b3bf3", "line-width": 3, "line-opacity": 0.9 } });
       }
@@ -122,7 +133,10 @@ export default function TourMapView({
       }
 
       // Auf alle Stationen zoomen (ein Ort → zentrieren; mehrere → fitBounds).
-      if (groups.size === 1) {
+      // KEINE Station: auf den Fokus (Wohnort) zentrieren, sonst Weltansicht.
+      if (groups.size === 0) {
+        if (focus) { map.setCenter([focus.lng, focus.lat]); map.setZoom(focusZoom); }
+      } else if (groups.size === 1) {
         const only = [...groups.values()][0];
         map.setCenter([only.lng, only.lat]);
         map.setZoom(6);
@@ -139,7 +153,7 @@ export default function TourMapView({
     };
     // Sprache (locale) neu aufbauen, damit die Popups übersetzt bleiben.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, locale]);
+  }, [entries, locale, focus?.lat, focus?.lng, focusZoom, showRoute]);
 
   return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-2xl border border-black/[0.08]`} />;
 }
