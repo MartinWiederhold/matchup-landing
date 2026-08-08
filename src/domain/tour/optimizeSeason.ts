@@ -1,0 +1,272 @@
+/**
+ * Saison-Optimierer (Domain-Schicht, v1) — Objektiv D: „meiste Turniere im Budget".
+ *
+ * Reine Funktion: keine DB, kein Netz, KEINE Systemuhr (`now` als Parameter),
+ * deterministisch (gleiche Eingabe ⇒ gleiches Ergebnis), Rückgaben tragen nur Codes.
+ * Ruft die vorhandenen Bausteine AUF, ändert sie nicht:
+ *   - computeSeasonCost  → DIE Autorität für Kosten inkl. Cluster-Effekt
+ *   - schengenUsage      → 90/180-Nebenbedingung
+ *   - decideTournament   → Fristenlage (verstrichen ⇒ raus)
+ *
+ * NÄHERUNG: Strahlsuche als Wochen-DP. Findet ein GUTES, nicht beweisbar das BESTE
+ * Ergebnis → Code `naeherung` in notes (immer). Auf kleinen Eingaben per Test gegen
+ * Brute-Force abgesichert.
+ *
+ * KOORDINATEN-BEFUND (DB-geprüft, Stand 2026-08): Die Kostenrechnung läuft über den
+ * Ortsschlüssel `country|city` (Station.place), NICHT über Koordinaten. Fehlende
+ * latitude/longitude betreffen NUR das Kartenbild — alle koordinatenlosen aktiven
+ * Turniere haben eine Stadt und sind damit VOLLSTÄNDIG kostenbewertbar. `hasMapCoords`
+ * ist reine Anzeige-Info (Code `ohne_kartenpunkt`), KEIN Ausschlussgrund.
+ *
+ * REASON-/NOTE-CODES sind i18n-Wurzeln (nur Codes, keine Sätze). ACHTUNG für die UI:
+ * fast alle Codes sind reine Bezeichner — GENAU EINER trägt einen Wert im Code:
+ *   `arrivals_gespart:${n}`  (n = eingesparte Anreisen, aus SeasonCost.arrivalsSaved).
+ * Die UI muss diesen Code am ":" trennen; alle anderen sind ohne ":" zu übersetzen.
+ */
+import { computeSeasonCost, type CostParams, type Money, type Station, type SeasonCost, type MoneyBag } from "./costs";
+import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "./schengen";
+import { decideTournament, type DecideReason } from "./decide";
+import type { TourSeries } from "./deadlines";
+
+export const OPTIMIZE_RULES_VERSION = "v1";
+
+const DAY = 86_400_000;
+const DEFAULT_NIGHTS = 7;      // Fallback, wenn nightsPerWeek nicht gesetzt ist → Code `naechte_annahme`
+const DEFAULT_BEAM = 64;       // Strahlbreite K
+const SCHENGEN_NEAR = 80;      // used ≥ 80 von 90 → Code `schengen_nah`
+
+/** v1: nur D. „most_points" (C) folgt erst mit einem ehrlichen Erwartungs-Punktemodell. */
+export type SeasonObjective = "most_tournaments";
+
+export type SeasonCandidate = {
+  id: string;
+  tournamentMonday: Date;    // Woche + Fristbezug (auf 00:00 UTC reduziert)
+  series: TourSeries;        // Fristen bekannt (itf_wtt) | unbekannt (challenger)
+  category: string | null;   // mitgeführt, in D nicht bewertet
+  place: string | null;      // Ortsschlüssel "country|city"; null = kein Schlüssel → nicht bewertbar
+  country: string | null;    // ISO-3166-1 alpha-2 (für Schengen-Zugehörigkeit)
+  hasMapCoords: boolean;      // NUR Anzeige (ohne_kartenpunkt), NICHT für die Rechnung
+  entryFee?: Money | null;    // optionale Meldegebühr (sonst weggelassen)
+};
+
+export type SchengenContext = {
+  applies: boolean;       // true, wenn die Nationalität der 90/180-Regel unterliegt
+  existingStays: Stay[];  // echte/gebuchte Aufenthalte (zählen mit)
+};
+
+export type OptimizeInput = {
+  candidates: SeasonCandidate[];
+  budget: Money | null;         // Cap in EINER Währung; null = kein Cap
+  params: CostParams;           // Kostensätze
+  homePlace: string;            // Startpunkt-Ortsschlüssel (Wohnort)
+  nightsPerWeek: number | null; // aus /tour/costs (localStorage "mu_tour_nights"); null → 7 + naechte_annahme
+  now: Date;                    // für Fristen (decide)
+  schengen: SchengenContext | null; // null = nicht betroffen
+  objective?: SeasonObjective;  // Default "most_tournaments"
+  beamWidth?: number;           // Default 64
+};
+
+export type SeasonPick = {
+  id: string;
+  weekMonday: string;       // ISO yyyy-mm-dd
+  place: string;
+  onMap: boolean;
+  reasons: DecideReason[];
+};
+export type RejectedCandidate = { id: string; reasons: DecideReason[] };
+
+export type SeasonProposal = {
+  rulesVersion: string;
+  objective: SeasonObjective;
+  approximate: true;
+  picks: SeasonPick[];
+  stations: Station[];
+  cost: SeasonCost;
+  schengen: SchengenUsage | null;
+  value: number;
+  budgetLeft: MoneyBag;
+  rejected: RejectedCandidate[];
+  unassessable: { id: string; code: "kein_ortsschluessel" }[];
+  notes: string[];
+};
+
+// ── Hilfen ───────────────────────────────────────────────────────────────────
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+const mondayMs = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+const reason = (code: string, direction: DecideReason["direction"]): DecideReason => ({ code, direction });
+
+/** Turniere in Reise-Reihenfolge → Stationen (place = country|city, nights je Turnierwoche). */
+function buildStations(chosen: SeasonCandidate[], nights: number): Station[] {
+  return chosen.map((c) => ({ place: c.place as string, nights, entryFee: c.entryFee ?? null }));
+}
+
+/** Schengen-Aufenthalte der Auswahl (nur Turniere in Schengen-Ländern) + bestehende. */
+function schengenStays(chosen: SeasonCandidate[], nights: number, existing: Stay[]): Stay[] {
+  const out: Stay[] = [...existing];
+  for (const c of chosen) {
+    if (!c.country || !isSchengenCode(c.country)) continue;
+    const start = mondayMs(c.tournamentMonday);
+    out.push({ country: c.country, entry: isoDay(start), exit: isoDay(start + nights * DAY) });
+  }
+  return out;
+}
+
+/** Skalar für den Kosten-Tiebreaker: Betrag in der maßgeblichen Währung (Budget bzw. Anreisesatz). */
+function costScalar(cost: SeasonCost, primaryCurrency: string | null): number {
+  if (primaryCurrency && cost.total[primaryCurrency] != null) return cost.total[primaryCurrency];
+  // sonst: die einzige/erste Währung (nie währungsübergreifend addiert)
+  const c = cost.currencies[0];
+  return c ? cost.total[c] : 0;
+}
+
+type State = { chosen: SeasonCandidate[]; cost: SeasonCost; scalar: number };
+
+/**
+ * Objektiv D: maximiere Anzahl Turniere unter Budget; bei gleicher Anzahl minimiere
+ * Kosten (Tiebreaker → belohnt Cluster). Strahlsuche über die chronologischen Wochen;
+ * pro Woche höchstens ein Turnier. Kosten IMMER via computeSeasonCost (Autorität).
+ */
+export function optimizeSeason(input: OptimizeInput): SeasonProposal {
+  const { candidates, budget, params, homePlace, now, schengen } = input;
+  const K = input.beamWidth ?? DEFAULT_BEAM;
+  const nightsGiven = input.nightsPerWeek;
+  const nights = nightsGiven != null && nightsGiven >= 0 ? Math.round(nightsGiven) : DEFAULT_NIGHTS;
+  const primaryCurrency = budget?.currency ?? params.arrival?.currency ?? params.perNight?.currency ?? null;
+
+  const budgetOk = (cost: SeasonCost): boolean => {
+    if (!budget) return true;
+    return (cost.total[budget.currency] ?? 0) <= budget.amount;
+  };
+  const schengenOk = (chosen: SeasonCandidate[]): boolean => {
+    if (!schengen?.applies) return true;
+    const stays = schengenStays(chosen, nights, schengen.existingStays);
+    if (stays.length === 0) return true;
+    const asOf = stays.reduce((mx, s) => (s.exit && s.exit > mx ? s.exit : mx), isoDay(mondayMs(now)));
+    return !schengenUsage(stays, asOf).exceeds;
+  };
+
+  // ── Kandidaten einteilen: unbewertbar (kein Ort), fristverstrichen (raus), sonst eignungsfähig ──
+  const unassessable: { id: string; code: "kein_ortsschluessel" }[] = [];
+  const excludedFrist: SeasonCandidate[] = [];
+  const eligible: SeasonCandidate[] = [];
+  const classOf = new Map<string, string>();
+  for (const c of candidates) {
+    if (!c.place) { unassessable.push({ id: c.id, code: "kein_ortsschluessel" }); continue; }
+    const cls = decideTournament({
+      tournament: { tournamentMonday: c.tournamentMonday, series: c.series, category: c.category ?? null, place: c.place },
+      now,
+    }).classification;
+    classOf.set(c.id, cls);
+    if (cls === "frist_verstrichen") { excludedFrist.push(c); continue; }
+    eligible.push(c);
+  }
+
+  // ── Wochen (chronologisch); je Woche die Kandidaten, deterministisch nach id ──
+  const byWeek = new Map<string, SeasonCandidate[]>();
+  for (const c of eligible) {
+    const wk = isoDay(mondayMs(c.tournamentMonday));
+    if (!byWeek.has(wk)) byWeek.set(wk, []);
+    byWeek.get(wk)!.push(c);
+  }
+  const weeks = [...byWeek.keys()].sort();
+  for (const wk of weeks) byWeek.get(wk)!.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+  const emptyCost = computeSeasonCost([], params);
+  let beam: State[] = [{ chosen: [], cost: emptyCost, scalar: 0 }];
+
+  const better = (a: State, b: State): number => {
+    if (a.chosen.length !== b.chosen.length) return b.chosen.length - a.chosen.length; // mehr Turniere zuerst
+    if (a.scalar !== b.scalar) return a.scalar - b.scalar;                              // dann günstiger
+    // stabiler Schlüssel (deterministisch)
+    const ka = a.chosen.map((c) => c.id).join(","), kb = b.chosen.map((c) => c.id).join(",");
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  };
+
+  for (const wk of weeks) {
+    const weekCands = byWeek.get(wk)!;
+    const next: State[] = [];
+    for (const st of beam) {
+      next.push(st); // Woche überspringen
+      for (const c of weekCands) {
+        const chosen = [...st.chosen, c];
+        const cost = computeSeasonCost(buildStations(chosen, nights), params);
+        if (!budgetOk(cost)) continue;      // Budget-Grenze
+        if (!schengenOk(chosen)) continue;  // Schengen 90/180
+        next.push({ chosen, cost, scalar: costScalar(cost, primaryCurrency) });
+      }
+    }
+    next.sort(better);
+    beam = next.slice(0, K);
+  }
+
+  const best = beam[0] ?? { chosen: [], cost: emptyCost, scalar: 0 };
+  const chosenIds = new Set(best.chosen.map((c) => c.id));
+  const stations = buildStations(best.chosen, nights);
+  const cost = computeSeasonCost(stations, params); // Re-Bewertung = die ausgewiesene Autorität
+
+  // ── Picks + Begründungen ────────────────────────────────────────────────────
+  const picks: SeasonPick[] = [];
+  let prevPlace: string | null = null;
+  for (const c of best.chosen) {
+    const reasons: DecideReason[] = [reason("passt_ins_budget", "dafuer")];
+    if (c.place === prevPlace) reasons.push(reason("keine_anreise_cluster", "dafuer"));
+    else if (c.place === homePlace) reasons.push(reason("heimatnah", "dafuer"));
+    else reasons.push(reason("guenstige_anreise", "neutral"));
+    reasons.push(classOf.get(c.id) === "fristen_unbekannt" ? reason("frist_unbekannt_challenger", "neutral") : reason("frist_offen", "dafuer"));
+    if (!c.hasMapCoords) reasons.push(reason("ohne_kartenpunkt", "neutral"));
+    picks.push({ id: c.id, weekMonday: isoDay(mondayMs(c.tournamentMonday)), place: c.place as string, onMap: c.hasMapCoords, reasons });
+    prevPlace = c.place;
+  }
+
+  // ── Verworfene (nichts still): Grund je nicht gewähltem Kandidaten ──────────
+  const weekHasPick = new Set(best.chosen.map((c) => isoDay(mondayMs(c.tournamentMonday))));
+  const rejected: RejectedCandidate[] = excludedFrist.map((c) => ({ id: c.id, reasons: [reason("frist_verstrichen", "dagegen")] }));
+  for (const c of eligible) {
+    if (chosenIds.has(c.id)) continue;
+    const wk = isoDay(mondayMs(c.tournamentMonday));
+    if (weekHasPick.has(wk)) { rejected.push({ id: c.id, reasons: [reason("woche_belegt", "dagegen")] }); continue; }
+    const test = [...best.chosen, c];
+    const tc = computeSeasonCost(buildStations(test, nights), params);
+    if (!budgetOk(tc)) rejected.push({ id: c.id, reasons: [reason("budget_erschoepft", "dagegen")] });
+    else if (!schengenOk(test)) rejected.push({ id: c.id, reasons: [reason("schengen_grenze", "dagegen")] });
+    else rejected.push({ id: c.id, reasons: [reason("naeherung", "neutral")] }); // machbar, aber von der Näherung ausgelassen
+  }
+
+  // ── Schengen-Auslastung der vorgeschlagenen Saison ──────────────────────────
+  let schengenResult: SchengenUsage | null = null;
+  if (schengen?.applies) {
+    const stays = schengenStays(best.chosen, nights, schengen.existingStays);
+    const asOf = stays.reduce((mx, s) => (s.exit && s.exit > mx ? s.exit : mx), isoDay(mondayMs(now)));
+    schengenResult = schengenUsage(stays, asOf);
+  }
+
+  // ── budgetLeft je Währung ───────────────────────────────────────────────────
+  const budgetLeft: MoneyBag = {};
+  if (budget) budgetLeft[budget.currency] = budget.amount - (cost.total[budget.currency] ?? 0);
+
+  // ── Notes (Saison-weit) ─────────────────────────────────────────────────────
+  const notes: string[] = ["naeherung"]; // Näherung — immer
+  if (nightsGiven == null) notes.push("naechte_annahme");
+  if (cost.multiCurrency) notes.push("mehrwaehrung");
+  notes.push(`arrivals_gespart:${cost.arrivalsSaved}`); // EINZIGER Code mit Wert — UI trennt am ":"
+  if (budget) {
+    const left = budgetLeft[budget.currency] ?? 0;
+    notes.push(left <= 0 ? "budget_ausgeschoepft" : "budget_uebrig");
+  }
+  if (schengenResult && schengenResult.used >= SCHENGEN_NEAR) notes.push("schengen_nah");
+
+  return {
+    rulesVersion: OPTIMIZE_RULES_VERSION,
+    objective: input.objective ?? "most_tournaments",
+    approximate: true,
+    picks,
+    stations,
+    cost,
+    schengen: schengenResult,
+    value: best.chosen.length,
+    budgetLeft,
+    rejected,
+    unassessable,
+    notes,
+  };
+}
