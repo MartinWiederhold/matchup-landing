@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { fetchAllPaged } from "@/lib/supabasePaginate";
 import type { CatalogRacket } from "@/lib/types";
 import RacketRadar, { type RadarSeries } from "./RacketRadar";
 
@@ -73,18 +74,25 @@ export default function RacketCatalog() {
     if (!user) return;
     let alive = true;
     setStatus("loading");
-    supabase
-      .from("rackets")
-      .select(COLUMNS)
-      .is("valid_to", null)
-      .order("brand", { ascending: true })
-      .order("name", { ascending: true })
-      .then(({ data, error }) => {
+    // Paginiert (gemeinsame Hilfe): sonst stille 1000-Zeilen-Kappung. Heute 402
+    // Schläger, aber ein weiterer Import/eine zweite Quelle könnte darüber wachsen.
+    // `.order("shop_product_id")` = totaler Tiebreaker für stabile Seiten.
+    fetchAllPaged<CatalogRacket>((from, to) =>
+      supabase
+        .from("rackets")
+        .select(COLUMNS)
+        .is("valid_to", null)
+        .order("brand", { ascending: true })
+        .order("name", { ascending: true })
+        .order("shop_product_id", { ascending: true })
+        .range(from, to),
+    )
+      .then((data) => {
         if (!alive) return;
-        if (error || !data) { setStatus("error"); return; }
-        setRackets(data as unknown as CatalogRacket[]);
+        setRackets(data);
         setStatus("ready");
-      });
+      })
+      .catch(() => { if (alive) setStatus("error"); });
     return () => { alive = false; };
   }, [user]);
 

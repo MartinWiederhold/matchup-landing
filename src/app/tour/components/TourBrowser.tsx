@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { fetchAllPaged } from "@/lib/supabasePaginate";
 import { isTargetRegion } from "@/domain/tour/region";
 import { loadSeasonTournamentIds } from "@/lib/tourSeason";
 import type { TourTournament } from "@/lib/types";
@@ -64,19 +65,26 @@ export default function TourBrowser({ preset = null }: { preset?: { category: st
     let cancel = false;
     setState("loading");
     const today = new Date().toISOString().slice(0, 10);
-    supabase
-      .from("tour_tournaments")
-      .select(COLUMNS)
-      .is("valid_to", null)
-      .gte("tournament_monday", today)
-      .order("tournament_monday", { ascending: true })
-      .order("country", { ascending: true })
-      .then(({ data, error }) => {
+    // Paginiert (gemeinsame Hilfe): sonst stille 1000-Zeilen-Kappung — heute nur 94
+    // zukünftige Turniere (Kalender ab September leer), aber die Zahl wächst mit
+    // vollständigeren Turnierdaten Richtung Grenze. `.order("id")` = totaler Tiebreaker.
+    fetchAllPaged<TourTournament>((from, to) =>
+      supabase
+        .from("tour_tournaments")
+        .select(COLUMNS)
+        .is("valid_to", null)
+        .gte("tournament_monday", today)
+        .order("tournament_monday", { ascending: true })
+        .order("country", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    )
+      .then((data) => {
         if (cancel) return;
-        if (error) { setState("error"); return; }
-        setRows((data as TourTournament[]) ?? []);
+        setRows(data);
         setState("done");
-      });
+      })
+      .catch(() => { if (!cancel) setState("error"); });
     return () => { cancel = true; };
   }, [authLoading, user]);
 

@@ -6,6 +6,7 @@
  * Zielregion kommt aus der Domain-Schicht (src/domain/tour/region.ts), unverändert.
  */
 import { supabase } from "@/lib/supabase";
+import { fetchAllPaged } from "@/lib/supabasePaginate";
 import { isTargetRegion } from "@/domain/tour/region";
 import type { TourTournament } from "@/lib/types";
 import type { SeasonEntry } from "@/lib/tourSeason";
@@ -55,24 +56,17 @@ const TOURNAMENT_COLUMNS =
   "id, tournament_monday, series, category, name, city, country, latitude, longitude, surface, valid_to, created_at";
 
 /** Alle aktiven Turniere (valid_to null) — einmal laden, dann client-seitig filtern.
- *  PAGINIERT: der Supabase-Client kappt sonst STILL bei 1000 Zeilen (~1489 aktiv →
- *  die Rahmen-Zahl wäre falsch). Seitenweise über id, bis eine Teilseite kleiner ist. */
+ *  PAGINIERT über die gemeinsame Hilfe (sonst stille 1000-Zeilen-Kappung, ~1489 aktiv).
+ *  `.order("id")` sorgt für eine deterministische, totale Seitensortierung. */
 export async function loadActiveTournaments(): Promise<TourTournament[]> {
-  const pageSize = 1000;
-  const all: TourTournament[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
+  return fetchAllPaged<TourTournament>((from, to) =>
+    supabase
       .from("tour_tournaments")
       .select(TOURNAMENT_COLUMNS)
       .is("valid_to", null)
       .order("id", { ascending: true })
-      .range(from, from + pageSize - 1);
-    if (error) throw error;
-    const batch = (data as TourTournament[] | null) ?? [];
-    all.push(...batch);
-    if (batch.length < pageSize) break; // letzte Seite erreicht
-  }
-  return all;
+      .range(from, to),
+  );
 }
 
 export type RegionMode = "ch" | "europe" | "all";
