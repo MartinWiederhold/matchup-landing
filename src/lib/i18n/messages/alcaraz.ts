@@ -30,16 +30,23 @@ export const alcaraz = {
     price_racket: "ca. 217–300 €",
     price_string: "ca. 13 € (12-m-Set)",
     price_overgrip: "ca. 10 € (3er) · 28,95 € (12er)",
-    price_shoes: "ca. 160–180 €",
+    price_shoe_hard: "169,99 €",
+    price_shoe_hyper: "179,99 €",
+    price_shoe_prm: "118,99 € statt 169,99 € (−30 %)",
 
     // Kompakte Datenzeile auf der Karte (Shop-Stil, wie „300g · 100in² · 16×19")
     sub_racket: "98 in² · 305 g · 16×20 · L4",
     sub_string: "1,30 mm · schwarz · voller Bezug",
     sub_overgrip: "0,4 mm · weiss",
     sub_basisgriff: "Leder · unter dem Overgrip",
-    sub_shoes: "Hartplatz & Sand",
+    sub_shoe_hard: "Hartplatz · Herren",
+    sub_shoe_hyper: "Hartplatz · Herren",
+    sub_shoe_prm: "Sandplatz · Herren",
     sub_bag: "12 Schläger · 85 L · 3 Fächer",
     techTitle: "Technische Daten",
+    setupPart: "Teil von Alcaraz’ Setup",
+    backToSetup: "Zum Alcaraz-Setup",
+    shoe_sale_note: "Aktionspreis — Aktionen laufen aus. Stand August 2026.",
 
     // Spezifikationen
     racket_specs:
@@ -50,8 +57,12 @@ export const alcaraz = {
       "Modell · VS Original / VS Grip Original\nFarbe · Weiss\nDicke · 0,4 mm (dünnstes am Markt)",
     basisgriff_specs:
       "Typ · Leder-Basisgriffband (Natural)\nFunktion · Liegt unter dem Overgrip\nWirkung · Gewicht im Griff + direktes Feedback",
-    shoes_specs:
-      "Modell · Nike Zoom Vapor 12\nBeläge · Hartplatz und Sand\nColorway · Alcaraz light green/green (u. a.)",
+    shoe_hard_specs:
+      "Modell · Nike Vapor 12\nEinsatz · Hartplatz\nPassform · Herren",
+    shoe_hyper_specs:
+      "Modell · Nike Vapor 12 Hypersmash\nEinsatz · Hartplatz\nPassform · Herren",
+    shoe_prm_specs:
+      "Modell · Nike Zoom Vapor 12 PRM\nEinsatz · Sandplatz\nPassform · Herren",
     bag_specs:
       "Modell · Babolat RH12 Pure Aero\nKapazität · 12 Schläger · 85 L\nFächer · 3 isolierte Fächer\nFarben · Metallic Grey / Black / Fluo Yellow",
 
@@ -101,16 +112,23 @@ export const alcaraz = {
     price_racket: "approx. €217–300",
     price_string: "approx. €13 (12 m set)",
     price_overgrip: "approx. €10 (3-pack) · €28.95 (12-pack)",
-    price_shoes: "approx. €160–180",
+    price_shoe_hard: "€169.99",
+    price_shoe_hyper: "€179.99",
+    price_shoe_prm: "€118.99 instead of €169.99 (−30%)",
 
     // Compact data line on the card (shop style, like "300g · 100in² · 16×19")
     sub_racket: "98 in² · 305 g · 16×20 · L4",
     sub_string: "1.30 mm · black · full bed",
     sub_overgrip: "0.4 mm · white",
     sub_basisgriff: "Leather · under the overgrip",
-    sub_shoes: "Hard & clay",
+    sub_shoe_hard: "Hard court · men",
+    sub_shoe_hyper: "Hard court · men",
+    sub_shoe_prm: "Clay court · men",
     sub_bag: "12 rackets · 85 L · 3 compartments",
     techTitle: "Technical data",
+    setupPart: "Part of Alcaraz’s setup",
+    backToSetup: "Back to the Alcaraz setup",
+    shoe_sale_note: "Sale price — promotions end. As of August 2026.",
 
     racket_specs:
       "Head size · 98 in² (632 cm²)\nWeight (retail) · 305 g\nAlcaraz custom · +5 g lead tape → 307 g\nString pattern · 16 × 20\nBeam · 21-23-21 mm\nLength · 685 mm / 27\"\nGrip size · L4\nBalance · approx. 6 pts head-light\nSwingweight · sub-325\nStiffness · RA 66 (Gen9)",
@@ -120,8 +138,12 @@ export const alcaraz = {
       "Model · VS Original / VS Grip Original\nColour · White\nThickness · 0.4 mm (thinnest on the market)",
     basisgriff_specs:
       "Type · Leather base grip (natural)\nFunction · Sits under the overgrip\nEffect · Weight in the handle + direct feedback",
-    shoes_specs:
-      "Model · Nike Zoom Vapor 12\nSurfaces · Hard and clay\nColorway · Alcaraz light green/green (among others)",
+    shoe_hard_specs:
+      "Model · Nike Vapor 12\nUse · Hard court\nFit · Men",
+    shoe_hyper_specs:
+      "Model · Nike Vapor 12 Hypersmash\nUse · Hard court\nFit · Men",
+    shoe_prm_specs:
+      "Model · Nike Zoom Vapor 12 PRM\nUse · Clay court\nFit · Men",
     bag_specs:
       "Model · Babolat RH12 Pure Aero\nCapacity · 12 rackets · 85 L\nCompartments · 3 insulated compartments\nColours · Metallic Grey / Black / Fluo Yellow",
 

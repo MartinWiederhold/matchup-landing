@@ -3,47 +3,15 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useT } from "@/lib/i18n";
+import { useT, type TFunction } from "@/lib/i18n";
 import { useCart, type Cat } from "./cart";
 import ProductCard, { type CardData } from "./ProductCard";
+import { SHOP_PRODUCTS, productHref, productLine, productSub, productPriceLabel, type Product } from "./products";
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Daten
+   Daten — die 17 Shop-Produkte kommen jetzt aus der gemeinsamen Quelle
+   (products.ts), damit Raster und Detailseite EINE Wahrheit teilen.
    ────────────────────────────────────────────────────────────────────────── */
-
-type Product = {
-  id: number;
-  brand: string;
-  name: string;
-  sub: string;
-  price: number;
-  badge?: "neu" | "bestseller";
-  cat: Cat;
-};
-
-const PRODUCTS: Product[] = [
-  // Tennis
-  { id: 1, brand: "Wilson", name: "Pro Staff 97 V14", sub: "315g · 97in² · 16×19", price: 289, badge: "bestseller", cat: "tennis" },
-  { id: 2, brand: "Babolat", name: "Pure Aero", sub: "300g · 100in² · 16×19", price: 269, cat: "tennis" },
-  { id: 3, brand: "Head", name: "Speed Pro", sub: "310g · 100in² · 18×20", price: 269, cat: "tennis" },
-  { id: 4, brand: "Yonex", name: "EZONE 98", sub: "305g · 98in² · 16×19", price: 269, badge: "neu", cat: "tennis" },
-  // Padel
-  { id: 5, brand: "Bullpadel", name: "Vertex 04", sub: "365g · Tropfenform · EVA", price: 319, badge: "bestseller", cat: "padel" },
-  { id: 6, brand: "Adidas", name: "Metalbone 3.3", sub: "360g · Diamant · Carbon", price: 299, cat: "padel" },
-  { id: 7, brand: "Nox", name: "AT10 Genius", sub: "360g · Rund · 18K", price: 289, badge: "neu", cat: "padel" },
-  { id: 8, brand: "Head", name: "Speed Motion", sub: "355g · Hybrid · EVA", price: 199, cat: "padel" },
-  // Pickleball
-  { id: 9, brand: "Joola", name: "Perseus CFS 16", sub: "Carbon · 16mm · 8.0oz", price: 249, badge: "bestseller", cat: "pickleball" },
-  { id: 10, brand: "Selkirk", name: "Vanguard Power", sub: "Carbon · 14mm · 7.9oz", price: 229, cat: "pickleball" },
-  { id: 11, brand: "CRBN", name: "1X Power Series", sub: "Carbon · 16mm · 8.1oz", price: 199, badge: "neu", cat: "pickleball" },
-  { id: 12, brand: "Engage", name: "Pursuit Pro", sub: "Composite · 14mm", price: 179, cat: "pickleball" },
-  // Zubehör
-  { id: 13, brand: "Wilson", name: "Tennisbälle 4er", sub: "ITF · Allcourt", price: 12, cat: "gear" },
-  { id: 14, brand: "Head", name: "Padel-Bälle 3er", sub: "Druckstabil", price: 9, cat: "gear" },
-  { id: 15, brand: "Onix", name: "Pickleball-Bälle 6er", sub: "Outdoor · 40 Löcher", price: 18, cat: "gear" },
-  { id: 16, brand: "Wilson", name: "Pro Racketbag", sub: "12 Schläger · Thermo", price: 119, badge: "neu", cat: "gear" },
-  { id: 18, brand: "Matchup", name: "Overgrip-Set 12er", sub: "Perforiert · Tour", price: 19, badge: "bestseller", cat: "gear" },
-];
 
 const FILTERS: { key: Cat | "all"; labelKey: string }[] = [
   { key: "all", labelKey: "shop.filterAll" },
@@ -65,9 +33,9 @@ const COLLECTIONS: {
   { titleKey: "shop.collectionGearTitle", metaKey: "shop.collectionGearMeta", cat: "gear", img: "/tennis/tennis-3.jpg" },
 ];
 
-// Shop-Produkt → Karten-Daten (geteilte ProductCard). Preis in der Shop-Form „{n} €".
-function toCard(p: Product): CardData {
-  return { brand: p.brand, name: p.name, sub: p.sub, priceLabel: `${p.price} €`, cat: p.cat, badge: p.badge };
+// Shop-Produkt → Karten-Daten (geteilte ProductCard).
+function toCard(p: Product, t: TFunction): CardData {
+  return { brand: p.brand, name: p.name, sub: productSub(p, t), priceLabel: productPriceLabel(p, t), cat: p.cat, image: p.image, badge: p.badge };
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -82,14 +50,9 @@ export default function ShopExperience() {
   const [filter, setFilter] = useState<Cat | "all">("all");
   const hscroll = useRef<HTMLDivElement>(null);
 
-  const shown = filter === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.cat === filter);
-  const favorites = PRODUCTS.filter((p) => p.badge);
+  const shown = filter === "all" ? SHOP_PRODUCTS : SHOP_PRODUCTS.filter((p) => p.cat === filter);
+  const favorites = SHOP_PRODUCTS.filter((p) => p.badge);
 
-  // Produkt → Korbzeile. id namespaced ("shop-N"), damit sie nicht mit Alcaraz kollidiert.
-  function addToCart(id: number) {
-    const p = PRODUCTS.find((x) => x.id === id);
-    if (p) add({ id: `shop-${p.id}`, brand: p.brand, name: p.name, price: p.price, cat: p.cat });
-  }
   function selectFilter(cat: Cat | "all") {
     setFilter(cat);
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
@@ -156,8 +119,8 @@ export default function ShopExperience() {
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {favorites.map((p) => (
-              <div key={p.id} className="w-[260px] flex-shrink-0 snap-start">
-                <ProductCard data={toCard(p)} onAdd={() => addToCart(p.id)} />
+              <div key={p.slug} className="w-[260px] flex-shrink-0 snap-start">
+                <ProductCard data={toCard(p, t)} href={productHref(p)} onAdd={() => add(productLine(p))} />
               </div>
             ))}
           </div>
@@ -231,7 +194,7 @@ export default function ShopExperience() {
           </p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {shown.map((p) => (
-              <ProductCard key={p.id} data={toCard(p)} onAdd={() => addToCart(p.id)} showBadge showBrand />
+              <ProductCard key={p.slug} data={toCard(p, t)} href={productHref(p)} onAdd={() => add(productLine(p))} showBadge showBrand />
             ))}
           </div>
         </div>

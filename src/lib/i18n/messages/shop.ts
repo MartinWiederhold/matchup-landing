@@ -57,6 +57,10 @@ export const shop = {
     // Dezenter Hinweis auf die Alcaraz-Setup-Seite
     setupHintTitle: "Pro-Setup: Carlos Alcaraz",
     setupHintText: "Sein komplettes Equipment — einzeln oder als Set in den Warenkorb.",
+    // Produktdetailseite
+    detailTechTitle: "Technische Daten",
+    detailAddToCart: "In den Warenkorb",
+    detailBackToShop: "Zurück zum Shop",
   },
   en: {
     notifyPlaceholder: "Your email address",
@@ -114,5 +118,9 @@ export const shop = {
     // Subtle pointer to the Alcaraz setup page
     setupHintTitle: "Pro setup: Carlos Alcaraz",
     setupHintText: "His full equipment — add items individually or as a set.",
+    // Product detail page
+    detailTechTitle: "Technical data",
+    detailAddToCart: "Add to cart",
+    detailBackToShop: "Back to shop",
   },
 };

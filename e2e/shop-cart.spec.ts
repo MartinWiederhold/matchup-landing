@@ -52,6 +52,9 @@ test("/shop Warenkorb: hinzufügen, Menge, entfernen, Drawer, Kasse — plus get
   // „269 €" erscheint zweimal (Zeilenpreis UND Summe) — genau richtig bei 1 Artikel.
   await expect(page.locator("aside").getByText("269 €").first()).toBeVisible();
   expect(await cartCount(page), "Zähler nach 1× Add").toBe(1);
+  // WICHTIG: Der Plus-Knopf liegt über dem Karten-Link — er darf NUR in den Korb
+  // legen, NICHT zur Detailseite navigieren.
+  expect(new URL(page.url()).pathname, "Plus-Knopf darf NICHT navigieren").toBe("/shop");
   await page.screenshot({ path: `${SHOTS}/shop-01-added.png` });
 
   // 2) Drawer schließen (✕ im Kopf) → Overlay inaktiv
@@ -91,4 +94,21 @@ test("/shop Warenkorb: hinzufügen, Menge, entfernen, Drawer, Kasse — plus get
   expect(await cartCount(page), "geteilter Korb nimmt Alcaraz-Artikel dazu").toBe(2);
   await expect(page.locator("aside").getByText("Pure Aero", { exact: false }).first()).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/shop-02-shared-cart.png` });
+});
+
+test("/shop Karte: Klick auf die Karte öffnet die Detailseite (der Plus-Knopf nicht)", async ({ page }) => {
+  await unlockGate(page);
+  await page.goto("/shop");
+
+  // Plus-Knopf: legt in den Korb, Pfad bleibt /shop (keine Navigation)
+  await page.getByRole("button", { name: /Pure Aero/ }).first().click();
+  expect(new URL(page.url()).pathname, "Plus-Knopf navigiert nicht").toBe("/shop");
+  expect(await cartCount(page)).toBe(1);
+
+  // Drawer schließen, dann die Karte selbst (Stretched-Link) öffnet die Detailseite
+  await page.locator(OVERLAY).click({ position: { x: 5, y: 5 } });
+  await expect.poll(() => drawerOpen(page), { timeout: 5000 }).toBeFalsy();
+  await page.getByRole("link", { name: "Pure Aero", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/shop\/babolat-pure-aero$/);
+  await expect(page.getByRole("heading", { name: "Pure Aero" })).toBeVisible();
 });
