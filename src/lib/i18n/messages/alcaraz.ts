@@ -32,6 +32,15 @@ export const alcaraz = {
     price_overgrip: "ca. 10 € (3er) · 28,95 € (12er)",
     price_shoes: "ca. 160–180 €",
 
+    // Kompakte Datenzeile auf der Karte (Shop-Stil, wie „300g · 100in² · 16×19")
+    sub_racket: "98 in² · 305 g · 16×20 · L4",
+    sub_string: "1,30 mm · schwarz · voller Bezug",
+    sub_overgrip: "0,4 mm · weiss",
+    sub_basisgriff: "Leder · unter dem Overgrip",
+    sub_shoes: "Hartplatz & Sand",
+    sub_bag: "12 Schläger · 85 L · 3 Fächer",
+    techTitle: "Technische Daten",
+
     // Spezifikationen
     racket_specs:
       "Kopfgröße · 98 in² (632 cm²)\nGewicht (Retail) · 305 g\nAlcaraz-Custom · +5 g Bleiband → 307 g\nBesaitungsbild · 16 × 20\nProfil · 21-23-21 mm\nLänge · 685 mm / 27\"\nGriffgröße · L4\nBalance · ca. 6 pts kopflastig\nSwingweight · sub-325\nSteifigkeit · RA 66 (Gen9)",
@@ -93,6 +102,15 @@ export const alcaraz = {
     price_string: "approx. €13 (12 m set)",
     price_overgrip: "approx. €10 (3-pack) · €28.95 (12-pack)",
     price_shoes: "approx. €160–180",
+
+    // Compact data line on the card (shop style, like "300g · 100in² · 16×19")
+    sub_racket: "98 in² · 305 g · 16×20 · L4",
+    sub_string: "1.30 mm · black · full bed",
+    sub_overgrip: "0.4 mm · white",
+    sub_basisgriff: "Leather · under the overgrip",
+    sub_shoes: "Hard & clay",
+    sub_bag: "12 rackets · 85 L · 3 compartments",
+    techTitle: "Technical data",
 
     racket_specs:
       "Head size · 98 in² (632 cm²)\nWeight (retail) · 305 g\nAlcaraz custom · +5 g lead tape → 307 g\nString pattern · 16 × 20\nBeam · 21-23-21 mm\nLength · 685 mm / 27\"\nGrip size · L4\nBalance · approx. 6 pts head-light\nSwingweight · sub-325\nStiffness · RA 66 (Gen9)",

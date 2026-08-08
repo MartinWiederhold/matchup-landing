@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import { useCart, type Cat } from "./cart";
-import { ProductVisual } from "./productVisual";
+import ProductCard, { type CardData } from "./ProductCard";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Daten
@@ -65,11 +65,10 @@ const COLLECTIONS: {
   { titleKey: "shop.collectionGearTitle", metaKey: "shop.collectionGearMeta", cat: "gear", img: "/tennis/tennis-3.jpg" },
 ];
 
-const BookmarkIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" strokeWidth="1.5" />
-  </svg>
-);
+// Shop-Produkt → Karten-Daten (geteilte ProductCard). Preis in der Shop-Form „{n} €".
+function toCard(p: Product): CardData {
+  return { brand: p.brand, name: p.name, sub: p.sub, priceLabel: `${p.price} €`, cat: p.cat, badge: p.badge };
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    Hauptkomponente — Warenkorb liegt jetzt im geteilten Context (cart.tsx);
@@ -158,7 +157,7 @@ export default function ShopExperience() {
           >
             {favorites.map((p) => (
               <div key={p.id} className="w-[260px] flex-shrink-0 snap-start">
-                <ProductCard product={p} onAdd={addToCart} />
+                <ProductCard data={toCard(p)} onAdd={() => addToCart(p.id)} />
               </div>
             ))}
           </div>
@@ -232,7 +231,7 @@ export default function ShopExperience() {
           </p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {shown.map((p) => (
-              <ProductCard key={p.id} product={p} onAdd={addToCart} showBadge showBrand />
+              <ProductCard key={p.id} data={toCard(p)} onAdd={() => addToCart(p.id)} showBadge showBrand />
             ))}
           </div>
         </div>
@@ -244,59 +243,6 @@ export default function ShopExperience() {
 /* ──────────────────────────────────────────────────────────────────────────
    Bausteine
    ────────────────────────────────────────────────────────────────────────── */
-
-function ProductCard({
-  product: p,
-  onAdd,
-  showBadge,
-  showBrand,
-}: {
-  product: Product;
-  onAdd: (id: number) => void;
-  showBadge?: boolean;
-  showBrand?: boolean;
-}) {
-  const t = useT();
-  return (
-    <div className="group">
-      <div className="relative aspect-[3/4] overflow-hidden rounded-md">
-        <ProductVisual cat={p.cat} brand={p.brand} name={p.name} />
-        {showBadge && p.badge && (
-          <span className="absolute left-2.5 top-2.5 rounded bg-black px-2 py-1 text-[9px] font-bold uppercase tracking-[0.06em] text-white">
-            {p.badge === "neu" ? t("shop.badgeNew") : t("shop.badgeBestseller")}
-          </span>
-        )}
-        <button
-          type="button"
-          aria-label={t("shop.bookmarkAria")}
-          className="absolute right-2.5 top-2.5 text-neutral-500 opacity-0 transition-opacity hover:text-black group-hover:opacity-100"
-        >
-          <BookmarkIcon className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="pt-2.5">
-        {showBrand && (
-          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-neutral-500">
-            {p.brand}
-          </div>
-        )}
-        <div className="text-sm font-medium">{p.name}</div>
-        <div className="text-[11px] text-neutral-500">{p.sub}</div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[15px] font-semibold">{p.price} €</span>
-          <button
-            type="button"
-            aria-label={t("shop.addToCartAria", { name: p.name })}
-            onClick={() => onAdd(p.id)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-lg text-white transition-transform hover:scale-110"
-          >
-            +
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function SectionHeader({
   title,

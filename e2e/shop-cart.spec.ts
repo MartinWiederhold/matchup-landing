@@ -85,8 +85,9 @@ test("/shop Warenkorb: hinzufügen, Menge, entfernen, Drawer, Kasse — plus get
   await expect(page).toHaveURL(/\/shop\/setup\/alcaraz/);
   expect(await cartCount(page), "Korb bleibt beim Seitenwechsel erhalten").toBe(1);
 
-  // Einen Alcaraz-Artikel hinzufügen → Zähler 2, beide Zeilen im selben Drawer
-  await page.getByRole("button", { name: /In den Warenkorb|Add to cart/ }).first().click();
+  // Einen Alcaraz-Artikel hinzufügen (gezielt die Racket-Karte, nicht „Komplettes Setup")
+  // → Zähler 2, beide Zeilen im selben Drawer
+  await page.getByRole("button", { name: /Pure Aero 98/ }).click();
   expect(await cartCount(page), "geteilter Korb nimmt Alcaraz-Artikel dazu").toBe(2);
   await expect(page.locator("aside").getByText("Pure Aero", { exact: false }).first()).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/shop-02-shared-cart.png` });
