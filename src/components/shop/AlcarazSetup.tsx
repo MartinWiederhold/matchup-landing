@@ -29,6 +29,9 @@ type Article = {
   image?: string;           // echtes Bild; leer → markenneutraler Kategorie-Platzhalter
 };
 
+// BILDHERKUNFT: Die referenzierten Produktbilder unter /shop/setup/alcaraz/
+// (string.webp, overgrip.avif, bag.avif) stammen von tennis-point.ch; laut
+// Auftraggeber besteht eine Nutzungserlaubnis.
 const CORE: Article[] = [
   { id: "racket", brand: "Babolat", name: "Pure Aero 98", cat: "tennis", priceCart: 217, priceKey: "price_racket", subKey: "sub_racket", specsKey: "racket_specs" },
   { id: "string", brand: "Babolat", name: "RPM Team 1.30", cat: "gear", priceCart: 13, priceKey: "price_string", subKey: "sub_string", specsKey: "string_specs", warn: true, image: "/shop/setup/alcaraz/string.webp" },
