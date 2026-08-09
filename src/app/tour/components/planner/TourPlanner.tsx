@@ -62,7 +62,9 @@ export default function TourPlanner() {
           ids: new Set(season.map((e) => e.tournament.id)),
           weeks: new Set(season.map((e) => e.tournament.tournament_monday)),
         });
-        setOpenStep(p.city ? 2 : 1); // Profil schon da → direkt in den Rahmen
+        // Schritt 3 ist der Zweck der Seite: steht Profil UND Rahmen (Budget), direkt dorthin —
+        // der Vorschlag rechnet dort reaktiv, ohne dass etwas aufgeklappt oder gedrückt werden muss.
+        setOpenStep(p.city ? (p.seasonBudget != null ? 3 : 2) : 1);
         setStatus("ready");
       })
       .catch(() => { if (alive) setStatus("error"); });
@@ -163,7 +165,7 @@ export default function TourPlanner() {
           </StepBlock>
 
           <StepBlock n={2} title={t("tour.plStep2")} intro={t("tour.plStep2Intro")} open={openStep === 2} done={profile.seasonBudget != null} summary={step2Summary} onOpen={() => setOpenStep(2)} t={t}>
-            <Step2Frame budgetInitial={profile.seasonBudget} userId={user.id} frame={frame} setFrame={setFrame} result={result} rates={rates} />
+            <Step2Frame budgetInitial={profile.seasonBudget} userId={user.id} frame={frame} setFrame={setFrame} result={result} rates={rates} onSaved={() => { reloadProfile(); setOpenStep(3); }} />
           </StepBlock>
 
           <StepBlock n={3} title={t("tour.plStep3")} intro={t("tour.plStep3Intro")} open={openStep === 3} done={false} summary="" onOpen={() => setOpenStep(3)} t={t}>
@@ -175,7 +177,6 @@ export default function TourPlanner() {
               rates={rates}
               existingWeeks={existing.weeks}
               existingIds={existing.ids}
-              proposal={proposal}
               setProposal={setProposal}
               removed={removed}
               setRemoved={setRemoved}

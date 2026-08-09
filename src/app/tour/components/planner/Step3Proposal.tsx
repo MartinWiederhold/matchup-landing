@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import CostRatesForm from "@/app/tour/costs/components/CostRatesForm";
 import {
@@ -9,6 +9,7 @@ import {
   costRatesComplete,
   placeKey,
   ratesToCostParams,
+  tournamentsInFrame,
   type Frame,
   type PlannerProfile,
 } from "@/lib/tourPlanner";
@@ -18,8 +19,7 @@ import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import type { TourTournament, TourCostRates } from "@/lib/types";
-import type { CostRatesPatch } from "@/lib/tourCosts";
-import { optimizeSeason, type SeasonProposal, type SeasonPick } from "@/domain/tour/optimizeSeason";
+import { optimizeSeason, type SeasonProposal } from "@/domain/tour/optimizeSeason";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
 
@@ -30,9 +30,15 @@ const DAY = 86_400_000;
  * Schritt 3 des Planers: den Saison-Optimierer anbinden, das Ergebnis ANZEIGEN,
  * per Streichen ANPASSEN und erst auf Knopfdruck ÜBERNEHMEN (Ergänzen, nie ersetzen).
  *
+ * REAKTIV (wie der /map-Planer): der Vorschlag rechnet automatisch, sobald genug
+ * Daten da sind — KEIN „Vorschlagen"-Knopf. Der Optimierer ist mit ~3 ms je Lauf
+ * (44 Kandidaten, Strahlbreite 64) weit unter jeder spürbaren Grenze. Die
+ * nutzerabhängigen Basisdaten (Schengen-Aufenthalte, Einreisesperren) hängen NICHT
+ * am Rahmen und werden EINMAL geladen; die eigentliche Rechnung ist rein (useMemo).
+ *
  * Gate: fehlen echte Kostensätze, führen wir ZUERST dorthin — es wird NICHT mit
- * Vorschlagswerten gerechnet. `proposal`/`removed` liegen im Eltern-Zustand, damit
- * die klebende Karte den Reiseweg zeigt und auf Streichungen reagiert.
+ * Vorschlagswerten gerechnet. Der berechnete Vorschlag wird nach oben gereicht
+ * (setProposal), damit die klebende Karte den Reiseweg zeigt.
  */
 export default function Step3Proposal({
   userId,
@@ -42,7 +48,6 @@ export default function Step3Proposal({
   rates,
   existingWeeks,
   existingIds,
-  proposal,
   setProposal,
   removed,
   setRemoved,
@@ -56,7 +61,6 @@ export default function Step3Proposal({
   rates: TourCostRates | null;
   existingWeeks: Set<string>;
   existingIds: Set<string>;
-  proposal: SeasonProposal | null;
   setProposal: (p: SeasonProposal | null) => void;
   removed: Set<string>;
   setRemoved: (s: Set<string>) => void;
@@ -75,10 +79,56 @@ export default function Step3Proposal({
     try { localStorage.setItem(NIGHTS_KEY, v); } catch { /* egal */ }
   }, []);
 
-  const [busy, setBusy] = useState<null | "run" | "takeover">(null);
+  const [busy, setBusy] = useState(false); // nur noch für „Übernehmen"
   const [error, setError] = useState(false);
   const [takeoverMsg, setTakeoverMsg] = useState<string | null>(null);
-  const [planStays, setPlanStays] = useState<Stay[]>([]); // Basis-Aufenthalte des Vorschlags (für Schengen-Neurechnung)
+
+  // ── Nutzerabhängige Basisdaten EINMAL laden (hängen an Nationalität/Aufenthalten,
+  //    NICHT am Rahmen) — damit die reaktive Rechnung rein bleibt und nicht bei jeder
+  //    Rahmenänderung die DB fragt. ─────────────────────────────────────────────────
+  const [stays, setStays] = useState<Stay[]>([]);
+  const [entryBanned, setEntryBanned] = useState<Set<string>>(new Set());
+  const passportsKey = profile.passports.join(",");
+  useEffect(() => {
+    let alive = true;
+    const applies = profile.passports.length > 0 && !hasSchengenPassport(profile.passports);
+    (async () => {
+      const loaded = applies
+        ? (await loadStays(userId)).filter((s) => s.confirmed).map((s) => ({ country: s.country, entry: s.entry_date, exit: s.exit_date }))
+        : [];
+      const banned = await bannedDestinations(profile.passports);
+      if (alive) { setStays(loaded); setEntryBanned(banned); }
+    })().catch(() => { if (alive) { setStays([]); setEntryBanned(new Set()); } });
+    return () => { alive = false; };
+  }, [userId, passportsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Reaktiver Vorschlag: pure Rechnung, automatisch bei Änderung von Rahmen/Budget/
+  //    Kostensätzen/Nächten/Basisdaten. Kein Knopf. ──────────────────────────────────
+  const proposal = useMemo<SeasonProposal | null>(() => {
+    if (!costRatesComplete(rates)) return null;
+    const rr = rates!;
+    const params = ratesToCostParams(rr);
+    const currency = rr.currency ?? "EUR";
+    const budget = budgetMoney(profile.seasonBudget, currency);
+    const homePlace = placeKey(profile.country, profile.city) ?? "";
+    let n: number | null = parseInt(nights.trim(), 10);
+    if (!Number.isFinite(n) || (n as number) < 0) n = null;
+    const applies = profile.passports.length > 0 && !hasSchengenPassport(profile.passports);
+    const candidates = buildSeasonCandidates(tours, frame, existingWeeks, existingIds);
+    return optimizeSeason({
+      candidates, budget, params, homePlace, nightsPerWeek: n, now: new Date(),
+      schengen: applies ? { applies: true, existingStays: stays } : null,
+      entryBanned,
+    });
+  }, [rates, tours, frame, existingWeeks, existingIds, nights, stays, entryBanned, profile.seasonBudget, profile.country, profile.city, passportsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Nach oben reichen (klebende Karte/Reiseweg) und Streichungen bei Neurechnung zurücksetzen.
+  useEffect(() => { setProposal(proposal); setRemoved(new Set()); }, [proposal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Stichtag für den Meldefrist-Countdown (aus der Komponente, nicht aus der Domain).
+  // useState-Initializer: läuft EINMAL beim Mount → reine Render-Phase (react-hooks/purity),
+  // und der Hook steht VOR dem Kostensätze-Gate (feste Hook-Reihenfolge).
+  const [nowMs] = useState(() => Date.now());
 
   const byId = new Map(tours.map((x) => [x.id, x]));
   const tName = (id: string) => {
@@ -91,7 +141,7 @@ export default function Step3Proposal({
   const fmtDay = (iso: string) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso + "T00:00:00Z"));
 
   // ── Kostensätze-Gate: ohne echte Sätze wird NICHT gerechnet ─────────────────
-  if (!costRatesComplete(rates)) {
+  if (!costRatesComplete(rates) || !proposal) {
     return (
       <div>
         <div className="rounded-xl bg-amber-50 px-4 py-3 text-[13px] text-amber-900 ring-1 ring-amber-200">
@@ -99,104 +149,38 @@ export default function Step3Proposal({
           <p className="mt-1 text-amber-800">{t("tour.opt.ratesFirstText")}</p>
         </div>
         <div className="mt-4">
-          <CostRatesForm rates={rates} userId={userId} onSaved={(_: CostRatesPatch) => onRatesSaved()} nights={nights} onNightsChange={onNightsChange} />
+          <CostRatesForm rates={rates} userId={userId} onSaved={() => onRatesSaved()} nights={nights} onNightsChange={onNightsChange} />
         </div>
       </div>
     );
   }
-  const ready = rates!; // ab hier vollständig
-
-  // ── Vorschlag rechnen ───────────────────────────────────────────────────────
-  async function run() {
-    setBusy("run");
-    setError(false);
-    setTakeoverMsg(null);
-    try {
-      const params = ratesToCostParams(ready);
-      const currency = ready.currency ?? "EUR";
-      const budget = budgetMoney(profile.seasonBudget, currency);
-      const homePlace = placeKey(profile.country, profile.city) ?? "";
-      let nightsNum: number | null = parseInt(nights.trim(), 10);
-      if (!Number.isFinite(nightsNum) || (nightsNum as number) < 0) nightsNum = null;
-
-      // Schengen nur, wenn die Nationalität bekannt UND nicht Schengen-privilegiert ist.
-      const natKnown = profile.passports.length > 0;
-      const applies = natKnown && !hasSchengenPassport(profile.passports);
-      let schengenStays: Stay[] = [];
-      if (applies) {
-        const stays = await loadStays(userId);
-        schengenStays = stays
-          .filter((s) => s.confirmed)
-          .map((s) => ({ country: s.country, entry: s.entry_date, exit: s.exit_date }));
-      }
-      setPlanStays(schengenStays);
-
-      const candidates = buildSeasonCandidates(tours, frame, existingWeeks, existingIds);
-      // Einreisesperren der Nationalität(en) → gesperrte Länder gar nicht erst vorschlagen.
-      const entryBanned = await bannedDestinations(profile.passports);
-      const result = optimizeSeason({
-        candidates,
-        budget,
-        params,
-        homePlace,
-        nightsPerWeek: nightsNum,
-        now: new Date(),
-        schengen: applies ? { applies: true, existingStays: schengenStays } : null,
-        entryBanned,
-      });
-      setRemoved(new Set());
-      setProposal(result);
-    } catch {
-      setError(true);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  // ── Auslöse-Ansicht (noch kein Vorschlag) ───────────────────────────────────
-  if (!proposal) {
-    return (
-      <div>
-        <p className="text-[13px] font-bold text-neutral-900">{t("tour.opt.runTitle")}</p>
-        <p className="mt-1 text-[12px] text-neutral-500">{t("tour.opt.runText")}</p>
-        {error && <p className="mt-3 text-[12px] font-semibold text-amber-700">{t("tour.opt.takeoverError")}</p>}
-        <button
-          type="button"
-          onClick={run}
-          disabled={busy === "run"}
-          className="mt-4 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-60"
-        >
-          {busy === "run" ? t("tour.opt.running") : t("tour.opt.runCta")}
-        </button>
-      </div>
-    );
-  }
+  const ready = rates!;
+  const params = ratesToCostParams(ready);
+  const currency = ready.currency ?? "EUR";
+  const budget = budgetMoney(profile.seasonBudget, currency);
 
   // ── Ergebnis: Picks (parallel zu stations), abzüglich gestrichener ──────────
-  const nowMs = Date.now(); // Stichtag für den Meldefrist-Countdown (aus der Komponente, nicht aus der Domain)
-  const nightsUsed = proposal.stations[0]?.nights ?? 7;
+  const nightsUsed = proposal.stations[0]?.nights ?? (() => { const n = parseInt(nights.trim(), 10); return Number.isFinite(n) && n >= 0 ? n : 7; })();
   const pairs = proposal.picks.map((pick, i) => ({ pick, station: proposal.stations[i] }));
   const remaining = pairs.filter((x) => !removed.has(x.pick.id));
 
-  const params = ratesToCostParams(ready);
   const liveCost = computeSeasonCost(remaining.map((x) => x.station), params);
-  const budget = budgetMoney(profile.seasonBudget, ready.currency ?? "EUR");
   const budgetLeftMinor = budget ? budget.amount - (liveCost.total[budget.currency] ?? 0) : null;
 
   // Schengen der verbliebenen Auswahl neu rechnen (nur wenn betroffen).
   const liveSchengen: SchengenUsage | null = (() => {
     if (proposal.schengen == null) return null; // Nationalität nicht betroffen → gar nicht geprüft
-    const stays: Stay[] = [...planStays];
+    const s: Stay[] = [...stays];
     for (const { pick } of remaining) {
       const cc = pick.place.split("|")[0];
       if (!isSchengenCode(cc)) continue;
       const start = Date.parse(pick.weekMonday + "T00:00:00Z");
-      stays.push({ country: cc, entry: pick.weekMonday, exit: new Date(start + nightsUsed * DAY).toISOString().slice(0, 10) });
+      s.push({ country: cc, entry: pick.weekMonday, exit: new Date(start + nightsUsed * DAY).toISOString().slice(0, 10) });
     }
-    if (stays.length === 0) return null;
+    if (s.length === 0) return null;
     const today = new Date().toISOString().slice(0, 10);
-    const asOf = stays.reduce((mx, s) => (s.exit && s.exit > mx ? s.exit : mx), today);
-    return schengenUsage(stays, asOf);
+    const asOf = s.reduce((mx, x) => (x.exit && x.exit > mx ? x.exit : mx), today);
+    return schengenUsage(s, asOf);
   })();
 
   const natUnknown = profile.passports.length === 0;
@@ -209,7 +193,7 @@ export default function Step3Proposal({
   }
 
   async function takeover() {
-    setBusy("takeover");
+    setBusy(true);
     setError(false);
     try {
       const toAdd = remaining.filter((x) => !existingIds.has(x.pick.id));
@@ -223,7 +207,7 @@ export default function Step3Proposal({
     } catch {
       setError(true);
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
@@ -236,21 +220,64 @@ export default function Step3Proposal({
     return t(`tour.opt.note.${code}`);
   };
 
+  // ── Grund einer LEEREN Saison ehrlich unterscheiden (Anzeige, keine Domain-Änderung):
+  //    (a) kein Turnier im Rahmen · (b) Turniere da, aber alle Wochen belegt · (c) Budget zu klein.
+  function emptyReason() {
+    const inFrame = tournamentsInFrame(tours, frame);
+    const cands = buildSeasonCandidates(tours, frame, existingWeeks, existingIds);
+    if (inFrame.length === 0) {
+      return <p className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">{t("tour.opt.emptyNoTournaments")}</p>;
+    }
+    if (cands.length === 0) {
+      // Alle im Rahmen liegenden Turniere fallen an belegten Wochen / bereits geplanten IDs raus → nennen.
+      return (
+        <div className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">
+          <p className="font-semibold">{t("tour.opt.emptyWeeksBlocked")}</p>
+          <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[12px] text-neutral-500">
+            {inFrame.slice(0, 8).map((x) => (
+              <li key={x.id}>{[x.city, x.category].filter(Boolean).join(" · ") || x.id} — {fmtDay(x.tournament_monday)}</li>
+            ))}
+            {inFrame.length > 8 && <li>… (+{inFrame.length - 8})</li>}
+          </ul>
+        </div>
+      );
+    }
+    // Kandidaten da, aber keiner gewählt → am Ablehnungsgrund des Optimierers festmachen
+    // (nicht raten): Budget nur nennen, wenn Budget wirklich der Grund war.
+    const codes = new Set(proposal!.rejected.flatMap((r) => r.reasons.map((x) => x.code)));
+    if (codes.has("budget_erschoepft")) {
+      let cheapest = Infinity;
+      for (const c of cands) {
+        if (!c.place) continue;
+        const cst = computeSeasonCost([{ place: c.place, nights: nightsUsed, entryFee: c.entryFee ?? null }], params);
+        const v = cst.total[currency] ?? (cst.currencies[0] ? cst.total[cst.currencies[0]] : 0);
+        if (v < cheapest) cheapest = v;
+      }
+      return (
+        <p className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">
+          {t("tour.opt.emptyBudget", {
+            needed: Number.isFinite(cheapest) ? fmt(cheapest, currency) : "—",
+            budget: budget ? fmt(budget.amount, budget.currency) : "—",
+          })}
+        </p>
+      );
+    }
+    // Kandidaten da, aber keiner planbar (meist verstrichene Meldefristen) → ehrlich sagen.
+    return <p className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">{t("tour.opt.emptyAllPassed")}</p>;
+  }
+
   return (
     <div className="space-y-4">
-      {/* Kopf: Titel + Anzahl + „neu vorschlagen" */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[15px] font-bold text-neutral-900">{t("tour.opt.resultTitle")}</p>
-          <p className="text-[12px] text-neutral-500">{t("tour.opt.countTournaments", { n: remaining.length })}</p>
-        </div>
-        <button type="button" onClick={() => { setProposal(null); setRemoved(new Set()); }} className="shrink-0 text-[12px] font-semibold text-matchup">
-          {t("tour.opt.runCta")}
-        </button>
+      {/* Kopf: Titel + Anzahl (reaktiv, kein „Vorschlagen"-Knopf mehr) */}
+      <div>
+        <p className="text-[15px] font-bold text-neutral-900">{t("tour.opt.resultTitle")}</p>
+        <p className="text-[12px] text-neutral-500">{t("tour.opt.countTournaments", { n: remaining.length })}</p>
       </div>
 
-      {remaining.length === 0 && pairs.length === 0 ? (
-        <p className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">{t("tour.opt.empty")}</p>
+      {pairs.length === 0 ? (
+        emptyReason()
+      ) : remaining.length === 0 ? (
+        <p className="rounded-xl bg-black/[0.03] px-4 py-3 text-[13px] text-neutral-600">{t("tour.opt.emptyAllStruck")}</p>
       ) : (
         <>
           {/* Näherung — bewusst sichtbar, nicht kleingedruckt */}
@@ -371,10 +398,10 @@ export default function Step3Proposal({
             <button
               type="button"
               onClick={takeover}
-              disabled={busy === "takeover" || remaining.length === 0}
+              disabled={busy || remaining.length === 0}
               className="inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-60"
             >
-              {busy === "takeover" ? t("tour.opt.takeoverBusy") : t("tour.opt.takeoverCta")}
+              {busy ? t("tour.opt.takeoverBusy") : t("tour.opt.takeoverCta")}
             </button>
           </div>
         </>

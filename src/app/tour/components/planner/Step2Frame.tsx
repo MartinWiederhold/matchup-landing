@@ -32,6 +32,7 @@ export default function Step2Frame({
   setFrame,
   result,
   rates,
+  onSaved,
 }: {
   budgetInitial: number | null;
   userId: string;
@@ -39,6 +40,7 @@ export default function Step2Frame({
   setFrame: (f: Frame) => void;
   result: FrameResult;
   rates: TourCostRates | null;
+  onSaved?: () => void; // nach erfolgreichem Budget-Speichern → Eltern zieht Profil nach + geht zu Schritt 3
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -87,7 +89,7 @@ export default function Step2Frame({
     const value = n != null && Number.isFinite(n) && n > 0 ? Math.round(n) : null;
     setBusy(true);
     setStatus("idle");
-    try { await saveSeasonBudget(userId, value); setStatus("saved"); }
+    try { await saveSeasonBudget(userId, value); setStatus("saved"); onSaved?.(); }
     catch { setStatus("error"); }
     finally { setBusy(false); }
   }

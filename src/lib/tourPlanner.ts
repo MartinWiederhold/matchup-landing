@@ -187,6 +187,20 @@ export function buildSeasonCandidates(
 }
 
 /**
+ * Turniere im Rahmen (Region ∩ Zeitraum), OHNE die Wochen-/Bestand-Sperre von
+ * buildSeasonCandidates. Für die Leermeldung: unterscheidet „gar kein Turnier im
+ * Rahmen" von „Turniere da, aber alle Wochen belegt".
+ */
+export function tournamentsInFrame(tours: TourTournament[], frame: Frame): TourTournament[] {
+  return tours.filter(
+    (t) =>
+      inRegion(t.country, frame.region) &&
+      !(frame.from && t.tournament_monday < frame.from) &&
+      !(frame.to && t.tournament_monday > frame.to),
+  );
+}
+
+/**
  * Vorgeschlagene Picks → Kartenpunkte (in Reise-Reihenfolge). Nur Picks MIT
  * Koordinaten kommen auf die Karte; die ohne werden in der Liste getrennt geführt.
  */
