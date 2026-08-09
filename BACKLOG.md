@@ -125,6 +125,12 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Ablaufdatum je Einladung, Token nach Annahme entwerten, und dem Spieler anzeigen, wann ein Link erzeugt wurde und ob er noch offen ist.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal erzeugter Einladungslink unbegrenzt gültig bleibt.
 
+### MU-032 · Kein ITF-Turnier mit offener Meldefrist — Planer für Futures-Spieler leer · L · offen · **Vor Launch**
+**Problem:** Kein aktives ITF-Turnier hat eine offene Meldefrist. Der späteste ITF-Turniermontag im Bestand ist `2026-08-03`, heute ist `2026-08-09`. Ursache: Wikipedia trägt ITF-Turniere erst nach, wenn sie laufen — der Kalender endet strukturell in der Vergangenheit.
+**Wirkung:** Für einen Futures-Spieler ist der Planer leer. Alle 1007 ITF-Turniere zeigen „Meldeschluss abgelaufen", der Optimierer wählt nur aus Challengern. Der Meldefrist-Countdown (`aba9789`) greift bei null Turnieren. Das trifft genau die Zielgruppe.
+**Lösung:** Eine vorausschauende Quelle für ITF-Turniere. Die Verbandsrecherche nennt Spanien (RFET), Türkei (TTF) und Deutschland (DTB) als machbar; für Nordafrika (Monastir, Sharm) gibt es keinen Verbandskalender — dort wären die Veranstalter anzuschreiben (Magic Tours, Soho Square).
+**Sperre:** Nicht mit echten Nutzern starten, solange der Kalender keine planbaren Turniere enthält.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
@@ -196,6 +202,10 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Problem:** `tournamentLogo()` in `src/lib/tournaments.ts` leitet das Logo aus Googles Favicon-Dienst ab. Gezeigt wird das Favicon der Turnier-Website, nie das echte Turnierlogo; fehlt die URL, fällt der Marker auf einen Stern zurück.
 **Wirkung:** Kosmetisch. Das dokumentierte Generali-Open-Problem.
 **Lösung:** Logos kuratiert hinterlegen oder sauberer Fallback (Landesflagge oder Monogramm) statt Favicon-Rateversuch.
+
+### MU-033 · Verwaiste SeasonList.tsx · S · offen
+**Problem:** `src/app/tour/components/sections/SeasonList.tsx` ist verwaist — nur von `TourWorkspace` gerendert, das an keiner Route mehr hängt. Die sichtbare Saison-Ansicht ist `/tour/season` über `SeasonView` und `SeasonCard`.
+**Lösung:** Entweder `SeasonList.tsx` (und `TourWorkspace`) entfernen — oder klären, ob `TourWorkspace` wieder eine Route bekommen soll. Bis dahin trägt `SeasonList` denselben Meldefrist-Countdown/Meldeweg wie `SeasonCard` (konsistent gehalten, aktuell aber unsichtbar).
 
 ## Erledigt
 
