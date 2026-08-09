@@ -16,6 +16,7 @@ import { addToSeason } from "@/lib/tourSeason";
 import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
+import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 import type { CostRatesPatch } from "@/lib/tourCosts";
 import { optimizeSeason, type SeasonProposal, type SeasonPick } from "@/domain/tour/optimizeSeason";
@@ -172,6 +173,7 @@ export default function Step3Proposal({
   }
 
   // ── Ergebnis: Picks (parallel zu stations), abzüglich gestrichener ──────────
+  const nowMs = Date.now(); // Stichtag für den Meldefrist-Countdown (aus der Komponente, nicht aus der Domain)
   const nightsUsed = proposal.stations[0]?.nights ?? 7;
   const pairs = proposal.picks.map((pick, i) => ({ pick, station: proposal.stations[i] }));
   const remaining = pairs.filter((x) => !removed.has(x.pick.id));
@@ -297,6 +299,7 @@ export default function Step3Proposal({
             {pairs.map(({ pick }) => {
               const struck = removed.has(pick.id);
               const arrival = pick.reasons.some((r) => r.code === "keine_anreise_cluster") ? false : true;
+              const xt = byId.get(pick.id); // volle Turnierdaten (Serie/Frist/website) für Countdown + Meldeweg
               return (
                 <li key={pick.id} className={`rounded-xl px-4 py-3 ring-1 ${struck ? "bg-black/[0.02] ring-black/5 opacity-60" : "bg-white ring-black/[0.08]"}`}>
                   <div className="flex items-start justify-between gap-3">
@@ -306,6 +309,8 @@ export default function Step3Proposal({
                         {t("tour.opt.week", { d: fmtDay(pick.weekMonday) })}
                         {arrival ? ` · ${t("tour.opt.arrival")}` : ""}
                       </p>
+                      {/* Countdown zur Meldefrist — Stichtag aus der Komponente (nowMs). */}
+                      {xt && <p className="mt-1"><DeadlineCountdown tournament={xt} now={nowMs} /></p>}
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {pick.reasons.map((r, i) => (
                           <span key={i} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${r.direction === "dafuer" ? "bg-emerald-50 text-emerald-700" : "bg-black/[0.04] text-neutral-500"}`}>
@@ -313,6 +318,8 @@ export default function Step3Proposal({
                           </span>
                         ))}
                       </div>
+                      {/* Weg zur Meldung — ehrlich beschriftet, kein Anmelde-Knopf. */}
+                      {xt && !struck && <EntryPath tournament={xt} />}
                     </div>
                     <button type="button" onClick={() => toggle(pick.id)} className="shrink-0 text-[12px] font-semibold text-neutral-500 hover:text-neutral-900">
                       {struck ? t("tour.opt.restore") : t("tour.opt.strike")}

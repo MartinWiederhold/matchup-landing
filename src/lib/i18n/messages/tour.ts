@@ -94,6 +94,20 @@ export const tour = {
     challengerUnknownText:
       "Für ATP-Challenger gilt nicht die ITF-Regel. Die genauen Fristen haben wir noch nicht hinterlegt — bitte im offiziellen Spielerportal prüfen.",
 
+    // Countdown zur Meldefrist + Weg zur Meldung (EntryDeadline.tsx)
+    entryCountdown: "Meldeschluss in {n} Tagen",
+    entryExpired: "Meldeschluss abgelaufen",
+    entryUnknownShort: "Meldefrist unbekannt",
+    entryPathTitle: "Weg zur Meldung",
+    entryWebsite: "Turnierseite",
+    entryPortalItf: "Zur Meldung im IPIN-Portal",
+    entryPortalItfNote: "Login im World-Tennis-Tour-Zone-Portal (ehemals IPIN) erforderlich.",
+    entryPortalAtp: "Meldung über die ATP PlayerZone",
+    entryPortalAtpNote:
+      "Die Meldung läuft in der ATP-PlayerZone-App (iOS/Android) — der Link öffnet nur die ATP-Seite, nicht die Meldung selbst.",
+    entryAtpAppIos: "iOS-App",
+    entryAtpAppAndroid: "Android-App",
+
     // Turnier-Entscheider (src/domain/tour/decide.ts) — sachlicher, ruhiger Ton.
     decide: {
       title: "Einschätzung",
@@ -612,6 +626,20 @@ export const tour = {
     challengerUnknownTitle: "Deadlines unknown",
     challengerUnknownText:
       "ATP Challenger does not follow the ITF rule. We have not recorded the exact deadlines yet — please check the official player portal.",
+
+    // Entry-deadline countdown + how to enter (EntryDeadline.tsx)
+    entryCountdown: "Entry deadline in {n} days",
+    entryExpired: "Entry deadline passed",
+    entryUnknownShort: "Entry deadline unknown",
+    entryPathTitle: "How to enter",
+    entryWebsite: "Tournament website",
+    entryPortalItf: "Enter via the IPIN portal",
+    entryPortalItfNote: "Requires a login to the World Tennis Tour Zone portal (formerly IPIN).",
+    entryPortalAtp: "Enter via ATP PlayerZone",
+    entryPortalAtpNote:
+      "Entry runs in the ATP PlayerZone app (iOS/Android) — the link only opens the ATP site, not the entry itself.",
+    entryAtpAppIos: "iOS app",
+    entryAtpAppAndroid: "Android app",
 
     // Tournament decider (src/domain/tour/decide.ts) — factual, calm tone.
     decide: {

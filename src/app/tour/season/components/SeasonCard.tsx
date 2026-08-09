@@ -4,6 +4,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import type { SeasonEntry, SeasonStatus } from "@/lib/tourSeason";
 import TourDeadlineBlock from "../../components/TourDeadlineBlock";
 import TourDecideBlock from "../../components/TourDecideBlock";
+import { DeadlineCountdown, EntryPath } from "../../components/EntryDeadline";
 
 const STATUSES: SeasonStatus[] = ["planned", "entered", "confirmed", "cancelled"];
 
@@ -33,6 +34,7 @@ export default function SeasonCard({
   const t = useT();
   const { locale } = useLocale();
   const x = entry.tournament;
+  const now = Date.now(); // Stichtag für den Meldefrist-Countdown (aus der Komponente, nicht aus der Domain)
 
   const countryName = (() => {
     if (!x.country) return t("tour.fieldMissing");
@@ -69,6 +71,10 @@ export default function SeasonCard({
         </span>
       </div>
 
+      {/* Countdown zur Meldefrist — gut sichtbar: ITF zählt herunter (verstrichen wird
+          benannt), Challenger ehrlich als „unbekannt" (nicht geraten). Stichtag = now. */}
+      <p className="mt-2"><DeadlineCountdown tournament={x} now={now} /></p>
+
       {/* Belag/Halle + Preisgeld */}
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-neutral-600">
         <span>
@@ -84,6 +90,8 @@ export default function SeasonCard({
       </div>
 
       <TourDeadlineBlock tournament={x} />
+      {/* Weg zur Meldung — ehrlich beschriftet (kein Anmelde-Knopf), direkt unter den Fristen. */}
+      <EntryPath tournament={x} />
       {/* Saison: MIT prevPlace → „Anreise entfällt, gleicher Ort" bzw. „Ortswechsel". */}
       <TourDecideBlock tournament={x} prevPlace={prevPlace} />
 
