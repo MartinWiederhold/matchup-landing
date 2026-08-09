@@ -3,34 +3,16 @@ import type { NextRequest } from "next/server";
 import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
 
 /**
- * Zugangsschutz NUR noch für die nicht-öffentlichen Bereiche: die eingeloggte
- * Webapp (/app) und das Admin (/admin). Die Marketing-Seiten (Startseite,
- * /find-a-partner, /events, /shop, /beratung) sind öffentlich & crawlbar —
- * sonst kann Google nichts indexieren.
+ * Vorstart-Zugangscode (Seiten-Gate) ENTFERNT: Die Seite ist öffentlich ohne Code
+ * erreichbar und crawlbar. Der Selbstschutz der nicht-öffentlichen Bereiche bleibt
+ * bestehen — /app über den Supabase-Login (AuthScreen), /admin über Login +
+ * E-Mail-Allowlist (AdminShell). Compete/Tour bleibt SEPARAT hinter der Warteliste
+ * (src/lib/tour.ts, Code 50805080) — das ist hier bewusst NICHT angefasst.
  *
- * Code/Token sind über Env-Variablen überschreibbar (SITE_GATE_CODE / _TOKEN).
+ * Die Middleware setzt jetzt nur noch das Sprach-Cookie anhand des Landes.
+ * Der frühere Lock-Screen (/locked) und /api/unlock bleiben ungenutzt im Repo;
+ * ein git-Revert dieses Commits reaktiviert das Gate vollständig.
  */
-const GATE_TOKEN = process.env.SITE_GATE_TOKEN || "mu-unlocked-2026";
-
-/** Die GESAMTE Seite ist hinter dem Code-Gate — nur der Lock-Screen selbst und
- *  der Freischalt-Endpoint müssen erreichbar bleiben, damit man den Code eingeben
- *  kann. Alles andere (inkl. Startseite) verlangt den Zugangscode. */
-function isProtected(pathname: string): boolean {
-  if (
-    pathname === "/locked" ||
-    pathname.startsWith("/api/unlock") ||
-    pathname.startsWith("/api/qr/scan") || // QR-Scan-Zähler muss auch ohne Code erreichbar sein
-    pathname.startsWith("/api/sync") || // Cron/Sync-Endpoint muss ohne Gate erreichbar sein
-    pathname.startsWith("/api/news") || // News-Sync (Cron + Lazy-Refresh) muss ohne Gate erreichbar sein
-    pathname.startsWith("/api/tour") || // Tour-APIs (Beleg-Scan) — eigene Auth-Prüfung im Handler
-    pathname.startsWith("/api/prices") || // Preis-Proxy (Travelpayouts) für /map darf nicht geblockt werden
-    pathname.startsWith("/api/pois") || // POI-Proxy (OpenStreetMap) für /map darf nicht geblockt werden
-    pathname.startsWith("/api/tennis") || // Live-Tennis-Proxy (ESPN) für /app-Home darf nicht geblockt werden
-    pathname.startsWith("/reset-password") // Passwort-Reset-Link aus der Mail muss offen sein
-  )
-    return false;
-  return true;
-}
 
 /**
  * Setzt — falls noch nicht vorhanden — das Sprach-Cookie anhand des Landes
@@ -48,32 +30,14 @@ function ensureLocaleCookie(request: NextRequest, response: NextResponse) {
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Öffentliche Marketing-Seiten + Lock-/Unlock-/Version-Endpoints: frei.
-  if (!isProtected(pathname)) {
-    const res = NextResponse.next();
-    ensureLocaleCookie(request, res);
-    return res;
-  }
-
-  // Geschützt (/app, /admin): gültiges Gate-Cookie nötig.
-  const unlocked = request.cookies.get("mu_gate")?.value === GATE_TOKEN;
-  if (unlocked) {
-    const res = NextResponse.next();
-    ensureLocaleCookie(request, res);
-    return res;
-  }
-
-  const url = request.nextUrl.clone();
-  url.pathname = "/locked";
-  const res = NextResponse.rewrite(url);
+  // Kein Zugangscode mehr: alles frei durchlassen, nur das Sprach-Cookie setzen.
+  const res = NextResponse.next();
   ensureLocaleCookie(request, res);
   return res;
 }
 
 export const config = {
-  // Statische Assets / Bilder ausnehmen, damit der Lock-Screen geladen werden kann.
+  // Statische Assets / Bilder ausnehmen.
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|robots.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|txt)$).*)",
   ],
