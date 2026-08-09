@@ -15,6 +15,7 @@ import {
 import { addToSeason } from "@/lib/tourSeason";
 import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
+import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 import type { CostRatesPatch } from "@/lib/tourCosts";
 import { optimizeSeason, type SeasonProposal, type SeasonPick } from "@/domain/tour/optimizeSeason";
@@ -130,6 +131,8 @@ export default function Step3Proposal({
       setPlanStays(schengenStays);
 
       const candidates = buildSeasonCandidates(tours, frame, existingWeeks, existingIds);
+      // Einreisesperren der Nationalität(en) → gesperrte Länder gar nicht erst vorschlagen.
+      const entryBanned = await bannedDestinations(profile.passports);
       const result = optimizeSeason({
         candidates,
         budget,
@@ -138,6 +141,7 @@ export default function Step3Proposal({
         nightsPerWeek: nightsNum,
         now: new Date(),
         schengen: applies ? { applies: true, existingStays: schengenStays } : null,
+        entryBanned,
       });
       setRemoved(new Set());
       setProposal(result);

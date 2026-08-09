@@ -28,7 +28,9 @@ import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "./
 import { decideTournament, type DecideReason } from "./decide";
 import type { TourSeries } from "./deadlines";
 
-export const OPTIMIZE_RULES_VERSION = "v1";
+// v2: Einreisesperren (entryBanned) — Länder mit „admission refused" für die
+//     Nationalität werden NICHT vorgeschlagen (Reject-Grund einreise_gesperrt).
+export const OPTIMIZE_RULES_VERSION = "v2";
 
 const DAY = 86_400_000;
 const DEFAULT_NIGHTS = 7;      // Fallback, wenn nightsPerWeek nicht gesetzt ist → Code `naechte_annahme`
@@ -62,6 +64,11 @@ export type OptimizeInput = {
   nightsPerWeek: number | null; // aus /tour/costs (localStorage "mu_tour_nights"); null → 7 + naechte_annahme
   now: Date;                    // für Fristen (decide)
   schengen: SchengenContext | null; // null = nicht betroffen
+  /** Ziel-Länder (ISO-3166-1 alpha-2), für die die Nationalität eine Einreisesperre
+   *  hat („admission refused"). Solche Turniere werden NICHT vorgeschlagen, sondern
+   *  landen mit Grund `einreise_gesperrt` in rejected. Aufgelöst vom Aufrufer aus
+   *  web.tour_visa_requirements — der Optimierer bleibt rein (kein DB/Netz). */
+  entryBanned?: Set<string>;
   objective?: SeasonObjective;  // Default "most_tournaments"
   beamWidth?: number;           // Default 64
 };
@@ -145,12 +152,17 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
     return !schengenUsage(stays, asOf).exceeds;
   };
 
-  // ── Kandidaten einteilen: unbewertbar (kein Ort), fristverstrichen (raus), sonst eignungsfähig ──
+  // ── Kandidaten einteilen: einreisegesperrt (raus), unbewertbar (kein Ort), fristverstrichen (raus), sonst eignungsfähig ──
+  const entryBanned = input.entryBanned ?? new Set<string>();
+  const bannedEntry: SeasonCandidate[] = [];
   const unassessable: { id: string; code: "kein_ortsschluessel" }[] = [];
   const excludedFrist: SeasonCandidate[] = [];
   const eligible: SeasonCandidate[] = [];
   const classOf = new Map<string, string>();
   for (const c of candidates) {
+    // Einreisesperre zuerst: dominanter Grund, unabhängig von Ort/Frist. Ein betroffenes
+    // Turnier kommt gar nicht in Betracht — nie vorschlagen, aber Grund ausweisen.
+    if (c.country && entryBanned.has(c.country)) { bannedEntry.push(c); continue; }
     if (!c.place) { unassessable.push({ id: c.id, code: "kein_ortsschluessel" }); continue; }
     const cls = decideTournament({
       tournament: { tournamentMonday: c.tournamentMonday, series: c.series, category: c.category ?? null, place: c.place },
@@ -220,7 +232,10 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
 
   // ── Verworfene (nichts still): Grund je nicht gewähltem Kandidaten ──────────
   const weekHasPick = new Set(best.chosen.map((c) => isoDay(mondayMs(c.tournamentMonday))));
-  const rejected: RejectedCandidate[] = excludedFrist.map((c) => ({ id: c.id, reasons: [reason("frist_verstrichen", "dagegen")] }));
+  const rejected: RejectedCandidate[] = [
+    ...bannedEntry.map((c) => ({ id: c.id, reasons: [reason("einreise_gesperrt", "dagegen")] })),
+    ...excludedFrist.map((c) => ({ id: c.id, reasons: [reason("frist_verstrichen", "dagegen")] })),
+  ];
   for (const c of eligible) {
     if (chosenIds.has(c.id)) continue;
     const wk = isoDay(mondayMs(c.tournamentMonday));

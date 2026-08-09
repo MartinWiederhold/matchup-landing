@@ -67,3 +67,10 @@ export function flagEmoji(country: string | null | undefined): string {
   const iso = ISO[norm(country)];
   return iso ? isoToFlag(iso) : "\u{1F3BE}";
 }
+
+/** Ländername (DE/EN, wie im Turnier-Datenstamm) → ISO-3166-1 alpha-2, oder null.
+ *  Nutzt dieselbe Namens-Map wie flagEmoji. */
+export function isoFromCountry(country: string | null | undefined): string | null {
+  if (!country) return null;
+  return ISO[norm(country)] ?? null;
+}

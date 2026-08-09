@@ -34,6 +34,7 @@ function baseInput(candidates: SeasonCandidate[], o: Partial<OptimizeInput> = {}
     nightsPerWeek: o.nightsPerWeek !== undefined ? o.nightsPerWeek : 1,
     now: o.now ?? NOW,
     schengen: o.schengen ?? null,
+    entryBanned: o.entryBanned,
     objective: o.objective,
     beamWidth: o.beamWidth,
   };
@@ -234,6 +235,24 @@ describe("Schengen 90/180", () => {
     const without = optimizeSeason(baseInput(esCands, { budget: null, nightsPerWeek: NIGHTS, schengen: { applies: true, existingStays: [] } }));
     expect(withPrior.value).toBeLessThanOrEqual(without.value);
     expect(withPrior.schengen!.exceeds).toBe(false);
+  });
+});
+
+describe("Einreisesperre (entryBanned)", () => {
+  it("25) gesperrtes Land ⇒ NIE gewählt, landet in rejected mit einreise_gesperrt", () => {
+    const cs = [cand("us", WK[0], "US|Miami", { country: "US" }), cand("es", WK[1], "ES|Barcelona", { country: "ES" })];
+    const r = optimizeSeason(baseInput(cs, { entryBanned: new Set(["US"]) }));
+    expect(r.picks.map((p) => p.id)).not.toContain("us");
+    expect(r.picks.map((p) => p.id)).toContain("es");
+    const rej = r.rejected.find((x) => x.id === "us");
+    expect(rej && codes(rej.reasons)).toContain("einreise_gesperrt");
+    expect(r.value).toBe(1);
+  });
+  it("26) ohne entryBanned unverändert ⇒ gesperrtes Land wählbar (Default = keine Sperre)", () => {
+    const cs = [cand("us", WK[0], "US|Miami", { country: "US" })];
+    const r = optimizeSeason(baseInput(cs));
+    expect(r.value).toBe(1);
+    expect(r.rejected.some((x) => codes(x.reasons).includes("einreise_gesperrt"))).toBe(false);
   });
 });
 

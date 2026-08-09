@@ -5,6 +5,8 @@ import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { loadTourPlan, loadTourProfile, loadTravelDocs, saveTravelDoc, removeTravelDoc, type TravelDoc } from "@/lib/tour";
 import { visaCases, hasSchengenPassport, regimeFacts, type VisaCase, type VisaRegime } from "@/lib/visa";
+import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
+import { isoFromCountry } from "@/lib/flags";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
 
@@ -26,6 +28,8 @@ export default function TourVisa() {
   const { locale } = useLocale();
   const { profile } = useAppNav();
   const [cases, setCases] = useState<VisaCase[] | null>(null);
+  const [natVisa, setNatVisa] = useState<Map<string, NatVisaInfo>>(new Map());
+  const [hasPassport, setHasPassport] = useState(true);
   const [docs, setDocs] = useState<TravelDoc[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -34,7 +38,11 @@ export default function TourVisa() {
     setDocs(await loadTravelDocs(profile.id));
     const ids = await loadTourPlan(profile.id);
     const tp = await loadTourProfile(profile.id);
-    const schengenPass = hasSchengenPassport(tp?.passports ?? []);
+    const passports = tp?.passports ?? [];
+    setHasPassport(passports.length > 0);
+    // Nationalitätsabhängiger Bestand (neben visa.ts): günstigste Klasse über alle Pässe.
+    setNatVisa(await loadEffectiveVisa(passports));
+    const schengenPass = hasSchengenPassport(passports);
     if (!ids.length) { setCases([]); return; }
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await supabase.from("tournaments").select("country,end_date").in("id", ids);
@@ -111,18 +119,60 @@ export default function TourVisa() {
 
         {/* Länder in deinem Plan */}
         <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-neutral-400">{t("mode.visaPlanCountries")}</p>
+        {!hasPassport && (
+          <p className="mb-2.5 rounded-2xl bg-amber-50 p-3.5 text-[12px] leading-relaxed text-amber-800 ring-1 ring-amber-200">{t("mode.visaNatNoPassport")}</p>
+        )}
         {cases === null ? null : cases.length === 0 ? (
           <p className="rounded-2xl bg-black/[0.035] p-4 text-center text-[13px] text-neutral-400">{t("mode.visaNoCountries")}</p>
         ) : (
           <div className="space-y-2.5">
             {cases.map((c, i) => {
               const f = regimeFacts(c.regime);
+              const iso = isoFromCountry(c.country);
+              const nat = iso ? natVisa.get(iso) : undefined;
+              const refused = nat?.requirementClass === "admission_refused";
+              // Datenstand + Quelle + Konsulats-Hinweis stehen an JEDER Aussage (auch visumfrei / keine Angabe).
+              const provenance = (
+                <div className="mt-2 border-t border-black/[0.06] pt-2 text-[10.5px] leading-relaxed text-neutral-400">
+                  {nat ? (
+                    <p>
+                      {t("mode.visaNatSource", { date: nat.sourceRevisedAt ? fmtDate(nat.sourceRevisedAt.slice(0, 10)) : "—" })}
+                      {" · "}
+                      <a href={nat.sourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-neutral-500 underline">{t("mode.visaNatSourceLink")}</a>
+                    </p>
+                  ) : (
+                    <p>{t("mode.visaNatNoData")}</p>
+                  )}
+                  <p className="mt-0.5 font-semibold text-neutral-500">{t("mode.visaNatConsulate")}</p>
+                </div>
+              );
+
+              if (refused) {
+                return (
+                  <div key={i} className="rounded-2xl border border-red-200 bg-red-50 p-3.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-[14px] font-bold text-red-700">{c.country}</p>
+                      <span className="shrink-0 rounded-full bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-600">{t("mode.visaNatClass_admission_refused")}</span>
+                    </div>
+                    <p className="mt-1.5 text-[13px] font-bold text-red-700">{t("mode.visaNatRefusedTitle")}</p>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-red-800">{t("mode.visaNatRefusedBody", { nat: nat!.nationality, country: c.country })}</p>
+                    {provenance}
+                  </div>
+                );
+              }
+
               return (
                 <div key={i} className="rounded-2xl border border-black/[0.07] p-3.5">
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="text-[14px] font-bold text-neutral-900">{c.country}</p>
-                    <span className="shrink-0 rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{regLabel(c.regime)}</span>
+                    <span className="shrink-0 rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{nat ? t(`mode.visaNatClass_${nat.requirementClass}`) : regLabel(c.regime)}</span>
                   </div>
+                  {nat && (
+                    <p className="mt-1.5 text-[12px] font-semibold text-neutral-700">
+                      {t("mode.visaNatForPassport", { nat: nat.nationality })}: {t(`mode.visaNatClass_${nat.requirementClass}`)}
+                      {nat.allowedStayDays != null ? ` · ${t("mode.visaNatStay", { n: nat.allowedStayDays })}` : ""}
+                    </p>
+                  )}
                   <p className="mt-1.5 text-[12px] leading-relaxed text-neutral-600">{t(`mode.visa_docs_${c.regime}`)}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500">
                     {f.maxStayDays != null && <span>{t("mode.visaMaxStay", { n: f.maxStayDays })}</span>}
@@ -131,6 +181,7 @@ export default function TourVisa() {
                       <a href={f.officialUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-matchup">{t("mode.visaOfficialLink")} →</a>
                     )}
                   </div>
+                  {provenance}
                 </div>
               );
             })}

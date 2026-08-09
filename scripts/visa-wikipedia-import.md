@@ -52,6 +52,21 @@ Im Zweifel also überspringen und protokollieren.
 - **4 Hex-Farbzellen ohne Template** (`US/MX/UA→CN` visumpflichtig, `KR→IR` schwarz)
   — keine Klasse aus bloßer Hintergrundfarbe abgeleitet.
 
+### Bekannte Lücke: KR → IR (Südkorea → Iran)
+
+Die Zelle nutzt eine rohe schwarze Hintergrundfarbe (`background:#000000`) **ohne**
+Status-Vorlage. Schwarz steht in diesen Tabellen üblicherweise für „Admission refused",
+d. h. **vermutlich eine Einreisesperre** — aber nicht belegbar aus einer Vorlage,
+sondern nur aus der Farbe.
+
+**Bewusst offen gelassen.** Eine Sperre allein aus einer Hintergrundfarbe abzuleiten ist
+genau die fragile Halb-Interpretation, die wir nicht importieren (Fehlerrichtung: eine
+FALSCHE Sperre kostet einen Spieler unsichtbar ein Turnier). Ergebnis: für `KR→IR` gibt
+es keine Zeile → die Anzeige zeigt „keine Angabe" + den Konsulats-Hinweis, der Optimierer
+sperrt das Land nicht. Falls jemand fragt, warum dort keine Sperr-Warnung erscheint: das
+ist die Antwort — die Angabe war nicht belegbar, und im Zweifel schweigen wir lieber, als
+falsch zu sperren.
+
 ## Stichprobe (aus der DB verifiziert)
 
 | Nationalität → Ziel | Klasse | Aufenthalt | Seite geändert |
