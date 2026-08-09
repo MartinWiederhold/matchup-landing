@@ -90,11 +90,12 @@
 **Stand (e58a504):** `/tour` hat einen EIGENEN Zähler, der auf bestätigten, durchgehenden Aufenthalten rechnet (`src/domain/tour/schengen.ts`, `web.tour_stays`, Route `/tour/schengen`) — dort ist die Untererfassung behoben. Das Ticket bleibt trotzdem offen: Es betrifft den Zähler im **/app-Compete** (`src/lib/schengen.ts`), der weiterhin auf Turnierfenstern rechnet und unterschätzt.
 **Sperre:** `COMPETE_EARLY_ACCESS_OPEN` nicht auf `true`, solange die Anzeige eine Untererfassung als Restkontingent darstellt.
 
-### MU-019 · Visa-Regeln ignorieren die Nationalität · M · offen · **Vor Launch**
+### MU-019 · Visa-Regeln ignorieren die Nationalität · M · **erledigt** · **Vor Launch**
 **Problem:** `countryRegime` in `src/lib/visa.ts` entscheidet nur nach Zielland. „USA → ESTA $21" gilt nur für Spieler mit Visa-Waiver-Pass. Für alle anderen ist die Auskunft falsch. Zusätzlich sind die Gebühren hartkodiert, undatiert und ohne Quellenbeleg (UK ETA lag zuvor bei £10).
 **Wirkung:** Betrifft besonders Spieler aus Afrika, Südasien und Lateinamerika — genau die Gruppe mit den größten Visa-Hürden.
-**Lösung:** Nationalität einbeziehen, oder die Aussage auf das reduzieren, was ohne sie stimmt („Einreisebestimmungen prüfen", mit Amtslink). Gebühren mit Datenstand versehen oder weglassen.
-**Sperre:** Nicht mit echten Nutzern starten, solange eine nationalitätsabhängige Aussage als allgemeingültig erscheint.
+**Gelöst** (`44f670d`, `68a6564`): Neuer nationalitätsabhängiger Bestand `web.tour_visa_requirements` (2410 Zeilen, 31 Nationalitäten × 83 Zielländer, Quelle Wikipedia mit Revisionsdatum je Zeile) plus `optimizeSeason` v2 mit `entryBanned` und dem Ablehnungsgrund `einreise_gesperrt`. Per Playwright belegt: Bei iranischer Nationalität erscheint die Sperr-Karte ohne Antragslink, US-Turniere tauchen im Vorschlag nicht auf und stehen mit Grund unter den verworfenen Kandidaten.
+**Bekannte Lücke:** KR → IR (schwarze Zelle ohne Vorlage, in `scripts/visa-wikipedia-import.md` dokumentiert). Fehlerrichtung bewusst: im Zweifel keine Sperre.
+**Offen bleibt:** `src/lib/visa.ts` existiert weiterhin daneben und entscheidet nur nach Zielland. Ob es abgelöst wird, ist eine eigene Entscheidung → als [MU-031] aufgenommen (Priorität 2).
 
 ### MU-020 · Kalender-Token lässt sich nicht zurückziehen · M · offen · **Vor Launch**
 **Problem:** `ensureCalendarToken` erzeugt einen Token einmalig und rotiert nie. `web.tour_calendar` hat kein Ablauffeld, kein Code-Pfad löscht oder erneuert die Zeile. Die Feed-URL `/api/tour/calendar/<token>.ics` ist login-los.
@@ -173,6 +174,12 @@ Attribution in beiden Fällen sicherstellen.
 **Einzelfälle:**
 - **Federer** ist seit 2022 zurückgetreten. Bei „Spiele wie die Profis" führt ein vier Jahre altes Setup in die Irre. Entweder entfernen oder als Referenz kennzeichnen — Produktentscheidung.
 - **Fritz** zeigt „Racket brand: Head" neben einer Solinco-Saite. Das ist auf der Tour üblich und kein Fehler, liest sich aber wie ein Widerspruch. Beschriftungsfrage.
+
+### MU-031 · `visa.ts` ablösen oder zielland-basiert belassen · M · offen
+**Kontext:** Mit MU-019 steht der nationalitätsabhängige Bestand `web.tour_visa_requirements` samt `optimizeSeason`-Sperre und Anzeige. `src/lib/visa.ts` (zielland-basierter Regime-Mapper: Schengen/UK-ETA/ESTA/… mit Antragslink, Kosten, Doku-Checkliste) läuft bewusst daneben weiter — der neue Bestand trat neben ihn, ohne ihn anzufassen.
+**Entscheidung:** Ob und wie `visa.ts` abgelöst wird, ist eine eigene Frage. Optionen: (a) ganz durch den Bestand ersetzen — dann fehlen aber Antragslink/Kosten/Checkliste, die der Bestand bewusst nicht führt; (b) beide verschränken — Bestand liefert Klasse + Datenstand, `visa.ts` die Regime-Handreichung; (c) `visa.ts` als reine Regime-Hilfe belassen. Vermutlich (b).
+**Wirkung:** Solange beide nebeneinander laufen, kann eine zielland-basierte Aussage (visa.ts) neben einer nationalitätsabhängigen (Bestand) stehen — für den Nutzer nicht immer klar getrennt.
+**Lösung:** Rollen der beiden Quellen festlegen, Anzeige zusammenführen, Doppelaussagen vermeiden.
 
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
