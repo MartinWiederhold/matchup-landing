@@ -551,6 +551,33 @@ export interface TourStay {
   updated_at: string; // ISO timestamp
 }
 
+/** Normierte Einreise-Klasse (web.tour_visa_requirements.requirement_class).
+ *  'admission_refused' ist KEINE Visumsart, sondern eine Einreisesperre — eigene Klasse:
+ *  der Optimierer schlägt solche Länder nicht vor, die Anzeige nennt kein Antrag. */
+export type VisaRequirementClass =
+  | "visa_free"
+  | "evisa"
+  | "visa_on_arrival"
+  | "eta"
+  | "visa_required"
+  | "admission_refused";
+
+/** Eine Zeile des nationalitätsabhängigen Visa-Bestands (web.tour_visa_requirements):
+ *  je (Nationalität × Zielland) eine normierte Klasse aus Wikipedia. Referenz, KEINE
+ *  amtliche Auskunft. RLS: authenticated liest, service_role schreibt. */
+export interface TourVisaRequirement {
+  id: string;
+  nationality: string; // ISO 3166-1 alpha-2 (Staatsbürgerschaft)
+  destination: string; // ISO 3166-1 alpha-2 (Zielland)
+  requirement_class: VisaRequirementClass;
+  allowed_stay_days: number | null; // erlaubte Aufenthaltsdauer in Tagen; NULL = nicht angegeben
+  source_url: string; // Quelllink (die Wikipedia-Seite)
+  source_revised_at: string | null; // ISO timestamp: wann die Seite zuletzt geändert wurde
+  imported_at: string; // ISO timestamp: wann wir importiert haben
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
