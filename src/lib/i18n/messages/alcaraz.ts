@@ -15,7 +15,7 @@ export const alcaraz = {
     coreTitle: "Die drei Dinge, die zählen",
     coreNote:
       "Schläger, Saite, Overgrip — das ist der eigentliche Kauf, rund 90 % des Setups. Der Rest ist Kosmetik.",
-    cosmeticTitle: "Der Rest — Kosmetik",
+    cosmeticTitle: "Schuhe",
 
     addOne: "In den Warenkorb",
     addAll: "Komplettes Setup in den Warenkorb",
@@ -99,7 +99,7 @@ export const alcaraz = {
     coreTitle: "The three things that matter",
     coreNote:
       "Racket, string, overgrip — that's the actual purchase, about 90 % of the setup. The rest is cosmetics.",
-    cosmeticTitle: "The rest — cosmetics",
+    cosmeticTitle: "Shoes",
 
     addOne: "Add to cart",
     addAll: "Add the full setup to cart",

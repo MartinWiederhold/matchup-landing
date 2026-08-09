@@ -84,11 +84,11 @@ const ALCARAZ_CORE_RAW: RawProduct[] = [
   { brand: "Babolat", name: "VS Original Overgrip", cat: "gear", group: "alcaraz-core", setup: true, price: 10, priceLabelKey: "alcaraz.price_overgrip", subKey: "alcaraz.sub_overgrip", specsKey: "alcaraz.overgrip_specs", image: "/shop/setup/alcaraz/overgrip.webp" },
 ];
 const ALCARAZ_COSMETIC_RAW: RawProduct[] = [
-  { brand: "Babolat", name: "Leder-Basisgriffband", cat: "gear", group: "alcaraz-cosmetic", setup: true, price: null, subKey: "alcaraz.sub_basisgriff", specsKey: "alcaraz.basisgriff_specs" },
-  // Drei Schuhvarianten (nike.com). Preise mit Datenstand; reduzierter Preis nur mit Aktions-Hinweis.
-  { brand: "Nike", name: "Vapor 12 Hartplatz", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 169.99, priceLabelKey: "alcaraz.price_shoe_hard", subKey: "alcaraz.sub_shoe_hard", specsKey: "alcaraz.shoe_hard_specs" },
-  { brand: "Nike", name: "Vapor 12 Hypersmash", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 179.99, priceLabelKey: "alcaraz.price_shoe_hyper", subKey: "alcaraz.sub_shoe_hyper", specsKey: "alcaraz.shoe_hyper_specs" },
-  { brand: "Nike", name: "Zoom Vapor 12 PRM", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 118.99, priceLabelKey: "alcaraz.price_shoe_prm", subKey: "alcaraz.sub_shoe_prm", specsKey: "alcaraz.shoe_prm_specs", saleNoteKey: "alcaraz.shoe_sale_note" },
+  // Leder-Basisgriffband ENTFERNT — Alcaraz nutzt keins.
+  // Drei Schuhvarianten (nike.com), mit echten Produktbildern. Preise mit Datenstand; reduzierter Preis nur mit Aktions-Hinweis.
+  { brand: "Nike", name: "Vapor 12 Hartplatz", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 169.99, priceLabelKey: "alcaraz.price_shoe_hard", subKey: "alcaraz.sub_shoe_hard", specsKey: "alcaraz.shoe_hard_specs", image: "/shop/setup/alcaraz/shoe-hard.avif" },
+  { brand: "Nike", name: "Vapor 12 Hypersmash", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 179.99, priceLabelKey: "alcaraz.price_shoe_hyper", subKey: "alcaraz.sub_shoe_hyper", specsKey: "alcaraz.shoe_hyper_specs", image: "/shop/setup/alcaraz/shoe-hyper.avif" },
+  { brand: "Nike", name: "Zoom Vapor 12 PRM", cat: "apparel", group: "alcaraz-cosmetic", setup: true, price: 118.99, priceLabelKey: "alcaraz.price_shoe_prm", subKey: "alcaraz.sub_shoe_prm", specsKey: "alcaraz.shoe_prm_specs", saleNoteKey: "alcaraz.shoe_sale_note", image: "/shop/setup/alcaraz/shoe-prm.avif" },
   { brand: "Babolat", name: "RH12 Pure Aero Tasche", cat: "gear", group: "alcaraz-cosmetic", setup: true, price: null, subKey: "alcaraz.sub_bag", specsKey: "alcaraz.bag_specs", image: "/shop/setup/alcaraz/bag.webp" },
 ];
 
