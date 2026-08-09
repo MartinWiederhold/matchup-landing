@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useT } from "@/lib/i18n";
+import Link from "next/link";
+import { useT, useLocale } from "@/lib/i18n";
 import { saveSeasonBudget } from "@/lib/tourSetup";
-import type { Frame, FrameResult, RegionMode } from "@/lib/tourPlanner";
+import { costRatesComplete, ratesToCostParams, type Frame, type FrameResult, type RegionMode } from "@/lib/tourPlanner";
+import { computeSeasonCost } from "@/domain/tour/costs";
+import type { TourCostRates } from "@/lib/types";
+
+const NIGHTS_KEY = "mu_tour_nights"; // dieselbe Annahme wie /tour/costs (fehlt → 7)
 
 const inputCls =
   "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
@@ -26,17 +31,54 @@ export default function Step2Frame({
   frame,
   setFrame,
   result,
+  rates,
 }: {
   budgetInitial: number | null;
   userId: string;
   frame: Frame;
   setFrame: (f: Frame) => void;
   result: FrameResult;
+  rates: TourCostRates | null;
 }) {
   const t = useT();
+  const { locale } = useLocale();
   const [budget, setBudget] = useState(budgetInitial != null ? String(budgetInitial) : "");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
+
+  // Nächte-Annahme wie in /tour/costs (fehlt → 7). Nur Anzeige, kein Persistieren hier.
+  const nights = (() => {
+    let raw = "";
+    try { raw = localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { /* egal */ }
+    const n = parseInt(raw.trim(), 10);
+    return Number.isFinite(n) && n >= 0 ? n : 7;
+  })();
+
+  // Kosten EINER Turnierwoche — über computeSeasonCost mit genau einer Station,
+  // NICHT über eine eigene Formel (sonst laufen zwei Rechnungen auseinander).
+  const week = costRatesComplete(rates)
+    ? (() => {
+        const cur = rates!.currency ?? "EUR";
+        const cost = computeSeasonCost([{ place: "x", nights }], ratesToCostParams(rates!));
+        const total = cost.total[cur] ?? 0;
+        const fmt = (minor: number) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100);
+        // Aufschlüsselung = die Sätze selbst beschriftet (die maßgebliche Summe kommt oben aus computeSeasonCost).
+        const parts = [
+          `${fmt(rates!.arrival_minor!)} ${t("tour.plWeekArrival")}`,
+          `${nights} ${t("tour.plWeekNights")} à ${fmt(rates!.per_night_minor!)}`,
+          `${nights} ${t("tour.plWeekFood")} à ${fmt(rates!.food_per_day_minor!)}`,
+        ];
+        if (rates!.coach_per_week_minor != null) parts.push(`${t("tour.plWeekCoach")} à ${fmt(rates!.coach_per_week_minor)}`);
+        return { totalMinor: total, totalLabel: fmt(total), parts: parts.join(" + ") };
+      })()
+    : null;
+
+  // Eingegebenes Budget (Major) → liegt es unter einer Woche? Direkt an der Eingabe melden.
+  const budgetMajor = (() => {
+    const n = Number(budget.trim().replace(",", "."));
+    return budget.trim() !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  })();
+  const belowWeek = week != null && budgetMajor != null && budgetMajor * 100 < week.totalMinor;
 
   async function saveBudget() {
     if (busy) return;
@@ -64,6 +106,21 @@ export default function Step2Frame({
           </button>
           {status === "saved" && <span className="text-[12px] text-emerald-600">{t("tour.setupSaved")}</span>}
           {status === "error" && <span className="text-[12px] text-neutral-500">{t("tour.setupSaveError")}</span>}
+        </div>
+
+        {/* Budget-Rückmeldung schon bei der Eingabe: Kosten einer Turnierwoche bzw. Verweis auf die Kostensätze */}
+        <div className="sm:col-span-2">
+          {week ? (
+            <>
+              <p className="text-[12px] text-neutral-500">{t("tour.plBudgetWeek", { total: week.totalLabel, parts: week.parts })}</p>
+              {belowWeek && <p className="mt-1 text-[12px] font-semibold text-amber-700">{t("tour.plBudgetTooLow", { total: week.totalLabel })}</p>}
+            </>
+          ) : (
+            <p className="text-[12px] text-neutral-500">
+              {t("tour.plBudgetNoRates")}{" "}
+              <Link href="/tour/costs" className="font-semibold text-matchup hover:underline">{t("tour.plBudgetNoRatesLink")}</Link>
+            </p>
+          )}
         </div>
       </div>
 

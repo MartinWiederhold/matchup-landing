@@ -120,7 +120,15 @@ export default function TourPlanner() {
     const n = t(`tour.country.${code}`);
     return n.startsWith("tour.country.") ? code : n;
   };
-  const step1Summary = [profile.city, profile.ranking != null ? t("tour.plChipRank", { n: profile.ranking }) : null, profile.passports[0] ? countryName(profile.passports[0]) : null].filter(Boolean).join(" · ");
+  // Wohnort MIT Wohnland (profiles.country) — der Pass ist etwas anderes und wird
+  // getrennt beschriftet, damit „Dietikon, Schweiz · Pass: AT" nicht als „Dietikon
+  // liegt in Österreich" gelesen wird. Mehrere Pässe: alle nennen.
+  const homeLabel = profile.city ? (profile.country ? `${profile.city}, ${countryName(profile.country)}` : profile.city) : null;
+  const step1Summary = [
+    homeLabel,
+    profile.ranking != null ? t("tour.plChipRank", { n: profile.ranking }) : null,
+    profile.passports.length ? `${t("tour.plChipPass")}: ${profile.passports.join(", ")}` : null,
+  ].filter(Boolean).join(" · ");
   const regionLabel = t(frame.region === "ch" ? "tour.plRegionCh" : frame.region === "all" ? "tour.plRegionAll" : "tour.plRegionEurope");
   const step2Summary = [profile.seasonBudget != null ? `${profile.seasonBudget} €` : null, regionLabel, frame.from || frame.to ? `${frame.from || "…"} – ${frame.to || "…"}` : null].filter(Boolean).join(" · ");
 
@@ -155,7 +163,7 @@ export default function TourPlanner() {
           </StepBlock>
 
           <StepBlock n={2} title={t("tour.plStep2")} intro={t("tour.plStep2Intro")} open={openStep === 2} done={profile.seasonBudget != null} summary={step2Summary} onOpen={() => setOpenStep(2)} t={t}>
-            <Step2Frame budgetInitial={profile.seasonBudget} userId={user.id} frame={frame} setFrame={setFrame} result={result} />
+            <Step2Frame budgetInitial={profile.seasonBudget} userId={user.id} frame={frame} setFrame={setFrame} result={result} rates={rates} />
           </StepBlock>
 
           <StepBlock n={3} title={t("tour.plStep3")} intro={t("tour.plStep3Intro")} open={openStep === 3} done={false} summary="" onOpen={() => setOpenStep(3)} t={t}>
