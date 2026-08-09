@@ -10,13 +10,18 @@ import {
   loadPlannerProfile,
   loadActiveTournaments,
   filterFrame,
+  picksToMapEntries,
   type PlannerProfile,
   type Frame,
 } from "@/lib/tourPlanner";
-import type { TourTournament } from "@/lib/types";
+import { loadCostRates } from "@/lib/tourCosts";
+import { loadSeason } from "@/lib/tourSeason";
+import type { TourTournament, TourCostRates } from "@/lib/types";
+import type { SeasonProposal } from "@/domain/tour/optimizeSeason";
 import ProfileChip from "./ProfileChip";
 import Step1Profile from "./Step1Profile";
 import Step2Frame from "./Step2Frame";
+import Step3Proposal from "./Step3Proposal";
 
 /**
  * Der durchgehende Saisonplaner unter /tour (Schritt 1 + 2). Ersetzt die alte
@@ -34,19 +39,29 @@ export default function TourPlanner() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [profile, setProfile] = useState<PlannerProfile | null>(null);
   const [tours, setTours] = useState<TourTournament[]>([]);
-  const [openStep, setOpenStep] = useState<1 | 2>(1);
+  const [openStep, setOpenStep] = useState<1 | 2 | 3>(1);
   // Rahmen — reiner Komponenten-Zustand.
   const [frame, setFrame] = useState<Frame>({ region: "europe", from: "", to: "" });
+  // Schritt 3: Kostensätze, bestehende Saison (Wochen + IDs), Vorschlag + Streichungen.
+  const [rates, setRates] = useState<TourCostRates | null>(null);
+  const [existing, setExisting] = useState<{ ids: Set<string>; weeks: Set<string> }>({ ids: new Set(), weeks: new Set() });
+  const [proposal, setProposal] = useState<SeasonProposal | null>(null);
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
     let alive = true;
     setStatus("loading");
-    Promise.all([loadPlannerProfile(user.id), loadActiveTournaments()])
-      .then(([p, ts]) => {
+    Promise.all([loadPlannerProfile(user.id), loadActiveTournaments(), loadCostRates(), loadSeason()])
+      .then(([p, ts, r, season]) => {
         if (!alive) return;
         setProfile(p);
         setTours(ts);
+        setRates(r);
+        setExisting({
+          ids: new Set(season.map((e) => e.tournament.id)),
+          weeks: new Set(season.map((e) => e.tournament.tournament_monday)),
+        });
         setOpenStep(p.city ? 2 : 1); // Profil schon da → direkt in den Rahmen
         setStatus("ready");
       })
@@ -58,12 +73,31 @@ export default function TourPlanner() {
     if (!user) return;
     try { setProfile(await loadPlannerProfile(user.id)); } catch { /* Anzeige bleibt */ }
   }
+  async function reloadRates() {
+    try { setRates(await loadCostRates()); } catch { /* Anzeige bleibt */ }
+  }
+  async function reloadExisting() {
+    try {
+      const season = await loadSeason();
+      setExisting({
+        ids: new Set(season.map((e) => e.tournament.id)),
+        weeks: new Set(season.map((e) => e.tournament.tournament_monday)),
+      });
+    } catch { /* Anzeige bleibt */ }
+  }
 
   const step1Done = !!profile?.city;
   const result = useMemo(() => filterFrame(tours, frame), [tours, frame]);
   const focus = profile?.lat != null && profile?.lng != null ? { lat: profile.lat, lng: profile.lng } : null;
-  // Karte: Schritt 1 → nur Zentrum (Wohnort); Schritt 2 → Kandidaten-Punkte.
-  const mapEntries = openStep === 2 ? result.mapEntries : [];
+  // Reiseweg des Vorschlags (verbliebene Picks) für Schritt 3 → reagiert auf Streichungen.
+  const routeEntries = useMemo(() => {
+    if (!proposal) return [];
+    const keep = proposal.picks.filter((p) => !removed.has(p.id));
+    return picksToMapEntries(keep, tours);
+  }, [proposal, removed, tours]);
+  // Karte: Schritt 1 → nur Zentrum; Schritt 2 → Kandidaten; Schritt 3 → Reiseweg.
+  const showRoute = openStep === 3 && proposal != null;
+  const mapEntries = showRoute ? routeEntries : openStep === 2 ? result.mapEntries : [];
 
   // ── Gates ────────────────────────────────────────────────────────────────
   if (authLoading || status === "loading") return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
@@ -110,7 +144,7 @@ export default function TourPlanner() {
               {t("tour.plMapEmpty")}
             </div>
           ) : (
-            <TourMapView entries={mapEntries} focus={focus} showRoute={false} heightClass="h-[40vh] lg:h-[calc(100vh-7rem)]" />
+            <TourMapView entries={mapEntries} focus={focus} showRoute={showRoute} heightClass="h-[40vh] lg:h-[calc(100vh-7rem)]" />
           )}
         </div>
 
@@ -124,11 +158,23 @@ export default function TourPlanner() {
             <Step2Frame budgetInitial={profile.seasonBudget} userId={user.id} frame={frame} setFrame={setFrame} result={result} />
           </StepBlock>
 
-          {/* Es geht weiter — ohne Versprechen, ohne die späteren Schritte anzudeuten */}
-          <div className="rounded-2xl border border-dashed border-black/10 px-5 py-4">
-            <p className="text-[13px] font-bold text-neutral-500">{t("tour.plMoreTitle")}</p>
-            <p className="mt-1 text-[12px] text-neutral-400">{t("tour.plMoreText")}</p>
-          </div>
+          <StepBlock n={3} title={t("tour.plStep3")} intro={t("tour.plStep3Intro")} open={openStep === 3} done={false} summary="" onOpen={() => setOpenStep(3)} t={t}>
+            <Step3Proposal
+              userId={user.id}
+              profile={profile}
+              tours={tours}
+              frame={frame}
+              rates={rates}
+              existingWeeks={existing.weeks}
+              existingIds={existing.ids}
+              proposal={proposal}
+              setProposal={setProposal}
+              removed={removed}
+              setRemoved={setRemoved}
+              onRatesSaved={reloadRates}
+              onTakenOver={reloadExisting}
+            />
+          </StepBlock>
         </div>
       </div>
     </div>

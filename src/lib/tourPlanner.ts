@@ -8,8 +8,10 @@
 import { supabase } from "@/lib/supabase";
 import { fetchAllPaged } from "@/lib/supabasePaginate";
 import { isTargetRegion } from "@/domain/tour/region";
-import type { TourTournament } from "@/lib/types";
+import type { TourTournament, TourCostRates } from "@/lib/types";
 import type { SeasonEntry } from "@/lib/tourSeason";
+import type { SeasonCandidate, SeasonPick } from "@/domain/tour/optimizeSeason";
+import type { CostParams, Money } from "@/domain/tour/costs";
 
 // ── Schritt 1: Profil (Wohnort-Koordinaten + Anzeige) ───────────────────────
 export type PlannerProfile = {
@@ -106,4 +108,95 @@ export function filterFrame(tours: TourTournament[], frame: Frame): FrameResult 
     }
   }
   return { inFrame, mapEntries, noCoords };
+}
+
+// ── Schritt 3: Anbindung des Saison-Optimierers (Domain) ────────────────────
+
+/**
+ * Ortsschlüssel „country|city" — DIESELBE Bildung für Kandidaten UND Wohnort, damit
+ * der Optimierer Cluster/Heimatnähe über reine String-Gleichheit erkennt. Ohne Stadt
+ * gibt es keinen Schlüssel → null (der Optimierer führt das Turnier als „unbewertbar").
+ */
+export function placeKey(country: string | null, city: string | null): string | null {
+  if (!city) return null;
+  return `${country ?? ""}|${city}`;
+}
+
+/** Sind ALLE Pflicht-Kostensätze gesetzt? Nur dann darf gerechnet werden (kein Vorschlagswert). */
+export function costRatesComplete(rates: TourCostRates | null): boolean {
+  return (
+    rates != null &&
+    rates.currency != null &&
+    rates.arrival_minor != null &&
+    rates.per_night_minor != null &&
+    rates.food_per_day_minor != null
+  );
+}
+
+/** Kostensätze (Minor-Einheiten) → CostParams des Domain-Moduls. Setzt Vollständigkeit voraus. */
+export function ratesToCostParams(rates: TourCostRates): CostParams {
+  const cur = rates.currency ?? "EUR";
+  const money = (minor: number | null): Money | null => (minor != null ? { amount: minor, currency: cur } : null);
+  return {
+    arrival: money(rates.arrival_minor),
+    perNight: money(rates.per_night_minor),
+    foodPerDay: money(rates.food_per_day_minor),
+    coachPerWeek: money(rates.coach_per_week_minor), // optional
+  };
+}
+
+/**
+ * Saisonbudget (in tour_profiles als GANZE Einheiten gespeichert) → Money in Minor-
+ * Einheiten der Kostensatz-Währung. Der Optimierer rechnet durchgängig in Minor.
+ */
+export function budgetMoney(seasonBudget: number | null, currency: string): Money | null {
+  if (seasonBudget == null) return null;
+  return { amount: Math.round(seasonBudget * 100), currency };
+}
+
+/**
+ * Aktive Turniere im Rahmen (Region ∩ Zeitraum) → Kandidaten für den Optimierer.
+ * `blockedWeeks` (bereits verplante Turnierwochen) und `existingIds` (schon in der
+ * Saison) werden ausgelassen — so schlägt der Optimierer NUR freie Wochen vor und
+ * kollidiert nie mit dem, was der Nutzer bereits geplant hat (Ergänzen, nicht ersetzen).
+ */
+export function buildSeasonCandidates(
+  tours: TourTournament[],
+  frame: Frame,
+  blockedWeeks: Set<string>,
+  existingIds: Set<string>,
+): SeasonCandidate[] {
+  const out: SeasonCandidate[] = [];
+  for (const t of tours) {
+    if (!inRegion(t.country, frame.region)) continue;
+    if (frame.from && t.tournament_monday < frame.from) continue;
+    if (frame.to && t.tournament_monday > frame.to) continue;
+    if (blockedWeeks.has(t.tournament_monday)) continue; // Woche schon belegt
+    if (existingIds.has(t.id)) continue;                 // schon in der Saison
+    out.push({
+      id: t.id,
+      tournamentMonday: new Date(t.tournament_monday), // ISO → UTC-Mitternacht (deterministisch)
+      series: t.series,
+      category: t.category,
+      place: placeKey(t.country, t.city),
+      country: t.country,
+      hasMapCoords: t.latitude != null && t.longitude != null,
+    });
+  }
+  return out;
+}
+
+/**
+ * Vorgeschlagene Picks → Kartenpunkte (in Reise-Reihenfolge). Nur Picks MIT
+ * Koordinaten kommen auf die Karte; die ohne werden in der Liste getrennt geführt.
+ */
+export function picksToMapEntries(picks: SeasonPick[], tours: TourTournament[]): SeasonEntry[] {
+  const byId = new Map(tours.map((t) => [t.id, t]));
+  const entries: SeasonEntry[] = [];
+  for (const p of picks) {
+    const t = byId.get(p.id);
+    if (!t || t.latitude == null || t.longitude == null) continue;
+    entries.push({ planId: t.id, status: "planned", note: null, addedAt: t.created_at, tournament: t, tournamentInactive: false });
+  }
+  return entries;
 }
