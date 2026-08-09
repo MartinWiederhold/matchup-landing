@@ -9,8 +9,9 @@ type Stop = { city: string; country: string; start: string; end: string };
 
 /**
  * Hotels am Turnierort (Ort + Check-in/out vorausgefüllt).
- * Booking.com-Suche (live) — Travelpayouts Drive (Script im Layout) macht daraus automatisch
- * einen Provisions-Link. Hotellook wurde 10/2025 eingestellt, deshalb NICHT mehr verwenden.
+ * Booking.com-Suche (live) — als NORMALER Link, ohne Provision: Hotellook wurde 10/2025
+ * eingestellt (kein Ersatz bei Travelpayouts), und das Drive-Script wurde entfernt
+ * (Laufzeitfehler, und booking.com stand ohnehin nicht in dessen Whitelist).
  */
 export function hotelUrl(t: Stop): string {
   const place = encodeURIComponent(`${t.city}, ${t.country}`);
