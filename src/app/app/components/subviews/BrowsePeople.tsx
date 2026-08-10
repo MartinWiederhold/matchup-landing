@@ -56,7 +56,7 @@ export default function BrowsePeople() {
     (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
 
     const { data: raw } = await supabase
-      .from("profiles").select("*")
+      .from("profiles").select("id, first_name, display_name, username, age, gender, sports, skill_level, profile_image, club_id, latitude, longitude, last_active")
       .eq("is_paused", false).eq("is_banned", false).eq("is_seed", false)
       .order("last_active", { ascending: false }).limit(300);
 

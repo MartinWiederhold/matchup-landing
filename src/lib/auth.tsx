@@ -95,12 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    // FCM-Token löschen
+    // FCM-Token löschen — liegt jetzt in web.profiles_private (Sicherheitsaudit 2026-08).
+    // update statt upsert: die Zeile existiert für Bestandsnutzer; fehlt sie (neuer
+    // Web-Nutzer ohne Push-Token), ist das Nullen ohnehin ein No-op.
     if (profile) {
       await supabase
-        .from("profiles")
+        .from("profiles_private")
         .update({ fcm_token: null })
-        .eq("id", profile.id);
+        .eq("user_id", profile.id);
     }
     await supabase.auth.signOut();
     setProfile(null);

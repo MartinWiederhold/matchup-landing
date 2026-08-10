@@ -3,8 +3,6 @@
 // ============================================================
 export interface Profile {
   id: string; // = auth.users.id (UUID)
-  apple_id: string | null;
-  google_id: string | null;
   display_name: string;
   first_name: string;
   username: string | null; // unique, Migration 016
@@ -42,17 +40,29 @@ export interface Profile {
   banned_at: string | null; // ISO timestamp
   daily_likes_count: number; // default 0
   daily_likes_reset: string | null; // ISO timestamp
-  device_fingerprint: string | null;
   push_matches: boolean; // default true
   push_messages: boolean; // default true
   push_reminders: boolean; // default true
   push_community: boolean; // default true
   public_posts: boolean; // default true, Migration 018
-  fcm_token: string | null;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
   last_active: string; // ISO timestamp
   _distance?: number; // client-seitiges Hilfsfeld (Discover-Sortierung)
+}
+
+/**
+ * Sensible Profilfelder, aus `profiles` in `web.profiles_private` ausgelagert
+ * (Sicherheitsaudit 2026-08): RLS ist zeilen-, nicht spaltenweise — diese Felder
+ * darf NUR der Eigner (bzw. server-seitig service_role) lesen, nicht jeder
+ * Eingeloggte. Push/Fingerprint werden v. a. von der Mobile-App geschrieben.
+ */
+export interface ProfilePrivate {
+  user_id: string; // = profiles.id
+  fcm_token: string | null;
+  device_fingerprint: string | null;
+  apple_id: string | null;
+  google_id: string | null;
 }
 
 export type Sport = "tennis" | "padel" | "pickleball";
