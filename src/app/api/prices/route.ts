@@ -34,6 +34,14 @@ async function cityIata(city: string): Promise<string | null> {
   return hit?.code ?? null;
 }
 
+/** Origin auflösen: ist schon ein IATA-Code (3 Buchstaben) → direkt; sonst als Stadtname
+ *  über cityIata. Rückwärtskompatibel — /map übergibt echte IATA-Codes (Länge 3). */
+async function resolveIata(codeOrCity: string): Promise<string | null> {
+  const s = codeOrCity.trim();
+  if (/^[A-Za-z]{3}$/.test(s)) return s.toUpperCase();
+  return cityIata(s);
+}
+
 async function hotelPrice(city: string, checkIn: string, checkOut: string): Promise<number | null> {
   const q = new URLSearchParams({ location: city, currency: "eur", checkIn, checkOut, limit: "5", token: TOKEN });
   const d = (await jget(`https://engine.hotellook.com/api/v2/cache.json?${q}`)) as { priceFrom?: number; priceAvg?: number }[] | null;
@@ -43,11 +51,11 @@ async function hotelPrice(city: string, checkIn: string, checkOut: string): Prom
 }
 
 async function flightPrice(origin: string, city: string, date: string): Promise<number | null> {
-  const dest = await cityIata(city);
-  if (!dest) return null;
+  const [orig, dest] = await Promise.all([resolveIata(origin), cityIata(city)]);
+  if (!orig || !dest) return null;
   const month = date.slice(0, 7); // YYYY-MM: monatsweit = mehr Treffer im Preis-Cache
   const q = new URLSearchParams({
-    origin: origin.toUpperCase(),
+    origin: orig,
     destination: dest,
     departure_at: month,
     currency: "eur",

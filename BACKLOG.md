@@ -203,11 +203,9 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Wirkung:** Kosmetisch. Das dokumentierte Generali-Open-Problem.
 **Lösung:** Logos kuratiert hinterlegen oder sauberer Fallback (Landesflagge oder Monogramm) statt Favicon-Rateversuch.
 
-### MU-033 · Verwaiste SeasonList.tsx · S · offen
-**Problem:** `src/app/tour/components/sections/SeasonList.tsx` ist verwaist — nur von `TourWorkspace` gerendert, das an keiner Route mehr hängt. Die sichtbare Saison-Ansicht ist `/tour/season` über `SeasonView` und `SeasonCard`.
-**Lösung:** Entweder `SeasonList.tsx` (und `TourWorkspace`) entfernen — oder klären, ob `TourWorkspace` wieder eine Route bekommen soll. Bis dahin trägt `SeasonList` denselben Meldefrist-Countdown/Meldeweg wie `SeasonCard` (konsistent gehalten, aktuell aber unsichtbar).
-
 ## Erledigt
+
+- ✅ MU-033 · Verwaister TourWorkspace-Cluster entfernt: `TourWorkspace`, `useTourWorkspace`, `sections/*` (SeasonList, SeasonOverview, MapPreview, RareStuff, NextDeadline). `SetupPanel` blieb (hängt an `/tour/setup`). Teil des /tour-Umbaus auf `SeasonWorkspace`.
 
 - ✅ RLS-Härtung über alle 44 Tabellen, Events-Datenschutz (Teilnehmerzeilen nicht öffentlich)
 - ✅ Compete/Tour-Modus komplett gebaut (3 Etappen), hinter Early-Access-Gate

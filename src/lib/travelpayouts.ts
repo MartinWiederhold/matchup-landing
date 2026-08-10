@@ -46,7 +46,11 @@ async function getPrice(params: Record<string, string>): Promise<LivePrice> {
 }
 
 export function hotelPriceQuery(_t: Stop): Promise<LivePrice> {
-  // Keine Hotel-Preis-Daten-API mehr verfügbar (Hotellook 10/2025 eingestellt, kein Ersatz bei Travelpayouts).
+  // ACHTUNG — KEIN BUG, sondern Absicht: Diese Funktion liefert KONSTRUKTIONSBEDINGT
+  // immer { configured: false, price: null }. Hotellook (die einzige Hotel-Preis-Daten-
+  // API bei Travelpayouts) wurde im Oktober 2025 eingestellt, es gibt keinen Ersatz.
+  // Es gibt also KEINE Live-Hotelpreise mehr — nur den Buchungs-Deep-Link (hotelUrl).
+  // Wer hier später einen fehlenden Preis sucht: das ist der Grund, kein Fehler.
   return Promise.resolve({ configured: false, price: null });
 }
 
