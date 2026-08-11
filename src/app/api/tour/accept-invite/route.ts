@@ -26,13 +26,19 @@ export async function POST(req: Request) {
 
   const { data: row } = await svc
     .from("tour_team")
-    .select("id, player_id, role, member_user_id")
+    .select("id, player_id, role, member_user_id, invite_expires_at")
     .eq("invite_token", invite)
     .maybeSingle();
+  // Kein Treffer heißt auch: bereits eingelöster Token (accept entwertet invite_token
+  // auf null) → ein weitergeleiteter, schon benutzter Link funktioniert NICHT erneut (MU-027).
   if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (row.player_id === user.id) return NextResponse.json({ error: "own_invite" }, { status: 400 });
   if (row.member_user_id && row.member_user_id !== user.id) {
     return NextResponse.json({ error: "already_taken" }, { status: 409 });
+  }
+  // Abgelaufene Einladung ablehnen (MU-027).
+  if (row.invite_expires_at && new Date(row.invite_expires_at).getTime() < Date.now()) {
+    return NextResponse.json({ error: "expired" }, { status: 410 });
   }
 
   const { data: me } = await svc.from("profiles").select("first_name").eq("id", user.id).maybeSingle();
@@ -40,7 +46,8 @@ export async function POST(req: Request) {
 
   await svc
     .from("tour_team")
-    .update({ member_user_id: user.id, status: "active", member_name: me?.first_name ?? null })
+    // invite_token = null ENTWERTET den Link: nach Annahme nicht wiederverwendbar.
+    .update({ member_user_id: user.id, status: "active", member_name: me?.first_name ?? null, invite_token: null })
     .eq("id", row.id);
 
   return NextResponse.json({ ok: true, role: row.role, player: player?.first_name ?? null });

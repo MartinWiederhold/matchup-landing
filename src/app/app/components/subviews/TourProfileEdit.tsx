@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
-import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, removeInvite, type TeamInvite } from "@/lib/tour";
+import { loadTourProfile, saveTourProfile, loadTeam, ensureInvite, inviteUrl, removeInvite, inviteState, type TeamInvite } from "@/lib/tour";
 import { protectedRanking } from "@/lib/deadlines";
 import type { Circuit, TeamMember } from "@/lib/types";
 
@@ -26,6 +26,7 @@ export default function TourProfileEdit() {
   const t = useT();
   const { profile, closeSubView } = useAppNav();
   const [loaded, setLoaded] = useState(false);
+  const [nowMs] = useState(() => Date.now()); // Stichtag für den Einladungs-Status (MU-027)
   const [circuit, setCircuit] = useState<Circuit | null>(null);
   const [ranking, setRanking] = useState("");
   const [points, setPoints] = useState("");
@@ -182,24 +183,32 @@ export default function TourProfileEdit() {
           <div className="space-y-3">
             {ROLES.map((r) => {
               const inv = invites.find((i) => i.role === r);
+              const state = inv ? inviteState(inv, nowMs) : "none";
               return (
                 <div key={r}>
                   <p className="mb-1 flex items-center gap-2 text-[12px] font-semibold text-neutral-500">
                     {t(ROLE_KEY[r])}
-                    {inv?.status === "active" && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">{inv.member_name ? inv.member_name : t("mode.teamActive")}</span>}
+                    {state === "active" && <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">{inv?.member_name ? inv.member_name : t("mode.teamActive")}</span>}
+                    {state === "open" && <span className="rounded-full bg-matchup/10 px-2 py-0.5 text-[10px] font-bold text-matchup">{t("mode.inviteOpen")}</span>}
+                    {state === "expired" && <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700">{t("mode.inviteExpired")}</span>}
                   </p>
                   <div className="flex gap-2">
                     <input value={team.find((m) => m.role === r)?.name ?? ""} onChange={(e) => setRole(r, e.target.value)} placeholder={t("onboarding.teamNamePlaceholder")} className={`${inp} flex-1`} />
-                    {inv ? (
+                    {/* Offen/abgelaufen: Link kopieren bzw. neu erzeugen (ensureInvite rotiert abgelaufene). */}
+                    {(state === "open" || state === "expired" || state === "none") && (
+                      <button type="button" onClick={() => copyInvite(r)} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-matchup">
+                        {copied === r ? t("mode.copied") : state === "expired" ? t("mode.inviteRenew") : state === "open" ? t("mode.inviteCopy") : t("mode.invite")}
+                      </button>
+                    )}
+                    {inv && (
                       <button type="button" onClick={async () => { if (!window.confirm(t("mode.removeConfirm"))) return; await removeInvite(inv.id); setInvites(await loadTeam(profile.id)); }} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-red-500">
                         {t("mode.remove")}
                       </button>
-                    ) : (
-                      <button type="button" onClick={() => copyInvite(r)} className="shrink-0 rounded-xl bg-black/[0.05] px-3 text-[12px] font-bold text-matchup">
-                        {copied === r ? t("mode.copied") : t("mode.invite")}
-                      </button>
                     )}
                   </div>
+                  {inv && state !== "active" && (
+                    <p className="mt-1 text-[10px] text-neutral-400">{t("mode.inviteCreated", { date: new Date(inv.created_at).toLocaleDateString() })}</p>
+                  )}
                 </div>
               );
             })}

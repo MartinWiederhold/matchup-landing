@@ -118,28 +118,60 @@ export async function removeTravelDoc(id: string): Promise<void> {
 }
 
 /* ── Team-Einladungen ─────────────────────────────────────── */
-export type TeamInvite = { id: string; role: string; member_name: string | null; status: string; invite_token: string };
+export type TeamInvite = { id: string; role: string; member_name: string | null; status: string; invite_token: string | null; created_at: string; invite_expires_at: string | null };
 
 export async function loadTeam(playerId: string): Promise<TeamInvite[]> {
   const { data } = await supabase
     .from("tour_team")
-    .select("id,role,member_name,status,invite_token")
+    .select("id,role,member_name,status,invite_token,created_at,invite_expires_at")
     .eq("player_id", playerId);
   return (data as TeamInvite[]) ?? [];
 }
 
+/** Status einer Einladung für die Anzeige (MU-027): aktiv (Mitglied beigetreten),
+ *  offen (Token gültig), abgelaufen (Token da, aber Frist vorbei). `nowMs` wird von
+ *  der Komponente hereingereicht (kein Laufzeit-Clock in Render). */
+export function inviteState(inv: TeamInvite, nowMs: number): "active" | "open" | "expired" | "none" {
+  if (inv.status === "active" || inv.member_name) return "active";
+  if (!inv.invite_token) return "none";
+  if (inv.invite_expires_at && new Date(inv.invite_expires_at).getTime() < nowMs) return "expired";
+  return "open";
+}
+
 /** Erzeugt (oder liefert) einen Einladungs-Token für eine Rolle. */
+function newInviteToken(): string {
+  return (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}${Math.round(Math.random() * 1e9)}`).replace(/-/g, "");
+}
+
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 Tage
+
+/**
+ * Einladungslink für eine Rolle erzeugen/holen (MU-027). Eine noch OFFENE (nicht
+ * angenommene) und GÜLTIGE Einladung wird wiederverwendet; ist sie abgelaufen, wird
+ * sie rotiert (neuer Token + neues Ablaufdatum). Angenommene Einladungen (member_user_id
+ * gesetzt, Token per accept-invite entwertet) werden nie angefasst — dann entsteht eine
+ * frische offene Einladung. Ablaufdatum: now()+7 Tage.
+ */
 export async function ensureInvite(playerId: string, role: string): Promise<string> {
+  const nowIso = new Date().toISOString();
+  const expiry = new Date(Date.now() + INVITE_TTL_MS).toISOString();
   const { data } = await supabase
     .from("tour_team")
-    .select("invite_token")
+    .select("id, invite_token, invite_expires_at")
     .eq("player_id", playerId)
     .eq("role", role)
+    .is("member_user_id", null)
+    .not("invite_token", "is", null)
     .limit(1);
-  const existing = data?.[0]?.invite_token as string | undefined;
-  if (existing) return existing;
-  const token = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}${Math.round(Math.random() * 1e9)}`).replace(/-/g, "");
-  await supabase.from("tour_team").insert({ player_id: playerId, role, invite_token: token });
+  const open = data?.[0] as { id: string; invite_token: string; invite_expires_at: string | null } | undefined;
+  const token = newInviteToken();
+  if (open) {
+    // Noch gültig → wiederverwenden; abgelaufen → rotieren.
+    if (open.invite_expires_at && open.invite_expires_at > nowIso) return open.invite_token;
+    await supabase.from("tour_team").update({ invite_token: token, invite_expires_at: expiry }).eq("id", open.id);
+    return token;
+  }
+  await supabase.from("tour_team").insert({ player_id: playerId, role, invite_token: token, invite_expires_at: expiry });
   return token;
 }
 
