@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { adminAction } from "@/lib/adminAction";
+import { adminAction, fetchModeration, type ModerationRow } from "@/lib/adminAction";
 import {
   type Profile,
   type ReportRow,
@@ -24,6 +24,7 @@ export default function UserDetailPage() {
   const id = params.id;
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [mod, setMod] = useState<ModerationRow | null>(null);
   const [reports, setReports] = useState<EnrichedReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
@@ -41,6 +42,8 @@ export default function UserDetailPage() {
           .order("created_at", { ascending: false }),
       ]);
       setProfile((p as Profile) || null);
+      // banned_at/pause_reason liegen server-only → über die verifyAdmin-Route.
+      setMod((await fetchModeration([id])).get(id) ?? null);
       const reportRows = (r || []) as ReportRow[];
       const reporterMap = await fetchProfilesMap(
         reportRows.map((row) => row.reporter_id),
@@ -205,13 +208,13 @@ export default function UserDetailPage() {
                 .join(", ")}
             />
             <Row label="Bio" value={profile.bio} />
-            {profile.pause_reason && (
-              <Row label="Pausegrund" value={profile.pause_reason} />
+            {mod?.pause_reason && (
+              <Row label="Pausegrund" value={mod.pause_reason} />
             )}
-            {profile.banned_at && (
+            {mod?.banned_at && (
               <Row
                 label="Gesperrt am"
-                value={formatDateTime(profile.banned_at)}
+                value={formatDateTime(mod.banned_at)}
               />
             )}
           </div>

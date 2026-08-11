@@ -16,17 +16,8 @@ import {
   CalendarIcon,
 } from "@/components/admin/icons";
 
-const FALLBACK_ADMIN = "wiederhold.martin@web.de";
-
-function allowedAdmins(): string[] {
-  const env = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const list = env
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (!list.includes(FALLBACK_ADMIN)) list.push(FALLBACK_ADMIN);
-  return list;
-}
+// Admin-Allowlist liegt jetzt server-seitig (adminClient.verifyAdmin, Route /api/admin/whoami).
+// Bewusst KEINE Adresse mehr im Client-Bundle (Punkt 2, Sicherheitsaudit 2026-08).
 
 type NavItem = {
   href: string;
@@ -55,6 +46,19 @@ export default function AdminShell({
 }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = wird server-seitig geprüft
+
+  // Server-seitige Admin-Prüfung (Punkt 2): whoami mit dem Session-Token statt
+  // Client-Allowlist. Kein NEXT_PUBLIC-Adressleak, Client entscheidet nicht selbst.
+  useEffect(() => {
+    if (!session) { setIsAdmin(null); return; }
+    let active = true;
+    fetch("/api/admin/whoami", { headers: { Authorization: `Bearer ${session.access_token}` } })
+      .then((r) => r.json())
+      .then((d) => { if (active) setIsAdmin(!!d.isAdmin); })
+      .catch(() => { if (active) setIsAdmin(false); });
+    return () => { active = false; };
+  }, [session]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -102,8 +106,10 @@ export default function AdminShell({
 
   if (!session) return <LoginForm />;
 
-  const email = (session.user.email || "").toLowerCase();
-  if (!allowedAdmins().includes(email)) {
+  // Admin-Prüfung läuft server-seitig (Punkt 2): der Client entscheidet nicht mehr
+  // selbst, die Allowlist verlässt das Server-Env nie. null = wird noch geprüft.
+  if (isAdmin === null) return <Spinner />;
+  if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-6">
         <div className="text-center">

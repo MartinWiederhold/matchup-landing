@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { adminAction } from "@/lib/adminAction";
+import { adminAction, fetchModeration, type ModerationRow } from "@/lib/adminAction";
 import {
   type Profile,
   displayName,
@@ -14,6 +14,7 @@ import {
 export default function BannedPage() {
   const router = useRouter();
   const [users, setUsers] = useState<Profile[]>([]);
+  const [mod, setMod] = useState<Map<string, ModerationRow>>(new Map());
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -26,7 +27,10 @@ export default function BannedPage() {
         .select("*")
         .or("is_paused.eq.true,is_banned.eq.true")
         .order("created_at", { ascending: false });
-      setUsers((data || []) as Profile[]);
+      const list = (data || []) as Profile[];
+      setUsers(list);
+      // banned_at/pause_reason liegen server-only → über die verifyAdmin-Route.
+      setMod(await fetchModeration(list.map((u) => u.id)));
     } catch (e) {
       console.error("Banned load failed:", e);
       setUsers([]);
@@ -118,10 +122,10 @@ export default function BannedPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-neutral-600">
-                    {u.pause_reason || "—"}
+                    {mod.get(u.id)?.pause_reason || "—"}
                   </td>
                   <td className="px-4 py-3 text-neutral-600">
-                    {u.banned_at ? formatDate(u.banned_at) : "—"}
+                    {mod.get(u.id)?.banned_at ? formatDate(mod.get(u.id)!.banned_at!) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <button

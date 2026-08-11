@@ -16,11 +16,16 @@ export function getServiceClient() {
 }
 
 function adminEmails(): string[] {
-  const fromEnv = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+  // ADMIN_EMAILS (server-only) ist die Quelle. NEXT_PUBLIC_ADMIN_EMAILS nur ÜBERGANGS-
+  // WEISE als Ersatz, damit die Env-Umbenennung ohne Fenster ohne gültige Allowlist
+  // läuft (Punkt 2, Sicherheitsaudit 2026-08). NACH dem Löschen von NEXT_PUBLIC_ADMIN_
+  // EMAILS diese Ersatz-Zeile entfernen — die Adresse gehört nicht ins Client-Bundle.
+  const raw = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
+  const fromEnv = raw
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  // eingebauter Fallback
+  // eingebauter server-seitiger Fallback
   return Array.from(new Set([...fromEnv, "wiederhold.martin@web.de"]));
 }
 

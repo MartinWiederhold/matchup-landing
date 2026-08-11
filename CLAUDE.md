@@ -49,8 +49,10 @@ Konkrete Fallstricke:
 - **Alle Tabellen liegen im Schema `web`**, nicht `public`. Clients setzen `db: { schema: "web" }`.
 - Anon-Client: `src/lib/supabase.ts` (Browser + öffentliche Server-Reads).
 - Service-Client: `src/lib/adminClient.ts` → `getServiceClient()`. **Nur in API-Routen/Server. Niemals im Client, niemals als `NEXT_PUBLIC_`.**
-- **RLS ist auf allen 44 Tabellen aktiv.** Neue Tabelle = RLS aktivieren + Policies im selben Schritt. Keine Views (umgehen RLS).
-- Kein `select *` auf `profiles` — explizite Spaltenliste. Sonst gehen `fcm_token`, `device_fingerprint` etc. an alle Eingeloggten.
+- **RLS ist auf allen Tabellen aktiv.** Neue Tabelle = RLS aktivieren + Policies **UND GRANTs** im selben Schritt. Keine Views (umgehen RLS).
+- **GRANTs nicht vergessen (nicht nur die Policy).** Ohne `grant select/insert/update … to authenticated` greift die RLS-Policy NIE — PostgREST liefert „permission denied for table". Der Build bleibt grün, die App ist kaputt. Immer prüfen: `select privilege_type from information_schema.role_table_grants where table_name=… and grantee='authenticated'`. Sensible Tabellen bekommen KEINEN `anon`-Grant.
+- Kein `select *` auf `profiles` — explizite Spaltenliste. Sensible Felder liegen in `web.profiles_private` (owner-only: fcm_token, device_fingerprint, apple_id, google_id, latitude, longitude); Distanz nur über die RPC `web.candidate_distances`, nie Rohkoordinaten an den Client.
+- **Spalten löschen = zweiphasig.** ZUERST den Code deployen, der die Spalte nicht mehr liest/schreibt, DANN `drop column`. Umgekehrt läuft der Prod-Code kurz gegen eine gelöschte Spalte (PostgREST-Fehler auf der ganzen Query) — bei lat/lng war die Partnersuche kurz defekt. Beim Anlegen umgekehrt: erst Tabelle+Grants+Backfill, Code umstellen, Beweis dass nichts mehr auf die alte Spalte zugreift, dann droppen.
 - Neue DDL kommt als SQL-Datei nach `supabase/`, nicht nur als Ad-hoc-Query. Danach `notify pgrst, 'reload schema';`.
 - Helper-Funktionen für Policies: `is_my_match(matchid)`, `is_group_member(gid)`, `is_group_creator`, `is_game_creator`. Immer `SECURITY DEFINER` mit fixem `search_path`.
 

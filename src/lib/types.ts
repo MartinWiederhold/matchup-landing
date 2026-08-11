@@ -35,11 +35,11 @@ export interface Profile {
   is_verified: boolean; // default false
   is_banned: boolean; // default false
   is_seed: boolean; // default false, Migration 021
-  report_count: number; // default 0
+  // pause_reason liegt in web.profiles_private (owner-lesbar) und wird im AuthProvider
+  // ins eigene profile-Objekt gemergt (AppGuard zeigt dem pausierten Nutzer den Grund).
   pause_reason: string | null;
-  banned_at: string | null; // ISO timestamp
-  daily_likes_count: number; // default 0
-  daily_likes_reset: string | null; // ISO timestamp
+  // report_count/banned_at/daily_likes_* liegen in web.profiles_moderation (SERVICE-ONLY,
+  // Sicherheitsaudit 2026-08) — nicht Teil des client-lesbaren Profils, siehe ProfileModeration.
   push_matches: boolean; // default true
   push_messages: boolean; // default true
   push_reminders: boolean; // default true
@@ -63,6 +63,23 @@ export interface ProfilePrivate {
   device_fingerprint: string | null;
   apple_id: string | null;
   google_id: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  pause_reason: string | null; // owner-lesbar: der pausierte Nutzer muss den Grund erfahren
+}
+
+/**
+ * Moderations-/Statusfelder (web.profiles_moderation): SERVICE-ONLY (Sicherheitsaudit
+ * 2026-08). Weder Fremde NOCH der Eigner lesen sie — wer die eigene Meldezahl sähe,
+ * könnte auf den Melder schließen. Zugriff nur server-seitig (service_role), Admin über
+ * die verifyAdmin-Route /api/admin/moderation.
+ */
+export interface ProfileModeration {
+  user_id: string; // = profiles.id
+  report_count: number;
+  banned_at: string | null;
+  daily_likes_count: number;
+  daily_likes_reset: string | null;
 }
 
 export type Sport = "tennis" | "padel" | "pickleball";

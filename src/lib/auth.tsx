@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // unverändert `profile.latitude/longitude` nutzen können.
     const { data: priv } = await supabase
       .from("profiles_private")
-      .select("latitude, longitude")
+      .select("latitude, longitude, pause_reason")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -92,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...(data as Profile),
       latitude: priv?.latitude ?? null,
       longitude: priv?.longitude ?? null,
+      pause_reason: priv?.pause_reason ?? null,
     });
     setLoading(false);
   }

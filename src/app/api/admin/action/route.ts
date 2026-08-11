@@ -24,43 +24,32 @@ export async function POST(request: Request) {
 
   try {
     switch (action) {
+      // banned_at liegt in profiles_moderation, pause_reason in profiles_private
+      // (Sicherheitsaudit 2026-08). is_banned/is_paused bleiben auf profiles.
       case "pauseUser": {
         const id = String(body.id);
         const paused = Boolean(body.paused);
-        const { error } = await svc
-          .from("profiles")
-          .update({ is_paused: paused, pause_reason: null })
-          .eq("id", id);
+        const { error } = await svc.from("profiles").update({ is_paused: paused }).eq("id", id);
         if (error) throw error;
+        await svc.from("profiles_private").update({ pause_reason: null }).eq("user_id", id);
         return NextResponse.json({ ok: true });
       }
 
       case "banUser": {
         const id = String(body.id);
         const banned = Boolean(body.banned);
-        const { error } = await svc
-          .from("profiles")
-          .update({
-            is_banned: banned,
-            banned_at: banned ? new Date().toISOString() : null,
-          })
-          .eq("id", id);
+        const { error } = await svc.from("profiles").update({ is_banned: banned }).eq("id", id);
         if (error) throw error;
+        await svc.from("profiles_moderation").update({ banned_at: banned ? new Date().toISOString() : null }).eq("user_id", id);
         return NextResponse.json({ ok: true });
       }
 
       case "unbanUser": {
         const id = String(body.id);
-        const { error } = await svc
-          .from("profiles")
-          .update({
-            is_banned: false,
-            is_paused: false,
-            banned_at: null,
-            pause_reason: null,
-          })
-          .eq("id", id);
+        const { error } = await svc.from("profiles").update({ is_banned: false, is_paused: false }).eq("id", id);
         if (error) throw error;
+        await svc.from("profiles_moderation").update({ banned_at: null }).eq("user_id", id);
+        await svc.from("profiles_private").update({ pause_reason: null }).eq("user_id", id);
         return NextResponse.json({ ok: true });
       }
 

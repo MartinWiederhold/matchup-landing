@@ -103,10 +103,10 @@ export default function AppGuard() {
         <button
           type="button"
           onClick={async () => {
-            await supabase
-              .from("profiles")
-              .update({ is_paused: false, pause_reason: null })
-              .eq("id", profile.id);
+            // is_paused bleibt auf profiles; pause_reason liegt jetzt in
+            // profiles_private (Sicherheitsaudit 2026-08).
+            await supabase.from("profiles").update({ is_paused: false }).eq("id", profile.id);
+            await supabase.from("profiles_private").update({ pause_reason: null }).eq("user_id", profile.id);
             await refreshProfile();
           }}
           className="mt-8 rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover"

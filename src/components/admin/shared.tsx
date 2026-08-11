@@ -96,7 +96,7 @@ export async function fetchProfilesMap(
     const { data } = await supabase
       .from("profiles")
       .select(
-        "id, first_name, display_name, profile_image, additional_images, age, gender, sports, skill_level, bio, is_seed, is_paused, is_banned, banned_at, pause_reason, created_at, city, country",
+        "id, first_name, display_name, profile_image, additional_images, age, gender, sports, skill_level, bio, is_seed, is_paused, is_banned, created_at, city, country",
       )
       .in("id", unique);
     for (const row of (data || []) as Profile[]) {
