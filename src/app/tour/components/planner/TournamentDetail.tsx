@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
+import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 
 const DAY = 86_400_000;
@@ -38,6 +39,7 @@ function useFlightPrice(city: string, country: string, start: string, end: strin
  */
 export default function TournamentDetail({
   tt, countryName, inSeason, onToggle, onClose, originCity, originLabel, nights, rates, nowMs,
+  viewerId, viewerName, viewerRank, viewerNationality,
 }: {
   tt: TourTournament;
   countryName: string;
@@ -49,9 +51,41 @@ export default function TournamentDetail({
   nights: number;
   rates: TourCostRates | null;
   nowMs: number;
+  viewerId: string;
+  viewerName: string | null;
+  viewerRank: string | null;
+  viewerNationality: string | null;
 }) {
   const t = useT();
   const { locale } = useLocale();
+
+  // ── „Wer ist hier?" — Opt-in-Präsenz (web.player_presence, geteilt mit /map).
+  // Komponente ist per key=tt.id gemountet → Anfangszustand frisch, ein Laden.
+  const [presence, setPresence] = useState<TourPresence[] | null>(null);
+  const [pContact, setPContact] = useState("");
+  const [pPartner, setPPartner] = useState(true);
+  const [pRoom, setPRoom] = useState(false);
+  const [pBusy, setPBusy] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadTourPresence(tt.id).then((rows) => {
+      if (!alive) return;
+      setPresence(rows);
+      const mine = rows.find((r) => r.user_id === viewerId);
+      if (mine) { setPContact(mine.contact ?? ""); setPPartner(mine.looking); setPRoom(mine.looking_room); }
+    });
+    return () => { alive = false; };
+  }, [tt.id, viewerId]);
+  const meListed = !!presence?.some((r) => r.user_id === viewerId);
+  const others = (presence ?? []).filter((r) => r.user_id !== viewerId);
+  const refreshPresence = async () => setPresence(await loadTourPresence(tt.id));
+  const joinP = async () => {
+    setPBusy(true);
+    await joinTourPresence(viewerId, tt.id, { name: viewerName, rankLabel: viewerRank, nationality: viewerNationality }, pPartner, pRoom, pContact);
+    await refreshPresence();
+    setPBusy(false);
+  };
+  const leaveP = async () => { setPBusy(true); await leaveTourPresence(viewerId, tt.id); await refreshPresence(); setPBusy(false); };
 
   const start = tt.tournament_monday;
   const end = addDaysISO(start, nights > 0 ? nights : 7);
@@ -121,6 +155,56 @@ export default function TournamentDetail({
             )}
           </section>
         )}
+
+        {/* Wer ist hier? — Opt-in-Präsenz (freiwillig, selbst gewählter Kontakt). */}
+        <section>
+          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsHereTitle")}{presence ? ` · ${presence.length}` : ""}</p>
+
+          {/* Eigene Eintragung (Opt-in): zwei Absichten + Kontakt. */}
+          <div className="mt-2 rounded-2xl border border-matchup/20 bg-matchup/5 p-3">
+            <p className="text-[13px] font-bold text-neutral-800">{meListed ? t("tour.wsHereListed") : t("tour.wsHereAsk")}</p>
+            <label className="mt-2 flex items-center gap-2 text-[13px] text-neutral-700">
+              <input type="checkbox" checked={pPartner} onChange={(e) => setPPartner(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsSeekPartner")}
+            </label>
+            <label className="mt-1 flex items-center gap-2 text-[13px] text-neutral-700">
+              <input type="checkbox" checked={pRoom} onChange={(e) => setPRoom(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsSeekRoom")}
+            </label>
+            <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] placeholder:text-neutral-400 focus:border-black/30 focus:outline-none" />
+            <div className="mt-2 flex gap-2">
+              <button type="button" onClick={joinP} disabled={pBusy} className="flex-1 rounded-full bg-matchup px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{meListed ? t("tour.wsHereUpdate") : t("tour.wsHereJoin")}</button>
+              {meListed && <button type="button" onClick={leaveP} disabled={pBusy} className="rounded-full bg-neutral-100 px-3 py-2 text-[12px] font-semibold text-neutral-500 hover:bg-neutral-200 disabled:opacity-50">{t("tour.wsHereLeave")}</button>}
+            </div>
+          </div>
+
+          {/* Andere vor Ort */}
+          {presence == null ? (
+            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
+          ) : others.length === 0 ? (
+            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsHereEmpty")}</p>
+          ) : (
+            <div className="mt-2 space-y-1.5">
+              {others.map((r) => {
+                const href = r.contact ? contactHref(r.contact) : null;
+                return (
+                  <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <span className="truncate text-[13px] font-semibold text-neutral-900">{r.name || t("tour.fieldMissing")}</span>
+                        {r.looking && <span className="shrink-0 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600">🎾 {t("tour.wsPartnerBadge")}</span>}
+                        {r.looking_room && <span className="shrink-0 rounded-full bg-matchup/10 px-1.5 py-0.5 text-[9px] font-bold text-matchup">🛏 {t("tour.wsRoomBadge")}</span>}
+                      </span>
+                      <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>
+                    </span>
+                    {r.contact && (href
+                      ? <a href={href} target="_blank" rel="noreferrer" className="shrink-0 rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsContact")}</a>
+                      : <span className="shrink-0 text-[11px] text-neutral-500">{r.contact}</span>)}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsHereNote")}</p>
+        </section>
 
         {/* Buchen — Deep-Links. Funktionieren IMMER (auch ohne Live-Preis) und sind der
             eigentliche Nutzen. Bewusst KEIN „Live-Preise"-Titel mehr. */}

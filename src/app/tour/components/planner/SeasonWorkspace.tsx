@@ -712,6 +712,10 @@ export default function SeasonWorkspace() {
       nights={nightsNum}
       rates={rates}
       nowMs={nowMs}
+      viewerId={user.id}
+      viewerName={profile?.firstName ?? null}
+      viewerRank={profile?.ranking != null ? `#${profile.ranking}` : null}
+      viewerNationality={profile?.passports[0] ?? profile?.country ?? null}
     />
   ) : panel;
 
