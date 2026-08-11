@@ -187,6 +187,12 @@ Attribution in beiden Fällen sicherstellen.
 **Wirkung:** Solange beide nebeneinander laufen, kann eine zielland-basierte Aussage (visa.ts) neben einer nationalitätsabhängigen (Bestand) stehen — für den Nutzer nicht immer klar getrennt.
 **Lösung:** Rollen der beiden Quellen festlegen, Anzeige zusammenführen, Doppelaussagen vermeiden.
 
+### MU-034 · Dienstleister-Bestand deckt die Turnierländer nicht — Services-Abschnitt vorerst nicht bauen · M · offen
+**Problem:** Die 77 Dienstleister in `web.service_providers` verteilen sich auf vier Länder, 60 davon in der Schweiz. **85% der Turniere (1273 von 1489) liegen in Ländern mit null Anbietern** — darunter alle volumenstarken Turnierländer: USA 117, Tunesien 96, Italien 94, China 69, Türkei 53, Ägypten 50, Portugal 47, Deutschland 43. Die Verteilung ist invertiert: Wo die meisten Anbieter sitzen (Schweiz, 60), finden 12 Turniere statt.
+**Wirkung:** Ein Dienstleister-Abschnitt in /tour wäre für die Zielgruppe in der großen Mehrheit der Turnierwochen leer. Echten Nutzen hätte er heute nur in Spanien (6 Anbieter, 96 Turniere) und Frankreich (5 / 79).
+**Lösung:** Bestand in den Turnierländern aufbauen, bevor die Oberfläche gebaut wird — Besaiter und Physios in Tunesien, der Türkei, Ägypten, Italien und Portugal. Die technische Seite ist vorbereitet: `service_providers` hat vollständige Koordinaten (77/77), `src/lib/services.ts` ist UI-unabhängig, eine Umkreissuche wäre ohne Schemaänderung möglich.
+**Entscheidung:** Vorerst **NICHT bauen**. Ein Element, das in 85% der Fälle nichts zeigt, wirkt wie ein Fehler — dasselbe Muster wie die Karte ohne Koordinaten (MU-029).
+
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
