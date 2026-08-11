@@ -55,6 +55,14 @@ export async function savePlannerAge(userId: string, age: number | null): Promis
   if (error) throw error;
 }
 
+/** Wohnort ins Profil schreiben (Einführung /tour): Stadt/Land nach profiles, Koordinaten
+ *  nach profiles_private (owner-only, Sicherheitsaudit 2026-08). Nur die eigene Zeile. Von
+ *  hier aus rechnet der Planer Anreise + Kosten je Turnierwoche. */
+export async function saveHome(userId: string, city: string, country: string | null, lat: number, lng: number): Promise<void> {
+  await supabase.from("profiles").update({ city, country }).eq("id", userId);
+  await supabase.from("profiles_private").update({ latitude: lat, longitude: lng }).eq("user_id", userId);
+}
+
 // ── Schritt 2: Turniere im Rahmen ───────────────────────────────────────────
 // Nur die für Karte + Zählung nötigen Spalten (kein select *). Aktive Turniere.
 const TOURNAMENT_COLUMNS =

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
-import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
+import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason } from "@/lib/tourSeason";
 import { saveWhoAmI, saveSeasonBudget } from "@/lib/tourSetup";
 import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
@@ -20,6 +20,7 @@ import { DeadlineCountdown } from "../EntryDeadline";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 import PlannerMap, { type PlanStop, type CandPoint, type MapStart } from "./PlannerMap";
 import TournamentDetail from "./TournamentDetail";
+import InfoHint from "./InfoHint";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
@@ -358,6 +359,16 @@ export default function SeasonWorkspace() {
   // Detail hinter dem eingeklappten Sheet verborgen. Stabile Referenz (Setter sind stabil).
   const handleSelect = useCallback((id: string) => { setSelectedId(id); setSheetOpen(true); }, []);
 
+  // Wohnort aus der Einführung ins Profil schreiben (nur wenn er fehlt). Von hier aus
+  // rechnet der Planer Anreise + Kosten je Turnierwoche → Einblendung verschwindet danach.
+  const pickHome = useCallback((c: { city: string; country: string | null; lat: number; lng: number }) => {
+    if (!user) return;
+    const country = profile?.country ?? c.country;
+    void saveHome(user.id, c.city, country, c.lat, c.lng);
+    setProfile((p) => (p ? { ...p, city: c.city, country, lat: c.lat, lng: c.lng } : p));
+    setLocQuery("");
+  }, [user, profile?.country]);
+
   // Außenklick/Escape schließt das Länder-Dropdown.
   useEffect(() => {
     if (!countryOpen) return;
@@ -414,6 +425,43 @@ export default function SeasonWorkspace() {
   const budgetLeftMinor = budgetMinor ? budgetMinor.amount - spentMinor : null;
   const budgetPct = budgetMinor && budgetMinor.amount > 0 ? Math.min(100, Math.round((spentMinor / budgetMinor.amount) * 100)) : 0;
 
+  // Profil-Editor (Ranking/Wohnland/Pässe) — liegt jetzt in der Chip-Überlagerung, nicht mehr im Panel.
+  const profileEditor = profile && (
+    <div className="space-y-3">
+      <label className="block">
+        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.rankLabel")}</span>
+        <div className="flex gap-2">
+          <input value={rankingInput} onChange={(e) => setRankingInput(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
+          <button type="button" onClick={saveRanking} className="shrink-0 rounded-xl bg-neutral-900 px-4 text-[13px] font-bold text-white hover:bg-neutral-700">{t("common.save")}</button>
+        </div>
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsHome")}</span>
+        <select value={profile.country ?? ""} onChange={(e) => saveCountry(e.target.value)} className={inp}>
+          <option value="">—</option>
+          {COUNTRY_CODES.map((c) => <option key={c} value={c}>{catName(c)}</option>)}
+        </select>
+      </label>
+      <div>
+        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsPassports")}</span>
+        {profile.passports.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {profile.passports.map((iso) => (
+              <button key={iso} type="button" onClick={() => setPassports(profile.passports.filter((p) => p !== iso))} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[12px] font-semibold text-matchup">
+                {catName(iso)} <span className="text-matchup/60">✕</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <select value="" onChange={(e) => { if (e.target.value) setPassports([...profile.passports, e.target.value]); }} className={inp}>
+          <option value="">{t("tour.wsAddPassport")}</option>
+          {COUNTRY_CODES.filter((c) => !profile.passports.includes(c)).map((c) => <option key={c} value={c}>{catName(c)}</option>)}
+        </select>
+      </div>
+      <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsProfileNote")}</p>
+    </div>
+  );
+
   const panel = (
     <div className="flex h-full flex-col">
       <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
@@ -427,61 +475,7 @@ export default function SeasonWorkspace() {
 
         {status === "ready" && profile && (
           <>
-            {/* 1) Profil (eingeklappt, aufklappbar) */}
-            <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5">
-              <button type="button" onClick={() => setProfileOpen((o) => !o)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-bold text-neutral-900">{profile.firstName || t("tour.plStep1")}</span>
-                  <span className="block truncate text-[12px] text-neutral-500">
-                    {profile.ranking != null ? `${t("tour.rankLabel")} ${profile.ranking}` : t("tour.noRank")}
-                    {profile.country ? ` · ${catName(profile.country)}` : ""}
-                    {profile.passports.length ? ` · ${t("tour.plChipPass")}: ${profile.passports.join(", ")}` : ""}
-                  </span>
-                </span>
-                <span className="shrink-0 text-[12px] font-semibold text-matchup">{profileOpen ? t("tour.plEdit") : t("tour.plEdit")}</span>
-              </button>
-              {profileOpen && (
-                <div className="space-y-3 border-t border-black/[0.06] p-4">
-                  <label className="block">
-                    <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.rankLabel")}</span>
-                    <div className="flex gap-2">
-                      <input value={rankingInput} onChange={(e) => setRankingInput(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
-                      <button type="button" onClick={saveRanking} className="shrink-0 rounded-xl bg-neutral-900 px-4 text-[13px] font-bold text-white hover:bg-neutral-700">{t("common.save")}</button>
-                    </div>
-                  </label>
-
-                  {/* Wohnland */}
-                  <label className="block">
-                    <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsHome")}</span>
-                    <select value={profile.country ?? ""} onChange={(e) => saveCountry(e.target.value)} className={inp}>
-                      <option value="">—</option>
-                      {COUNTRY_CODES.map((c) => <option key={c} value={c}>{catName(c)}</option>)}
-                    </select>
-                  </label>
-
-                  {/* Pässe (Nationalität) — Chips zum Entfernen + Auswahl zum Hinzufügen */}
-                  <div>
-                    <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsPassports")}</span>
-                    {profile.passports.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1.5">
-                        {profile.passports.map((iso) => (
-                          <button key={iso} type="button" onClick={() => setPassports(profile.passports.filter((p) => p !== iso))} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[12px] font-semibold text-matchup">
-                            {catName(iso)} <span className="text-matchup/60">✕</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <select value="" onChange={(e) => { if (e.target.value) setPassports([...profile.passports, e.target.value]); }} className={inp}>
-                      <option value="">{t("tour.wsAddPassport")}</option>
-                      {COUNTRY_CODES.filter((c) => !profile.passports.includes(c)).map((c) => <option key={c} value={c}>{catName(c)}</option>)}
-                    </select>
-                  </div>
-
-                  <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsProfileNote")}</p>
-                </div>
-              )}
-            </section>
+            {/* Profil liegt jetzt als Chip oben rechts über der Karte (Überlagerung). */}
 
             {/* 2) Startpunkt: Suche + Chips */}
             <section>
@@ -518,6 +512,8 @@ export default function SeasonWorkspace() {
               <label className="block">
                 <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plBudget")}</span>
                 <input value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
+                {/* Zweite Hürde: Hinweis an der Stelle, wo das Budget steht — keine zweite Einblendung. */}
+                {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plFrom")}</span>
@@ -573,64 +569,65 @@ export default function SeasonWorkspace() {
               </div>
             </section>
 
-            {/* 4) Kosten & Status (reaktiv) + günstigste Saison füllen */}
+            {/* 4) Kosten & Status — sichtbar bleibt nur Summe + Budgetbalken + Rest + Schengen-
+                   Warnung wenn sie greift. Alles Erklärende (Wochenkosten, Kostensätze,
+                   Anreisen/Unbekannt, Schengen-Details im Rahmen, Datenherkunft) hinter dem „i". */}
             <section className="space-y-3">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsCostTitle")}</h2>
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                {t("tour.wsCostTitle")}
+                <InfoHint label={t("tour.wsCostInfo")}>
+                  {ratesDone && <p>{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>}
+                  {ratesDone && <button type="button" onClick={() => setCostOpen((o) => !o)} className="mt-1 font-semibold text-matchup hover:underline">{t("tour.wsEditRates")}</button>}
+                  {cost && cost.arrivalsSaved > 0 && <p className="mt-1 text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
+                  {cost && cost.hasUnknown && <p className="mt-1">{t("tour.wsCostUnknown")}</p>}
+                  {schengen && !schengen.exceeds && <p className="mt-1">{t("tour.wsSchengen", { used: schengen.used })} · {t("tour.wsSchengenLeft", { n: schengen.left })}</p>}
+                  <p className="mt-1">{t("tour.wsCostSource")}</p>
+                </InfoHint>
+              </h2>
 
-              {!ratesDone ? (
-                <>
-                  <p className="text-[12px] leading-relaxed text-neutral-500">{t("tour.wsCostNeedRates")}</p>
-                  <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />
-                </>
-              ) : (
-                <>
-                  <p className="text-[12px] leading-relaxed text-neutral-500">{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>
+              {/* Kostensätze fehlen → eine Zeile, die das Formular öffnet (kein Dauer-Block). */}
+              {!ratesDone && !costOpen && (
+                <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
+              )}
+              {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />}
 
-                  {cost && cost.stations.length > 0 && (
-                    <div className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-[12px] font-semibold text-neutral-500">{t("tour.wsCostTotal")}</span>
-                        <span className="text-[15px] font-extrabold tabular-nums text-neutral-900">{cost.currencies.map((c) => money(cost.total[c], c)).join(" + ")}</span>
+              {/* Sichtbar: Summe + Budgetbalken + Restbetrag */}
+              {ratesDone && cost && cost.stations.length > 0 && (
+                <div className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[12px] font-semibold text-neutral-500">{t("tour.wsCostTotal")}</span>
+                    <span className="text-[15px] font-extrabold tabular-nums text-neutral-900">{cost.currencies.map((c) => money(cost.total[c], c)).join(" + ")}</span>
+                  </div>
+                  {budgetMinor && (
+                    <div className="mt-2">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
+                        <div className={`h-full rounded-full ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "bg-amber-500" : "bg-matchup"}`} style={{ width: `${budgetPct}%` }} />
                       </div>
-                      {budgetMinor && (
-                        <div className="mt-2">
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
-                            <div className={`h-full rounded-full ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "bg-amber-500" : "bg-matchup"}`} style={{ width: `${budgetPct}%` }} />
-                          </div>
-                          <p className={`mt-1 text-[12px] font-semibold ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "text-amber-700" : "text-neutral-500"}`}>
-                            {budgetLeftMinor != null && budgetLeftMinor < 0 ? t("tour.wsBudgetOver", { amount: money(-budgetLeftMinor, cur) }) : t("tour.wsBudgetLeft", { amount: money(budgetLeftMinor ?? 0, cur) })}
-                          </p>
-                        </div>
-                      )}
-                      {cost.arrivalsSaved > 0 && <p className="mt-1.5 text-[12px] text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
-                      {cost.hasUnknown && <p className="mt-1 text-[12px] text-neutral-400">{t("tour.wsCostUnknown")}</p>}
+                      <p className={`mt-1 text-[12px] font-semibold ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "text-amber-700" : "text-neutral-500"}`}>
+                        {budgetLeftMinor != null && budgetLeftMinor < 0 ? t("tour.wsBudgetOver", { amount: money(-budgetLeftMinor, cur) }) : t("tour.wsBudgetLeft", { amount: money(budgetLeftMinor ?? 0, cur) })}
+                      </p>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {schengen && (schengen.exceeds ? (
-                    // Grenze gerissen = Problem, nicht Detail: eigener Warnblock mit Handlungshinweis
-                    // (Bernstein, kein Alarmrot/Blinken — Designsprache wie NextDeadline/tourUi).
-                    <div className="rounded-2xl border border-amber-300 bg-amber-500/10 p-3">
-                      <p className="flex items-center gap-1.5 text-[13px] font-bold text-amber-800"><span aria-hidden>⚠</span> {t("tour.wsSchengenTitle")}</p>
-                      <p className="mt-0.5 text-[12px] font-semibold text-amber-700">{t("tour.wsSchengenExceed", { used: schengen.used, over: schengen.used - 90 })}</p>
-                      <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700/90">{t("tour.wsSchengenAction")}</p>
-                    </div>
-                  ) : (
-                    <div className={`rounded-xl px-3 py-2 text-[12px] font-semibold ${schengen.used >= 80 ? "bg-amber-500/10 text-amber-700" : "bg-black/[0.03] text-neutral-600"}`}>
-                      {t("tour.wsSchengen", { used: schengen.used })} · {t("tour.wsSchengenLeft", { n: schengen.left })}
-                    </div>
-                  ))}
-
-                  <button type="button" onClick={() => setCostOpen((o) => !o)} className="text-[12px] font-semibold text-matchup hover:underline">{t("tour.wsEditRates")}</button>
-                  {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />}
-                </>
+              {/* Sichtbar NUR wenn die Schengen-Grenze gerissen ist (Problem, kein Detail). */}
+              {schengen && schengen.exceeds && (
+                <div className="rounded-2xl border border-amber-300 bg-amber-500/10 p-3">
+                  <p className="flex items-center gap-1.5 text-[13px] font-bold text-amber-800"><span aria-hidden>⚠</span> {t("tour.wsSchengenTitle")}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-amber-700">{t("tour.wsSchengenExceed", { used: schengen.used, over: schengen.used - 90 })}</p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700/90">{t("tour.wsSchengenAction")}</p>
+                </div>
               )}
 
               <button type="button" onClick={smartFill} disabled={filling || !ratesDone}
                 className="w-full rounded-full bg-neutral-900 px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-40">
                 {filling ? t("tour.wsFilling") : t("tour.wsFill")}
               </button>
-              <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsFillHint")}</p>
+              <p className="text-[11px] leading-relaxed text-neutral-400">
+                {t("tour.wsFillShort")}
+                <InfoHint label={t("tour.wsFillInfo")}>{t("tour.wsFillLong")}</InfoHint>
+              </p>
             </section>
 
             {/* Meine Saison */}
@@ -719,18 +716,83 @@ export default function SeasonWorkspace() {
     />
   ) : panel;
 
+  // Einführung nur beim ersten Besuch: solange keine Wohnort-KOORDINATEN im Profil stehen.
+  // Bewusst auf Koordinaten, nicht auf city — profiles.city ist NOT NULL (immer gesetzt),
+  // taugt also nicht als Gate; die Reisekosten hängen an den Koordinaten. Wer aus /app mit
+  // Standort kommt (lat/lng in profiles_private vorhanden), sieht die Einführung NIE. Danach weg.
+  const homeSet = profile?.lat != null && profile?.lng != null;
+  const showIntro = status === "ready" && !homeSet && !profileOpen;
+
+  const introBody = (
+    <div className="w-[360px] max-w-full">
+      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
+      {/* Der eine Satz sagt, WOZU der Wohnort dient — nicht nur, dass er fehlt. */}
+      <p className="mt-1 text-[15px] font-semibold leading-snug text-neutral-900">{t("tour.wsIntroLead")}</p>
+      <div className="relative mt-3">
+        <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={t("tour.wsIntroField")} className={inp} autoFocus />
+        {locMatches.length > 0 && (
+          <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
+            {locMatches.map((c) => (
+              <li key={`${c.country}|${c.city}`}>
+                <button type="button" onClick={() => pickHome({ city: c.city, country: c.country, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
+                  <span className="truncate font-semibold text-neutral-900">{c.city}</span>
+                  <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
+  // Profil-Chip oben rechts über der Karte (Desktop + Mobile = obere Leiste).
+  const chip = profile && (
+    <button type="button" onClick={() => setProfileOpen(true)} className="absolute right-3 top-3 z-[70] flex max-w-[70%] items-center gap-2 rounded-full bg-white/95 py-1.5 pl-1.5 pr-3 shadow-lg ring-1 ring-black/10 backdrop-blur hover:bg-white">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
+      <span className="min-w-0 text-left leading-tight">
+        <span className="block truncate text-[13px] font-bold text-neutral-900">{profile.firstName || t("tour.plStep1")}</span>
+        <span className="block truncate text-[11px] text-neutral-500">
+          {profile.ranking != null ? `${t("tour.rankLabel")} ${profile.ranking}` : t("tour.noRank")}
+          {profile.city ? ` · ${profile.city}` : ""}
+        </span>
+      </span>
+    </button>
+  );
+
   return (
     <div className="relative flex h-[100dvh] w-full overflow-hidden bg-white text-neutral-900">
       <aside className="hidden w-[440px] shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">{surface}</aside>
       <div className="relative flex-1 bg-neutral-100">
         <PlannerMap start={start} plan={planStops} candidates={candidateStops} selectedId={selectedId} onSelect={handleSelect} />
+        {chip}
+        {/* Einführung als schlichte Einblendung über der Karte (Desktop). */}
+        {showIntro && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[65] hidden justify-center p-6 md:flex">
+            <div className="pointer-events-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/5">{introBody}</div>
+          </div>
+        )}
       </div>
       <div className={`absolute inset-x-0 bottom-0 z-[60] flex h-[62%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden ${sheetOpen ? "translate-y-0" : "translate-y-[calc(100%-44px)]"}`}>
         <button type="button" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} className="flex h-11 shrink-0 items-center justify-center gap-2 border-b border-neutral-100 text-[13px] font-bold text-neutral-700">
           {t("tour.plTitle")}<span aria-hidden className={`transition-transform ${sheetOpen ? "" : "rotate-180"}`}>▾</span>
         </button>
-        <div className="min-h-0 flex-1">{surface}</div>
+        {/* Mobil füllt die Einführung das Bottom-Sheet. */}
+        <div className="min-h-0 flex-1">{showIntro ? <div className="p-5">{introBody}</div> : surface}</div>
       </div>
+
+      {/* Profil-Bearbeitung als Überlagerung (Chip-Klick). */}
+      {profileOpen && profile && (
+        <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onClick={() => setProfileOpen(false)}>
+          <div className="max-h-[85vh] w-[420px] max-w-full overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[15px] font-extrabold text-neutral-900">{profile.firstName || t("tour.plStep1")}</h2>
+              <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
+            </div>
+            {profileEditor}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
