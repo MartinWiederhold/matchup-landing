@@ -41,10 +41,30 @@ create policy profiles_private_owner on web.profiles_private
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+-- WICHTIG: Tabellen-GRANTs für authenticated. Ohne diese greift die RLS-Policy gar
+-- nicht — PostgREST liefert „permission denied for table". Die RLS beschränkt dann
+-- auf die eigene Zeile. anon bekommt KEINEN Zugriff (profiles_private ist nie
+-- öffentlich). NICHT vergessen (war der stille Breaker beim ersten Anlauf).
+grant select, insert, update on web.profiles_private to authenticated;
+
 -- Bestand übernehmen (Werte aktuell alle null, aber vollständig & idempotent).
 insert into web.profiles_private (user_id, fcm_token, device_fingerprint, apple_id, google_id)
   select id, fcm_token, device_fingerprint, apple_id, google_id from web.profiles
   on conflict (user_id) do nothing;
+
+-- Jede neue profiles-Zeile bekommt automatisch eine profiles_private-Zeile, damit
+-- die Invariante „1:1" immer gilt (Onboarding-Insert, fcm-Null beim Logout, lat/lng-
+-- Merge im AuthProvider verlassen sich darauf). SECURITY DEFINER + fixer search_path.
+create or replace function web.create_profiles_private_row()
+returns trigger language plpgsql security definer set search_path = web, public as $$
+begin
+  insert into web.profiles_private (user_id) values (new.id) on conflict (user_id) do nothing;
+  return new;
+end $$;
+drop trigger if exists trg_profiles_private_autocreate on web.profiles;
+create trigger trg_profiles_private_autocreate
+  after insert on web.profiles
+  for each row execute function web.create_profiles_private_row();
 
 notify pgrst, 'reload schema';
 

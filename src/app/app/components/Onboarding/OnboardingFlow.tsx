@@ -354,8 +354,6 @@ export default function OnboardingFlow() {
         city: state.city,
         country: state.country,
         country_name: countryName(state.country),
-        latitude: state.latitude,
-        longitude: state.longitude,
         club_id: state.club_id,
         club_name_manual: state.club_id ? null : state.club_name,
         goals: state.goals,
@@ -368,6 +366,15 @@ export default function OnboardingFlow() {
         search_radius_km: 25,
       });
       if (insertError) throw insertError;
+
+      // Koordinaten in web.profiles_private (Sicherheitsaudit 2026-08). Die Zeile
+      // legt der Auto-Create-Trigger beim profiles-Insert an → update genügt.
+      if (state.latitude != null && state.longitude != null) {
+        await supabase
+          .from("profiles_private")
+          .update({ latitude: state.latitude, longitude: state.longitude })
+          .eq("user_id", user.id);
+      }
 
       // Tour-Profil anlegen, wenn Tour-Pfad gewählt wurde (best effort).
       if (state.onb_mode === "tour") {

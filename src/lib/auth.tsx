@@ -73,7 +73,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", userId)
       .maybeSingle();
 
-    setProfile(error ? null : (data as Profile | null));
+    if (error || !data) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    // Eigene Koordinaten liegen jetzt in web.profiles_private (nicht mehr fremd
+    // lesbar). Hier in das profile-Objekt mergen, damit alle EIGEN-Koordinaten-
+    // Stellen (EditProfile-Vorschau, CreateGame/ClubPicker, Kartenzentrierung)
+    // unverändert `profile.latitude/longitude` nutzen können.
+    const { data: priv } = await supabase
+      .from("profiles_private")
+      .select("latitude, longitude")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    setProfile({
+      ...(data as Profile),
+      latitude: priv?.latitude ?? null,
+      longitude: priv?.longitude ?? null,
+    });
     setLoading(false);
   }
 

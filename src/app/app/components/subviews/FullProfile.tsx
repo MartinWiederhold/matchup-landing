@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { skillLabel, sportLabel, formatDistance } from "@/lib/utils/formatters";
-import { haversineKm } from "@/lib/utils/haversine";
+import { fetchDistances } from "@/lib/utils/distances";
 import {
   SportIcon,
   FlagIcon,
@@ -51,6 +51,7 @@ export default function FullProfile({
   const { profile: me, closeSubView, refreshBadges, openSubView } = useAppNav();
   const [p, setP] = useState<Profile | null>(null);
   const [stats, setStats] = useState<PlayerStats | null>(null);
+  const [distKm, setDistKm] = useState<number | null>(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [sent, setSent] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,6 +70,8 @@ export default function FullProfile({
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => setStats(data as PlayerStats | null));
+    // Distanz serverseitig (keine Rohkoordinaten); null, wenn eigener/fremder Ort fehlt.
+    fetchDistances([userId]).then((m) => setDistKm(m.get(userId) ?? null));
   }, [userId]);
 
   if (!p) return <FullLoading />;
@@ -131,8 +134,8 @@ export default function FullProfile({
   }
 
   const dist =
-    me.latitude && me.longitude && p.latitude && p.longitude
-      ? formatDistance(haversineKm(me.latitude, me.longitude, p.latitude, p.longitude))
+    distKm != null
+      ? formatDistance(distKm)
       : p._distance != null
         ? formatDistance(p._distance)
         : null;

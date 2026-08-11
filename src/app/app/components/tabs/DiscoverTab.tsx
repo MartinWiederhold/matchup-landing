@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { haversineKm } from "@/lib/utils/haversine";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useT } from "@/lib/i18n";
@@ -134,7 +133,8 @@ export default function DiscoverTab() {
 
     const { data: raw } = await supabase
       .from("profiles")
-      .select("*")
+      // Keine Koordinaten mehr (Sicherheitsaudit 2026-08) — explizite öffentliche Spalten.
+      .select("id, first_name, display_name, username, age, gender, sports, skill_level, profile_image, club_id, last_active")
       .eq("is_paused", false)
       .eq("is_banned", false)
       // Seed-/Demo-Profile bleiben sichtbar (App populated); Admin trennt sie über is_seed.
@@ -162,23 +162,6 @@ export default function DiscoverTab() {
         return false;
       if (c.age < filters.ageMin || c.age > filters.ageMax) return false;
       if (filters.clubId && c.club_id !== filters.clubId) return false;
-
-      if (
-        filters.radius < 201 &&
-        profile.latitude &&
-        profile.longitude &&
-        c.latitude &&
-        c.longitude
-      ) {
-        const dist = haversineKm(
-          profile.latitude,
-          profile.longitude,
-          c.latitude,
-          c.longitude,
-        );
-        if (dist > filters.radius) return false;
-        c._distance = dist;
-      }
       return true;
     });
 

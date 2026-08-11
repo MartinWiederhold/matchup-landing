@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { haversineKm } from "@/lib/utils/haversine";
+import { fetchDistances } from "@/lib/utils/distances";
 import { skillLabel, formatDistance } from "@/lib/utils/formatters";
 import { SportIcon, FilterIcon, CheckIcon, MapPinIcon } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
@@ -56,23 +56,29 @@ export default function BrowsePeople() {
     (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
 
     const { data: raw } = await supabase
-      .from("profiles").select("id, first_name, display_name, username, age, gender, sports, skill_level, profile_image, club_id, latitude, longitude, last_active")
+      // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
+      .from("profiles").select("id, first_name, display_name, username, age, gender, sports, skill_level, profile_image, club_id, last_active")
       .eq("is_paused", false).eq("is_banned", false).eq("is_seed", false)
       .order("last_active", { ascending: false }).limit(300);
 
     const effectiveSports = filters.sports.length ? filters.sports : profile.sports;
-    const filtered = ((raw as Profile[]) ?? []).filter((c) => {
+    const base = ((raw as Profile[]) ?? []).filter((c) => {
       if (exclude.has(c.id)) return false;
       if (effectiveSports?.length && !effectiveSports.some((s) => c.sports?.includes(s))) return false;
       if (filters.gender && c.gender !== filters.gender) return false;
       if (filters.skillLevels.length && !filters.skillLevels.includes(c.skill_level)) return false;
       if (c.age < filters.ageMin || c.age > filters.ageMax) return false;
       if (filters.clubId && c.club_id !== filters.clubId) return false;
-      if (filters.radius < 201 && profile.latitude && profile.longitude && c.latitude && c.longitude) {
-        const dist = haversineKm(profile.latitude, profile.longitude, c.latitude, c.longitude);
-        if (dist > filters.radius) return false;
-        c._distance = dist;
-      }
+      return true;
+    });
+
+    // Distanzen serverseitig (Rohkoordinaten verlassen die DB nie). Fehlt die Distanz
+    // (eigener ODER fremder Ort fehlt), bleibt der Kandidat drin — ohne Distanz.
+    const distMap = await fetchDistances(base.map((c) => c.id));
+    const filtered = base.filter((c) => {
+      const km = distMap.get(c.id);
+      if (km != null) c._distance = km;
+      if (filters.radius < 201 && km != null && km > filters.radius) return false;
       return true;
     });
 
@@ -101,10 +107,7 @@ export default function BrowsePeople() {
   }
 
   function dist(c: Profile): string | null {
-    if (c._distance !== undefined) return formatDistance(c._distance);
-    if (profile.latitude && profile.longitude && c.latitude && c.longitude)
-      return formatDistance(haversineKm(profile.latitude, profile.longitude, c.latitude, c.longitude));
-    return null;
+    return c._distance !== undefined ? formatDistance(c._distance) : null;
   }
 
   return (

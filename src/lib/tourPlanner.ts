@@ -28,16 +28,19 @@ export type PlannerProfile = {
 
 /** Lädt die für den Planer nötigen Profilfelder — benannte Spalten, kein select *. */
 export async function loadPlannerProfile(userId: string): Promise<PlannerProfile> {
-  const [{ data: p }, { data: tp }] = await Promise.all([
-    supabase.from("profiles").select("first_name, city, country, latitude, longitude, age").eq("id", userId).maybeSingle(),
+  // Eigene Koordinaten liegen in web.profiles_private (Sicherheitsaudit 2026-08),
+  // nicht mehr in profiles. Eigene Zeile → RLS erlaubt das Lesen.
+  const [{ data: p }, { data: tp }, { data: pp }] = await Promise.all([
+    supabase.from("profiles").select("first_name, city, country, age").eq("id", userId).maybeSingle(),
     supabase.from("tour_profiles").select("ranking, passports, season_budget").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles_private").select("latitude, longitude").eq("user_id", userId).maybeSingle(),
   ]);
   return {
     firstName: p?.first_name ?? null,
     city: p?.city ?? null,
     country: p?.country ?? null,
-    lat: p?.latitude ?? null,
-    lng: p?.longitude ?? null,
+    lat: pp?.latitude ?? null,
+    lng: pp?.longitude ?? null,
     age: p?.age ?? null,
     ranking: tp?.ranking ?? null,
     passports: tp?.passports ?? [],

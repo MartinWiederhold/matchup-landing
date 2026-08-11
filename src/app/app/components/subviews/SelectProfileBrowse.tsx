@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n";
 import { sportLabel } from "@/lib/utils/formatters";
-import { haversineKm } from "@/lib/utils/haversine";
+import { fetchDistances } from "@/lib/utils/distances";
 import { ensureMatch } from "@/lib/matchmaking";
 import type { Sport, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
@@ -19,7 +19,7 @@ type Row = {
   skill_level: string | null; sports: string[] | null; bio: string | null;
   profile_image: string | null; additional_images: string[] | null;
   match_score: number | null; height_cm: number | null;
-  gender: string | null; latitude: number | null; longitude: number | null;
+  gender: string | null;
 };
 
 const SKILL: Record<string, string> = {
@@ -107,8 +107,9 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   useEffect(() => {
     setRows(null);
     let q = supabase
+      // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
       .from("profiles")
-      .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender,latitude,longitude")
+      .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender")
       .eq("is_paused", false).eq("is_banned", false).neq("id", profile.id)
       .not("profile_image", "is", null);
     if (filters.sports.length) q = q.overlaps("sports", filters.sports);
@@ -117,20 +118,20 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
     q = q.gte("age", filters.ageMin).lte("age", filters.ageMax);
     q.order("last_active", { ascending: false })
       .limit(60)
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         let list = (data as Row[]) ?? [];
-        // Distanz nur clientseitig (Koordinaten liegen nicht als Geo-Index vor).
-        // 201 = „weltweit" → kein Limit; sonst Haversine gegen den eigenen Standort.
-        const myLat = profile.latitude, myLng = profile.longitude;
-        if (filters.radius < 201 && myLat != null && myLng != null) {
-          list = list.filter((r) =>
-            r.latitude != null && r.longitude != null &&
-            haversineKm(myLat, myLng, r.latitude, r.longitude) <= filters.radius,
-          );
+        // 201 = „weltweit" → kein Radiuslimit. Sonst: Distanz serverseitig; unbekannte
+        // Distanz (eigener/fremder Ort fehlt) bleibt DRIN (kein stiller Ausfall).
+        if (filters.radius < 201) {
+          const distMap = await fetchDistances(list.map((r) => r.id));
+          list = list.filter((r) => {
+            const km = distMap.get(r.id);
+            return km == null || km <= filters.radius;
+          });
         }
         setRows(list.slice(0, 40));
       });
-  }, [profile.id, profile.latitude, profile.longitude, filters]);
+  }, [profile.id, filters]);
 
   const levelLabel = (s: string | null) => (s ? SKILL[s] ?? s : "");
 

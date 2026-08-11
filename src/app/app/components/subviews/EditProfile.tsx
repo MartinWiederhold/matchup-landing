@@ -250,11 +250,15 @@ export default function EditProfile() {
         club_id: clubId,
         club_name_manual: clubId ? null : clubName,
         city: loc.city,
-        latitude: loc.lat,
-        longitude: loc.lng,
         country: loc.country,
       })
       .eq("id", profile.id);
+    // Koordinaten liegen jetzt in web.profiles_private (Sicherheitsaudit 2026-08).
+    // Zeile existiert via Auto-Create-Trigger; update genügt.
+    await supabase
+      .from("profiles_private")
+      .update({ latitude: loc.lat, longitude: loc.lng })
+      .eq("user_id", profile.id);
     await refreshProfile();
     setSaving(false);
     closeSubView();
