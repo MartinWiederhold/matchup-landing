@@ -13,6 +13,11 @@
 
 alter table web.tour_team add column if not exists invite_expires_at timestamptz;
 
+-- invite_token war NOT NULL — deshalb konnte accept-invite den Token bislang nicht auf
+-- null setzen (Update schlug still fehl → keine Entwertung, MU-027-Lücke). Ein
+-- angenommener Invite hat legitim KEINEN offenen Token → NOT NULL entfernen.
+alter table web.tour_team alter column invite_token drop not null;
+
 -- Bestand (aktuell 0 Zeilen → No-op, aber idempotent): offene Tokens bekommen ein
 -- Ablaufdatum relativ zur Erzeugung.
 update web.tour_team
