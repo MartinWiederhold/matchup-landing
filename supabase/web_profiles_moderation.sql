@@ -103,14 +103,13 @@ end $$;
 notify pgrst, 'reload schema';
 
 -- ── Phase 2: Spalten aus web.profiles entfernen ─────────────────────────────
--- ERST nach der Code-Umstellung (AuthProvider merged pause_reason; AppGuard +
--- Admin-Action-Route + Admin-Lese-Route umgestellt; kein profiles-Zugriff mehr
--- auf diese Felder). Reihenfolge: Code deployen, DANN droppen (CLAUDE.md).
---
--- alter table web.profiles
---   drop column report_count, drop column banned_at, drop column pause_reason,
---   drop column daily_likes_count, drop column daily_likes_reset;
--- notify pgrst, 'reload schema';
+-- Angewendet 2026-08-11, NACH dem Code-Deploy (6d4e9ab): AuthProvider merged
+-- pause_reason; AppGuard/Admin-Action-Route/Admin-Lese-Route umgestellt; kein
+-- profiles-Zugriff mehr auf diese Felder (Code zuerst, dann Drop — CLAUDE.md).
+alter table web.profiles
+  drop column report_count, drop column banned_at, drop column pause_reason,
+  drop column daily_likes_count, drop column daily_likes_reset;
+notify pgrst, 'reload schema';
 
 -- ── Rollback ────────────────────────────────────────────────────────────────
 --   Spalten in profiles zurück (add column …) + aus profiles_private/-moderation
