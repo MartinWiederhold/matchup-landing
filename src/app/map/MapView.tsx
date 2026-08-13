@@ -545,7 +545,10 @@ export default function MapView() {
       .from("venues")
       .select(VENUE_SELECT)
       .order("name")
-      .limit(3000) // sonst kappt PostgREST bei 1000 Zeilen → Anlagen fehlen
+      // Alle Anlagen auf einmal laden (Client-Filter/Viewport-Culling). Grenze großzügig,
+      // damit weitere Länder nicht stillschweigend wegfallen. Bei sehr großem Weltbestand
+      // (>~25k) muss das später auf regions-/bbox-basiertes Nachladen umgestellt werden.
+      .limit(25000)
       .then(({ data }) => setVenues((data as Venue[]) ?? []));
   }, []);
 
