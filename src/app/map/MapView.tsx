@@ -634,6 +634,23 @@ export default function MapView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, zoom, ready, moveTick]);
 
+  // Aktuelle Region aus der Kartenmitte ableiten: der Hub der nächstgelegenen Anlage.
+  // Speist Header-Label und Anbieter-Scoping — statt fix „Zürich". Neu berechnet bei Pan/Zoom.
+  const mapRegion = useMemo(() => {
+    const map = mapRef.current;
+    if (!map || !ready || venues.length === 0) return null;
+    const c = map.getCenter();
+    let best: Venue | null = null;
+    let bd = Infinity;
+    for (const v of venues) {
+      if (v.lat == null || v.lng == null) continue;
+      const d = (v.lat - c.lat) ** 2 + (v.lng - c.lng) ** 2;
+      if (d < bd) { bd = d; best = v; }
+    }
+    return best ? hubFor(best.city, "de") : null;
+  }, [venues, ready, moveTick]);
+  const regionLabel = mapRegion ?? "Zürich";
+
   const focus = useCallback((v: Venue) => {
     setSelectedId(v.id);
     const map = mapRef.current;
@@ -856,14 +873,13 @@ export default function MapView() {
     loadProviders({ limit: 200 }).then(setProviders);
   }, []);
   // Anbieter der aktuell gewählten Discover-Kategorie (Coach/Stringer/Physio),
-  // auf die Zürich-Region begrenzt (via CITY_HUB, wie die Court-Cluster) — passend zum
-  // fixen „Zürich"-Header. Beim späteren Weltweit-Ausbau hier auf die Kartenregion umstellen.
+  // begrenzt auf die aktuelle Kartenregion (via CITY_HUB, wie die Court-Cluster).
   const discProviders = useMemo(
     () =>
       discCat === "courts"
         ? []
-        : providers.filter((p) => p.category === discCat && hubFor(p.city, "de") === "Zürich"),
-    [providers, discCat],
+        : providers.filter((p) => p.category === discCat && hubFor(p.city, "de") === regionLabel),
+    [providers, discCat, regionLabel],
   );
   // Auswahl zurücksetzen, wenn man die Anbieter-Kategorien verlässt.
   useEffect(() => { if (!(tab === "discover" && discCat !== "courts")) setSelProvider(null); }, [tab, discCat]);
@@ -1039,7 +1055,7 @@ export default function MapView() {
               <>
                 <div className="shrink-0 border-b border-neutral-200 px-4 py-3">
                   <span className="text-lg font-bold tracking-tight">{tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)}</span>
-                  <p className="text-xs text-neutral-400">{discProviders.length} {tt("in Zürich", "in Zürich")}</p>
+                  <p className="text-xs text-neutral-400">{discProviders.length} · {regionLabel}</p>
                 </div>
                 <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
                   {discProviders.map((p) => (
@@ -1057,8 +1073,8 @@ export default function MapView() {
             <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
               <div className="flex items-center gap-2">
                 <PinIcon className="h-5 w-5 text-matchup" />
-                <span className="text-lg font-bold tracking-tight">Zürich</span>
-                <span className="ml-auto text-xs text-neutral-400">{visible.length} {tt("Orte", "places")}</span>
+                <span className="text-lg font-bold tracking-tight">{regionLabel}</span>
+                <span className="ml-auto text-xs text-neutral-400">{listSource.length} {tt("Orte", "places")}</span>
               </div>
               <input
                 value={query}
@@ -1157,7 +1173,7 @@ export default function MapView() {
                         placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
                         className="h-11 w-full bg-transparent text-sm outline-none"
                       />
-                      <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
+                      <span className="shrink-0 text-xs font-semibold text-neutral-400">{listSource.length}</span>
                     </div>
                     <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {sportChips(true)}
