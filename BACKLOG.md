@@ -131,6 +131,13 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Eine vorausschauende Quelle für ITF-Turniere. Die Verbandsrecherche nennt Spanien (RFET), Türkei (TTF) und Deutschland (DTB) als machbar; für Nordafrika (Monastir, Sharm) gibt es keinen Verbandskalender — dort wären die Veranstalter anzuschreiben (Magic Tours, Soho Square).
 **Sperre:** Nicht mit echten Nutzern starten, solange der Kalender keine planbaren Turniere enthält.
 
+### MU-035 · Fremde Personenfotos ohne Einwilligung in `service_providers.image_url` · M · offen · **Vor Launch** · **Rechtsfrage**
+**Problem:** Alle 77 Einträge in `web.service_providers` tragen ein `image_url`, das auf einen fremden Server zeigt. 33 sind Website-Favicons über `icons.duckduckgo.com` — als Anbieterfoto wertlos. Die übrigen 44 sind von den Websites der Anbieter gehotlinkt; jedes Personenfoto darunter erscheint ohne Einwilligung der abgebildeten Person. Ein Porträt ist ein personenbezogenes Datum, eine Rechtsgrundlage liegt nicht vor. Aus der URL lässt sich nicht unterscheiden, welche Bilder Personen zeigen. Verschärfend: Die Bilder werden live von fremden Servern geladen — fremde Bandbreite, und wer die Datei dort austauscht, ändert das Bild in unserer App.
+**Wirkung:** Sobald ein Services-Bereich sichtbar wird, zeigt die App fremde Personenfotos ohne Grundlage. Bei einem Widerspruch wäre das nicht verhandelbar.
+**Lösung:** `image_url` nicht anzeigen. Stattdessen Monogramm oder Initialen, wie bei den Turnierlogos (MU-025). Echte Bilder nur von Anbietern, die sich selbst eintragen und eins hochladen — dafür fehlt heute der Upload: `ProviderListingForm` hat kein Bildfeld, `createProviderListing` schreibt kein `image_url`.
+**Ergänzend prüfen:** Ob die 77 `image_url`-Werte überhaupt in der Datenbank stehen bleiben sollen oder geleert werden.
+**Sperre:** Kein Services-Bereich mit Fremdbildern.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
