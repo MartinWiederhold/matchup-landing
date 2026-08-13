@@ -39,8 +39,9 @@ import {
   EMPTY_PROFILE,
   type PlayerProfile,
 } from "@/lib/player";
-import { loadTourPlan, saveTourPlan } from "@/lib/tour";
+import { loadTourPlan, saveTourPlan, tourUnlocked, unlockTour } from "@/lib/tour";
 import { loadProviders, type ServiceProvider } from "@/lib/services";
+import WaitlistScreen from "@/app/app/components/WaitlistScreen";
 
 const SVC_CAT_LABEL: Record<string, { de: string; en: string }> = {
   coach: { de: "Coach", en: "Coach" }, hitting: { de: "Hitting Partner", en: "Hitting Partner" },
@@ -349,10 +350,19 @@ export default function MapView() {
   const [tab, setTab] = useState<"discover" | "season" | "services">(() => {
     if (typeof window !== "undefined") {
       const t = new URLSearchParams(window.location.search).get("tab");
-      if (t === "season" || t === "services" || t === "discover") return t;
+      // Compete-Gate: Saison & Services nur, wenn per Warteliste-Code (50805080) freigeschaltet.
+      if ((t === "season" || t === "services") && tourUnlocked()) return t;
     }
     return "discover";
   });
+  // Compete-Gate: Saison & Services bleiben bis zur Freischaltung (Warteliste-Code 50805080)
+  // gesperrt — nur Entdecken ist offen. tourUnlocked() prüft die lokale Freischaltung.
+  const [gateFor, setGateFor] = useState<"season" | "services" | null>(null);
+  // Tab-Wechsel mit Gate: gesperrte Tabs öffnen die Warteliste statt umzuschalten.
+  const goTab = (t: "discover" | "season" | "services") => {
+    if ((t === "season" || t === "services") && !tourUnlocked()) { setGateFor(t); return; }
+    setTab(t);
+  };
   const [dark, setDark] = useState(false);
   const tileRef = useRef<L.TileLayer | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -392,7 +402,7 @@ export default function MapView() {
         initialTabSet.current = true;
         try {
           const { data: pr } = await supabase.from("profiles").select("mode").eq("id", uid).maybeSingle();
-          if ((pr as { mode?: string } | null)?.mode === "tour") setTab("season");
+          if ((pr as { mode?: string } | null)?.mode === "tour" && tourUnlocked()) setTab("season");
         } catch { /* ignore */ }
       }
     } else {
@@ -928,9 +938,9 @@ export default function MapView() {
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         <div className="shrink-0 border-b border-neutral-200 p-3">
           <div className="flex rounded-full bg-neutral-100 p-1">
-            <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
-            <TabBtn active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>
-            <TabBtn active={tab === "services"} onClick={() => setTab("services")}>{tt("Services","Services")}</TabBtn>
+            <TabBtn active={tab === "discover"} onClick={() => goTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+            <TabBtn active={tab === "season"} locked={!tourUnlocked()} onClick={() => goTab("season")}>{tt("Saison","Season")}</TabBtn>
+            <TabBtn active={tab === "services"} locked={!tourUnlocked()} onClick={() => goTab("services")}>{tt("Services","Services")}</TabBtn>
           </div>
         </div>
         {tab === "season" ? (
@@ -1062,9 +1072,9 @@ export default function MapView() {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[550] space-y-2 p-3 md:hidden">
             <div className="flex justify-center">
               <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
-                <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>
-                <TabBtn small active={tab === "services"} onClick={() => setTab("services")}>{tt("Services","Services")}</TabBtn>
+                <TabBtn small active={tab === "discover"} onClick={() => goTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+                <TabBtn small active={tab === "season"} locked={!tourUnlocked()} onClick={() => goTab("season")}>{tt("Saison","Season")}</TabBtn>
+                <TabBtn small active={tab === "services"} locked={!tourUnlocked()} onClick={() => goTab("services")}>{tt("Services","Services")}</TabBtn>
               </div>
             </div>
             {tab === "discover" && (
@@ -1160,6 +1170,18 @@ export default function MapView() {
           </div>
         )}
       </div>
+
+      {gateFor && (
+        // Warteliste-Pop-up (Code 50805080). Nach Freischaltung springt der Tab auf, der
+        // das Gate ausgelöst hat. Bis dahin bleibt nur Entdecken zugänglich.
+        <WaitlistScreen
+          layout="overlay"
+          feature={tt("Compete", "Compete")}
+          featureKey="Compete"
+          onClose={() => setGateFor(null)}
+          onUnlock={() => { unlockTour(); const t = gateFor; setGateFor(null); if (t) setTab(t); }}
+        />
+      )}
     </div>
   );
 }
@@ -1220,21 +1242,30 @@ function TabBtn({
   onClick,
   children,
   small = false,
+  locked = false,
 }: {
   active: boolean;
   onClick: () => void;
   children: ReactNode;
   small?: boolean;
+  locked?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full font-semibold transition-colors ${
+      className={`inline-flex items-center justify-center gap-1 rounded-full font-semibold transition-colors ${
         small ? "px-4 py-1.5 text-sm" : "flex-1 px-3 py-2 text-sm"
       } ${active ? "bg-matchup text-white shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
     >
       {children}
+      {locked && (
+        // Schloss: signalisiert, dass der Tab bis zur Warteliste-Freischaltung gesperrt ist.
+        <svg viewBox="0 0 24 24" aria-hidden className="h-3 w-3 opacity-70" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <rect x="5" y="11" width="14" height="9" rx="2" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+        </svg>
+      )}
     </button>
   );
 }
