@@ -21,6 +21,8 @@ import type { TourTournament, TourCostRates } from "@/lib/types";
 import PlannerMap, { type PlanStop, type CandPoint, type MapStart } from "./PlannerMap";
 import TournamentDetail from "./TournamentDetail";
 import InfoHint from "./InfoHint";
+import { geocodeCity, type GeoHit } from "@/lib/geocode";
+import { HOME_BASES } from "@/lib/tournaments";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
@@ -37,7 +39,6 @@ const NIGHTS_KEY = "mu_tour_nights";
 const byMonday = (a: TourTournament, b: TourTournament) => a.tournament_monday.localeCompare(b.tournament_monday);
 const hasCoords = (t: TourTournament) => t.latitude != null && t.longitude != null;
 const RECENT_KEY = "mu_tour_recent_starts";
-type CityOpt = { city: string; country: string | null; lat: number; lng: number };
 
 export default function SeasonWorkspace() {
   const { user, loading: authLoading } = useAuth();
@@ -61,6 +62,7 @@ export default function SeasonWorkspace() {
   const [startPick, setStartPick] = useState<{ name: string; lat: number; lng: number } | null>(null);
   const [locQuery, setLocQuery] = useState("");
   const [recent, setRecent] = useState<{ name: string; lat: number; lng: number }[]>([]);
+  const [geoResults, setGeoResults] = useState<GeoHit[]>([]);
 
   // Rahmen (Budget, Zeitraum, Region/Länder). Länder-Dropdown-Zustand.
   const [frame, setFrame] = useState<Frame>(() => ({ region: "europe", from: new Date().toISOString().slice(0, 10), to: "", countries: [] }));
@@ -108,21 +110,17 @@ export default function SeasonWorkspace() {
   const fmtDay = useCallback((iso: string) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z")), [locale]);
   const catName = useCallback((c: string | null) => (c ? (t(`tour.country.${c}`).startsWith("tour.country.") ? c : t(`tour.country.${c}`)) : "—"), [t]);
 
-  // ── Startpunkt-Vorschläge: eindeutige Turnierorte mit Koordinaten ──────────────
-  const cityOptions = useMemo(() => {
-    const m = new Map<string, CityOpt>();
-    for (const tt of tours) {
-      if (!hasCoords(tt) || !tt.city) continue;
-      const k = `${tt.country}|${tt.city}`;
-      if (!m.has(k)) m.set(k, { city: tt.city, country: tt.country, lat: tt.latitude as number, lng: tt.longitude as number });
-    }
-    return [...m.values()];
-  }, [tours]);
-  const locMatches = useMemo(() => {
-    const q = locQuery.trim().toLowerCase();
-    if (!q) return [];
-    return cityOptions.filter((c) => c.city.toLowerCase().includes(q) || (catName(c.country).toLowerCase().includes(q))).slice(0, 8);
-  }, [locQuery, cityOptions, catName]);
+  // ── Wohnort-/Startpunkt-Suche: ECHTE Städteliste über den Geocoder (Nominatim-Proxy),
+  //    nicht mehr aus dem Turnierkatalog — ein Wohnort ist selten ein Turnierort. Entprellt
+  //    (~400 ms nach Tippende), nicht pro Tastendruck (Nominatim-Richtlinie). Land-Bias aus
+  //    dem Profil. ──────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const q = locQuery.trim();
+    if (q.length < 3) { setGeoResults([]); return; }
+    const cc = profile?.country ?? undefined;
+    const id = window.setTimeout(() => { void geocodeCity(q, cc).then(setGeoResults); }, 400);
+    return () => window.clearTimeout(id);
+  }, [locQuery, profile?.country]);
 
   const pickStart = useCallback((c: { name: string; lat: number; lng: number }) => {
     setStartPick(c);
@@ -482,12 +480,12 @@ export default function SeasonWorkspace() {
               <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsStartTitle")}</h2>
               <div className="relative mt-2">
                 <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={startName ? t("tour.wsStartCurrent", { name: startName }) : t("tour.wsStartSearch")} className={inp} />
-                {locMatches.length > 0 && (
+                {geoResults.length > 0 && (
                   <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
-                    {locMatches.map((c) => (
-                      <li key={`${c.country}|${c.city}`}>
-                        <button type="button" onClick={() => pickStart({ name: c.city, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
-                          <span className="truncate font-semibold text-neutral-900">{c.city}</span>
+                    {geoResults.map((c, i) => (
+                      <li key={`${c.country}|${c.name}|${i}`}>
+                        <button type="button" onClick={() => pickStart({ name: c.name, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
+                          <span className="truncate font-semibold text-neutral-900">{c.name}</span>
                           <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
                         </button>
                       </li>
@@ -495,15 +493,19 @@ export default function SeasonWorkspace() {
                   </ul>
                 )}
               </div>
-              {recent.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {recent.map((r) => (
-                    <button key={r.name} type="button" onClick={() => pickStart(r)} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === r.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
-                      {r.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Schnellwahl: kuratierte Wohnorte (HOME_BASES) + zuletzt gewählte. */}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {HOME_BASES.map((b) => (
+                  <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
+                    {b.name}
+                  </button>
+                ))}
+                {recent.filter((r) => !HOME_BASES.some((b) => b.name === r.name)).map((r) => (
+                  <button key={r.name} type="button" onClick={() => pickStart(r)} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === r.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
+                    {r.name}
+                  </button>
+                ))}
+              </div>
             </section>
 
             {/* 3) Rahmen: Budget, Zeitraum, Länder-Mehrfachauswahl mit Zählern */}
@@ -730,18 +732,26 @@ export default function SeasonWorkspace() {
       <p className="mt-1 text-[15px] font-semibold leading-snug text-neutral-900">{t("tour.wsIntroLead")}</p>
       <div className="relative mt-3">
         <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={t("tour.wsIntroField")} className={inp} autoFocus />
-        {locMatches.length > 0 && (
+        {geoResults.length > 0 && (
           <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
-            {locMatches.map((c) => (
-              <li key={`${c.country}|${c.city}`}>
-                <button type="button" onClick={() => pickHome({ city: c.city, country: c.country, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
-                  <span className="truncate font-semibold text-neutral-900">{c.city}</span>
+            {geoResults.map((c, i) => (
+              <li key={`${c.country}|${c.name}|${i}`}>
+                <button type="button" onClick={() => pickHome({ city: c.name, country: c.country, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
+                  <span className="truncate font-semibold text-neutral-900">{c.name}</span>
                   <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
                 </button>
               </li>
             ))}
           </ul>
         )}
+      </div>
+      {/* Schnellwahl: kuratierte Wohnorte, falls die Stadt schon dabei ist. */}
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {HOME_BASES.map((b) => (
+          <button key={b.name} type="button" onClick={() => pickHome({ city: b.name, country: profile?.country ?? null, lat: b.lat, lng: b.lng })} className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-neutral-600 ring-1 ring-black/10 hover:bg-black/[0.03]">
+            {b.name}
+          </button>
+        ))}
       </div>
     </div>
   );
