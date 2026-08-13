@@ -39,9 +39,8 @@ import {
   EMPTY_PROFILE,
   type PlayerProfile,
 } from "@/lib/player";
-import { loadTourPlan, saveTourPlan, tourUnlocked, unlockTour } from "@/lib/tour";
+import { loadTourPlan, saveTourPlan, tourUnlocked, TOUR_UNLOCK_EVENT } from "@/lib/tour";
 import { loadProviders, type ServiceProvider } from "@/lib/services";
-import WaitlistScreen from "@/app/app/components/WaitlistScreen";
 
 const SVC_CAT_LABEL: Record<string, { de: string; en: string }> = {
   coach: { de: "Coach", en: "Coach" }, hitting: { de: "Hitting Partner", en: "Hitting Partner" },
@@ -199,6 +198,15 @@ const AMENITY_LABEL: Record<string, { de: string; en: string }> = {
 // Englische Labels für importierte (deutsche) Maps aus @/lib/venuesDb — Render-Zeit-Remap.
 const CAT_LABEL_EN: Record<string, string> = { club: "Club", public: "Public", private: "Private", hotel: "Hotel" };
 const WEEKDAY_EN: Record<string, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+// Discover-Kategorien: Plätze (Courts) + Anbieter-Typen. Anbieter kommen aus web.service_providers.
+type DiscCat = "courts" | "coach" | "stringer" | "physio";
+const DISC_CAT_LABEL: Record<DiscCat, { de: string; en: string }> = {
+  courts: { de: "Courts", en: "Courts" },
+  coach: { de: "Coaches", en: "Coaches" },
+  stringer: { de: "Stringer", en: "Stringer" },
+  physio: { de: "Physio", en: "Physio" },
+};
+const DISC_CAT_ORDER: DiscCat[] = ["courts", "coach", "stringer", "physio"];
 
 function markerIcon(v: Venue, active: boolean): L.DivIcon {
   const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
@@ -347,22 +355,28 @@ export default function MapView() {
   const tt = (de: string, en: string) => (locale === "de" ? de : en);
   // Mobiles Saison-Sheet: eingeklappt bleibt nur der Griff sichtbar → Karte frei.
   const [seasonOpen, setSeasonOpen] = useState(true);
-  const [tab, setTab] = useState<"discover" | "season" | "services">(() => {
+  const [tab, setTab] = useState<"discover" | "season">(() => {
     if (typeof window !== "undefined") {
-      const t = new URLSearchParams(window.location.search).get("tab");
-      // Compete-Gate: Saison & Services nur, wenn per Warteliste-Code (50805080) freigeschaltet.
-      if ((t === "season" || t === "services") && tourUnlocked()) return t;
+      if (new URLSearchParams(window.location.search).get("tab") === "season") return "season";
     }
     return "discover";
   });
-  // Compete-Gate: Saison & Services bleiben bis zur Freischaltung (Warteliste-Code 50805080)
-  // gesperrt — nur Entdecken ist offen. tourUnlocked() prüft die lokale Freischaltung.
-  const [gateFor, setGateFor] = useState<"season" | "services" | null>(null);
-  // Tab-Wechsel mit Gate: gesperrte Tabs öffnen die Warteliste statt umzuschalten.
-  const goTab = (t: "discover" | "season" | "services") => {
-    if ((t === "season" || t === "services") && !tourUnlocked()) { setGateFor(t); return; }
-    setTab(t);
-  };
+  // Discover-Kategorie: Plätze (Courts) oder ein Anbieter-Typ (Coach/Stringer/Physio).
+  const [discCat, setDiscCat] = useState<DiscCat>("courts");
+  // Compete-Modus = am Profil gewählt (mode='tour') UND auf diesem Gerät freigeschaltet —
+  // identisch zu AppShell. Nur dann ist der Saison-Tab sichtbar; Play zeigt nur Discover.
+  const [mode, setMode] = useState<"play" | "tour">("play");
+  const [unlocked, setUnlocked] = useState(false);
+  const [modeLoaded, setModeLoaded] = useState(false);
+  useEffect(() => {
+    const sync = () => setUnlocked(tourUnlocked());
+    sync();
+    window.addEventListener(TOUR_UNLOCK_EVENT, sync);
+    return () => window.removeEventListener(TOUR_UNLOCK_EVENT, sync);
+  }, []);
+  const isCompete = mode === "tour" && unlocked;
+  // Kein Compete-Modus → kein Saison-Tab; einen offenen Saison-Tab auf Discover zurückholen.
+  useEffect(() => { if (modeLoaded && !isCompete && tab !== "discover") setTab("discover"); }, [modeLoaded, isCompete, tab]);
   const [dark, setDark] = useState(false);
   const tileRef = useRef<L.TileLayer | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -397,16 +411,21 @@ export default function MapView() {
         setProfile(local);
         await saveProfileRemote(uid, local);
       }
-      // Tour-Nutzer starten auf „Saison planen", Play-Nutzer auf „Entdecken".
-      if (!initialTabSet.current) {
-        initialTabSet.current = true;
-        try {
-          const { data: pr } = await supabase.from("profiles").select("mode").eq("id", uid).maybeSingle();
-          if ((pr as { mode?: string } | null)?.mode === "tour" && tourUnlocked()) setTab("season");
-        } catch { /* ignore */ }
-      }
+      // Modus steuert die Tab-Sichtbarkeit: Tour-Nutzer sehen Saison, Play nur Entdecken.
+      try {
+        const { data: pr } = await supabase.from("profiles").select("mode").eq("id", uid).maybeSingle();
+        const m = (pr as { mode?: string } | null)?.mode === "tour" ? "tour" : "play";
+        setMode(m);
+        if (!initialTabSet.current) {
+          initialTabSet.current = true;
+          if (m === "tour" && tourUnlocked()) setTab("season");
+        }
+      } catch { /* ignore */ }
+      setModeLoaded(true);
     } else {
       setProfile(loadProfile());
+      setMode("play");
+      setModeLoaded(true);
     }
     profileReady.current = true;
   }, []);
@@ -714,7 +733,7 @@ export default function MapView() {
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
-    if (!map || !layer || !ready || tab !== "discover") return;
+    if (!map || !layer || !ready || tab !== "discover" || discCat !== "courts") return;
     layer.clearLayers();
 
     if (zoom <= CLUSTER_ZOOM) {
@@ -738,7 +757,7 @@ export default function MapView() {
           .setZIndexOffset(v.id === selectedId ? 1000 : 0);
       }
     }
-  }, [visible, inView, ready, zoom, selectedId, focus, tab, locale]);
+  }, [visible, inView, ready, zoom, selectedId, focus, tab, discCat, locale]);
 
   // Saison-Modus: Turnier-Marker + animierte Reiseroute vom Startpunkt durch alle Stops
   useEffect(() => {
@@ -836,22 +855,32 @@ export default function MapView() {
   useEffect(() => {
     loadProviders({ limit: 200 }).then(setProviders);
   }, []);
-  // Auswahl zurücksetzen, wenn man den Services-Tab verlässt.
-  useEffect(() => { if (tab !== "services") setSelProvider(null); }, [tab]);
+  // Anbieter der aktuell gewählten Discover-Kategorie (Coach/Stringer/Physio),
+  // auf die Zürich-Region begrenzt (via CITY_HUB, wie die Court-Cluster) — passend zum
+  // fixen „Zürich"-Header. Beim späteren Weltweit-Ausbau hier auf die Kartenregion umstellen.
+  const discProviders = useMemo(
+    () =>
+      discCat === "courts"
+        ? []
+        : providers.filter((p) => p.category === discCat && hubFor(p.city, "de") === "Zürich"),
+    [providers, discCat],
+  );
+  // Auswahl zurücksetzen, wenn man die Anbieter-Kategorien verlässt.
+  useEffect(() => { if (!(tab === "discover" && discCat !== "courts")) setSelProvider(null); }, [tab, discCat]);
 
-  // Services-Layer: Preis-Pins je Anbieter.
+  // Anbieter-Layer: Preis-Pins je Anbieter (nur in den Discover-Anbieter-Kategorien).
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
-    if (!map || !layer || !ready || tab !== "services") return;
+    if (!map || !layer || !ready || tab !== "discover" || discCat === "courts") return;
     layer.clearLayers();
-    for (const p of providers) {
+    for (const p of discProviders) {
       if (p.latitude == null || p.longitude == null) continue;
       L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p, locale), keyboard: false })
         .addTo(layer)
         .on("click", () => { setSelProvider(p); map.flyTo([p.latitude!, p.longitude!], 14, { duration: 0.6 }); });
     }
-  }, [ready, tab, providers, locale]);
+  }, [ready, tab, discCat, discProviders, locale]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -931,6 +960,32 @@ export default function MapView() {
       })}
     </>
   );
+  // Discover-Kategorie-Umschalter: Courts · Coaches · Stringer · Physio.
+  const discCatChips = (mobile: boolean) => (
+    <>
+      {DISC_CAT_ORDER.map((c) => {
+        const active = discCat === c;
+        return (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setDiscCat(c)}
+            className={`shrink-0 whitespace-nowrap rounded-full font-bold transition-colors ${
+              mobile ? "px-3.5 py-1.5 text-sm" : "px-3.5 py-1.5 text-[13px]"
+            } ${
+              active
+                ? "bg-matchup text-white shadow-sm"
+                : mobile
+                  ? "bg-white/95 text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
+                  : "text-neutral-500 hover:text-neutral-900"
+            }`}
+          >
+            {tt(DISC_CAT_LABEL[c].de, DISC_CAT_LABEL[c].en)}
+          </button>
+        );
+      })}
+    </>
+  );
 
   return (
     <div className={`relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900 ${dark ? "map-dark" : ""}`}>
@@ -938,12 +993,11 @@ export default function MapView() {
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         <div className="shrink-0 border-b border-neutral-200 p-3">
           <div className="flex rounded-full bg-neutral-100 p-1">
-            <TabBtn active={tab === "discover"} onClick={() => goTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
-            <TabBtn active={tab === "season"} locked={!tourUnlocked()} onClick={() => goTab("season")}>{tt("Saison","Season")}</TabBtn>
-            <TabBtn active={tab === "services"} locked={!tourUnlocked()} onClick={() => goTab("services")}>{tt("Services","Services")}</TabBtn>
+            <TabBtn active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+            {isCompete && <TabBtn active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>}
           </div>
         </div>
-        {tab === "season" ? (
+        {tab === "season" && isCompete ? (
           <SeasonPlanner
             planIds={planIds}
             onTogglePlan={togglePlan}
@@ -976,20 +1030,28 @@ export default function MapView() {
             setOnlyEligible={setOnlyEligible}
             venues={venues}
           />
-        ) : tab === "services" ? (
+        ) : (
           <>
-            <div className="shrink-0 border-b border-neutral-200 p-4">
-              <span className="text-lg font-bold tracking-tight">Services</span>
-              <p className="text-xs text-neutral-400">{tt("Coaches, Hitting Partner & Stringer", "Coaches, hitting partners & stringers")} · {providers.length}</p>
+            <div className="shrink-0 border-b border-neutral-200 px-3 py-2.5">
+              <div className="flex gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{discCatChips(false)}</div>
             </div>
-            <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
-              {providers.map((p) => (
-                <SvcCard key={p.id} p={p} locale={locale} onFly={() => { setSelProvider(p); if (p.latitude != null && p.longitude != null) mapRef.current?.flyTo([p.latitude, p.longitude], 14, { duration: 0.6 }); }} />
-              ))}
-            </div>
-          </>
-        ) : sel ? (
-          <VenueDetail venue={sel} onBack={backToList} locale={locale} />
+            {discCat !== "courts" ? (
+              <>
+                <div className="shrink-0 border-b border-neutral-200 px-4 py-3">
+                  <span className="text-lg font-bold tracking-tight">{tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)}</span>
+                  <p className="text-xs text-neutral-400">{discProviders.length} {tt("in Zürich", "in Zürich")}</p>
+                </div>
+                <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+                  {discProviders.map((p) => (
+                    <SvcCard key={p.id} p={p} locale={locale} onFly={() => { setSelProvider(p); if (p.latitude != null && p.longitude != null) mapRef.current?.flyTo([p.latitude, p.longitude], 14, { duration: 0.6 }); }} />
+                  ))}
+                  {discProviders.length === 0 && (
+                    <p className="px-4 py-8 text-center text-sm text-neutral-400">{tt("Hier noch keine Anbieter.", "No providers here yet.")}</p>
+                  )}
+                </div>
+              </>
+            ) : sel ? (
+              <VenueDetail venue={sel} onBack={backToList} locale={locale} />
         ) : (
           <>
             <div className="shrink-0 space-y-3 border-b border-neutral-200 p-4">
@@ -1046,6 +1108,8 @@ export default function MapView() {
               )}
             </div>
           </>
+            )}
+          </>
         )}
       </aside>
 
@@ -1071,29 +1135,41 @@ export default function MapView() {
         {!(tab === "discover" && sel) && (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[550] space-y-2 p-3 md:hidden">
             <div className="flex justify-center">
-              <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                <TabBtn small active={tab === "discover"} onClick={() => goTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
-                <TabBtn small active={tab === "season"} locked={!tourUnlocked()} onClick={() => goTab("season")}>{tt("Saison","Season")}</TabBtn>
-                <TabBtn small active={tab === "services"} locked={!tourUnlocked()} onClick={() => goTab("services")}>{tt("Services","Services")}</TabBtn>
-              </div>
+              {isCompete && (
+                <div className="pointer-events-auto flex rounded-full bg-white/95 p-1 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                  <TabBtn small active={tab === "discover"} onClick={() => setTab("discover")}>{tt("Entdecken","Discover")}</TabBtn>
+                  <TabBtn small active={tab === "season"} onClick={() => setTab("season")}>{tt("Saison","Season")}</TabBtn>
+                </div>
+              )}
             </div>
             {tab === "discover" && (
               <>
-                <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                  <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
-                    className="h-11 w-full bg-transparent text-sm outline-none"
-                  />
-                  <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
-                </div>
                 <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {sportChips(true)}
-                  <span className="shrink-0 self-center text-neutral-300">·</span>
-                  {catChips(true)}
+                  {discCatChips(true)}
                 </div>
+                {discCat === "courts" ? (
+                  <>
+                    <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                      <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+                      <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
+                        className="h-11 w-full bg-transparent text-sm outline-none"
+                      />
+                      <span className="shrink-0 text-xs font-semibold text-neutral-400">{visible.length}</span>
+                    </div>
+                    <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {sportChips(true)}
+                      <span className="shrink-0 self-center text-neutral-300">·</span>
+                      {catChips(true)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="pointer-events-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-neutral-500 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                    <span className="text-matchup">{discProviders.length}</span> {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)} · {tt("Pin antippen", "Tap a pin")}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1107,7 +1183,7 @@ export default function MapView() {
         )}
 
         {/* Mobile: Service-Anbieter als Bottom-Sheet (bei Pin-Tap) */}
-        {tab === "services" && selProvider && (
+        {tab === "discover" && discCat !== "courts" && selProvider && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5 md:hidden">
             <div className="mb-2 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
             <button type="button" onClick={() => setSelProvider(null)} aria-label={tt("Schliessen", "Close")} className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
@@ -1116,7 +1192,7 @@ export default function MapView() {
         )}
 
         {/* Mobile: Saisonplaner als Bottom-Sheet, Karte + Route bleiben sichtbar */}
-        {tab === "season" && (
+        {tab === "season" && isCompete && (
           <div
             className={`absolute inset-x-0 bottom-0 z-[600] flex h-[52%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden ${
               seasonOpen ? "translate-y-0" : "translate-y-[calc(100%-44px)]"
@@ -1171,17 +1247,6 @@ export default function MapView() {
         )}
       </div>
 
-      {gateFor && (
-        // Warteliste-Pop-up (Code 50805080). Nach Freischaltung springt der Tab auf, der
-        // das Gate ausgelöst hat. Bis dahin bleibt nur Entdecken zugänglich.
-        <WaitlistScreen
-          layout="overlay"
-          feature={tt("Compete", "Compete")}
-          featureKey="Compete"
-          onClose={() => setGateFor(null)}
-          onUnlock={() => { unlockTour(); const t = gateFor; setGateFor(null); if (t) setTab(t); }}
-        />
-      )}
     </div>
   );
 }
@@ -1242,30 +1307,21 @@ function TabBtn({
   onClick,
   children,
   small = false,
-  locked = false,
 }: {
   active: boolean;
   onClick: () => void;
   children: ReactNode;
   small?: boolean;
-  locked?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1 rounded-full font-semibold transition-colors ${
+      className={`rounded-full font-semibold transition-colors ${
         small ? "px-4 py-1.5 text-sm" : "flex-1 px-3 py-2 text-sm"
       } ${active ? "bg-matchup text-white shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
     >
       {children}
-      {locked && (
-        // Schloss: signalisiert, dass der Tab bis zur Warteliste-Freischaltung gesperrt ist.
-        <svg viewBox="0 0 24 24" aria-hidden className="h-3 w-3 opacity-70" fill="none" stroke="currentColor" strokeWidth="2.2">
-          <rect x="5" y="11" width="14" height="9" rx="2" />
-          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-        </svg>
-      )}
     </button>
   );
 }
