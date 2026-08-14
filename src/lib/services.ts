@@ -59,6 +59,35 @@ export async function loadProvidersNear(city: string | null, limit = 60): Promis
   return { rows: await loadProviders({ limit }), exact: false };
 }
 
+export type ProviderNear = ServiceProvider & { distance_km: number };
+
+/**
+ * Anbieter im Umkreis (km) um eine Koordinate — für die Turnier-Ansicht in /tour.
+ * Grob per Bounding-Box vorfiltern (skaliert), dann Haversine-Distanz exakt rechnen,
+ * auf den Radius kappen und nach Nähe sortieren. Ein Besaiter 200 km weg taucht nicht auf.
+ */
+export async function loadProvidersNearCoords(lat: number, lng: number, radiusKm: number): Promise<ProviderNear[]> {
+  const dLat = radiusKm / 111;
+  const dLng = radiusKm / (111 * Math.max(0.15, Math.cos((lat * Math.PI) / 180)));
+  const { data } = await supabase
+    .from("service_providers")
+    .select("*")
+    .gte("latitude", lat - dLat).lte("latitude", lat + dLat)
+    .gte("longitude", lng - dLng).lte("longitude", lng + dLng)
+    .limit(300);
+  const R = 6371;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  return ((data as ServiceProvider[]) ?? [])
+    .filter((p) => p.latitude != null && p.longitude != null)
+    .map((p) => {
+      const dPhi = rad(p.latitude! - lat), dLam = rad(p.longitude! - lng);
+      const a = Math.sin(dPhi / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(p.latitude!)) * Math.sin(dLam / 2) ** 2;
+      return { ...p, distance_km: 2 * R * Math.asin(Math.sqrt(a)) };
+    })
+    .filter((p) => p.distance_km <= radiusKm)
+    .sort((a, b) => a.distance_km - b.distance_km);
+}
+
 /* ── Favoriten ────────────────────────────────────────────── */
 export async function loadFavoriteIds(userId: string): Promise<Set<string>> {
   const { data } = await supabase.from("service_favorites").select("provider_id").eq("user_id", userId);

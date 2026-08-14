@@ -5,10 +5,15 @@ import { useT, useLocale } from "@/lib/i18n";
 import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
+import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 
 const DAY = 86_400_000;
+// Dienstleister-Umkreis: 50 km ≈ Turnierstadt + direktes Umland (taggleich erreichbar).
+// Bewusst KEINE Auto-Erweiterung — lieber ehrlich leer als Unnütze aus 200 km.
+const PROVIDER_RADIUS_KM = 50;
+const SVC_CAT_ORDER = ["coach", "physio", "stringer", "sc", "mental", "nutrition", "hitting", "tour_companion"];
 
 /** ISO-Datum + n Tage (UTC, deterministisch). */
 function addDaysISO(iso: string, n: number): string {
@@ -92,6 +97,19 @@ export default function TournamentDetail({
     setPBusy(false);
   };
   const leaveP = async () => { setPBusy(true); await leaveTourPresence(viewerId, tt.id); await refreshPresence(); setPBusy(false); };
+
+  // ── Dienstleister im Umkreis (50 km um den Turnierort), redaktioneller Bestand.
+  const [prov, setProv] = useState<ProviderNear[] | null>(null);
+  const [provCat, setProvCat] = useState<string>("all");
+  useEffect(() => {
+    if (tt.latitude == null || tt.longitude == null) { setProv([]); return; }
+    let alive = true;
+    loadProvidersNearCoords(tt.latitude, tt.longitude, PROVIDER_RADIUS_KM).then((rows) => { if (alive) setProv(rows); });
+    return () => { alive = false; };
+  }, [tt.id, tt.latitude, tt.longitude]);
+  const provCats = prov ? SVC_CAT_ORDER.filter((c) => prov.some((p) => p.category === c)) : [];
+  const provShown = (prov ?? []).filter((p) => provCat === "all" || p.category === provCat);
+  const unitLabel = (u: string | null) => (u ? t(`services.per${u.charAt(0).toUpperCase()}${u.slice(1)}`) : "");
 
   const start = tt.tournament_monday;
   const end = addDaysISO(start, nights > 0 ? nights : 7);
@@ -215,6 +233,59 @@ export default function TournamentDetail({
             </div>
           )}
           <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsHereNote")}</p>
+        </section>
+
+        {/* Dienstleister vor Ort — Anbieter im 50-km-Umkreis, redaktioneller Bestand.
+            Kein Bild (auch bei Selbst-Einträgen): Darstellung wie Plätze/Vereine in /map. */}
+        <section>
+          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+            {t("tour.svcTitle")}{prov && prov.length > 0 ? ` · ${prov.length}` : ""}
+          </p>
+          {prov == null ? (
+            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
+          ) : prov.length === 0 ? (
+            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.svcEmpty", { city: tt.city || countryName })}</p>
+          ) : (
+            <>
+              {provCats.length > 1 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {["all", ...provCats].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setProvCat(c)}
+                      className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${provCat === c ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-500"}`}
+                    >
+                      {c === "all" ? t("tour.svcAll") : t(`services.cat_${c}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 space-y-1.5">
+                {provShown.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[13px] font-bold text-neutral-500">
+                      {(p.name || "?").slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-semibold text-neutral-900">{p.name}</span>
+                      <span className="block truncate text-[11px] text-neutral-500">
+                        {t(`services.cat_${p.category}`)}{p.city ? ` · ${p.city}` : ""} · {Math.round(p.distance_km)} km
+                        {p.price_from != null ? ` · ${t("tour.svcFrom")} ${p.currency ?? ""} ${p.price_from}${p.price_unit ? " " + unitLabel(p.price_unit) : ""}` : ""}
+                      </span>
+                      {p.languages?.length > 0 && (
+                        <span className="block truncate text-[10px] text-neutral-400">{p.languages.join(" · ").toUpperCase()}</span>
+                      )}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      {p.website && <a href={p.website} target="_blank" rel="noreferrer" className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.svcWeb")}</a>}
+                      {p.contact_email && <a href={`mailto:${p.contact_email}`} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.svcEmail")}</a>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* Buchen — Deep-Links. Funktionieren IMMER (auch ohne Live-Preis) und sind der
