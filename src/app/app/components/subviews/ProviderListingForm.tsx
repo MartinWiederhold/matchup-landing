@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useT } from "@/lib/i18n";
-import { createProviderListing, loadMyListings, deleteListing, type ServiceCategory, type ServiceProvider } from "@/lib/services";
+import { createProviderListing, loadMyListings, deleteListing, uploadProviderImage, deleteProviderImage, type ServiceCategory, type ServiceProvider } from "@/lib/services";
 import { sportLabel } from "@/lib/utils/formatters";
 import { useAppNav } from "../appNav";
 import { SubViewHeader } from "../shared/ui";
@@ -26,10 +26,29 @@ export default function ProviderListingForm() {
   const [website, setWebsite] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imgBusy, setImgBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => { loadMyListings(profile.id).then(setMine); }, [profile.id]);
+
+  // Bildfeld: eigenes Foto in provider-images/<uid>/… hochladen → öffentliche URL in image_url.
+  async function onPickImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImgBusy(true);
+    setError(false);
+    const url = await uploadProviderImage(profile.id, file);
+    setImgBusy(false);
+    if (url) setImageUrl(url); else setError(true);
+  }
+  async function onRemoveImage() {
+    const url = imageUrl;
+    setImageUrl(null);
+    if (url) await deleteProviderImage(url);
+  }
 
   const valid = name.trim().length >= 2 && city.trim().length >= 2 && (email.trim() !== "" || website.trim() !== "");
 
@@ -40,6 +59,7 @@ export default function ProviderListingForm() {
     const res = await createProviderListing(profile.id, {
       name, category, sport, city, level, bio, website, contact_email: email,
       price_from: price.trim() ? Number(price) : null, price_unit: unit, currency: "CHF",
+      image_url: imageUrl,
     });
     setSaving(false);
     if (res) openSubView({ type: "service-detail", providerId: res.id });
@@ -77,6 +97,21 @@ export default function ProviderListingForm() {
             </div>
           </div>
         )}
+
+        <label className={label}>{t("services.fPhoto")}</label>
+        {imageUrl ? (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+            <button type="button" onClick={onRemoveImage} className="text-[12px] font-bold text-red-500">{t("services.fPhotoRemove")}</button>
+          </div>
+        ) : (
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-black/15 bg-black/[0.02] px-3.5 py-3 text-[13px] font-semibold text-neutral-500 hover:bg-black/[0.04]">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onPickImage} disabled={imgBusy} className="hidden" />
+            {imgBusy ? "…" : t("services.fPhotoAdd")}
+          </label>
+        )}
+        <p className="mt-1.5 px-1 text-[11px] text-neutral-400">{t("services.fPhotoHint")}</p>
 
         <label className={label}>{t("services.fName")}</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("services.fNamePh")} className={input} />

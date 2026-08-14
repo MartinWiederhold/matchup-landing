@@ -166,6 +166,7 @@ export type NewListing = {
   price_from: number | null;
   price_unit: string; // hour | session | stringing | week | year
   currency: string;
+  image_url: string | null; // selbst hochgeladenes Foto (Bucket provider-images) — MU-035: nur mit Einwilligung
 };
 
 /** URL normalisieren: fehlendes Schema → https:// voranstellen (sonst relativer Link). */
@@ -192,6 +193,7 @@ export async function createProviderListing(userId: string, l: NewListing): Prom
       price_from: l.price_from,
       price_unit: l.price_from != null ? l.price_unit : null,
       currency: l.currency,
+      image_url: l.image_url,
       source: "self",
       is_seed: false,
       created_by: userId,
@@ -199,6 +201,29 @@ export async function createProviderListing(userId: string, l: NewListing): Prom
     .select("id")
     .maybeSingle();
   return (data as { id: string } | null) ?? null;
+}
+
+/* ── Anbieter-Foto (öffentlicher Bucket provider-images, Ordner je Nutzer) ── */
+const PROVIDER_IMAGES_BUCKET = "provider-images";
+
+/**
+ * Selbst hochgeladenes Anbieter-Foto in den EIGENEN Ordner legen (RLS erlaubt nur
+ * <user_id>/…). Gibt die öffentliche URL zurück (für image_url) oder null bei Fehler.
+ */
+export async function uploadProviderImage(userId: string, file: File): Promise<string | null> {
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(PROVIDER_IMAGES_BUCKET).upload(path, file, { upsert: false, contentType: file.type });
+  if (error) return null;
+  return supabase.storage.from(PROVIDER_IMAGES_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Ein hochgeladenes Anbieter-Foto wieder entfernen (RLS: nur eigener Ordner). */
+export async function deleteProviderImage(publicUrl: string): Promise<void> {
+  const marker = `/${PROVIDER_IMAGES_BUCKET}/`;
+  const i = publicUrl.indexOf(marker);
+  if (i < 0) return;
+  await supabase.storage.from(PROVIDER_IMAGES_BUCKET).remove([publicUrl.slice(i + marker.length)]);
 }
 
 /** Eigene Anbieter-Einträge des Nutzers. */
