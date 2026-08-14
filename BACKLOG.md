@@ -146,7 +146,8 @@ Attribution in beiden Fällen sicherstellen.
 **Hinweis (Turnier-Chat):** Der geplante Turnier-Chat soll das Anschreiben an ein beidseitiges Präsenz-Opt-in koppeln (beide beim selben Turnier eingetragen, beide mit Absicht). Das ist eine **dritte** erlaubte Verbindung und gehört als weiterer ODER-Zweig in genau diese Policy/`may_match` — nicht über die hier geschlossene Lücke. `may_match` deshalb erweiterbar bauen.
 **Sperre:** Nicht mit echten Nutzern starten, solange die Datenbank unaufgefordertes Anschreiben Fremder zulässt.
 
-### MU-037 · „Günstigste Saison füllen" ersetzt die bestehende Saison — Datenverlust ohne Vorwarnung · M · offen · **Vor Launch**
+### MU-037 · „Günstigste Saison füllen" ersetzt die bestehende Saison — Datenverlust ohne Vorwarnung · M · **erledigt** · **Vor Launch**
+**Erledigt (14.08.):** „Ergänzen statt ersetzen" umgesetzt (`smartFill` in `SeasonWorkspace.tsx`): belegte Wochen fallen aus den Kandidaten, gefüllt wird nur ins Restbudget, persistiert wird ausschließlich `addToSeason` — kein `removeFromSeason` mehr. Rückmeldung nach dem Füllen. Beleg `e2e/tour-fill.spec.ts` (REST-Snapshot/Restore): Bestand B1=6 → S1=15, ergänzt=9, gelöscht=0. **Sperre aufgehoben.**
 **Problem:** „Günstigste Saison füllen" (`smartFill` in `SeasonWorkspace.tsx`) **ersetzt** die bestehende Saison. Der Diff entfernt alle Einträge, die nicht unter den Optimierer-Picks sind (`toRemove = aktuelle \ picks`, sofort persistiert via `removeFromSeason`). Eine von Hand kuratierte Saison ist damit weg — ohne Warnung, ohne Rückweg.
 **Belegt:** Beim /tour-Audit am 14.08. hat ein einziger Klick sechs kuratierte Einträge des Testkontos gelöscht. Die IDs waren nicht wiederherstellbar.
 **Wirkung:** Ein Spieler plant seine Saison von Hand, drückt aus Neugier den Knopf und verliert die Arbeit. Das ist Datenverlust ohne Vorwarnung — bei der zentralen Aktion der Seite.
