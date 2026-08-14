@@ -1,0 +1,31 @@
+-- Anbieter (Coaches/Physio/Stringer) Zürich + Como aus kuratiertem PDF (redaktionell).
+-- source='editorial', created_by=NULL, kein Bild (MU-035). Koordinaten via Nominatim.
+insert into web.service_providers (name,category,sports,city,country,latitude,longitude,price_from,price_unit,currency,website,contact_email,phone,source,created_by) values
+('racketshop.ch','stringer',array['tennis']::text[],'Winterthur','CH',47.4937801,8.7167037,25,'stringing','CHF','https://racketshop.ch','info@racketshop.ch','+41 43 321 75 00','editorial',null),
+('besaitung.ch','stringer',array['tennis']::text[],'Adliswil','CH',47.3117624,8.52491,null,null,null,'https://www.besaitung.ch',null,null,'editorial',null),
+('Tennis-Point Store Zürich','stringer',array['tennis']::text[],'Dietikon','CH',47.4050746,8.4030765,null,null,null,'https://www.tennis-point.ch',null,null,'editorial',null),
+('Michel Gucek / Racketace','stringer',array['tennis']::text[],'St. Gallen','CH',47.425618,9.3762397,30,'stringing','CHF','https://www.michelgucek.com',null,null,'editorial',null),
+('Decathlon Zürich','stringer',array['tennis']::text[],'Zürich','CH',47.3574987,8.5227352,null,null,null,null,null,'+41 44 741 20 30','editorial',null),
+('GoSports Tennisshop','stringer',array['tennis']::text[],'Wohlen','CH',47.3503796,8.2612849,null,null,null,'https://www.gosports-shop.ch',null,null,'editorial',null),
+('Tennis Dynamics','coach',array['tennis']::text[],'Zürich','CH',47.3744489,8.5410422,null,null,null,'https://www.tennisdynamics.ch',null,null,'editorial',null),
+('Sports Professionals Tennis Academy','coach',array['tennis']::text[],'Zürich','CH',47.3744489,8.5410422,null,null,null,'https://sports-professionals.ch/tennis-academy/',null,null,'editorial',null),
+('Schulthess Klinik – Swiss Olympic Medical Center','physio',array['tennis']::text[],'Zürich','CH',47.3518853,8.5735173,null,null,null,'https://www.schulthess-klinik.ch',null,null,'editorial',null),
+('Medbase Zürich Löwenstrasse','physio',array['tennis']::text[],'Zürich','CH',47.3759946,8.5375648,null,null,null,'https://www.medbase.ch',null,null,'editorial',null),
+('Kinezi Sport Physiotherapie Zürich','physio',array['tennis']::text[],'Zürich','CH',47.3744489,8.5410422,null,null,null,'https://www.sport-physiotherapie-zurich.ch',null,null,'editorial',null),
+('Break Point Sport','stringer',array['tennis']::text[],'Como','IT',45.8105929,9.0778907,15,'stringing','EUR','https://www.breakpointsport.it','info@breakpointsport.it','+39 031 273244','editorial',null),
+('Candusso Tennis Lab','stringer',array['tennis']::text[],'Torino','IT',45.0677551,7.6824892,15,'stringing','EUR','https://candussotennis.it','info@candussotennis.it','+39 338 560 6969','editorial',null),
+('Doctor Tennis','stringer',array['tennis']::text[],'Milano','IT',45.4971267,9.1311668,null,null,null,'https://doctortennis.it',null,'+39 331 314 6834','editorial',null),
+('SportIT Como Pro Shop','stringer',array['tennis']::text[],'Como','IT',45.8075848,9.0927132,null,null,null,'https://www.sportit.com',null,null,'editorial',null),
+('Maxi Sport Como','stringer',array['tennis']::text[],'Como','IT',45.9395857,9.1493609,null,null,null,'https://www.maxisport.com',null,null,'editorial',null),
+('A.S.D. Tennis Como (Villa Olmo)','coach',array['tennis']::text[],'Como','IT',45.8178024,9.0654936,null,null,null,'https://www.tenniscomo.it','info@tenniscomo.it','+39 031 573180','editorial',null),
+('Tennis Club Lecco','coach',array['tennis']::text[],'Lecco','IT',45.9005485,9.4120248,null,null,null,'https://tennisclublecco.it','info@tennisclublecco.it','+39 0341 368048','editorial',null),
+('Circolo Tennis Cantù','coach',array['tennis']::text[],'Cantù','IT',45.7396769,9.1181564,null,null,null,'https://www.tenniscantu.com','tenniscantu@tenniscantu.com','+39 031 2070648','editorial',null),
+('Nuovo Tennis delle Vigne','coach',array['tennis']::text[],'Como','IT',45.8347736,9.0646198,null,null,null,'https://www.tennisdellevigne.com','info@tennisdellevigne.com','+39 348 5421393','editorial',null),
+('Sporting Faloppio','coach',array['tennis']::text[],'Faloppio','IT',45.808881,8.9711727,null,null,null,'https://sporting.co.it','info@sporting.co.it',null,'editorial',null),
+('Tennis Club Mendrisio','coach',array['tennis']::text[],'Mendrisio','CH',45.8709661,8.9875293,null,null,null,'https://www.tennisclubmendrisio.ch',null,'+41 76 343 42 36','editorial',null),
+('Tennis Club Chiasso','coach',array['tennis']::text[],'Chiasso','CH',45.8355209,9.0290169,null,null,null,'https://www.tcchiasso.ch',null,null,'editorial',null),
+('Fisio Salute Como','physio',array['tennis']::text[],'Villa Guardia','IT',45.7691324,9.0312946,null,null,null,'https://www.fisio-salute.com',null,'+39 031 812 3477','editorial',null),
+('Fisiolab (Villa Guardia)','physio',array['tennis']::text[],'Villa Guardia','IT',45.7726437,9.0254791,null,null,null,'https://fisiolabgroup.it','info@fisiolabgroup.it','+39 031 4148646','editorial',null),
+('Fisio Center Como','physio',array['tennis']::text[],'Como','IT',45.796826,9.0947598,null,null,null,'https://fisiocentercomo.it',null,null,'editorial',null),
+('Fisio Salute Swiss (Morbio Inferiore)','physio',array['tennis']::text[],'Morbio Inferiore','CH',45.8476412,9.0151022,null,null,null,'https://www.fisio-salute.com',null,'+41 91 210 4004','editorial',null);
+notify pgrst, 'reload schema';
