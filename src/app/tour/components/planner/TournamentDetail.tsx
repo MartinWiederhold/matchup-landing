@@ -5,6 +5,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
+import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 
 const DAY = 86_400_000;
@@ -66,6 +67,7 @@ export default function TournamentDetail({
   const [pPartner, setPPartner] = useState(true);
   const [pRoom, setPRoom] = useState(false);
   const [pBusy, setPBusy] = useState(false);
+  const [chatWith, setChatWith] = useState<TourPresence | null>(null);
   useEffect(() => {
     let alive = true;
     loadTourPresence(tt.id).then((rows) => {
@@ -78,6 +80,10 @@ export default function TournamentDetail({
   }, [tt.id, viewerId]);
   const meListed = !!presence?.some((r) => r.user_id === viewerId);
   const others = (presence ?? []).filter((r) => r.user_id !== viewerId);
+  // In-App-Anschreiben nur, wenn ich selbst mit Absicht eingetragen bin (spiegelt die
+  // RLS web.may_match: beide brauchen Präsenz + Absicht — sonst lehnt die DB den Match ab).
+  const myPresence = presence?.find((r) => r.user_id === viewerId);
+  const canMessage = !!myPresence && (myPresence.looking || myPresence.looking_room);
   const refreshPresence = async () => setPresence(await loadTourPresence(tt.id));
   const joinP = async () => {
     setPBusy(true);
@@ -195,9 +201,14 @@ export default function TournamentDetail({
                       </span>
                       <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>
                     </span>
-                    {r.contact && (href
-                      ? <a href={href} target="_blank" rel="noreferrer" className="shrink-0 rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsContact")}</a>
-                      : <span className="shrink-0 text-[11px] text-neutral-500">{r.contact}</span>)}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      {canMessage && (r.looking || r.looking_room) && (
+                        <button type="button" onClick={() => setChatWith(r)} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsMessage")}</button>
+                      )}
+                      {r.contact && (href
+                        ? <a href={href} target="_blank" rel="noreferrer" className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.wsContact")}</a>
+                        : <span className="text-[11px] text-neutral-500">{r.contact}</span>)}
+                    </span>
                   </div>
                 );
               })}
@@ -218,6 +229,15 @@ export default function TournamentDetail({
           <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBookNote")}</p>
         </section>
       </div>
+
+      {chatWith && (
+        <TourChatPanel
+          meId={viewerId}
+          otherId={chatWith.user_id}
+          otherName={chatWith.name ?? ""}
+          onClose={() => setChatWith(null)}
+        />
+      )}
     </div>
   );
 }
