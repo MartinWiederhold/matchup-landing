@@ -27,7 +27,8 @@ export type ServiceProvider = {
   sports: string[];
   website: string | null;
   contact_email: string | null;
-  source: string | null; // seed | directory | self
+  phone: string | null;
+  source: string | null; // seed | directory | self | editorial
   created_by: string | null;
 };
 

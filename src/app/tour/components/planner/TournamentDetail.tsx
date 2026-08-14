@@ -278,6 +278,7 @@ export default function TournamentDetail({
                       )}
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
+                      {p.phone && <a href={`tel:${p.phone}`} className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.svcPhone")}</a>}
                       {p.website && <a href={p.website} target="_blank" rel="noreferrer" className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.svcWeb")}</a>}
                       {p.contact_email && <a href={`mailto:${p.contact_email}`} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.svcEmail")}</a>}
                     </span>

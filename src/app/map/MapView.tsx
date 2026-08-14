@@ -1306,8 +1306,9 @@ function SvcCard({ p, onFly, detailed, locale }: { p: ServiceProvider; onFly?: (
         <span className="text-[13px] font-bold text-neutral-900">
           {p.price_from != null && <><span className="text-neutral-400">{tt("ab ", "from ")}</span>{p.price_from} {p.currency}<span className="text-[11px] font-medium text-neutral-400"> {p.price_unit && SVC_UNIT[p.price_unit] ? tt(SVC_UNIT[p.price_unit].de, SVC_UNIT[p.price_unit].en) : ""}</span></>}
         </span>
-        {p.contact_email || p.website ? (
+        {p.contact_email || p.website || p.phone ? (
           <span className="flex shrink-0 items-center gap-1.5">
+            {p.phone && <a href={`tel:${p.phone}`} className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700">{tt("Telefon", "Phone")}</a>}
             {p.website && <a href={p.website} target="_blank" rel="noopener noreferrer" className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700">Website</a>}
             {p.contact_email && <a href={`mailto:${p.contact_email}?subject=${encodeURIComponent(tt("Anfrage über Matchup", "Inquiry via Matchup"))}`} className="rounded-full bg-matchup px-4 py-1.5 text-[12px] font-bold text-white">{tt("E-Mail", "Email")}</a>}
           </span>

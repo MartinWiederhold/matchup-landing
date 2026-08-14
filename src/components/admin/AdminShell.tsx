@@ -28,6 +28,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { href: "/admin", label: "Dashboard", Icon: DashboardIcon },
   { href: "/admin/venues", label: "Clubs / Karte", Icon: DashboardIcon },
+  { href: "/admin/providers", label: "Anbieter", Icon: UsersIcon },
   { href: "/admin/cutoffs", label: "Turnier-Cut-Offs", Icon: CalendarIcon },
   { href: "/admin/events", label: "Events", Icon: CalendarIcon },
   { href: "/admin/waitlist", label: "Waitlist", Icon: UsersIcon },
