@@ -68,6 +68,7 @@ Konkrete Fallstricke:
 ## Architektur-Leitplanken
 
 - Reine Geschäftslogik → `src/domain/**`. Keine UI, keine DB-Zugriffe, **immer mit Vitest-Test**.
+- **Schreibende E2E-Prüfungen (Playwright) laufen über Snapshot und Restore per REST** (mit dem JWT des Testkontos, RLS, Anon-Key) — **NIE über die Oberfläche**. Sonst ändert der Test Kontodaten, die er nicht zurückholen kann: Am 14.08. löschte ein einziger UI-Klick („Günstigste Saison füllen") sechs kuratierte Saison-Einträge des Testkontos — unwiederbringlich, weil die IDs nicht vorlagen. Muster in `e2e/tour-fill.spec.ts`.
 - Scoring-Regeln sind versioniert (`RULES_VERSION`). Logikänderung → Version hochziehen und Tests anpassen.
 - Seed-/Demo-Daten sind mit `isDemoData: true` bzw. `is_seed = true` markiert. Nie als echte Daten ausgeben.
 - Feature-Flags in `src/lib/feature-flags` steuern die Advice-Ausbaustufen. Nur `advisory_enabled=true`. Flags nicht ohne Auftrag umlegen.

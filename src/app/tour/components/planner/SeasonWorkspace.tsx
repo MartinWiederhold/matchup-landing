@@ -107,6 +107,8 @@ export default function SeasonWorkspace() {
   }
   const [stays, setStays] = useState<Stay[]>([]);
   const [filling, setFilling] = useState(false);
+  // MU-037: Rückmeldung nach dem Füllen (ergänzt / bereits belegte Wochen).
+  const [fillReport, setFillReport] = useState<{ added: number; occupied: number } | null>(null);
   const [costOpen, setCostOpen] = useState(false); // Kostensätze/Nächte bearbeiten (aufklappbar, wenn Sätze schon da sind)
   const [nowMs] = useState(() => Date.now()); // Stichtag für den Meldefrist-Countdown (aus der Komponente)
 
@@ -323,10 +325,22 @@ export default function SeasonWorkspace() {
       const budgetVal = raw === "" ? (profile?.seasonBudget ?? null) : Number(raw);
       const budgetM = budgetVal != null && Number.isFinite(budgetVal) && budgetVal >= 0 ? budgetMoney(Math.round(budgetVal), cur) : null;
       const homePlace = placeKey(profile?.country ?? null, profile?.city ?? null) ?? "";
-      const candidates = buildSeasonCandidates(tours, frame, new Set(), new Set());
+      // MU-037 — ERGÄNZEN, NIE ERSETZEN. Der Knopf heißt „füllen", nicht „ersetzen":
+      // (1) Wochen mit bestehendem Saison-Eintrag fallen als blockedWeeks aus den
+      //     Kandidaten (buildSeasonCandidates blockt sie) → der Optimierer schlägt nur
+      //     freie Wochen vor und kollidiert nie mit Handgeplantem.
+      // (2) Gefüllt wird nur ins RESTBUDGET (Budget minus bereits verplante Kosten),
+      //     damit die Ergänzung das Budget nicht sprengt.
+      // (3) Persistiert wird ausschließlich ein INSERT je neuem Turnier — kein einziges
+      //     removeFromSeason. Ein Klick kann eine geplante Saison damit nicht mehr löschen.
+      const blockedWeeks = new Set<string>();
+      for (const id of seasonIds) { const tt = tours.find((x) => x.id === id); if (tt?.tournament_monday) blockedWeeks.add(tt.tournament_monday); }
+      const spentMinor = cost ? (cost.total[cur] ?? 0) : 0;
+      const remainingM = budgetM ? { amount: Math.max(0, budgetM.amount - spentMinor), currency: cur } : null;
+      const candidates = buildSeasonCandidates(tours, frame, blockedWeeks, seasonIds);
       const result = optimizeSeason({
         candidates,
-        budget: budgetM,
+        budget: remainingM,
         params,
         homePlace,
         nightsPerWeek: nights.trim() === "" ? null : nightsNum,
@@ -334,19 +348,21 @@ export default function SeasonWorkspace() {
         schengen: schengenApplies ? { applies: true, existingStays: stays } : null,
         entryBanned: banned,
       });
-      const newIds = new Set(result.picks.map((p) => p.id));
-      const cur0 = seasonIds;
-      const toRemove = [...cur0].filter((id) => !newIds.has(id));
-      const toAdd = [...newIds].filter((id) => !cur0.has(id));
-      setSeasonIds(newIds); // optimistisch
-      await Promise.all([...toRemove.map((id) => removeFromSeason(id)), ...toAdd.map((id) => addToSeason(user.id, id))]);
+      const picks = result.picks.filter((p) => !seasonIds.has(p.id)); // doppelte Sicherung: nie Bestehendes
+      if (picks.length > 0) {
+        const next = new Set(seasonIds);
+        picks.forEach((p) => next.add(p.id));
+        setSeasonIds(next); // optimistisch — NUR hinzufügen
+        await Promise.all(picks.map((p) => addToSeason(user.id, p.id)));
+      }
+      setFillReport({ added: picks.length, occupied: blockedWeeks.size });
     } catch {
       // Bei Fehler den echten Stand zurückholen, damit Anzeige und DB nicht auseinanderlaufen.
       try { setSeasonIds(await loadSeasonTournamentIds()); } catch { /* egal */ }
     } finally {
       setFilling(false);
     }
-  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds]);
+  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost]);
 
   const money = useCallback((minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [locale]);
 
@@ -661,6 +677,11 @@ export default function SeasonWorkspace() {
                 {t("tour.wsFillShort")}
                 <InfoHint label={t("tour.wsFillInfo")}>{t("tour.wsFillLong")}</InfoHint>
               </p>
+              {fillReport && (
+                <p className="mt-1 rounded-xl bg-matchup/[0.06] px-3 py-2 text-[12px] leading-relaxed text-neutral-600">
+                  {t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })}
+                </p>
+              )}
             </section>
 
             {/* Meine Saison */}
