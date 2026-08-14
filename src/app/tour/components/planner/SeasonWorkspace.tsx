@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -39,6 +39,15 @@ const NIGHTS_KEY = "mu_tour_nights";
 const byMonday = (a: TourTournament, b: TourTournament) => a.tournament_monday.localeCompare(b.tournament_monday);
 const hasCoords = (t: TourTournament) => t.latitude != null && t.longitude != null;
 const RECENT_KEY = "mu_tour_recent_starts";
+// Panel-Breite (Desktop): Anzeigevorliebe, kein Datum → localStorage. Default 560,
+// nicht schmaler als 400, nicht breiter als die halbe Fensterbreite.
+const PANEL_W_KEY = "mu_tour_panel_w";
+const PANEL_W_DEFAULT = 560;
+const PANEL_W_MIN = 400;
+function clampPanelW(w: number): number {
+  const max = typeof window !== "undefined" ? Math.max(PANEL_W_MIN, Math.floor(window.innerWidth / 2)) : 720;
+  return Math.min(max, Math.max(PANEL_W_MIN, Math.round(w)));
+}
 
 export default function SeasonWorkspace() {
   const { user, loading: authLoading } = useAuth();
@@ -74,6 +83,28 @@ export default function SeasonWorkspace() {
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
   const [nights, setNights] = useState<string>(() => { try { return localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { return ""; } });
+  // Panel-Breite (Desktop): SSR-stabiler Default, danach aus localStorage übernehmen
+  // (vermeidet Hydration-Mismatch am inline width). Ziehen setzt/merkt die Breite.
+  const [panelW, setPanelW] = useState(PANEL_W_DEFAULT);
+  useEffect(() => {
+    try { const v = parseInt(localStorage.getItem(PANEL_W_KEY) ?? "", 10); if (Number.isFinite(v)) setPanelW(clampPanelW(v)); } catch { /* egal */ }
+  }, []);
+  function startPanelDrag(e: ReactMouseEvent<HTMLDivElement>) {
+    e.preventDefault();
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    let last = panelW;
+    const onMove = (ev: MouseEvent) => { last = clampPanelW(ev.clientX); setPanelW(last); };
+    const onUp = () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      try { localStorage.setItem(PANEL_W_KEY, String(last)); } catch { /* egal */ }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
   const [stays, setStays] = useState<Stay[]>([]);
   const [filling, setFilling] = useState(false);
   const [costOpen, setCostOpen] = useState(false); // Kostensätze/Nächte bearbeiten (aufklappbar, wenn Sätze schon da sind)
@@ -772,7 +803,16 @@ export default function SeasonWorkspace() {
 
   return (
     <div className="relative flex h-[100dvh] w-full overflow-hidden bg-white text-neutral-900">
-      <aside className="hidden w-[440px] shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">{surface}</aside>
+      <aside className="hidden shrink-0 flex-col bg-white md:flex" style={{ width: panelW }}>{surface}</aside>
+      {/* Zieh-Griff: Panel-Breite selbst einstellen (nur Desktop). */}
+      <div
+        onMouseDown={startPanelDrag}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t("tour.panelResize")}
+        title={t("tour.panelResize")}
+        className="hidden w-1.5 shrink-0 cursor-col-resize bg-neutral-200 transition-colors hover:bg-matchup/40 active:bg-matchup/60 md:block"
+      />
       <div className="relative flex-1 bg-neutral-100">
         <PlannerMap start={start} plan={planStops} candidates={candidateStops} selectedId={selectedId} onSelect={handleSelect} />
         {chip}
