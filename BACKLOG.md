@@ -146,6 +146,13 @@ Attribution in beiden Fällen sicherstellen.
 **Hinweis (Turnier-Chat):** Der geplante Turnier-Chat soll das Anschreiben an ein beidseitiges Präsenz-Opt-in koppeln (beide beim selben Turnier eingetragen, beide mit Absicht). Das ist eine **dritte** erlaubte Verbindung und gehört als weiterer ODER-Zweig in genau diese Policy/`may_match` — nicht über die hier geschlossene Lücke. `may_match` deshalb erweiterbar bauen.
 **Sperre:** Nicht mit echten Nutzern starten, solange die Datenbank unaufgefordertes Anschreiben Fremder zulässt.
 
+### MU-037 · „Günstigste Saison füllen" ersetzt die bestehende Saison — Datenverlust ohne Vorwarnung · M · offen · **Vor Launch**
+**Problem:** „Günstigste Saison füllen" (`smartFill` in `SeasonWorkspace.tsx`) **ersetzt** die bestehende Saison. Der Diff entfernt alle Einträge, die nicht unter den Optimierer-Picks sind (`toRemove = aktuelle \ picks`, sofort persistiert via `removeFromSeason`). Eine von Hand kuratierte Saison ist damit weg — ohne Warnung, ohne Rückweg.
+**Belegt:** Beim /tour-Audit am 14.08. hat ein einziger Klick sechs kuratierte Einträge des Testkontos gelöscht. Die IDs waren nicht wiederherstellbar.
+**Wirkung:** Ein Spieler plant seine Saison von Hand, drückt aus Neugier den Knopf und verliert die Arbeit. Das ist Datenverlust ohne Vorwarnung — bei der zentralen Aktion der Seite.
+**Lösung:** Entweder **ergänzen statt ersetzen** (belegte Wochen sperren, wie es der früher gebaute Vorschlag tat), oder vor dem Ersetzen fragen und sagen, wie viele Einträge entfernt würden. Die erste Variante ist die bessere: Der Knopf heißt „füllen", nicht „ersetzen".
+**Sperre:** Nicht mit echten Nutzern starten, solange ein Klick eine geplante Saison löschen kann.
+
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
 ### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
