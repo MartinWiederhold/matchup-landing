@@ -14,6 +14,16 @@ const DAY = 86_400_000;
 // Bewusst KEINE Auto-Erweiterung — lieber ehrlich leer als Unnütze aus 200 km.
 const PROVIDER_RADIUS_KM = 50;
 const SVC_CAT_ORDER = ["coach", "physio", "stringer", "sc", "mental", "nutrition", "hitting", "tour_companion"];
+// Reiter des Turnierdetails (Etappe a des /tour-Vier-Spalten-Umbaus). Der Shell lädt
+// Präsenz/Anbieter/Flugpreis EINMAL je tt.id; die Reiter rendern nur konditional →
+// Wechsel = reines Re-Render, kein neuer Abruf.
+const DETAIL_TABS = [
+  { k: "overview", label: "tour.tabOverview" },
+  { k: "onsite", label: "tour.tabOnSite" },
+  { k: "services", label: "tour.tabServices" },
+  { k: "booking", label: "tour.tabBooking" },
+] as const;
+type DetailTab = (typeof DETAIL_TABS)[number]["k"];
 // Website-Logo je Anbieter = Favicon der eigenen Website (öffentliche Marke, KEIN
 // Personenfoto → MU-035 unberührt). Ohne Website fällt die Zeile auf ein Monogramm zurück.
 function providerDomain(website: string | null): string | null {
@@ -79,6 +89,7 @@ export default function TournamentDetail({
   const [pRoom, setPRoom] = useState(false);
   const [pBusy, setPBusy] = useState(false);
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
+  const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   useEffect(() => {
     let alive = true;
     loadTourPresence(tt.id).then((rows) => {
@@ -177,6 +188,17 @@ export default function TournamentDetail({
         </button>
         {inSeason && <button type="button" onClick={onToggle} className="w-full text-center text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>}
 
+        {/* Reiter */}
+        <div className="flex gap-1 rounded-full bg-black/[0.04] p-1">
+          {DETAIL_TABS.map((tab) => (
+            <button key={tab.k} type="button" onClick={() => setActiveTab(tab.k)} className={`flex-1 rounded-full px-2 py-1.5 text-[12px] font-bold transition-colors ${activeTab === tab.k ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>
+              {t(tab.label)}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "overview" && (
+        <>
         {/* Meldefrist + Weg zur Meldung */}
         <section className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
           <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsDetailDeadline")}</p>
@@ -197,6 +219,11 @@ export default function TournamentDetail({
           </section>
         )}
 
+        </>
+        )}
+
+        {activeTab === "onsite" && (
+        <>
         {/* Wer ist hier? — Opt-in-Präsenz (freiwillig, selbst gewählter Kontakt). */}
         <section>
           <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsHereTitle")}{presence ? ` · ${presence.length}` : ""}</p>
@@ -252,6 +279,11 @@ export default function TournamentDetail({
           <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsHereNote")}</p>
         </section>
 
+        </>
+        )}
+
+        {activeTab === "services" && (
+        <>
         {/* Dienstleister vor Ort — Anbieter im 50-km-Umkreis, redaktioneller Bestand.
             Kein Bild (auch bei Selbst-Einträgen): Darstellung wie Plätze/Vereine in /map. */}
         <section>
@@ -324,6 +356,11 @@ export default function TournamentDetail({
           )}
         </section>
 
+        </>
+        )}
+
+        {activeTab === "booking" && (
+        <>
         {/* Buchen — Deep-Links. Funktionieren IMMER (auch ohne Live-Preis) und sind der
             eigentliche Nutzen. Bewusst KEIN „Live-Preise"-Titel mehr. */}
         <section>
@@ -335,6 +372,8 @@ export default function TournamentDetail({
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBookNote")}</p>
         </section>
+        </>
+        )}
       </div>
 
       {chatWith && (
