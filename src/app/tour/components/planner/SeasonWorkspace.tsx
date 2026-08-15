@@ -14,7 +14,8 @@ import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { tourDeadlines } from "@/domain/tour/deadlines";
-import { optimizeSeason } from "@/domain/tour/optimizeSeason";
+import { optimizeSeason, type SeasonObjective } from "@/domain/tour/optimizeSeason";
+import { expectedPoints, type PointsRound } from "@/domain/tour/points";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
 import CostRatesForm from "@/app/tour/costs/components/CostRatesForm";
 import { DeadlineCountdown } from "../EntryDeadline";
@@ -27,6 +28,12 @@ import { HOME_BASES } from "@/lib/tournaments";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
+// Optimierer-Objektiv (v3): „meiste Turniere" (Standard) vs. „meiste erwartete Punkte".
+// Beim Umschalten auf Punkte ist die Zielrunde nie leer — Vorgabe R16 (2. Runde).
+const OBJECTIVE_KEY = "mu_tour_objective";
+const EXP_ROUND_KEY = "mu_tour_exp_round";
+const EXP_ROUND_DEFAULT: PointsRound = "R16";
+const ROUND_OPTS: PointsRound[] = ["W", "F", "SF", "QF", "R16", "R32"];
 
 /**
  * Saisonplaner unter /tour — EINE Fläche nach dem Vorbild des /map-SeasonPlanners.
@@ -96,6 +103,21 @@ export default function SeasonWorkspace() {
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
   const [nights, setNights] = useState<string>(() => { try { return localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { return ""; } });
+  // Optimierer-Objektiv + angenommene Zielrunde (Erwartungspunkte). SSR-stabile Defaults,
+  // danach aus localStorage. Die Runde ist nie leer → Vorgabe R16 (Entscheidung 3: kein
+  // stiller Objektiv-Rückfall — die Vorgabe verhindert, dass expectedRound leer ankommt).
+  const [objective, setObjective] = useState<SeasonObjective>("most_tournaments");
+  const [expRound, setExpRound] = useState<PointsRound>(EXP_ROUND_DEFAULT);
+  useEffect(() => {
+    try {
+      const o = localStorage.getItem(OBJECTIVE_KEY);
+      if (o === "most_points" || o === "most_tournaments") setObjective(o);
+      const r = localStorage.getItem(EXP_ROUND_KEY);
+      if (r && (ROUND_OPTS as string[]).includes(r)) setExpRound(r as PointsRound);
+    } catch { /* egal */ }
+  }, []);
+  const chooseObjective = useCallback((o: SeasonObjective) => { setObjective(o); try { localStorage.setItem(OBJECTIVE_KEY, o); } catch { /* egal */ } }, []);
+  const chooseRound = useCallback((r: PointsRound) => { setExpRound(r); try { localStorage.setItem(EXP_ROUND_KEY, r); } catch { /* egal */ } }, []);
   // Katalogspalten-Breite (Desktop): SSR-stabiler Default, danach aus localStorage übernehmen
   // (vermeidet Hydration-Mismatch am inline width). Der Zieh-Griff sitzt zwischen Katalog
   // und Karte. Beim Ziehen wird die Filterspalten-Breite mitgerechnet (Griff-x minus Offset).
@@ -317,6 +339,20 @@ export default function SeasonWorkspace() {
     return best?.tt ?? null;
   }, [seasonOrdered, nowMs]);
 
+  // Erwartete Punkte der geplanten Saison unter der Annahme-Runde (nur Objektiv „Punkte").
+  // anyPoints=false heißt: mit dieser Runde bringt kein Turnier Punkte (z. B. R32/1. Runde).
+  const expPoints = useMemo(() => {
+    if (objective !== "most_points") return null;
+    let sum = 0;
+    let anyPoints = false;
+    for (const { tt } of seasonOrdered) {
+      const p = expectedPoints(tt.category, expRound, tt.tournament_monday).points;
+      sum += p;
+      if (p > 0) anyPoints = true;
+    }
+    return { sum, anyPoints };
+  }, [objective, expRound, seasonOrdered]);
+
   // Budget der Kostensatz-Währung (Minor) für den Balken.
   const budgetMinor = useMemo(() => {
     const cur = rates?.currency ?? "EUR";
@@ -389,6 +425,8 @@ export default function SeasonWorkspace() {
         now: new Date(),
         schengen: schengenApplies ? { applies: true, existingStays: stays } : null,
         entryBanned: banned,
+        objective,
+        expectedRound: objective === "most_points" ? expRound : null,
       });
       const picks = result.picks.filter((p) => !seasonIds.has(p.id)); // doppelte Sicherung: nie Bestehendes
       if (picks.length > 0) {
@@ -404,7 +442,7 @@ export default function SeasonWorkspace() {
     } finally {
       setFilling(false);
     }
-  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost]);
+  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound]);
 
   const money = useCallback((minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [locale]);
 
@@ -605,6 +643,26 @@ export default function SeasonWorkspace() {
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Optimierungsziel: steuert „Füllen". Bei „Punkte" erscheint die angenommene Zielrunde. */}
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsObjectiveTitle")}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {([["most_tournaments", "wsObjTournaments"], ["most_points", "wsObjPoints"]] as const).map(([v, key]) => (
+              <button key={v} type="button" onClick={() => chooseObjective(v)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${objective === v ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.${key}`)}</button>
+            ))}
+          </div>
+          {objective === "most_points" && (
+            <div className="mt-2.5">
+              <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsRoundLabel")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {ROUND_OPTS.map((r) => (
+                  <button key={r} type="button" onClick={() => chooseRound(r)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${expRound === r ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.round_${r}`)}</button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRoundHint")}</p>
+            </div>
+          )}
+        </div>
         {/* Serie */}
         <div>
           <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.series")}</span>
@@ -782,6 +840,20 @@ export default function SeasonWorkspace() {
           <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsNextDeadlineNone")}</p>
         )}
       </section>
+
+      {/* Erwartete Punkte (nur Objektiv „Punkte") — sichtbar als Annahme markiert. */}
+      {objective === "most_points" && expPoints && seasonOrdered.length > 0 && (
+        <section>
+          <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsExpPointsTitle")}</h2>
+          {expPoints.anyPoints ? (
+            <p className="mt-2 rounded-2xl bg-black/[0.02] p-4 text-[13px] font-semibold text-neutral-800 ring-1 ring-black/5">
+              {t("tour.wsExpPointsSum", { sum: expPoints.sum, round: t(`tour.round_${expRound}`) })}
+            </p>
+          ) : (
+            <p className="mt-2 rounded-2xl border border-amber-300 bg-amber-500/10 p-3 text-[12px] leading-relaxed text-amber-800">{t("tour.wsExpPointsZero")}</p>
+          )}
+        </section>
+      )}
     </div>
   );
 

@@ -155,6 +155,43 @@ function lookupPoints(category: string, round: string, era: 2025 | 2026): { poin
   return { points: 0, note: "keine_punkte" };
 }
 
+// ── v3-Optimierer: ERWARTUNGSPUNKTE (vor der Saison) ──────────────────────────
+// Anders als scorePoints (bewertet ERZIELTE Ergebnisse) schätzt dies die Punkte unter
+// EINER sichtbaren Annahme: „der Spieler erreicht Runde `round`". Rein/deterministisch,
+// dieselbe Jahrgangs-Ära + Tabelle wie scorePoints. Die DB-Kategorie ist der Anzeigetext
+// („M25", „Challenger 125") — bei Challengern IST die Zahl die Punktestufe (MU-028 hier
+// korrekt: kein Preisgeld, sondern die belegte Punkte-Kategorie).
+const CAT_DISPLAY_TO_POINTS: Record<string, PointsCategory> = {
+  m15: "m15",
+  m25: "m25",
+  "challenger 50": "challenger_50",
+  "challenger 75": "challenger_75",
+  "challenger 100": "challenger_100",
+  "challenger 125": "challenger_125",
+  "challenger 175": "challenger_175",
+};
+
+/** DB-Kategorie („M25", „Challenger 125") → PointsCategory. Unbekannt/null → null. */
+export function toPointsCategory(category: string | null): PointsCategory | null {
+  if (!category) return null;
+  return CAT_DISPLAY_TO_POINTS[category.trim().toLowerCase()] ?? null;
+}
+
+/**
+ * Erwartete Punkte eines Turniers unter der Annahme „mindestens Runde `round` erreicht".
+ * `note` (Code) begründet eine 0: `erwartungspunkte_null` (Kategorie unbekannt),
+ * `kein_punkt_erstrunde` (R32 zählt nicht, 9.03 G.2), `kein_quali_itf`, `ungueltiges_datum`.
+ * @param tournamentMonday Montag der Turnierwoche als ISO-Datum (YYYY-MM-DD) — Jahrgangs-Anker.
+ */
+export function expectedPoints(category: string | null, round: PointsRound, tournamentMonday: string): { points: number; note?: string } {
+  const cat = toPointsCategory(category);
+  if (!cat) return { points: 0, note: "erwartungspunkte_null" };
+  const ms = parseUtcDay(tournamentMonday);
+  if (Number.isNaN(ms)) return { points: 0, note: "ungueltiges_datum" };
+  const era = eraForYear(new Date(ms).getUTCFullYear(), []);
+  return lookupPoints(cat, round, era);
+}
+
 /**
  * Berechnet Punkte, Zählstand und Verfall aus einer Ergebnisliste zum Stichtag.
  *

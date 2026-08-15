@@ -19,26 +19,33 @@
  * ist reine Anzeige-Info (Code `ohne_kartenpunkt`), KEIN Ausschlussgrund.
  *
  * REASON-/NOTE-CODES sind i18n-Wurzeln (nur Codes, keine Sätze). ACHTUNG für die UI:
- * fast alle Codes sind reine Bezeichner — GENAU EINER trägt einen Wert im Code:
- *   `arrivals_gespart:${n}`  (n = eingesparte Anreisen, aus SeasonCost.arrivalsSaved).
- * Die UI muss diesen Code am ":" trennen; alle anderen sind ohne ":" zu übersetzen.
+ * fast alle Codes sind reine Bezeichner — DREI tragen einen Wert im Code (am ":" trennen):
+ *   `arrivals_gespart:${n}`          (Note; eingesparte Anreisen, SeasonCost.arrivalsSaved)
+ *   `erwartungspunkte:${n}`          (Pick-Reason, Objektiv C; erwartete Punkte des Turniers)
+ *   `erwartungspunkte_annahme:${r}`  (Note, Objektiv C; angenommene Zielrunde, z. B. R16)
+ * Alle anderen Codes sind ohne ":" zu übersetzen.
  */
 import { computeSeasonCost, type CostParams, type Money, type Station, type SeasonCost, type MoneyBag } from "./costs";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "./schengen";
 import { decideTournament, type DecideReason } from "./decide";
+import { expectedPoints, type PointsRound } from "./points";
 import type { TourSeries } from "./deadlines";
 
+// v3: zweites Objektiv C „most_points" — maximiere ERWARTETE ATP-Punkte im Budget unter
+//     einer SICHTBAREN Annahme (expectedRound). Kosten bleiben harte Grenze + Tiebreaker
+//     (belohnt weiter Cluster/Heimatnähe). Jeder Punktwert ist eine gekennzeichnete Erwartung
+//     (Code erwartungspunkte_annahme:<Runde>), kein Versprechen.
 // v2: Einreisesperren (entryBanned) — Länder mit „admission refused" für die
 //     Nationalität werden NICHT vorgeschlagen (Reject-Grund einreise_gesperrt).
-export const OPTIMIZE_RULES_VERSION = "v2";
+export const OPTIMIZE_RULES_VERSION = "v3";
 
 const DAY = 86_400_000;
 const DEFAULT_NIGHTS = 7;      // Fallback, wenn nightsPerWeek nicht gesetzt ist → Code `naechte_annahme`
 const DEFAULT_BEAM = 64;       // Strahlbreite K
 const SCHENGEN_NEAR = 80;      // used ≥ 80 von 90 → Code `schengen_nah`
 
-/** v1: nur D. „most_points" (C) folgt erst mit einem ehrlichen Erwartungs-Punktemodell. */
-export type SeasonObjective = "most_tournaments";
+// Objektive: D „meiste Turniere im Budget" (Standard) · C „meiste erwartete Punkte im Budget".
+export type SeasonObjective = "most_tournaments" | "most_points";
 
 export type SeasonCandidate = {
   id: string;
@@ -70,6 +77,11 @@ export type OptimizeInput = {
    *  web.tour_visa_requirements — der Optimierer bleibt rein (kein DB/Netz). */
   entryBanned?: Set<string>;
   objective?: SeasonObjective;  // Default "most_tournaments"
+  /** Objektiv C: angenommene Zielrunde je Turnier (Erwartungspunkte). Die UI setzt beim
+   *  Umschalten auf "most_points" eine Vorgabe (R16), damit dies nie leer ankommt. Kommt es
+   *  DOCH null bei "most_points" an → Rückfall auf "most_tournaments" + Note erwartungspunkte_null
+   *  (Absicherung, greift regulär nie). */
+  expectedRound?: PointsRound | null;
   beamWidth?: number;           // Default 64
 };
 
@@ -126,7 +138,7 @@ function costScalar(cost: SeasonCost, primaryCurrency: string | null): number {
   return c ? cost.total[c] : 0;
 }
 
-type State = { chosen: SeasonCandidate[]; cost: SeasonCost; scalar: number };
+type State = { chosen: SeasonCandidate[]; cost: SeasonCost; scalar: number; points: number };
 
 /**
  * Objektiv D: maximiere Anzahl Turniere unter Budget; bei gleicher Anzahl minimiere
@@ -139,6 +151,12 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const nightsGiven = input.nightsPerWeek;
   const nights = nightsGiven != null && nightsGiven >= 0 ? Math.round(nightsGiven) : DEFAULT_NIGHTS;
   const primaryCurrency = budget?.currency ?? params.arrival?.currency ?? params.perNight?.currency ?? null;
+
+  // Objektiv auflösen. Absicherung (greift regulär NIE, weil die UI beim Umschalten eine
+  // Zielrunde setzt): most_points ohne Zielrunde → Rückfall auf most_tournaments + Note.
+  const expectedRound = input.expectedRound ?? null;
+  const fallbackNoRound = (input.objective ?? "most_tournaments") === "most_points" && expectedRound == null;
+  const objective: SeasonObjective = fallbackNoRound ? "most_tournaments" : (input.objective ?? "most_tournaments");
 
   const budgetOk = (cost: SeasonCost): boolean => {
     if (!budget) return true;
@@ -183,12 +201,29 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const weeks = [...byWeek.keys()].sort();
   for (const wk of weeks) byWeek.get(wk)!.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
+  // ── Erwartungspunkte je eignungsfähigem Kandidaten (nur Objektiv C). maxExpected = 0
+  //    heißt: mit dieser Zielrunde bringt KEIN Turnier im Rahmen Punkte (z. B. R32/1. Runde,
+  //    9.03 G.2) → das Ergebnis sagt das (Note), statt willkürlich Turniere zu wählen. ──
+  const pointsOf = new Map<string, number>();
+  let maxExpected = 0;
+  if (objective === "most_points" && expectedRound) {
+    for (const c of eligible) {
+      const p = expectedPoints(c.category, expectedRound, isoDay(mondayMs(c.tournamentMonday))).points;
+      pointsOf.set(c.id, p);
+      if (p > maxExpected) maxExpected = p;
+    }
+  }
+
   const emptyCost = computeSeasonCost([], params);
-  let beam: State[] = [{ chosen: [], cost: emptyCost, scalar: 0 }];
+  let beam: State[] = [{ chosen: [], cost: emptyCost, scalar: 0, points: 0 }];
 
   const better = (a: State, b: State): number => {
-    if (a.chosen.length !== b.chosen.length) return b.chosen.length - a.chosen.length; // mehr Turniere zuerst
-    if (a.scalar !== b.scalar) return a.scalar - b.scalar;                              // dann günstiger
+    if (objective === "most_points") {
+      if (a.points !== b.points) return b.points - a.points;                            // mehr Punkte zuerst
+    } else if (a.chosen.length !== b.chosen.length) {
+      return b.chosen.length - a.chosen.length;                                          // mehr Turniere zuerst
+    }
+    if (a.scalar !== b.scalar) return a.scalar - b.scalar;                              // dann günstiger (Tiebreaker)
     // stabiler Schlüssel (deterministisch)
     const ka = a.chosen.map((c) => c.id).join(","), kb = b.chosen.map((c) => c.id).join(",");
     return ka < kb ? -1 : ka > kb ? 1 : 0;
@@ -204,14 +239,14 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
         const cost = computeSeasonCost(buildStations(chosen, nights), params);
         if (!budgetOk(cost)) continue;      // Budget-Grenze
         if (!schengenOk(chosen)) continue;  // Schengen 90/180
-        next.push({ chosen, cost, scalar: costScalar(cost, primaryCurrency) });
+        next.push({ chosen, cost, scalar: costScalar(cost, primaryCurrency), points: st.points + (pointsOf.get(c.id) ?? 0) });
       }
     }
     next.sort(better);
     beam = next.slice(0, K);
   }
 
-  const best = beam[0] ?? { chosen: [], cost: emptyCost, scalar: 0 };
+  const best = beam[0] ?? { chosen: [], cost: emptyCost, scalar: 0, points: 0 };
   const chosenIds = new Set(best.chosen.map((c) => c.id));
   const stations = buildStations(best.chosen, nights);
   const cost = computeSeasonCost(stations, params); // Re-Bewertung = die ausgewiesene Autorität
@@ -225,6 +260,8 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
     else if (c.place === homePlace) reasons.push(reason("heimatnah", "dafuer"));
     else reasons.push(reason("guenstige_anreise", "neutral"));
     reasons.push(classOf.get(c.id) === "fristen_unbekannt" ? reason("frist_unbekannt_challenger", "neutral") : reason("frist_offen", "dafuer"));
+    // Objektiv C: erwartete Punkte je Pick (wertführender Code — UI trennt am ":").
+    if (objective === "most_points") reasons.push(reason(`erwartungspunkte:${pointsOf.get(c.id) ?? 0}`, "dafuer"));
     if (!c.hasMapCoords) reasons.push(reason("ohne_kartenpunkt", "neutral"));
     picks.push({ id: c.id, weekMonday: isoDay(mondayMs(c.tournamentMonday)), place: c.place as string, onMap: c.hasMapCoords, reasons });
     prevPlace = c.place;
@@ -263,22 +300,28 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const notes: string[] = ["naeherung"]; // Näherung — immer
   if (nightsGiven == null) notes.push("naechte_annahme");
   if (cost.multiCurrency) notes.push("mehrwaehrung");
-  notes.push(`arrivals_gespart:${cost.arrivalsSaved}`); // EINZIGER Code mit Wert — UI trennt am ":"
+  notes.push(`arrivals_gespart:${cost.arrivalsSaved}`); // wertführender Code — UI trennt am ":"
   if (budget) {
     const left = budgetLeft[budget.currency] ?? 0;
     notes.push(left <= 0 ? "budget_ausgeschoepft" : "budget_uebrig");
   }
   if (schengenResult && schengenResult.used >= SCHENGEN_NEAR) notes.push("schengen_nah");
+  // Objektiv C: Annahme sichtbar machen; leere Runde melden statt willkürlich zu wählen.
+  if (objective === "most_points" && expectedRound) {
+    notes.push(`erwartungspunkte_annahme:${expectedRound}`); // wertführend — UI trennt am ":"
+    if (maxExpected === 0) notes.push("erwartungspunkte_runde_wertlos"); // z. B. R32: alle 0 (9.03 G.2)
+  }
+  if (fallbackNoRound) notes.push("erwartungspunkte_null"); // Absicherung: greift regulär nie
 
   return {
     rulesVersion: OPTIMIZE_RULES_VERSION,
-    objective: input.objective ?? "most_tournaments",
+    objective,
     approximate: true,
     picks,
     stations,
     cost,
     schengen: schengenResult,
-    value: best.chosen.length,
+    value: objective === "most_points" ? best.points : best.chosen.length,
     budgetLeft,
     rejected,
     unassessable,

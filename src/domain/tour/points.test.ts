@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scorePoints, POINTS_RULES_VERSION, type MatchResult } from "./points";
+import { scorePoints, POINTS_RULES_VERSION, toPointsCategory, expectedPoints, type MatchResult } from "./points";
 
 // Alle verwendeten tournamentMonday-Werte sind echte Montage (unten teils via getUTCDay geprüft):
 //   2024-01-08, 2025-01-06, 2025-06-02, 2025-11-03, 2026-03-02 — je getUTCDay() === 1.
@@ -194,5 +194,46 @@ describe("scorePoints – Determinismus", () => {
     const a = scorePoints(results, "2026-04-01");
     const b = scorePoints(results, "2026-04-01");
     expect(a).toEqual(b);
+  });
+});
+
+describe("toPointsCategory – DB-Kategorie → PointsCategory", () => {
+  it("alle sieben aktiven DB-Kategorien bilden ab (auch mit abweichender Groß-/Kleinschreibung)", () => {
+    expect(toPointsCategory("M15")).toBe("m15");
+    expect(toPointsCategory("M25")).toBe("m25");
+    expect(toPointsCategory("Challenger 50")).toBe("challenger_50");
+    expect(toPointsCategory("Challenger 75")).toBe("challenger_75");
+    expect(toPointsCategory("Challenger 100")).toBe("challenger_100");
+    expect(toPointsCategory("challenger 125")).toBe("challenger_125");
+    expect(toPointsCategory("CHALLENGER 175")).toBe("challenger_175");
+  });
+  it("unbekannt / null ⇒ null", () => {
+    expect(toPointsCategory(null)).toBeNull();
+    expect(toPointsCategory("ATP 250")).toBeNull();
+    expect(toPointsCategory("")).toBeNull();
+  });
+});
+
+describe("expectedPoints – Erwartungspunkte unter Annahme-Runde", () => {
+  it("Jahrgangs-Ära: M25-Finale 2025 = 16, 2026 = 14 (Regeländerung); Challenger konstant", () => {
+    expect(expectedPoints("M25", "F", "2025-06-02").points).toBe(16);
+    expect(expectedPoints("M25", "F", "2026-03-02").points).toBe(14);
+    expect(expectedPoints("Challenger 125", "F", "2025-06-02").points).toBe(64);
+    expect(expectedPoints("Challenger 125", "F", "2026-03-02").points).toBe(64);
+  });
+  it("1. Runde (R32) ⇒ 0 Punkte mit Code kein_punkt_erstrunde (9.03 G.2) — für ITF wie Challenger", () => {
+    expect(expectedPoints("M25", "R32", "2026-03-02")).toEqual({ points: 0, note: "kein_punkt_erstrunde" });
+    expect(expectedPoints("Challenger 175", "R32", "2026-03-02")).toEqual({ points: 0, note: "kein_punkt_erstrunde" });
+  });
+  it("unbekannte Kategorie ⇒ 0 mit Code erwartungspunkte_null", () => {
+    expect(expectedPoints("ATP 500", "W", "2026-03-02")).toEqual({ points: 0, note: "erwartungspunkte_null" });
+    expect(expectedPoints(null, "W", "2026-03-02")).toEqual({ points: 0, note: "erwartungspunkte_null" });
+  });
+  it("ITF-Qualifikation trägt keine Punkte (9.03 G.3), Challenger-Quali schon", () => {
+    expect(expectedPoints("M15", "Q", "2026-03-02")).toEqual({ points: 0, note: "kein_quali_itf" });
+    expect(expectedPoints("Challenger 125", "Q", "2026-03-02").points).toBe(5);
+  });
+  it("ungültiges Datum ⇒ 0 mit Code ungueltiges_datum", () => {
+    expect(expectedPoints("M25", "W", "kein-datum")).toEqual({ points: 0, note: "ungueltiges_datum" });
   });
 });

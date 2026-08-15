@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { optimizeSeason, OPTIMIZE_RULES_VERSION, type SeasonCandidate, type OptimizeInput } from "./optimizeSeason";
 import { computeSeasonCost, type Money, type CostParams } from "./costs";
 import { schengenUsage, type Stay } from "./schengen";
+import { expectedPoints, type PointsRound } from "./points";
 
 // ── Bausteine für die Tests ──────────────────────────────────────────────────
 const NOW = new Date("2026-01-05T00:00:00Z"); // Montag; alle Turniere unten liegen danach → keine verstrichene Frist
@@ -36,6 +37,7 @@ function baseInput(candidates: SeasonCandidate[], o: Partial<OptimizeInput> = {}
     schengen: o.schengen ?? null,
     entryBanned: o.entryBanned,
     objective: o.objective,
+    expectedRound: o.expectedRound,
     beamWidth: o.beamWidth,
   };
 }
@@ -271,5 +273,85 @@ describe("Mehrwährung & Begründung", () => {
     const saved = r.cost.arrivalsSaved;
     expect(r.notes).toContain(`arrivals_gespart:${saved}`);
     expect(saved).toBe(1); // 2 Stationen gleicher Ort → 1 Anreise gespart
+  });
+});
+
+describe("Objektiv C — meiste erwartete Punkte im Budget (v3)", () => {
+  it("v3) OPTIMIZE_RULES_VERSION ist v3 (Regeländerung: zweites Objektiv)", () => {
+    expect(OPTIMIZE_RULES_VERSION).toBe("v3");
+  });
+
+  it("27) bei Budget für nur EINES gewinnt das punktstärkere Turnier (gleiche Kosten)", () => {
+    // Gleicher Ort, gleiche Kosten (110 je Station; zusammen 120 > 110 → nur eines passt).
+    const cs = [
+      cand("hi", WK[0], "TN|Monastir", { category: "M25" }), // QF 2026 = 3
+      cand("lo", WK[1], "TN|Monastir", { category: "M15" }), // QF 2026 = 2
+    ];
+    const r = optimizeSeason(baseInput(cs, { budget: EUR(110), objective: "most_points", expectedRound: "QF" }));
+    expect(r.objective).toBe("most_points");
+    expect(r.picks.map((p) => p.id)).toEqual(["hi"]);
+    expect(r.value).toBe(3); // = Erwartungspunkte M25 QF
+    expect(r.picks[0].reasons.some((x) => x.code === "erwartungspunkte:3")).toBe(true);
+    expect(r.notes.some((n) => n === "erwartungspunkte_annahme:QF")).toBe(true);
+  });
+
+  it("28) == Brute-Force-Optimum (max Σ Punkte, dann min Kosten)", () => {
+    const ROUND: PointsRound = "QF";
+    const specs: { wk: number; place: string; cat: string; ser: "itf_wtt" | "challenger" }[] = [
+      { wk: 0, place: "TN|Monastir", cat: "M25", ser: "itf_wtt" },
+      { wk: 0, place: "ES|Barcelona", cat: "Challenger 75", ser: "challenger" },
+      { wk: 1, place: "TN|Monastir", cat: "M15", ser: "itf_wtt" },
+      { wk: 2, place: "IT|Rome", cat: "Challenger 125", ser: "challenger" },
+      { wk: 2, place: "TN|Monastir", cat: "M25", ser: "itf_wtt" },
+      { wk: 3, place: "ES|Barcelona", cat: "M25", ser: "itf_wtt" },
+      { wk: 4, place: "TN|Monastir", cat: "Challenger 50", ser: "challenger" },
+      { wk: 5, place: "IT|Rome", cat: "M15", ser: "itf_wtt" },
+    ];
+    const cs = specs.map((s, i) => cand(`t${i}`, WK[s.wk], s.place, { category: s.cat, series: s.ser }));
+    const budget = EUR(360);
+    const pts = (c: SeasonCandidate) => expectedPoints(c.category, ROUND, c.tournamentMonday.toISOString().slice(0, 10)).points;
+
+    // Brute-Force: alle Teilmengen; eine Woche/eins + Budget; max Σ Punkte, dann min Kosten.
+    let best = { pts: -1, cost: Infinity };
+    for (let mask = 0; mask < (1 << cs.length); mask++) {
+      const sub = cs.filter((_, b) => mask & (1 << b));
+      const weeks = new Set(sub.map((c) => c.tournamentMonday.toISOString()));
+      if (weeks.size !== sub.length) continue;
+      const ordered = [...sub].sort((a, b) => +a.tournamentMonday - +b.tournamentMonday);
+      const eur = computeSeasonCost(ordered.map((c) => ({ place: c.place!, nights: 1, entryFee: null })), PARAMS).total.EUR ?? 0;
+      if (eur > budget.amount) continue;
+      const p = sub.reduce((s, c) => s + pts(c), 0);
+      if (p > best.pts || (p === best.pts && eur < best.cost)) best = { pts: p, cost: eur };
+    }
+
+    const r = optimizeSeason(baseInput(cs, { budget, objective: "most_points", expectedRound: ROUND }));
+    expect(r.value).toBe(best.pts);
+    expect(r.cost.total.EUR ?? 0).toBeLessThanOrEqual(best.cost);
+  });
+
+  it("29) 1. Runde (R32) ⇒ alle Turniere 0 Punkte (9.03 G.2): leere Saison + Code, nicht willkürlich", () => {
+    const cs = [
+      cand("a", WK[0], "TN|Monastir", { category: "M25" }),
+      cand("b", WK[1], "ES|Barcelona", { category: "Challenger 125", series: "challenger" }),
+    ];
+    const r = optimizeSeason(baseInput(cs, { budget: EUR(100_000), objective: "most_points", expectedRound: "R32" }));
+    expect(r.value).toBe(0);
+    expect(r.picks).toEqual([]);
+    expect(r.notes).toContain("erwartungspunkte_runde_wertlos");
+    expect(r.notes.some((n) => n === "erwartungspunkte_annahme:R32")).toBe(true);
+  });
+
+  it("30) Absicherung: most_points OHNE Zielrunde ⇒ Rückfall auf most_tournaments + Code (greift regulär nie)", () => {
+    const cs = [cand("a", WK[0], "TN|Monastir", { category: "M25" })];
+    const r = optimizeSeason(baseInput(cs, { budget: EUR(100_000), objective: "most_points" })); // expectedRound fehlt
+    expect(r.objective).toBe("most_tournaments");
+    expect(r.notes).toContain("erwartungspunkte_null");
+    expect(r.value).toBe(1); // Anzahl Turniere, nicht Punkte
+  });
+
+  it("31) deterministisch auch unter most_points", () => {
+    const cs = [cand("a", WK[0], "TN|Monastir", { category: "M25" }), cand("b", WK[1], "ES|Barcelona", { category: "Challenger 75", series: "challenger" })];
+    const inp = baseInput(cs, { budget: EUR(500), objective: "most_points", expectedRound: "SF" });
+    expect(optimizeSeason(inp)).toEqual(optimizeSeason(inp));
   });
 });
