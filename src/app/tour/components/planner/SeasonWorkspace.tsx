@@ -693,6 +693,7 @@ export default function SeasonWorkspace() {
       entryStatus={planByTour.get(selectedTt.id)?.status ?? "planned"}
       alternatePosition={planByTour.get(selectedTt.id)?.alternate_position ?? null}
       feePaid={planByTour.get(selectedTt.id)?.fee_paid ?? false}
+      entryEvents={eventsByPlan.get(planByTour.get(selectedTt.id)?.id ?? "") ?? []}
       onEntryChanged={reloadEntries}
     />
   ) : null;

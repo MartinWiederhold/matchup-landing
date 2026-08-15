@@ -114,35 +114,47 @@ test("/tour Entry-Status: Editor schreibt Event automatisch; zweite Beobachtung 
     await catalog.getByRole("button", { name: /Como/i }).first().click();
     await expect(detail.getByRole("button", { name: /^Overview$|^Übersicht$/ })).toBeVisible({ timeout: 20_000 });
 
-    // ── 1. Beobachtung: Alternate #12 ─────────────────────────────────────────
+    const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+    const today = iso(Date.now());
+    const d3 = iso(Date.now() - 3 * 86_400_000); // vor 3 Tagen (für den Abstand im Verlauf)
+    const newEvents = async () => (await db.events(planId)).filter((e) => !keepEvents.includes(e.id));
+
+    // ── 1. Beobachtung: Alternate #12, Stand vor 3 Tagen ──────────────────────
     await detail.getByRole("button", { name: /^Planned$|^Geplant$/ }).click();     // Status-Pill → Editor auf
     await detail.getByRole("button", { name: /^Alternate$/ }).click();             // Status Alternate
     await detail.locator('input[type="number"]').fill("12");
+    await detail.locator('input[type="date"]').fill(d3);
     await detail.getByRole("button", { name: /^Set$|^Eintragen$/ }).click();
 
     // Beleg DB: genau EIN neues Event, Position 12.
-    await expect.poll(async () => (await db.events(planId)).filter((e) => !keepEvents.includes(e.id)).length, { timeout: 10_000 }).toBe(1);
-    const ev1 = (await db.events(planId)).filter((e) => !keepEvents.includes(e.id));
-    expect(ev1[0].status).toBe("alternate");
-    expect(ev1[0].alternate_position).toBe(12);
+    await expect.poll(async () => (await newEvents()).length, { timeout: 10_000 }).toBe(1);
+    expect((await newEvents())[0].alternate_position).toBe(12);
 
-    // Beleg UI: Pill „Alternate #12" in der Saisonliste, und bei EINER Beobachtung KEIN Trend-Marker.
+    // Beleg UI: Pill „#12", KEIN Trend-Marker bei einer Beobachtung; Meldegebühr-Zeile sichtbar.
     await expect(catalog.getByText(/Alternate #12/).first(), "Pill Alternate #12").toBeVisible({ timeout: 10_000 });
     await expect(catalog.getByTitle(/moved up|moved down|unchanged|hochgerückt|abgerutscht|unverändert/), "kein Marker bei einer Beobachtung").toHaveCount(0);
+    await expect(detail.getByText(/Entry fee unpaid|Meldegebühr offen/i).first(), "Meldegebühr-offen-Zeile (gemeldet + unbezahlt)").toBeVisible({ timeout: 8_000 });
 
-    // ── 2. Beobachtung: Alternate #7 (hochgerückt) ────────────────────────────
+    // ── 2. Beobachtung: Alternate #7, heute (→ 3 Tage später, hochgerückt) ────
     await detail.getByRole("button", { name: /Alternate #12/ }).click();           // Pill → Editor auf
     await detail.locator('input[type="number"]').fill("7");
+    await detail.locator('input[type="date"]').fill(today);
     await detail.getByRole("button", { name: /^Set$|^Eintragen$/ }).click();
 
-    // Beleg DB: jetzt ZWEI neue Events.
-    await expect.poll(async () => (await db.events(planId)).filter((e) => !keepEvents.includes(e.id)).length, { timeout: 10_000 }).toBe(2);
-
-    // Beleg UI: Pill „Alternate #7" + Trend-Marker (hochgerückt).
+    await expect.poll(async () => (await newEvents()).length, { timeout: 10_000 }).toBe(2);
     await expect(catalog.getByText(/Alternate #7/).first(), "Pill Alternate #7").toBeVisible({ timeout: 10_000 });
     await expect(catalog.getByTitle(/moved up|hochgerückt/).first(), "Trend erscheint bei zwei Beobachtungen").toBeVisible({ timeout: 10_000 });
 
-    console.log("[ENTRY] Auto-Event ✓ · 1 Beob. = kein Marker ✓ · 2 Beob. = Trend ✓");
+    // ── Verlauf: zwei Beobachtungen mit ABSTAND +3 Tage (Tempo sichtbar) ──────
+    await detail.getByRole("button", { name: /History|Verlauf/ }).click();
+    await expect(detail.getByText(/\+3 days|\+3 Tage/).first(), "Abstand +3 Tage im Verlauf").toBeVisible({ timeout: 8_000 });
+
+    // ── Löschen: eine Beobachtung raus (nur löschen, append-only) → Verlauf schrumpft ──
+    await detail.getByRole("button", { name: /Delete observation|Beobachtung löschen/ }).first().click();
+    await expect.poll(async () => (await newEvents()).length, { timeout: 10_000 }).toBe(1);
+    await expect(detail.getByText(/\+3 days|\+3 Tage/), "nach dem Löschen kein Abstand mehr (nur 1 Beobachtung)").toHaveCount(0);
+
+    console.log("[ENTRY] Auto-Event ✓ · kein Marker bei 1 ✓ · Trend bei 2 ✓ · Gebühr-Zeile ✓ · Verlauf +3 Tage ✓ · Löschen ✓");
   } finally {
     // Restore: die vom Test angelegten Events löschen; Planzeile zurücksetzen bzw. Seed entfernen.
     await db.deleteEventsExcept(planId, keepEvents);

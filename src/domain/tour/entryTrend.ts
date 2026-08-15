@@ -46,3 +46,23 @@ export function alternateTrend(observations: Obs[], asOf: string): EntryTrend {
   const delta = (prev.alternatePosition as number) - (last.alternatePosition as number);
   return { kind: delta > 0 ? "up" : delta < 0 ? "down" : "flat", delta };
 }
+
+/**
+ * Beobachtungen für die Verlaufsansicht: chronologisch, NEUESTE ZUERST, jede mit dem
+ * Abstand (`gapDays`) zur vorigen (älteren) Beobachtung. So wird das TEMPO sichtbar —
+ * #12 → #7 in 3 Tagen (gapDays 3) ist etwas anderes als in 3 Wochen (gapDays 21), obwohl
+ * der Pfeil beides gleich zeigt. Reine Funktion. Der älteste Eintrag hat gapDays = null.
+ */
+type HistObs = { id: string; observedAt: string; status: string; alternatePosition: number | null; note: string | null };
+export type HistoryRow = HistObs & { gapDays: number | null };
+
+export function entryHistory(observations: HistObs[]): HistoryRow[] {
+  const sorted = observations
+    .slice()
+    .sort((a, b) => a.observedAt.localeCompare(b.observedAt)); // alt → neu
+  const rows: HistoryRow[] = sorted.map((o, i) => ({
+    ...o,
+    gapDays: i === 0 ? null : Math.floor((parseDay(o.observedAt) - parseDay(sorted[i - 1].observedAt)) / DAY),
+  }));
+  return rows.reverse(); // neueste zuerst
+}

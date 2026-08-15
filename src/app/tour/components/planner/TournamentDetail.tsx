@@ -8,9 +8,10 @@ import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
-import { setEntryStatus, setFeePaid, logEntryEvent } from "@/lib/tourSeason";
+import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
+import { entryHistory } from "@/domain/tour/entryTrend";
 import TourChatPanel from "./TourChatPanel";
-import type { TourTournament, TourCostRates, TourEntryStatus } from "@/lib/types";
+import type { TourTournament, TourCostRates, TourEntryStatus, TourEntryEvent } from "@/lib/types";
 
 // Entry-Status-Auswahl im Editor: der Lebenszyklus ohne die Legacy-Codes.
 const ENTRY_STATUS_OPTS: TourEntryStatus[] = ["planned", "entered", "main_draw", "qualifying", "alternate", "withdrawn"];
@@ -68,7 +69,7 @@ function useFlightPrice(city: string, country: string, start: string, end: strin
 export default function TournamentDetail({
   tt, countryName, inSeason, onToggle, onClose, originCity, originLabel, nights, rates, nowMs,
   viewerId, viewerName, viewerRank, viewerNationality, viewerPassports,
-  planId, entryStatus, alternatePosition, feePaid, onEntryChanged,
+  planId, entryStatus, alternatePosition, feePaid, entryEvents, onEntryChanged,
 }: {
   tt: TourTournament;
   countryName: string;
@@ -90,7 +91,8 @@ export default function TournamentDetail({
   entryStatus: TourEntryStatus;
   alternatePosition: number | null;
   feePaid: boolean;
-  onEntryChanged: () => void; // nach dem Speichern: Parent lädt Plan + Verlauf neu
+  entryEvents: TourEntryEvent[]; // Beobachtungs-Verlauf dieser Planzeile (chronologisch)
+  onEntryChanged: () => void; // nach dem Speichern/Löschen: Parent lädt Plan + Verlauf neu
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -109,6 +111,7 @@ export default function TournamentDetail({
   // ist per key=tt.id gemountet, daher ist das Seed-once korrekt. Beim Speichern wird IMMER
   // automatisch ein Event geschrieben (Verlauf ohne Zutun) — „Stand vom" bleibt änderbar.
   const [entryOpen, setEntryOpen] = useState(false);
+  const [histOpen, setHistOpen] = useState(false);
   const [eStatus, setEStatus] = useState<TourEntryStatus>(entryStatus);
   const [ePos, setEPos] = useState<string>(alternatePosition != null ? String(alternatePosition) : "");
   const [eObserved, setEObserved] = useState<string>(new Date(nowMs).toISOString().slice(0, 10));
@@ -129,6 +132,10 @@ export default function TournamentDetail({
       setSavingEntry(false);
     }
   };
+  // Append-only: eine Fehl-Beobachtung LÖSCHEN (nicht ändern). Danach Parent neu laden.
+  const delObs = async (id: string) => { await deleteEntryEvent(id); onEntryChanged(); };
+  // Gebühr fällig-Warnung nur, wenn wirklich gemeldet (nicht bei geplant/zurückgezogen).
+  const feeDue = !!planId && !feePaid && (entryStatus === "entered" || entryStatus === "main_draw" || entryStatus === "qualifying" || entryStatus === "alternate");
   useEffect(() => {
     let alive = true;
     loadTourPresence(tt.id).then((rows) => {
@@ -208,6 +215,8 @@ export default function TournamentDetail({
   const fmtCur = (minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100);
   // Abrufdatum (Tag genügt) — nowMs vom Elter, kein Laufzeit-Clock in Render.
   const fmtStand = (ms: number) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(new Date(ms));
+  // Kompaktes Beobachtungsdatum (ISO-Tag, UTC) für die Verlaufsliste.
+  const fmtObsDate = (iso: string) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
 
   // Flugpreis (Zahl oder null). "loading" → null → keine Zeile (kein Platzhalter, kein Hinweis).
   const flightPrice = price === "loading" ? null : price.price;
@@ -329,11 +338,35 @@ export default function TournamentDetail({
             <div className="py-2.5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsEntryStatusLabel")}</span>
-                <button type="button" onClick={() => setEntryOpen((o) => !o)} className="flex items-center gap-1.5">
-                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${entryPillClass(entryStatus)}`}>{entryWord}</span>
-                  <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-                </button>
+                <div className="flex items-center gap-2.5">
+                  {entryEvents.length > 0 && (
+                    <button type="button" onClick={() => setHistOpen((o) => !o)} className={`text-[11px] font-semibold ${histOpen ? "text-matchup" : "text-neutral-400 hover:text-neutral-700"}`}>{t("tour.wsEntryHistory")} ({entryEvents.length})</button>
+                  )}
+                  <button type="button" onClick={() => setEntryOpen((o) => !o)} className="flex items-center gap-1.5">
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${entryPillClass(entryStatus)}`}>{entryWord}</span>
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                  </button>
+                </div>
               </div>
+
+              {/* Verlauf — chronologisch, neueste zuerst; Abstände zeigen das Tempo. Jede
+                  Beobachtung löschbar (append-only: nur löschen, nicht ändern). */}
+              {histOpen && (
+                <ul className="mt-2 space-y-1 rounded-xl border border-black/10 bg-black/[0.02] p-2.5">
+                  {entryHistory(entryEvents.map((e) => ({ id: e.id, observedAt: e.observed_at, status: e.status, alternatePosition: e.alternate_position, note: e.note }))).map((r) => (
+                    <li key={r.id} className="flex items-start justify-between gap-2 text-[12px]">
+                      <span className="min-w-0">
+                        <span className="font-semibold text-neutral-700">{fmtObsDate(r.observedAt)}</span>
+                        <span className="text-neutral-500"> · {t(`tour.status_${r.status}`)}{r.status === "alternate" && r.alternatePosition != null ? ` #${r.alternatePosition}` : ""}</span>
+                        {r.gapDays != null && <span className="text-neutral-400"> · {r.gapDays === 0 ? t("tour.wsEntryGapSameDay") : t("tour.wsEntryGapDays", { n: r.gapDays })}</span>}
+                        {r.note && <span className="block truncate text-[11px] text-neutral-400">{r.note}</span>}
+                      </span>
+                      <button type="button" onClick={() => delObs(r.id)} aria-label={t("tour.wsEntryDelete")} className="shrink-0 text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               {entryOpen && (
                 <div className="mt-2 space-y-2.5 rounded-xl border border-black/10 bg-black/[0.02] p-3">
                   {/* Status-Auswahl */}
@@ -365,6 +398,15 @@ export default function TournamentDetail({
                 </div>
               )}
             </div>
+          )}
+
+          {/* Meldegebühr offen — sichtbare Warnung (nur wenn gemeldet + unbezahlt). Ein
+              verfallener Startplatz wegen vergessener Gebühr ist genau der Fehler, den das
+              Werkzeug verhindern soll. Tippen öffnet den Editor (dort abhaken). */}
+          {feeDue && (
+            <button type="button" onClick={() => setEntryOpen(true)} className="flex w-full items-center gap-1.5 py-2.5 text-left text-[12px] font-semibold text-amber-700">
+              <span aria-hidden>⚠</span>{t("tour.wsFeeUnpaid")}<span className="font-normal text-amber-700/80">· {t("tour.wsFeeUnpaidHint")}</span>
+            </button>
           )}
 
           {/* 1) Meldefrist — Countdown oder „unbekannt" */}

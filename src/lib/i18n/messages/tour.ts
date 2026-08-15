@@ -386,6 +386,13 @@ export const tour = {
     wsTrendUp: "hochgerückt um {n}",
     wsTrendDown: "abgerutscht um {n}",
     wsTrendFlat: "unverändert",
+    // Verlaufsansicht + Meldegebühr-Warnung.
+    wsEntryHistory: "Verlauf",
+    wsEntryGapDays: "+{n} Tage",
+    wsEntryGapSameDay: "selber Tag",
+    wsEntryDelete: "Beobachtung löschen",
+    wsFeeUnpaid: "Meldegebühr offen",
+    wsFeeUnpaidHint: "sonst verfällt der Startplatz",
     tournamentInactive: "Dieses Turnier ist nicht mehr verfügbar. Es bleibt in deiner Saison, bis du es entfernst.",
 
     // Punkte-Seite (/tour/points)
@@ -1058,6 +1065,13 @@ export const tour = {
     wsTrendUp: "moved up {n}",
     wsTrendDown: "moved down {n}",
     wsTrendFlat: "unchanged",
+    // History view + entry-fee warning.
+    wsEntryHistory: "History",
+    wsEntryGapDays: "+{n} days",
+    wsEntryGapSameDay: "same day",
+    wsEntryDelete: "Delete observation",
+    wsFeeUnpaid: "Entry fee unpaid",
+    wsFeeUnpaidHint: "or you lose your spot",
     tournamentInactive: "This tournament is no longer available. It stays in your season until you remove it.",
 
     // Points page (/tour/points)
