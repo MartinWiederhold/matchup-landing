@@ -542,11 +542,15 @@ export type TourEntryStatus =
   | "planned" | "entered" | "main_draw" | "qualifying" | "alternate" | "withdrawn"
   | "confirmed" | "cancelled";
 
+// Entscheidung des Spielers je Turnier (Wochen-Pipeline): spielen|warten|Ausweichturnier|offen.
+export type TourDecision = "play" | "wait" | "fallback" | "open";
+
 export interface TourSeasonPlanEntry {
   id: string;
   user_id: string; // FK → profiles.id (Eigentümer)
   tournament_id: string; // FK → tour_tournaments.id (on delete restrict)
   status: TourEntryStatus;
+  decision: TourDecision; // Vorgabe 'open'
   // Nachrücker-Position (1..999), NUR bei status='alternate' gesetzt. Aktueller Wert;
   // der Verlauf liegt in web.tour_entry_events (TourEntryEvent).
   alternate_position: number | null;

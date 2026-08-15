@@ -396,6 +396,25 @@ export const tour = {
     // Fristen-Erinnerungen (E-Mail) — Schalter im Profil.
     wsRemindersLabel: "Fristen-Erinnerungen",
     wsRemindersHint: "Per E-Mail vor Melde- und Rückzugsfristen deiner Saison-Turniere. Jederzeit abbestellbar.",
+    // Wochen-Pipeline (Kommandozentrale).
+    pipelineSeoTitle: "Wochen-Pipeline",
+    pipelineSeoDescription: "Deine kommenden Wochen auf einen Blick — Turnier, Status, Frist, Kosten, Entscheidung.",
+    pipelineTitle: "Wochen-Pipeline",
+    pipelineSubtitle: "Deine kommenden Wochen — eine Zeile je Woche, chronologisch. Leere Wochen sind Erholung, kein Fehler.",
+    pipelineOpen: "Wochen-Pipeline",
+    pipeColWeek: "Woche",
+    pipeColTournament: "Turnier",
+    pipeColStatus: "Status",
+    pipeColDeadline: "Frist",
+    pipeColCost: "Kosten",
+    pipeColDecision: "Entscheidung",
+    pipeGap: "Freie Woche",
+    pipeEmpty: "Keine kommenden Turniere in deiner Saison.",
+    pipeKw: "KW {n}",
+    decision_play: "Spielen",
+    decision_wait: "Warten",
+    decision_fallback: "Ausweichturnier",
+    decision_open: "Offen",
     tournamentInactive: "Dieses Turnier ist nicht mehr verfügbar. Es bleibt in deiner Saison, bis du es entfernst.",
 
     // Punkte-Seite (/tour/points)
@@ -1078,6 +1097,25 @@ export const tour = {
     // Deadline reminders (email) — toggle in the profile.
     wsRemindersLabel: "Deadline reminders",
     wsRemindersHint: "By email before entry and withdrawal deadlines of your season tournaments. Unsubscribe anytime.",
+    // Week pipeline (command center).
+    pipelineSeoTitle: "Week pipeline",
+    pipelineSeoDescription: "Your upcoming weeks at a glance — tournament, status, deadline, cost, decision.",
+    pipelineTitle: "Week pipeline",
+    pipelineSubtitle: "Your upcoming weeks — one row per week, chronological. Empty weeks are recovery, not a mistake.",
+    pipelineOpen: "Week pipeline",
+    pipeColWeek: "Week",
+    pipeColTournament: "Tournament",
+    pipeColStatus: "Status",
+    pipeColDeadline: "Deadline",
+    pipeColCost: "Cost",
+    pipeColDecision: "Decision",
+    pipeGap: "Free week",
+    pipeEmpty: "No upcoming tournaments in your season.",
+    pipeKw: "Wk {n}",
+    decision_play: "Play",
+    decision_wait: "Wait",
+    decision_fallback: "Fallback",
+    decision_open: "Open",
     tournamentInactive: "This tournament is no longer available. It stays in your season until you remove it.",
 
     // Points page (/tour/points)

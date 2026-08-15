@@ -11,10 +11,10 @@
  */
 
 import { supabase } from "@/lib/supabase";
-import type { TourSeasonPlanEntry, TourEntryEvent, TourTournament } from "@/lib/types";
+import type { TourSeasonPlanEntry, TourEntryEvent, TourDecision, TourTournament } from "@/lib/types";
 
 // Explizite Spaltenlisten (kein select *).
-const PLAN_COLUMNS = "id, user_id, tournament_id, status, alternate_position, fee_paid, note, created_at, updated_at";
+const PLAN_COLUMNS = "id, user_id, tournament_id, status, alternate_position, fee_paid, decision, note, created_at, updated_at";
 const TOURNAMENT_COLUMNS =
   "id, source_ref, tournament_monday, series, category, category_recognized, name, city, country, latitude, longitude, surface, indoor, prize_money, prize_currency, website, status, valid_from, valid_to, created_at, updated_at";
 const EVENT_COLUMNS = "id, user_id, plan_id, observed_at, status, alternate_position, note, created_at";
@@ -95,6 +95,15 @@ export async function loadSeasonPlanRows(): Promise<TourSeasonPlanEntry[]> {
   return (data as TourSeasonPlanEntry[]) ?? [];
 }
 
+/** Turniere zu einer ID-Liste (für die Pipeline). Ohne valid_to-Filter — inaktive werden
+ *  über valid_to markiert; benannte Spalten. Leere Liste → leeres Ergebnis (kein Query). */
+export async function loadTournamentsByIds(ids: string[]): Promise<TourTournament[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from("tour_tournaments").select(TOURNAMENT_COLUMNS).in("id", ids);
+  if (error) throw error;
+  return (data as TourTournament[]) ?? [];
+}
+
 /** ALLE Beobachtungen des Nutzers (RLS scoped), chronologisch — für den Trend je Eintrag.
  *  EINE Abfrage; die UI gruppiert client-seitig nach plan_id. */
 export async function loadAllEntryEvents(): Promise<TourEntryEvent[]> {
@@ -149,6 +158,12 @@ export async function setEntryStatus(planId: string, status: SeasonStatus, alter
 /** Meldegebühr-Flag setzen. */
 export async function setFeePaid(planId: string, paid: boolean): Promise<void> {
   const { error } = await supabase.from("tour_season_plan").update({ fee_paid: paid }).eq("id", planId);
+  if (error) throw error;
+}
+
+/** Entscheidung je Turnier setzen (Wochen-Pipeline): play|wait|fallback|open. */
+export async function setDecision(planId: string, decision: TourDecision): Promise<void> {
+  const { error } = await supabase.from("tour_season_plan").update({ decision }).eq("id", planId);
   if (error) throw error;
 }
 

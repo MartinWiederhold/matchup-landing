@@ -1054,7 +1054,11 @@ export default function SeasonWorkspace() {
 
           {/* Meine Saison */}
           <section>
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
+              {/* Zweiter Weg in die Pipeline — direkt im Saison-Kontext. */}
+              <Link href="/tour/pipeline" className="shrink-0 text-[11px] font-semibold text-matchup hover:underline">{t("tour.pipelineOpen")} →</Link>
+            </div>
             {seasonOrdered.length === 0 ? (
               <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
             ) : (
@@ -1118,7 +1122,13 @@ export default function SeasonWorkspace() {
     <div className="flex h-full flex-col bg-white">
       <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
-        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900">{t("tour.plTitle")}</h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-extrabold tracking-tight text-neutral-900">{t("tour.plTitle")}</h1>
+          {/* Kommandozentrale — prominent im Kopf, geht nicht im Scroll unter. */}
+          <Link href="/tour/pipeline" className="inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-900 px-3.5 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-neutral-700">
+            {t("tour.pipelineOpen")} →
+          </Link>
+        </div>
       </div>
       {catalogScroll}
     </div>
