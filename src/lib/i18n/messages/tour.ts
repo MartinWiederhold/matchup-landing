@@ -517,6 +517,10 @@ export const tour = {
     // Vier-Spalten-Umbau: Filterspalte, Übersichtsspalte, Einreise-Abschnitt im Detail.
     wsFilters: "Filter",
     wsFiltersReset: "Zurücksetzen",
+    // Aktive-Filter-Chips oben im Katalog (entfernbar per x).
+    wsChipFrom: "ab {date}",
+    wsChipUntil: "bis {date}",
+    wsChipRemove: "{label} entfernen",
     wsOverviewTitle: "Saison-Übersicht",
     wsOverviewHint: "Wähle links ein Turnier für Details, oder plane deine Saison.",
     wsVisaTitle: "Einreise",
@@ -1169,6 +1173,10 @@ export const tour = {
     // Four-column rebuild: filter column, overview column, entry section in the detail.
     wsFilters: "Filters",
     wsFiltersReset: "Reset",
+    // Active-filter chips atop the catalog (removable via x).
+    wsChipFrom: "from {date}",
+    wsChipUntil: "until {date}",
+    wsChipRemove: "Remove {label}",
     wsOverviewTitle: "Season overview",
     wsOverviewHint: "Pick a tournament on the left for details, or plan your season.",
     wsVisaTitle: "Entry",

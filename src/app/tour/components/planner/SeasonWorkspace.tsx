@@ -95,6 +95,9 @@ export default function SeasonWorkspace() {
 
   // Rahmen (Budget, Zeitraum, Region/Länder). Länder-Dropdown-Zustand.
   const [frame, setFrame] = useState<Frame>(() => ({ region: "europe", from: new Date().toISOString().slice(0, 10), to: "", countries: [] }));
+  // Standard-Startdatum (heute bei Mount) — Bezug für den „Zeitraum"-Chip (nur bei Abweichung).
+  // Als State (einmal initialisiert) statt Ref: im Render lesbar, ohne Purity-Verstoß.
+  const [defaultFrom] = useState(() => frame.from);
   const [budget, setBudget] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
@@ -762,20 +765,49 @@ export default function SeasonWorkspace() {
     </div>
   );
 
-  // Rahmen-Kurzfassung als Chips (öffnen die Filterspalte) + Filter-Knopf mit Zähler-Badge.
-  const summaryChips: string[] = [
-    selCountries.length ? t("tour.wsCountriesN", { n: selCountries.length }) : (frame.region === "all" ? t("tour.plRegionAll") : t("tour.plRegionEurope")),
-    ...selSeries.map((v) => SERIES_OPTS.find((o) => o.v === v)?.label ?? v),
-    ...selSurface.map((s) => t(`tour.surface_${s}`)),
-    ...(frame.to ? [`${frame.from || "…"} – ${frame.to}`] : []),
+  // ── Aktive-Filter-Chips: je vom STANDARD abweichender Filter EIN Chip mit x. Region
+  //    (Europa-Standard bzw. „alle Länder") und leeres Budget erzeugen KEINEN Chip. Das x
+  //    setzt genau diesen Filter zurück, OHNE die Filterspalte zu öffnen → Katalog/Karte/
+  //    Optimierer reagieren sofort (reaktiv über frame/budget). Viele Länder → EIN Chip
+  //    „N Länder", dessen x alle zurücksetzt (nicht zwölf Chips). ──────────────────────────
+  const fmtChipDate = (iso: string) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
+  const fromChanged = frame.from !== defaultFrom;
+  const dateActive = fromChanged || frame.to !== "";
+  const dateLabel = frame.to && fromChanged
+    ? `${fmtChipDate(frame.from)} – ${fmtChipDate(frame.to)}`
+    : frame.to ? t("tour.wsChipUntil", { date: fmtChipDate(frame.to) })
+    : fromChanged ? t("tour.wsChipFrom", { date: fmtChipDate(frame.from) })
+    : "";
+  const budgetNum = Number(budget.trim().replace(",", "."));
+  const budgetLabel = Number.isFinite(budgetNum) && budget.trim() !== "" ? `${t("tour.plBudget")} ${money(Math.round(budgetNum) * 100, cur)}` : t("tour.plBudget");
+  const clearCountries = () => setFrame((f) => ({ ...f, countries: [] }));
+  const activeChips: { key: string; label: string; onRemove: () => void }[] = [
+    ...selSeries.map((v) => ({ key: `series-${v}`, label: SERIES_OPTS.find((o) => o.v === v)?.label ?? v, onRemove: () => toggleSeries(v) })),
+    ...selSurface.map((s) => ({ key: `surface-${s}`, label: t(`tour.surface_${s}`), onRemove: () => toggleSurface(s) })),
+    ...(selCountries.length === 1
+      ? [{ key: "country", label: catName(selCountries[0]), onRemove: clearCountries }]
+      : selCountries.length > 1
+        ? [{ key: "countries", label: t("tour.wsCountriesN", { n: selCountries.length }), onRemove: clearCountries }]
+        : []),
+    ...(dateActive ? [{ key: "date", label: dateLabel, onRemove: () => setFrame((f) => ({ ...f, from: defaultFrom, to: "" })) }] : []),
+    ...(budget.trim() !== "" ? [{ key: "budget", label: budgetLabel, onRemove: () => setBudget("") }] : []),
   ];
   const filterBar = (
     <div className="flex items-center gap-2">
-      <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
-        {summaryChips.map((c, i) => (
-          <button key={i} type="button" onClick={toggleFilters} className="max-w-full truncate rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-semibold text-neutral-600 hover:bg-black/[0.08]">{c}</button>
-        ))}
-      </div>
+      {/* Chips in EINER Zeile mit waagerechtem Scrollen (kein Umbruch → schiebt den Katalog
+          nicht nach unten). Kein Chip → nur ein unsichtbarer Platzhalter, keine leere Zeile. */}
+      {activeChips.length > 0 ? (
+        <div className="no-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto">
+          {activeChips.map((chip) => (
+            <span key={chip.key} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-black/[0.05] py-1 pl-2.5 pr-1 text-[11px] font-semibold text-neutral-600">
+              <button type="button" onClick={toggleFilters} className="max-w-[9rem] truncate hover:text-neutral-900">{chip.label}</button>
+              <button type="button" onClick={chip.onRemove} aria-label={t("tour.wsChipRemove", { label: chip.label })} className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:bg-black/[0.08] hover:text-neutral-700">✕</button>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="min-w-0 flex-1" />
+      )}
       <button type="button" onClick={toggleFilters} className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ring-1 ${filtersOpen ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
         <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
         {t("tour.wsFilters")}
