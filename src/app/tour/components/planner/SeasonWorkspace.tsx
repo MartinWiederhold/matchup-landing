@@ -8,6 +8,7 @@ import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
 import { alternateTrend } from "@/domain/tour/entryTrend";
+import { loadReminderSettings, saveReminderSettings } from "@/lib/tourReminders";
 import { saveWhoAmI, saveSeasonBudget } from "@/lib/tourSetup";
 import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
 import { loadStays } from "@/lib/tourStays";
@@ -172,6 +173,21 @@ export default function SeasonWorkspace() {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }
+  // Fristen-Erinnerungen (E-Mail): Schalter im Profil. Vorgabe an; beim Umschalten wird die
+  // aktuelle UI-Sprache mitgespeichert, damit die Mail sie trifft.
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    loadReminderSettings(user.id).then((s) => { if (alive) setReminderEnabled(s.enabled); }).catch(() => { /* egal — Vorgabe an */ });
+    return () => { alive = false; };
+  }, [user]);
+  const toggleReminders = useCallback((next: boolean) => {
+    if (!user) return;
+    setReminderEnabled(next); // optimistisch
+    void saveReminderSettings(user.id, next, locale === "en" ? "en" : "de").catch(() => setReminderEnabled(!next));
+  }, [user, locale]);
+
   // Plan-Rows (Status/Position/Gebühr) + Verlauf neu laden — nach Toggle, Füllen, Speichern.
   const reloadEntries = useCallback(async () => {
     if (!user) return;
@@ -665,6 +681,18 @@ export default function SeasonWorkspace() {
         </select>
       </div>
       <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsProfileNote")}</p>
+
+      {/* Fristen-Erinnerungen per E-Mail — Vorgabe an, jederzeit abschaltbar. */}
+      <div className="border-t border-black/[0.06] pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[12px] font-semibold text-neutral-700">{t("tour.wsRemindersLabel")}</span>
+          <button type="button" role="switch" aria-checked={reminderEnabled} onClick={() => toggleReminders(!reminderEnabled)}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderEnabled ? "bg-matchup" : "bg-black/15"}`}>
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${reminderEnabled ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+          </button>
+        </div>
+        <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRemindersHint")}</p>
+      </div>
     </div>
   );
 
