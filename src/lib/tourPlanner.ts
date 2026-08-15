@@ -131,7 +131,7 @@ export function filterFrame(tours: TourTournament[], frame: Frame): FrameResult 
     if (frame.to && t.tournament_monday > frame.to) continue;
     inFrame++;
     if (t.latitude != null && t.longitude != null) {
-      mapEntries.push({ planId: t.id, status: "planned", note: null, addedAt: t.created_at, tournament: t, tournamentInactive: false });
+      mapEntries.push({ planId: t.id, status: "planned", alternatePosition: null, feePaid: false, note: null, addedAt: t.created_at, tournament: t, tournamentInactive: false });
     } else {
       noCoords++;
     }
@@ -241,7 +241,7 @@ export function picksToMapEntries(picks: SeasonPick[], tours: TourTournament[]):
   for (const p of picks) {
     const t = byId.get(p.id);
     if (!t || t.latitude == null || t.longitude == null) continue;
-    entries.push({ planId: t.id, status: "planned", note: null, addedAt: t.created_at, tournament: t, tournamentInactive: false });
+    entries.push({ planId: t.id, status: "planned", alternatePosition: null, feePaid: false, note: null, addedAt: t.created_at, tournament: t, tournamentInactive: false });
   }
   return entries;
 }

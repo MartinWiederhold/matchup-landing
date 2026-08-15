@@ -6,7 +6,10 @@ import TourDeadlineBlock from "../../components/TourDeadlineBlock";
 import TourDecideBlock from "../../components/TourDecideBlock";
 import { DeadlineCountdown, EntryPath } from "../../components/EntryDeadline";
 
-const STATUSES: SeasonStatus[] = ["planned", "entered", "confirmed", "cancelled"];
+// Vollständige Optionsliste — sonst zeigt das Dropdown einen neuen Status-Wert als LEERE
+// Auswahl (stille Unstimmigkeit). Reihenfolge nach Lebenszyklus; confirmed/cancelled als
+// Legacy hinten (werden nicht mehr neu vergeben). NUR die Liste erweitert, sonst nichts.
+const STATUSES: SeasonStatus[] = ["planned", "entered", "main_draw", "qualifying", "alternate", "withdrawn", "confirmed", "cancelled"];
 
 // Turniermontag ist ein Kalendertag → in UTC formatieren (keine Zeitzonen-Verschiebung).
 function fmtMonday(iso: string, locale: string) {

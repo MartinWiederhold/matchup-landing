@@ -535,16 +535,37 @@ export interface TourTournamentClaim {
 
 /** Ein Saisonplan-Eintrag (web.tour_season_plan): Nutzer nimmt ein Turnier aus
  *  web.tour_tournaments auf. RLS: nur eigene Zeilen. Getrennt von web.tour_plan. */
+// Entry-Lebenszyklus (eine Achse): geplant → gemeldet → Hauptfeld|Quali|Alternate →
+// zurückgezogen. confirmed|cancelled sind LEGACY (altes /tour/season) und werden nicht
+// mehr neu vergeben. Selbstauskunft des Spielers aus IPIN/PlayerZone (kein Live-Abruf).
+export type TourEntryStatus =
+  | "planned" | "entered" | "main_draw" | "qualifying" | "alternate" | "withdrawn"
+  | "confirmed" | "cancelled";
+
 export interface TourSeasonPlanEntry {
   id: string;
   user_id: string; // FK → profiles.id (Eigentümer)
   tournament_id: string; // FK → tour_tournaments.id (on delete restrict)
-  // Status der NUTZER-Beziehung zum Turnier (nicht der Turnier-Lebenszyklus):
-  // planned|entered|confirmed|cancelled = geplant|gemeldet|bestätigt|abgesagt
-  status: "planned" | "entered" | "confirmed" | "cancelled";
+  status: TourEntryStatus;
+  // Nachrücker-Position (1..999), NUR bei status='alternate' gesetzt. Aktueller Wert;
+  // der Verlauf liegt in web.tour_entry_events (TourEntryEvent).
+  alternate_position: number | null;
+  fee_paid: boolean; // Meldegebühr bezahlt (Selbstauskunft)
   note: string | null; // freie Notiz des Nutzers
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
+}
+
+/** Eine vom Spieler festgehaltene Beobachtung (append-only Verlauf, web.tour_entry_events). */
+export interface TourEntryEvent {
+  id: string;
+  user_id: string; // FK → profiles.id (Eigentümer)
+  plan_id: string; // FK → tour_season_plan.id (on delete cascade)
+  observed_at: string; // ISO-Datum (YYYY-MM-DD): „Stand vom"
+  status: TourEntryStatus;
+  alternate_position: number | null;
+  note: string | null;
+  created_at: string; // ISO timestamp
 }
 
 /** Kostensätze eines Nutzers (web.tour_cost_rates): Eingabe für src/domain/tour/costs.ts.

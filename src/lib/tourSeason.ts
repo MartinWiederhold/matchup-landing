@@ -11,19 +11,22 @@
  */
 
 import { supabase } from "@/lib/supabase";
-import type { TourSeasonPlanEntry, TourTournament } from "@/lib/types";
+import type { TourSeasonPlanEntry, TourEntryEvent, TourTournament } from "@/lib/types";
 
 // Explizite Spaltenlisten (kein select *).
-const PLAN_COLUMNS = "id, user_id, tournament_id, status, note, created_at, updated_at";
+const PLAN_COLUMNS = "id, user_id, tournament_id, status, alternate_position, fee_paid, note, created_at, updated_at";
 const TOURNAMENT_COLUMNS =
   "id, source_ref, tournament_monday, series, category, category_recognized, name, city, country, latitude, longitude, surface, indoor, prize_money, prize_currency, website, status, valid_from, valid_to, created_at, updated_at";
+const EVENT_COLUMNS = "id, user_id, plan_id, observed_at, status, alternate_position, note, created_at";
 
-export type SeasonStatus = TourSeasonPlanEntry["status"]; // planned|entered|confirmed|cancelled
+export type SeasonStatus = TourSeasonPlanEntry["status"]; // = TourEntryStatus (8 Werte)
 
 /** Ein Saisoneintrag: Planzeile + verbundenes Turnier + Soft-Delete-Kennzeichen. */
 export type SeasonEntry = {
   planId: string;
   status: SeasonStatus;
+  alternatePosition: number | null; // aktuelle Nachrücker-Position (nur bei status='alternate')
+  feePaid: boolean;
   note: string | null;
   addedAt: string; // created_at der Planzeile
   tournament: TourTournament;
@@ -59,6 +62,8 @@ export async function loadSeason(): Promise<SeasonEntry[]> {
     entries.push({
       planId: r.id,
       status: r.status,
+      alternatePosition: r.alternate_position,
+      feePaid: r.fee_paid,
       note: r.note,
       addedAt: r.created_at,
       tournament: t,
@@ -99,9 +104,71 @@ export async function removeFromSeason(tournamentId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Status eines Eintrags ändern. */
+/**
+ * Status eines Eintrags ändern (schlicht, für das ältere /tour/season-Dropdown).
+ * Die Alternate-Position ist NUR bei status='alternate' zulässig (DB-Cross-Check) →
+ * bei jedem anderen Status wird sie auf null gesetzt, damit das Update nie am Check scheitert.
+ */
 export async function setSeasonStatus(planId: string, status: SeasonStatus): Promise<void> {
-  const { error } = await supabase.from("tour_season_plan").update({ status }).eq("id", planId);
+  const patch = status === "alternate" ? { status } : { status, alternate_position: null };
+  const { error } = await supabase.from("tour_season_plan").update(patch).eq("id", planId);
+  if (error) throw error;
+}
+
+/**
+ * Entry-Status + Alternate-Position gemeinsam setzen (neues /tour-Management). Position
+ * NUR bei 'alternate' — sonst null (spiegelt den DB-Cross-Check). Aktualisiert die Planzeile
+ * (aktueller Stand); den VERLAUF schreibt logEntryEvent separat.
+ */
+export async function setEntryStatus(planId: string, status: SeasonStatus, alternatePosition?: number | null): Promise<void> {
+  const alt = status === "alternate" ? (alternatePosition ?? null) : null;
+  const { error } = await supabase.from("tour_season_plan").update({ status, alternate_position: alt }).eq("id", planId);
+  if (error) throw error;
+}
+
+/** Meldegebühr-Flag setzen. */
+export async function setFeePaid(planId: string, paid: boolean): Promise<void> {
+  const { error } = await supabase.from("tour_season_plan").update({ fee_paid: paid }).eq("id", planId);
+  if (error) throw error;
+}
+
+/**
+ * Eine Beobachtung in den Verlauf schreiben (web.tour_entry_events, append-only). Der
+ * Spieler hält fest, was er im IPIN sah. Position nur bei 'alternate'. observed_at leer →
+ * DB-Default (heute). user_id ist Pflicht (RLS WITH CHECK verlangt auth.uid() = user_id).
+ */
+export async function logEntryEvent(
+  userId: string,
+  planId: string,
+  obs: { status: SeasonStatus; alternatePosition?: number | null; observedAt?: string; note?: string | null },
+): Promise<void> {
+  const row: Record<string, unknown> = {
+    user_id: userId,
+    plan_id: planId,
+    status: obs.status,
+    alternate_position: obs.status === "alternate" ? (obs.alternatePosition ?? null) : null,
+    note: obs.note?.trim() ? obs.note.trim() : null,
+  };
+  if (obs.observedAt) row.observed_at = obs.observedAt;
+  const { error } = await supabase.from("tour_entry_events").insert(row);
+  if (error) throw error;
+}
+
+/** Verlauf eines Saisoneintrags, chronologisch (ältester zuerst). */
+export async function loadEntryEvents(planId: string): Promise<TourEntryEvent[]> {
+  const { data, error } = await supabase
+    .from("tour_entry_events")
+    .select(EVENT_COLUMNS)
+    .eq("plan_id", planId)
+    .order("observed_at", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as TourEntryEvent[]) ?? [];
+}
+
+/** Eine Fehl-Beobachtung entfernen (append-only kennt kein Update — löschen + neu erfassen). */
+export async function deleteEntryEvent(id: string): Promise<void> {
+  const { error } = await supabase.from("tour_entry_events").delete().eq("id", id);
   if (error) throw error;
 }
 
