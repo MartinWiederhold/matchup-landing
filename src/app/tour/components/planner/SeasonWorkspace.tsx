@@ -6,7 +6,8 @@ import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
-import { loadSeasonTournamentIds, addToSeason, removeFromSeason } from "@/lib/tourSeason";
+import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
+import { alternateTrend } from "@/domain/tour/entryTrend";
 import { saveWhoAmI, saveSeasonBudget } from "@/lib/tourSetup";
 import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
 import { loadStays } from "@/lib/tourStays";
@@ -19,7 +20,7 @@ import { expectedPoints, type PointsRound } from "@/domain/tour/points";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
 import CostRatesForm from "@/app/tour/costs/components/CostRatesForm";
 import { DeadlineCountdown } from "../EntryDeadline";
-import type { TourTournament, TourCostRates } from "@/lib/types";
+import type { TourTournament, TourCostRates, TourSeasonPlanEntry, TourEntryEvent } from "@/lib/types";
 import PlannerMap, { type PlanStop, type CandPoint, type MapStart } from "./PlannerMap";
 import TournamentDetail from "./TournamentDetail";
 import InfoHint from "./InfoHint";
@@ -28,6 +29,13 @@ import { HOME_BASES } from "@/lib/tournaments";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
+
+/** Beobachtungen nach plan_id gruppieren (für den Trend je Saisoneintrag). */
+function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]> {
+  const m = new Map<string, TourEntryEvent[]>();
+  for (const e of evs) { const a = m.get(e.plan_id); if (a) a.push(e); else m.set(e.plan_id, [e]); }
+  return m;
+}
 // Optimierer-Objektiv (v3): „meiste Turniere" (Standard) vs. „meiste erwartete Punkte".
 // Beim Umschalten auf Punkte ist die Zielrunde nie leer — Vorgabe R16 (2. Runde).
 const OBJECTIVE_KEY = "mu_tour_objective";
@@ -79,6 +87,10 @@ export default function SeasonWorkspace() {
   const [tours, setTours] = useState<TourTournament[]>([]);
   const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set());
   const [banned, setBanned] = useState<Set<string>>(new Set());
+  // Entry-Status je Turnier (Planzeile) + Beobachtungs-Verlauf je Planzeile — für die
+  // Status-Pills + Trend in der Saisonliste und den Editor im Detail.
+  const [planByTour, setPlanByTour] = useState<Map<string, TourSeasonPlanEntry>>(new Map());
+  const [eventsByPlan, setEventsByPlan] = useState<Map<string, TourEntryEvent[]>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [sheetOpen, setSheetOpen] = useState(true);
@@ -160,6 +172,16 @@ export default function SeasonWorkspace() {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }
+  // Plan-Rows (Status/Position/Gebühr) + Verlauf neu laden — nach Toggle, Füllen, Speichern.
+  const reloadEntries = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [rows, evs] = await Promise.all([loadSeasonPlanRows(), loadAllEntryEvents()]);
+      setPlanByTour(new Map(rows.map((r) => [r.tournament_id, r])));
+      setEventsByPlan(groupEventsByPlan(evs));
+    } catch { /* egal — Pills bleiben beim letzten Stand */ }
+  }, [user]);
+
   const [stays, setStays] = useState<Stay[]>([]);
   const [filling, setFilling] = useState(false);
   // MU-037: Rückmeldung nach dem Füllen (ergänzt / bereits belegte Wochen).
@@ -172,11 +194,15 @@ export default function SeasonWorkspace() {
     let alive = true;
     (async () => {
       try {
-        const [p, ts, ids, cr] = await Promise.all([loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates()]);
+        const [p, ts, ids, cr, planRows, evs] = await Promise.all([
+          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(),
+        ]);
         if (!alive) return;
         setProfile(p);
         setTours(ts);
         setSeasonIds(ids);
+        setPlanByTour(new Map(planRows.map((r) => [r.tournament_id, r])));
+        setEventsByPlan(groupEventsByPlan(evs));
         setRates(cr);
         setRankingInput(p.ranking != null ? String(p.ranking) : "");
         setBudget(p.seasonBudget != null ? String(p.seasonBudget) : "");
@@ -290,10 +316,12 @@ export default function SeasonWorkspace() {
     const next = new Set(seasonIds);
     if (inSeason) next.delete(id); else next.add(id);
     setSeasonIds(next);
-    (inSeason ? removeFromSeason(id) : addToSeason(user.id, id)).catch(() => {
-      setSeasonIds((cur) => { const rb = new Set(cur); if (inSeason) rb.add(id); else rb.delete(id); return rb; });
-    });
-  }, [user, seasonIds]);
+    (inSeason ? removeFromSeason(id) : addToSeason(user.id, id))
+      .then(() => reloadEntries()) // Planzeile/planId für die neue Auswahl nachladen
+      .catch(() => {
+        setSeasonIds((cur) => { const rb = new Set(cur); if (inSeason) rb.add(id); else rb.delete(id); return rb; });
+      });
+  }, [user, seasonIds, reloadEntries]);
 
   // ── Etappe 3: reaktive Kosten & Status ─────────────────────────────────────────
   // Nächte-Annahme (localStorage): leer → 7 (Domain-Default), sonst die Eingabe.
@@ -437,6 +465,7 @@ export default function SeasonWorkspace() {
         picks.forEach((p) => next.add(p.id));
         setSeasonIds(next); // optimistisch — NUR hinzufügen
         await Promise.all(picks.map((p) => addToSeason(user.id, p.id)));
+        await reloadEntries(); // Planzeilen der neu gefüllten Turniere nachladen
       }
       setFillReport({ added: picks.length, occupied: blockedWeeks.size });
     } catch {
@@ -445,7 +474,7 @@ export default function SeasonWorkspace() {
     } finally {
       setFilling(false);
     }
-  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound]);
+  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound, reloadEntries]);
 
   const money = useCallback((minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [locale]);
 
@@ -563,6 +592,37 @@ export default function SeasonWorkspace() {
     );
   };
 
+  // Status-Pill je Saisoneintrag. 'planned' (Default aus Optimierer/„Füllen") erzeugt KEIN
+  // Pill — kein Rauschen. Bei Alternate: Position + Trend-Marker aus dem Verlauf (entryTrend
+  // setzt die zwei Regeln um: kein Marker bei einer Beobachtung; Datum statt Pfeil, wenn die
+  // letzte Beobachtung zu alt ist).
+  const asOfDate = new Date(nowMs).toISOString().slice(0, 10);
+  const entryPill = (tt: TourTournament) => {
+    const plan = planByTour.get(tt.id);
+    const status = plan?.status ?? "planned";
+    if (status === "planned") return null;
+    const pos = plan?.alternate_position ?? null;
+    const cls = status === "main_draw" || status === "entered" || status === "qualifying" || status === "confirmed" ? "bg-emerald-500/10 text-emerald-700"
+      : status === "alternate" ? "bg-amber-500/10 text-amber-700"
+      : status === "withdrawn" || status === "cancelled" ? "bg-black/[0.05] text-neutral-500 line-through"
+      : "bg-black/[0.05] text-neutral-600";
+    const word = `${t(`tour.status_${status}`)}${status === "alternate" && pos != null ? ` #${pos}` : ""}`;
+    // Trend nur bei Alternate.
+    const events = plan ? (eventsByPlan.get(plan.id) ?? []) : [];
+    const trend = status === "alternate"
+      ? alternateTrend(events.map((e) => ({ observedAt: e.observed_at, alternatePosition: e.alternate_position })), asOfDate)
+      : { kind: "none" as const };
+    return (
+      <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+        <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${cls}`}>{word}</span>
+        {trend.kind === "up" && <span className="text-[11px] font-bold text-emerald-600" title={t("tour.wsTrendUp", { n: trend.delta })}>↑</span>}
+        {trend.kind === "down" && <span className="text-[11px] font-bold text-amber-600" title={t("tour.wsTrendDown", { n: -trend.delta })}>↓</span>}
+        {trend.kind === "flat" && <span className="text-[11px] font-bold text-neutral-400" title={t("tour.wsTrendFlat")}>•</span>}
+        {trend.kind === "stale" && <span className="text-[10.5px] text-neutral-400">{t("tour.wsEntryAsOf", { date: fmtDay(trend.observedAt) })}</span>}
+      </span>
+    );
+  };
+
   // Anzeigewerte für die Kosten-Sektion (reine Ableitungen, keine Systemzeit).
   const ratesDone = costRatesComplete(rates);
   const cur = rates?.currency ?? "EUR";
@@ -629,6 +689,11 @@ export default function SeasonWorkspace() {
       viewerRank={profile?.ranking != null ? `#${profile.ranking}` : null}
       viewerNationality={profile?.passports[0] ?? profile?.country ?? null}
       viewerPassports={profile?.passports ?? []}
+      planId={planByTour.get(selectedTt.id)?.id ?? null}
+      entryStatus={planByTour.get(selectedTt.id)?.status ?? "planned"}
+      alternatePosition={planByTour.get(selectedTt.id)?.alternate_position ?? null}
+      feePaid={planByTour.get(selectedTt.id)?.fee_paid ?? false}
+      onEntryChanged={reloadEntries}
     />
   ) : null;
 
@@ -980,6 +1045,7 @@ export default function SeasonWorkspace() {
                         <p className="text-[11px] text-neutral-500">{fmtDay(tt.tournament_monday)} · {tt.category || "—"}</p>
                       </button>
                       <div className="mt-0.5"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
+                      {entryPill(tt)}
                     </div>
                     <button type="button" onClick={() => toggle(tt.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-800">{t("tour.seasonRemove")}</button>
                   </li>

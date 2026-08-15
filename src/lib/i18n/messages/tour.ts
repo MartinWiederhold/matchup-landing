@@ -374,6 +374,18 @@ export const tour = {
     status_withdrawn: "Zurückgezogen",
     status_confirmed: "Bestätigt",
     status_cancelled: "Abgesagt",
+    // Entry-Status: Zeile + Editor im Übersicht-Reiter, Pill + Trend in der Saisonliste.
+    wsEntryStatusLabel: "Entry-Status",
+    wsEntrySet: "Eintragen",
+    wsEntryObservedAt: "Stand vom",
+    wsEntryPosition: "Position",
+    wsEntryFeePaid: "Meldegebühr bezahlt",
+    wsEntryNote: "Notiz (optional)",
+    wsEntryHint: "Was du im IPIN/PlayerZone siehst. Jede Speicherung merkt sich den Stand — daraus entsteht der Verlauf.",
+    wsEntryAsOf: "Stand {date}",
+    wsTrendUp: "hochgerückt um {n}",
+    wsTrendDown: "abgerutscht um {n}",
+    wsTrendFlat: "unverändert",
     tournamentInactive: "Dieses Turnier ist nicht mehr verfügbar. Es bleibt in deiner Saison, bis du es entfernst.",
 
     // Punkte-Seite (/tour/points)
@@ -1034,6 +1046,18 @@ export const tour = {
     status_withdrawn: "Withdrawn",
     status_confirmed: "Confirmed",
     status_cancelled: "Cancelled",
+    // Entry status: line + editor in the overview tab, pill + trend in the season list.
+    wsEntryStatusLabel: "Entry status",
+    wsEntrySet: "Set",
+    wsEntryObservedAt: "As of",
+    wsEntryPosition: "Position",
+    wsEntryFeePaid: "Entry fee paid",
+    wsEntryNote: "Note (optional)",
+    wsEntryHint: "What you see in IPIN/PlayerZone. Every save records the state — that's what builds the history.",
+    wsEntryAsOf: "as of {date}",
+    wsTrendUp: "moved up {n}",
+    wsTrendDown: "moved down {n}",
+    wsTrendFlat: "unchanged",
     tournamentInactive: "This tournament is no longer available. It stays in your season until you remove it.",
 
     // Points page (/tour/points)

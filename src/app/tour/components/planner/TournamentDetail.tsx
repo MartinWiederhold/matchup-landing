@@ -8,8 +8,12 @@ import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
+import { setEntryStatus, setFeePaid, logEntryEvent } from "@/lib/tourSeason";
 import TourChatPanel from "./TourChatPanel";
-import type { TourTournament, TourCostRates } from "@/lib/types";
+import type { TourTournament, TourCostRates, TourEntryStatus } from "@/lib/types";
+
+// Entry-Status-Auswahl im Editor: der Lebenszyklus ohne die Legacy-Codes.
+const ENTRY_STATUS_OPTS: TourEntryStatus[] = ["planned", "entered", "main_draw", "qualifying", "alternate", "withdrawn"];
 
 const DAY = 86_400_000;
 // Dienstleister-Umkreis: 50 km ≈ Turnierstadt + direktes Umland (taggleich erreichbar).
@@ -64,6 +68,7 @@ function useFlightPrice(city: string, country: string, start: string, end: strin
 export default function TournamentDetail({
   tt, countryName, inSeason, onToggle, onClose, originCity, originLabel, nights, rates, nowMs,
   viewerId, viewerName, viewerRank, viewerNationality, viewerPassports,
+  planId, entryStatus, alternatePosition, feePaid, onEntryChanged,
 }: {
   tt: TourTournament;
   countryName: string;
@@ -80,6 +85,12 @@ export default function TournamentDetail({
   viewerRank: string | null;
   viewerNationality: string | null;
   viewerPassports: string[];
+  // Entry-Status des Saisoneintrags (null = nicht in der Saison → keine Status-Zeile).
+  planId: string | null;
+  entryStatus: TourEntryStatus;
+  alternatePosition: number | null;
+  feePaid: boolean;
+  onEntryChanged: () => void; // nach dem Speichern: Parent lädt Plan + Verlauf neu
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -93,6 +104,31 @@ export default function TournamentDetail({
   const [pBusy, setPBusy] = useState(false);
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
+
+  // ── Entry-Status-Editor (nur in der Saison). Anfangswerte aus den Props; die Komponente
+  // ist per key=tt.id gemountet, daher ist das Seed-once korrekt. Beim Speichern wird IMMER
+  // automatisch ein Event geschrieben (Verlauf ohne Zutun) — „Stand vom" bleibt änderbar.
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [eStatus, setEStatus] = useState<TourEntryStatus>(entryStatus);
+  const [ePos, setEPos] = useState<string>(alternatePosition != null ? String(alternatePosition) : "");
+  const [eObserved, setEObserved] = useState<string>(new Date(nowMs).toISOString().slice(0, 10));
+  const [eFee, setEFee] = useState<boolean>(feePaid);
+  const [eNote, setENote] = useState<string>("");
+  const [savingEntry, setSavingEntry] = useState(false);
+  const saveEntry = async () => {
+    if (!planId) return;
+    setSavingEntry(true);
+    try {
+      const pos = eStatus === "alternate" && parseInt(ePos, 10) > 0 ? parseInt(ePos, 10) : null;
+      await setEntryStatus(planId, eStatus, pos);                                   // aktuellen Stand an die Planzeile
+      await logEntryEvent(viewerId, planId, { status: eStatus, alternatePosition: pos, observedAt: eObserved || undefined, note: eNote }); // AUTO-Event → Verlauf
+      if (eFee !== feePaid) await setFeePaid(planId, eFee);
+      onEntryChanged();
+      setEntryOpen(false);
+    } finally {
+      setSavingEntry(false);
+    }
+  };
   useEffect(() => {
     let alive = true;
     loadTourPresence(tt.id).then((rows) => {
@@ -230,6 +266,16 @@ export default function TournamentDetail({
 
   const link = "flex items-center justify-between rounded-xl border border-black/10 px-3 py-2.5 text-[13px] font-semibold text-neutral-800 transition-colors hover:bg-black/[0.03]";
 
+  // Pill-Tönung je Status (dezent, kein Alarmrot): angenommen = grün, Alternate = bernstein,
+  // zurückgezogen = grau/durchgestrichen, geplant = neutral.
+  const entryPillClass = (s: TourEntryStatus) =>
+    s === "main_draw" || s === "entered" || s === "qualifying" || s === "confirmed" ? "bg-emerald-500/10 text-emerald-700"
+    : s === "alternate" ? "bg-amber-500/10 text-amber-700"
+    : s === "withdrawn" || s === "cancelled" ? "bg-black/[0.05] text-neutral-500 line-through"
+    : "bg-black/[0.05] text-neutral-600";
+  const entryWord = `${t(`tour.status_${entryStatus}`)}${entryStatus === "alternate" && alternatePosition != null ? ` #${alternatePosition}` : ""}`;
+  const inp2 = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Kopf mit Zurück */}
@@ -276,6 +322,50 @@ export default function TournamentDetail({
         // Entschlackt: VIER Zeilen. Alles Erklärende hinter „i". Eine Einreisesperre bleibt
         // sichtbar (rot), nicht aufklappbar. Nichts gestrichen — nur verlagert.
         <div className="divide-y divide-black/[0.06]">
+
+          {/* Entry-Status — nur in der Saison (dann existiert eine Planzeile). Der Kern des
+              Management-Werkzeugs: wo stehe ich? Bearbeiten öffnet den Editor darunter. */}
+          {planId && (
+            <div className="py-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsEntryStatusLabel")}</span>
+                <button type="button" onClick={() => setEntryOpen((o) => !o)} className="flex items-center gap-1.5">
+                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${entryPillClass(entryStatus)}`}>{entryWord}</span>
+                  <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                </button>
+              </div>
+              {entryOpen && (
+                <div className="mt-2 space-y-2.5 rounded-xl border border-black/10 bg-black/[0.02] p-3">
+                  {/* Status-Auswahl */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {ENTRY_STATUS_OPTS.map((s) => (
+                      <button key={s} type="button" onClick={() => setEStatus(s)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${eStatus === s ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.status_${s}`)}</button>
+                    ))}
+                  </div>
+                  {/* Position nur bei Alternate */}
+                  {eStatus === "alternate" && (
+                    <label className="flex items-center gap-2 text-[12px] font-semibold text-neutral-600">{t("tour.wsEntryPosition")}
+                      <input type="number" min={1} value={ePos} onChange={(e) => setEPos(e.target.value)} className="w-24 rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] focus:border-black/30 focus:outline-none" />
+                    </label>
+                  )}
+                  {/* Stand vom (bleibt änderbar — Nachtrag möglich) + Gebühr */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="block text-[12px] font-semibold text-neutral-600">{t("tour.wsEntryObservedAt")}
+                      <input type="date" value={eObserved} onChange={(e) => setEObserved(e.target.value)} className={`mt-1 ${inp2}`} />
+                    </label>
+                    <label className="flex items-end gap-2 pb-1.5 text-[12px] text-neutral-700">
+                      <input type="checkbox" checked={eFee} onChange={(e) => setEFee(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsEntryFeePaid")}
+                    </label>
+                  </div>
+                  <input value={eNote} onChange={(e) => setENote(e.target.value)} placeholder={t("tour.wsEntryNote")} className={inp2} />
+                  <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsEntryHint")}</p>
+                  <button type="button" onClick={saveEntry} disabled={savingEntry} className="w-full rounded-full bg-matchup py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">
+                    {savingEntry ? t("tour.wsFilling") : t("tour.wsEntrySet")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 1) Meldefrist — Countdown oder „unbekannt" */}
           <div className="flex items-center justify-between gap-3 py-2.5">

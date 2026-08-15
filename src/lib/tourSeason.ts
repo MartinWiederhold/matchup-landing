@@ -87,6 +87,26 @@ export async function loadSeasonTournamentIds(): Promise<Set<string>> {
   return new Set(((data as { tournament_id: string }[]) ?? []).map((r) => r.tournament_id));
 }
 
+/** Rohe Planzeilen des Nutzers (Status/Position/Gebühr je Turnier) — für die Saisonliste
+ *  + den Entry-Status im Detail. Benannte Spalten, RLS scoped auf die eigenen Zeilen. */
+export async function loadSeasonPlanRows(): Promise<TourSeasonPlanEntry[]> {
+  const { data, error } = await supabase.from("tour_season_plan").select(PLAN_COLUMNS);
+  if (error) throw error;
+  return (data as TourSeasonPlanEntry[]) ?? [];
+}
+
+/** ALLE Beobachtungen des Nutzers (RLS scoped), chronologisch — für den Trend je Eintrag.
+ *  EINE Abfrage; die UI gruppiert client-seitig nach plan_id. */
+export async function loadAllEntryEvents(): Promise<TourEntryEvent[]> {
+  const { data, error } = await supabase
+    .from("tour_entry_events")
+    .select(EVENT_COLUMNS)
+    .order("observed_at", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as TourEntryEvent[]) ?? [];
+}
+
 /**
  * Turnier in die Saison aufnehmen. Idempotent: ein bereits vorhandenes Turnier
  * (UNIQUE-Verstoß 23505) ist KEIN Fehler. JEDER andere Fehler — insbesondere ein
