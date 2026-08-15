@@ -85,7 +85,16 @@ export async function loadActiveTournaments(): Promise<TourTournament[]> {
 export type RegionMode = "ch" | "europe" | "all";
 // countries (ISO-3166-1 alpha-2): explizite Länder-Mehrfachauswahl. Ist sie gesetzt
 // (nicht leer), GEWINNT sie über region — sonst greift region (Schnellwahl Europa/alle).
-export type Frame = { region: RegionMode; from: string; to: string; countries?: string[] };
+// series/surface: optionale Mehrfachauswahl (Serie itf_wtt|challenger, Belag clay|hard|…).
+// Leer = kein Filter. Wirkt auf Katalog, Kartenkandidaten UND Optimierer-Pool gleichermaßen.
+export type Frame = { region: RegionMode; from: string; to: string; countries?: string[]; series?: string[]; surface?: string[] };
+
+/** Serie-/Belag-Filter des Rahmens (leere Auswahl = kein Filter). */
+export function matchesFrameKind(t: TourTournament, frame: Frame): boolean {
+  if (frame.series && frame.series.length > 0 && !frame.series.includes(t.series)) return false;
+  if (frame.surface && frame.surface.length > 0 && !(t.surface && frame.surface.includes(t.surface))) return false;
+  return true;
+}
 
 /** Liegt ein Turnierland im gewählten Regionsmodus? „europe" nutzt die Domain-Zielregion. */
 function inRegion(country: string | null | undefined, mode: RegionMode): boolean {
@@ -117,6 +126,7 @@ export function filterFrame(tours: TourTournament[], frame: Frame): FrameResult 
   let noCoords = 0;
   for (const t of tours) {
     if (!matchesFrameRegion(t.country, frame)) continue;
+    if (!matchesFrameKind(t, frame)) continue;
     if (frame.from && t.tournament_monday < frame.from) continue;
     if (frame.to && t.tournament_monday > frame.to) continue;
     inFrame++;
@@ -188,6 +198,7 @@ export function buildSeasonCandidates(
   const out: SeasonCandidate[] = [];
   for (const t of tours) {
     if (!matchesFrameRegion(t.country, frame)) continue;
+    if (!matchesFrameKind(t, frame)) continue;
     if (frame.from && t.tournament_monday < frame.from) continue;
     if (frame.to && t.tournament_monday > frame.to) continue;
     if (blockedWeeks.has(t.tournament_monday)) continue; // Woche schon belegt
@@ -214,6 +225,7 @@ export function tournamentsInFrame(tours: TourTournament[], frame: Frame): TourT
   return tours.filter(
     (t) =>
       matchesFrameRegion(t.country, frame) &&
+      matchesFrameKind(t, frame) &&
       !(frame.from && t.tournament_monday < frame.from) &&
       !(frame.to && t.tournament_monday > frame.to),
   );

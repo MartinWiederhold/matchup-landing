@@ -13,6 +13,7 @@ import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { computeSeasonCost } from "@/domain/tour/costs";
+import { tourDeadlines } from "@/domain/tour/deadlines";
 import { optimizeSeason } from "@/domain/tour/optimizeSeason";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
 import CostRatesForm from "@/app/tour/costs/components/CostRatesForm";
@@ -39,15 +40,27 @@ const NIGHTS_KEY = "mu_tour_nights";
 const byMonday = (a: TourTournament, b: TourTournament) => a.tournament_monday.localeCompare(b.tournament_monday);
 const hasCoords = (t: TourTournament) => t.latitude != null && t.longitude != null;
 const RECENT_KEY = "mu_tour_recent_starts";
-// Panel-Breite (Desktop): Anzeigevorliebe, kein Datum → localStorage. Default 560,
-// nicht schmaler als 400, nicht breiter als die halbe Fensterbreite.
-const PANEL_W_KEY = "mu_tour_panel_w";
-const PANEL_W_DEFAULT = 560;
-const PANEL_W_MIN = 400;
-function clampPanelW(w: number): number {
-  const max = typeof window !== "undefined" ? Math.max(PANEL_W_MIN, Math.floor(window.innerWidth / 2)) : 720;
-  return Math.min(max, Math.max(PANEL_W_MIN, Math.round(w)));
+// Katalogspalten-Breite (Desktop): Anzeigevorliebe, kein Datum → localStorage. Default 380
+// (schmaler als früher: die Filter haben jetzt eine EIGENE Spalte). Clamp [320, min(560, 42%)].
+// Der alte Schlüssel mu_tour_panel_w bleibt unberührt liegen (andere Semantik).
+const LEFT_W_KEY = "mu_tour_left_w";
+const LEFT_W_DEFAULT = 380;
+const LEFT_W_MIN = 320;
+function clampLeftW(w: number): number {
+  const max = typeof window !== "undefined" ? Math.max(LEFT_W_MIN, Math.min(560, Math.floor(window.innerWidth * 0.42))) : 520;
+  return Math.min(max, Math.max(LEFT_W_MIN, Math.round(w)));
 }
+const FILTERS_OPEN_KEY = "mu_tour_filters_open";
+// Feste Breiten der Filter-/Detailspalte (Desktop, inline). Nur die Katalogspalte ist
+// zieh-verstellbar (ein einziger Breiten-Schlüssel laut Entwurf).
+const FILTER_W = 296;
+const DETAIL_W = 400;
+// Responsive Schwellen (px). Drop-Reihenfolge bei schmalerem Fenster: Filter → Detail →
+// Katalog; die KARTE fällt nie weg. Ab BP_FOUR steht die Filterspalte inline (schiebt),
+// ab BP_DETAIL die Detailspalte inline; darunter werden beide zu Overlays.
+const BP_FOUR = 1520;
+const BP_DETAIL = 1200;
+const BP_MOBILE = 1024;
 
 export default function SeasonWorkspace() {
   const { user, loading: authLoading } = useAuth();
@@ -83,24 +96,41 @@ export default function SeasonWorkspace() {
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
   const [nights, setNights] = useState<string>(() => { try { return localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { return ""; } });
-  // Panel-Breite (Desktop): SSR-stabiler Default, danach aus localStorage übernehmen
-  // (vermeidet Hydration-Mismatch am inline width). Ziehen setzt/merkt die Breite.
-  const [panelW, setPanelW] = useState(PANEL_W_DEFAULT);
+  // Katalogspalten-Breite (Desktop): SSR-stabiler Default, danach aus localStorage übernehmen
+  // (vermeidet Hydration-Mismatch am inline width). Der Zieh-Griff sitzt zwischen Katalog
+  // und Karte. Beim Ziehen wird die Filterspalten-Breite mitgerechnet (Griff-x minus Offset).
+  const [leftW, setLeftW] = useState(LEFT_W_DEFAULT);
   useEffect(() => {
-    try { const v = parseInt(localStorage.getItem(PANEL_W_KEY) ?? "", 10); if (Number.isFinite(v)) setPanelW(clampPanelW(v)); } catch { /* egal */ }
+    try { const v = parseInt(localStorage.getItem(LEFT_W_KEY) ?? "", 10); if (Number.isFinite(v)) setLeftW(clampLeftW(v)); } catch { /* egal */ }
   }, []);
-  function startPanelDrag(e: ReactMouseEvent<HTMLDivElement>) {
+  // Filterspalte auf-/zugeklappt (Anzeigevorliebe → localStorage). Standard: zu.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  useEffect(() => { try { setFiltersOpen(localStorage.getItem(FILTERS_OPEN_KEY) === "1"); } catch { /* egal */ } }, []);
+  const toggleFilters = useCallback(() => setFiltersOpen((o) => { const n = !o; try { localStorage.setItem(FILTERS_OPEN_KEY, n ? "1" : "0"); } catch { /* egal */ } return n; }), []);
+  // Fensterbreite steuert, welche Spalten inline stehen und welche zu Overlays werden.
+  // SSR-stabiler Default (Desktop-Annahme), danach gemessen + auf resize aktualisiert.
+  const [winW, setWinW] = useState(1440);
+  useEffect(() => {
+    const on = () => setWinW(window.innerWidth);
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  function startLeftDrag(e: ReactMouseEvent<HTMLDivElement>) {
     e.preventDefault();
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
-    let last = panelW;
-    const onMove = (ev: MouseEvent) => { last = clampPanelW(ev.clientX); setPanelW(last); };
+    // Offset der linken Kante der Katalogspalte (0 oder Filterspaltenbreite, wenn sie inline steht).
+    const filterInline = window.innerWidth >= BP_FOUR && filtersOpen;
+    const offset = filterInline ? FILTER_W : 0;
+    let last = leftW;
+    const onMove = (ev: MouseEvent) => { last = clampLeftW(ev.clientX - offset); setLeftW(last); };
     const onUp = () => {
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
-      try { localStorage.setItem(PANEL_W_KEY, String(last)); } catch { /* egal */ }
+      try { localStorage.setItem(LEFT_W_KEY, String(last)); } catch { /* egal */ }
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -275,6 +305,18 @@ export default function SeasonWorkspace() {
     return computeSeasonCost(stations, params);
   }, [rates, seasonOrdered, nightsNum]);
 
+  // Nächste noch offene Meldefrist über die geplante Saison (für die Übersichtsspalte).
+  const nextDeadline = useMemo(() => {
+    let best: { tt: TourTournament; ms: number } | null = null;
+    for (const { tt } of seasonOrdered) {
+      const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series);
+      const ms = dl.entry ? dl.entry.getTime() : null;
+      if (ms == null || ms < nowMs) continue;
+      if (!best || ms < best.ms) best = { tt, ms };
+    }
+    return best?.tt ?? null;
+  }, [seasonOrdered, nowMs]);
+
   // Budget der Kostensatz-Währung (Minor) für den Balken.
   const budgetMinor = useMemo(() => {
     const cur = rates?.currency ?? "EUR";
@@ -431,6 +473,24 @@ export default function SeasonWorkspace() {
     return { ...f, countries: [...cur] };
   });
 
+  // Serie/Belag (Mehrfachauswahl). Leere Auswahl = kein Filter (siehe matchesFrameKind).
+  const SERIES_OPTS: { v: string; label: string }[] = [
+    { v: "itf_wtt", label: t("tour.seriesItf") },
+    { v: "challenger", label: t("tour.seriesChallenger") },
+  ];
+  const SURFACE_OPTS = ["clay", "hard", "grass", "carpet"] as const;
+  const selSeries = frame.series ?? [];
+  const selSurface = frame.surface ?? [];
+  const toggleSeries = (v: string) => setFrame((f) => {
+    const cur = new Set(f.series ?? []); if (cur.has(v)) cur.delete(v); else cur.add(v); return { ...f, series: [...cur] };
+  });
+  const toggleSurface = (v: string) => setFrame((f) => {
+    const cur = new Set(f.surface ?? []); if (cur.has(v)) cur.delete(v); else cur.add(v); return { ...f, surface: [...cur] };
+  });
+  // Zähler für das Badge am Filter-Knopf: konkrete, gesetzte Filter-Facetten.
+  const activeFilters = selSeries.length + selSurface.length + selCountries.length + (frame.to ? 1 : 0) + (frame.region !== "europe" && selCountries.length === 0 ? 1 : 0);
+  const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
+
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
   if (authLoading) return <div className="flex h-[100dvh] items-center justify-center bg-white text-sm text-neutral-500">{t("tour.loading")}</div>;
   if (!user) {
@@ -507,250 +567,10 @@ export default function SeasonWorkspace() {
     </div>
   );
 
-  const panel = (
-    <div className="flex h-full flex-col">
-      <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
-        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900">{t("tour.plTitle")}</h1>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-        {status === "loading" && <p className="text-sm text-neutral-500">{t("tour.loading")}</p>}
-        {status === "error" && <p className="text-sm text-neutral-500">{t("tour.loadError")}</p>}
-
-        {status === "ready" && profile && (
-          <>
-            {/* Profil liegt jetzt als Chip oben rechts über der Karte (Überlagerung). */}
-
-            {/* 2) Startpunkt: Suche + Chips */}
-            <section>
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsStartTitle")}</h2>
-              <div className="relative mt-2">
-                <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={startName ? t("tour.wsStartCurrent", { name: startName }) : t("tour.wsStartSearch")} className={inp} />
-                {geoResults.length > 0 && (
-                  <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
-                    {geoResults.map((c, i) => (
-                      <li key={`${c.country}|${c.name}|${i}`}>
-                        <button type="button" onClick={() => pickStart({ name: c.name, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
-                          <span className="truncate font-semibold text-neutral-900">{c.name}</span>
-                          <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              {/* Schnellwahl: kuratierte Wohnorte (HOME_BASES) + zuletzt gewählte. */}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {HOME_BASES.map((b) => (
-                  <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
-                    {b.name}
-                  </button>
-                ))}
-                {recent.filter((r) => !HOME_BASES.some((b) => b.name === r.name)).map((r) => (
-                  <button key={r.name} type="button" onClick={() => pickStart(r)} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === r.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
-                    {r.name}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* 3) Rahmen: Budget, Zeitraum, Länder-Mehrfachauswahl mit Zählern */}
-            <section className="space-y-3">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.plStep2")}</h2>
-              <label className="block">
-                <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plBudget")}</span>
-                <input value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
-                {/* Zweite Hürde: Hinweis an der Stelle, wo das Budget steht — keine zweite Einblendung. */}
-                {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plFrom")}</span>
-                  <input type="date" value={frame.from} onChange={(e) => setFrame((f) => ({ ...f, from: e.target.value }))} className={inp} /></label>
-                <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plTo")}</span>
-                  <input type="date" value={frame.to} onChange={(e) => setFrame((f) => ({ ...f, to: e.target.value }))} className={inp} /></label>
-              </div>
-
-              <div>
-                <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.plRegion")}</span>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "all", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "all" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionAll")}</button>
-                  <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "europe", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "europe" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionEurope")}</button>
-
-                  {/* Länder-Mehrfachauswahl mit Turnierzahl je Land */}
-                  <div className="relative" ref={countryBoxRef}>
-                    <button type="button" onClick={() => setCountryOpen((o) => !o)} className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
-                      {selCountries.length ? t("tour.wsCountriesN", { n: selCountries.length }) : t("tour.wsCountries")}
-                      <span className={`transition-transform ${countryOpen ? "rotate-180" : ""}`}>▾</span>
-                    </button>
-                    {countryOpen && (
-                      <div className="absolute left-0 z-30 mt-1.5 w-72 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
-                        <input value={countryQuery} onChange={(e) => setCountryQuery(e.target.value)} placeholder={t("tour.wsCountrySearch")} className={`${inp} mb-2`} autoFocus />
-                        <div className="max-h-64 overflow-auto">
-                          {countryList.map(([iso, n]) => {
-                            const on = selCountries.includes(iso);
-                            return (
-                              <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-black/[0.03]">
-                                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${on ? "border-matchup bg-matchup text-white" : "border-neutral-300 text-transparent"}`}>✓</span>
-                                <span className="min-w-0 flex-1 truncate text-neutral-800">{catName(iso)}</span>
-                                <span className="shrink-0 tabular-nums text-[12px] font-semibold text-neutral-400">{n}</span>
-                              </button>
-                            );
-                          })}
-                          {countryList.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-neutral-400">{t("tour.opt.emptyNoTournaments")}</p>}
-                        </div>
-                        {selCountries.length > 0 && (
-                          <button type="button" onClick={() => setFrame((f) => ({ ...f, countries: [] }))} className="mt-2 w-full rounded-lg bg-black/[0.03] py-1.5 text-[12px] font-semibold text-neutral-600 hover:bg-black/[0.06]">{t("tour.wsCountriesClear")}</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {selCountries.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {selCountries.map((iso) => (
-                      <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[12px] font-semibold text-matchup">
-                        {catName(iso)} <span className="text-matchup/60">✕</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* 4) Kosten & Status — sichtbar bleibt nur Summe + Budgetbalken + Rest + Schengen-
-                   Warnung wenn sie greift. Alles Erklärende (Wochenkosten, Kostensätze,
-                   Anreisen/Unbekannt, Schengen-Details im Rahmen, Datenherkunft) hinter dem „i". */}
-            <section className="space-y-3">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
-                {t("tour.wsCostTitle")}
-                <InfoHint label={t("tour.wsCostInfo")}>
-                  {ratesDone && <p>{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>}
-                  {ratesDone && <button type="button" onClick={() => setCostOpen((o) => !o)} className="mt-1 font-semibold text-matchup hover:underline">{t("tour.wsEditRates")}</button>}
-                  {cost && cost.arrivalsSaved > 0 && <p className="mt-1 text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
-                  {cost && cost.hasUnknown && <p className="mt-1">{t("tour.wsCostUnknown")}</p>}
-                  {schengen && !schengen.exceeds && <p className="mt-1">{t("tour.wsSchengen", { used: schengen.used })} · {t("tour.wsSchengenLeft", { n: schengen.left })}</p>}
-                  <p className="mt-1">{t("tour.wsCostSource")}</p>
-                </InfoHint>
-              </h2>
-
-              {/* Kostensätze fehlen → eine Zeile, die das Formular öffnet (kein Dauer-Block). */}
-              {!ratesDone && !costOpen && (
-                <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
-              )}
-              {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />}
-
-              {/* Sichtbar: Summe + Budgetbalken + Restbetrag */}
-              {ratesDone && cost && cost.stations.length > 0 && (
-                <div className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-[12px] font-semibold text-neutral-500">{t("tour.wsCostTotal")}</span>
-                    <span className="text-[15px] font-extrabold tabular-nums text-neutral-900">{cost.currencies.map((c) => money(cost.total[c], c)).join(" + ")}</span>
-                  </div>
-                  {budgetMinor && (
-                    <div className="mt-2">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
-                        <div className={`h-full rounded-full ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "bg-amber-500" : "bg-matchup"}`} style={{ width: `${budgetPct}%` }} />
-                      </div>
-                      <p className={`mt-1 text-[12px] font-semibold ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "text-amber-700" : "text-neutral-500"}`}>
-                        {budgetLeftMinor != null && budgetLeftMinor < 0 ? t("tour.wsBudgetOver", { amount: money(-budgetLeftMinor, cur) }) : t("tour.wsBudgetLeft", { amount: money(budgetLeftMinor ?? 0, cur) })}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Sichtbar NUR wenn die Schengen-Grenze gerissen ist (Problem, kein Detail). */}
-              {schengen && schengen.exceeds && (
-                <div className="rounded-2xl border border-amber-300 bg-amber-500/10 p-3">
-                  <p className="flex items-center gap-1.5 text-[13px] font-bold text-amber-800"><span aria-hidden>⚠</span> {t("tour.wsSchengenTitle")}</p>
-                  <p className="mt-0.5 text-[12px] font-semibold text-amber-700">{t("tour.wsSchengenExceed", { used: schengen.used, over: schengen.used - 90 })}</p>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700/90">{t("tour.wsSchengenAction")}</p>
-                </div>
-              )}
-
-              <button type="button" onClick={smartFill} disabled={filling || !ratesDone}
-                className="w-full rounded-full bg-neutral-900 px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-40">
-                {filling ? t("tour.wsFilling") : t("tour.wsFill")}
-              </button>
-              <p className="text-[11px] leading-relaxed text-neutral-400">
-                {t("tour.wsFillShort")}
-                <InfoHint label={t("tour.wsFillInfo")}>{t("tour.wsFillLong")}</InfoHint>
-              </p>
-              {fillReport && (
-                <p className="mt-1 rounded-xl bg-matchup/[0.06] px-3 py-2 text-[12px] leading-relaxed text-neutral-600">
-                  {t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })}
-                </p>
-              )}
-            </section>
-
-            {/* Meine Saison */}
-            <section>
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
-              {seasonOrdered.length === 0 ? (
-                <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
-              ) : (
-                <ul className="mt-2 space-y-1.5">
-                  {start && (
-                    <li className="flex items-center gap-2 text-[13px] font-semibold text-emerald-700">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-[13px]">⌂</span>
-                      {t("tour.wsStart")}{startName ? ` · ${startName}` : ""}
-                    </li>
-                  )}
-                  {seasonOrdered.map(({ tt, order }) => (
-                    <li key={tt.id} className={`flex items-start gap-2 rounded-xl px-1.5 py-1 ${selectedId === tt.id ? "bg-matchup/[0.06] ring-1 ring-matchup/40" : ""}`}>
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-[11px] font-bold text-white">{order}</span>
-                      <div className="min-w-0 flex-1">
-                        <button type="button" onClick={() => setSelectedId(tt.id)} className="block w-full text-left">
-                          <p className="truncate text-[13px] font-semibold text-neutral-900">{tt.city || t("tour.fieldMissing")}<span className="text-neutral-400">, {catName(tt.country)}</span></p>
-                          <p className="text-[11px] text-neutral-500">{fmtDay(tt.tournament_monday)} · {tt.category || "—"}</p>
-                        </button>
-                        <div className="mt-0.5"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
-                      </div>
-                      <button type="button" onClick={() => toggle(tt.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-800">{t("tour.seasonRemove")}</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {/* Turnierkatalog */}
-            <section>
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsBrowseTitle")} · {catalog.total}</h2>
-              <div className="mt-2 space-y-1">
-                {catalog.clusters.map((cl) => {
-                  const open = expanded.has(cl.key);
-                  const inCount = cl.items.filter((x) => seasonIds.has(x.id)).length;
-                  return (
-                    <div key={cl.key} className="rounded-xl ring-1 ring-black/[0.06]">
-                      <button type="button" onClick={() => setExpanded((s) => { const n = new Set(s); if (n.has(cl.key)) n.delete(cl.key); else n.add(cl.key); return n; })} className="flex w-full items-center gap-2 px-3 py-2 text-left">
-                        <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-gradient-to-br from-matchup to-violet-500 px-1.5 text-[11px] font-bold text-white">{cl.items.length}×</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-semibold text-neutral-900">{cl.place}<span className="text-neutral-400">, {catName(cl.country)}</span></span>
-                          <span className="block text-[11px] text-neutral-500">{cl.items.length} {t("tour.wsWeeks")}{inCount ? ` · ${inCount} ${t("tour.wsInSeason")}` : ""}</span>
-                        </span>
-                        <span className={`text-neutral-300 transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
-                      </button>
-                      {open && <div className="border-t border-black/[0.06] p-1">{cl.items.map((it) => catalogRow(it))}</div>}
-                    </div>
-                  );
-                })}
-                {catalog.singles.map((tt) => catalogRow(tt))}
-                {catalog.clusters.length === 0 && catalog.singles.length === 0 && (
-                  <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[13px] text-neutral-500">{t("tour.opt.emptyNoTournaments")}</p>
-                )}
-              </div>
-            </section>
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  // Detail statt Planer-Fläche, sobald ein Turnier gewählt ist (Desktop + Mobile-Sheet).
-  // key=tt.id → beim Wechsel neu gemountet (Live-Preis wird genau einmal je Turnier geholt).
+  // ── Detailelement (Reiter). key=tt.id → beim Wechsel neu gemountet (Live-Preis genau
+  //    einmal je Turnier). Wird in der Detailspalte ODER als Overlay gezeigt. ──────────
   const selectedTt = selectedId ? byId.get(selectedId) : undefined;
-  const surface = selectedTt ? (
+  const detailEl = selectedTt ? (
     <TournamentDetail
       key={selectedTt.id}
       tt={selectedTt}
@@ -767,8 +587,353 @@ export default function SeasonWorkspace() {
       viewerName={profile?.firstName ?? null}
       viewerRank={profile?.ranking != null ? `#${profile.ranking}` : null}
       viewerNationality={profile?.passports[0] ?? profile?.country ?? null}
+      viewerPassports={profile?.passports ?? []}
     />
-  ) : panel;
+  ) : null;
+
+  // Kostensätze fehlen → aus dem Katalog heraus die Filterspalte + das Formular öffnen.
+  const openRates = () => { setCostOpen(true); setFiltersOpen(true); try { localStorage.setItem(FILTERS_OPEN_KEY, "1"); } catch { /* egal */ } };
+
+  // ── SPALTE 1: Filter (Serie · Belag · Region · Länder · Zeitraum · Budget · Kostensätze) ──
+  const filterPanel = (
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t("tour.wsFilters")}{activeFilters > 0 ? ` · ${activeFilters}` : ""}</h2>
+        <div className="flex items-center gap-1">
+          {activeFilters > 0 && <button type="button" onClick={resetFilters} className="rounded-full px-2.5 py-1 text-[12px] font-semibold text-neutral-500 hover:bg-black/[0.04]">{t("tour.wsFiltersReset")}</button>}
+          <button type="button" onClick={toggleFilters} className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        {/* Serie */}
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.series")}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {SERIES_OPTS.map((o) => {
+              const on = selSeries.includes(o.v);
+              return <button key={o.v} type="button" onClick={() => toggleSeries(o.v)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${on ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{o.label}</button>;
+            })}
+          </div>
+        </div>
+        {/* Belag */}
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.surfaceLabel")}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {SURFACE_OPTS.map((s) => {
+              const on = selSurface.includes(s);
+              return <button key={s} type="button" onClick={() => toggleSurface(s)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${on ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.surface_${s}`)}</button>;
+            })}
+          </div>
+        </div>
+        {/* Region + Länder-Mehrfachauswahl mit Turnierzahl je Land */}
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.plRegion")}</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "all", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "all" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionAll")}</button>
+            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "europe", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "europe" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionEurope")}</button>
+            <div className="relative" ref={countryBoxRef}>
+              <button type="button" onClick={() => setCountryOpen((o) => !o)} className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
+                {selCountries.length ? t("tour.wsCountriesN", { n: selCountries.length }) : t("tour.wsCountries")}
+                <span className={`transition-transform ${countryOpen ? "rotate-180" : ""}`}>▾</span>
+              </button>
+              {countryOpen && (
+                <div className="absolute left-0 z-30 mt-1.5 w-72 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
+                  <input value={countryQuery} onChange={(e) => setCountryQuery(e.target.value)} placeholder={t("tour.wsCountrySearch")} className={`${inp} mb-2`} autoFocus />
+                  <div className="max-h-64 overflow-auto">
+                    {countryList.map(([iso, n]) => {
+                      const on = selCountries.includes(iso);
+                      return (
+                        <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-black/[0.03]">
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${on ? "border-matchup bg-matchup text-white" : "border-neutral-300 text-transparent"}`}>✓</span>
+                          <span className="min-w-0 flex-1 truncate text-neutral-800">{catName(iso)}</span>
+                          <span className="shrink-0 tabular-nums text-[12px] font-semibold text-neutral-400">{n}</span>
+                        </button>
+                      );
+                    })}
+                    {countryList.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-neutral-400">{t("tour.opt.emptyNoTournaments")}</p>}
+                  </div>
+                  {selCountries.length > 0 && (
+                    <button type="button" onClick={() => setFrame((f) => ({ ...f, countries: [] }))} className="mt-2 w-full rounded-lg bg-black/[0.03] py-1.5 text-[12px] font-semibold text-neutral-600 hover:bg-black/[0.06]">{t("tour.wsCountriesClear")}</button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          {selCountries.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {selCountries.map((iso) => (
+                <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[12px] font-semibold text-matchup">
+                  {catName(iso)} <span className="text-matchup/60">✕</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Zeitraum */}
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plFrom")}</span>
+            <input type="date" value={frame.from} onChange={(e) => setFrame((f) => ({ ...f, from: e.target.value }))} className={inp} /></label>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plTo")}</span>
+            <input type="date" value={frame.to} onChange={(e) => setFrame((f) => ({ ...f, to: e.target.value }))} className={inp} /></label>
+        </div>
+        {/* Budget */}
+        <label className="block">
+          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plBudget")}</span>
+          <input value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
+          {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
+        </label>
+        {/* Kostensätze */}
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsCostTitle")}
+            <InfoHint label={t("tour.wsCostInfo")}>
+              {ratesDone && <p>{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>}
+              {cost && cost.arrivalsSaved > 0 && <p className="mt-1 text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
+              {cost && cost.hasUnknown && <p className="mt-1">{t("tour.wsCostUnknown")}</p>}
+              <p className="mt-1">{t("tour.wsCostSource")}</p>
+            </InfoHint>
+          </span>
+          {!ratesDone && !costOpen && (
+            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
+          )}
+          {ratesDone && !costOpen && (
+            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsEditRates")}</button>
+          )}
+          {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Rahmen-Kurzfassung als Chips (öffnen die Filterspalte) + Filter-Knopf mit Zähler-Badge.
+  const summaryChips: string[] = [
+    selCountries.length ? t("tour.wsCountriesN", { n: selCountries.length }) : (frame.region === "all" ? t("tour.plRegionAll") : t("tour.plRegionEurope")),
+    ...selSeries.map((v) => SERIES_OPTS.find((o) => o.v === v)?.label ?? v),
+    ...selSurface.map((s) => t(`tour.surface_${s}`)),
+    ...(frame.to ? [`${frame.from || "…"} – ${frame.to}`] : []),
+  ];
+  const filterBar = (
+    <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+        {summaryChips.map((c, i) => (
+          <button key={i} type="button" onClick={toggleFilters} className="max-w-full truncate rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-semibold text-neutral-600 hover:bg-black/[0.08]">{c}</button>
+        ))}
+      </div>
+      <button type="button" onClick={toggleFilters} className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ring-1 ${filtersOpen ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
+        <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+        {t("tour.wsFilters")}
+        {activeFilters > 0 && <span className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${filtersOpen ? "bg-white/25 text-white" : "bg-matchup text-white"}`}>{activeFilters}</span>}
+      </button>
+    </div>
+  );
+
+  // ── SPALTE 4 (bzw. eingefaltet): Saison-Übersicht — Kosten & Status, Schengen, Frist ──
+  const overviewSection = (
+    <div className="space-y-5">
+      <section className="space-y-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+          {t("tour.wsCostTitle")}
+          <InfoHint label={t("tour.wsCostInfo")}>
+            {ratesDone && <p>{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>}
+            {ratesDone && <button type="button" onClick={openRates} className="mt-1 font-semibold text-matchup hover:underline">{t("tour.wsEditRates")}</button>}
+            {cost && cost.arrivalsSaved > 0 && <p className="mt-1 text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
+            {cost && cost.hasUnknown && <p className="mt-1">{t("tour.wsCostUnknown")}</p>}
+            {schengen && !schengen.exceeds && <p className="mt-1">{t("tour.wsSchengen", { used: schengen.used })} · {t("tour.wsSchengenLeft", { n: schengen.left })}</p>}
+            <p className="mt-1">{t("tour.wsCostSource")}</p>
+          </InfoHint>
+        </h2>
+        {ratesDone && cost && cost.stations.length > 0 ? (
+          <div className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[12px] font-semibold text-neutral-500">{t("tour.wsCostTotal")}</span>
+              <span className="text-[15px] font-extrabold tabular-nums text-neutral-900">{cost.currencies.map((c) => money(cost.total[c], c)).join(" + ")}</span>
+            </div>
+            {budgetMinor && (
+              <div className="mt-2">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
+                  <div className={`h-full rounded-full ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "bg-amber-500" : "bg-matchup"}`} style={{ width: `${budgetPct}%` }} />
+                </div>
+                <p className={`mt-1 text-[12px] font-semibold ${budgetLeftMinor != null && budgetLeftMinor < 0 ? "text-amber-700" : "text-neutral-500"}`}>
+                  {budgetLeftMinor != null && budgetLeftMinor < 0 ? t("tour.wsBudgetOver", { amount: money(-budgetLeftMinor, cur) }) : t("tour.wsBudgetLeft", { amount: money(budgetLeftMinor ?? 0, cur) })}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[12px] leading-relaxed text-neutral-500">{t("tour.wsOverviewHint")}</p>
+        )}
+        {schengen && schengen.exceeds && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-500/10 p-3">
+            <p className="flex items-center gap-1.5 text-[13px] font-bold text-amber-800"><span aria-hidden>⚠</span> {t("tour.wsSchengenTitle")}</p>
+            <p className="mt-0.5 text-[12px] font-semibold text-amber-700">{t("tour.wsSchengenExceed", { used: schengen.used, over: schengen.used - 90 })}</p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700/90">{t("tour.wsSchengenAction")}</p>
+          </div>
+        )}
+      </section>
+
+      {/* Nächste offene Meldefrist über die Saison */}
+      <section>
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsNextDeadlineTitle")}</h2>
+        {nextDeadline ? (
+          <button type="button" onClick={() => setSelectedId(nextDeadline.id)} className="mt-2 block w-full rounded-2xl bg-black/[0.02] p-3 text-left ring-1 ring-black/5 hover:bg-black/[0.04]">
+            <p className="truncate text-[13px] font-semibold text-neutral-900">{nextDeadline.city || t("tour.fieldMissing")}<span className="text-neutral-400">, {catName(nextDeadline.country)}</span></p>
+            <div className="mt-0.5"><DeadlineCountdown tournament={nextDeadline} now={nowMs} /></div>
+          </button>
+        ) : (
+          <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsNextDeadlineNone")}</p>
+        )}
+      </section>
+    </div>
+  );
+
+  // ── SPALTE 2: Katalog — Rahmen-Kurzfassung/Filter-Knopf, Start, Füllen, (ggf. Übersicht),
+  //    Saison, Turnierkatalog. Der Scroll-Body wird auch im Mobile-Sheet verwendet. ────────
+  const foldOverview = winW < BP_DETAIL; // Detailspalte fällt weg → Übersicht faltet hier ein
+  const catalogScroll = (
+    <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
+      {status === "loading" && <p className="text-sm text-neutral-500">{t("tour.loading")}</p>}
+      {status === "error" && <p className="text-sm text-neutral-500">{t("tour.loadError")}</p>}
+
+      {status === "ready" && profile && (
+        <>
+          {filterBar}
+
+          {/* Startpunkt: Suche + Chips */}
+          <section>
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsStartTitle")}</h2>
+            <div className="relative mt-2">
+              <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={startName ? t("tour.wsStartCurrent", { name: startName }) : t("tour.wsStartSearch")} className={inp} />
+              {geoResults.length > 0 && (
+                <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
+                  {geoResults.map((c, i) => (
+                    <li key={`${c.country}|${c.name}|${i}`}>
+                      <button type="button" onClick={() => pickStart({ name: c.name, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
+                        <span className="truncate font-semibold text-neutral-900">{c.name}</span>
+                        <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {HOME_BASES.map((b) => (
+                <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
+                  {b.name}
+                </button>
+              ))}
+              {recent.filter((r) => !HOME_BASES.some((b) => b.name === r.name)).map((r) => (
+                <button key={r.name} type="button" onClick={() => pickStart(r)} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === r.name ? "bg-emerald-500/10 text-emerald-700 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Füllen (ergänzt, ersetzt nie — MU-037). Kostensätze liegen im Filter. */}
+          <section className="space-y-2">
+            <button type="button" onClick={smartFill} disabled={filling || !ratesDone}
+              className="w-full rounded-full bg-neutral-900 px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-40">
+              {filling ? t("tour.wsFilling") : t("tour.wsFill")}
+            </button>
+            {!ratesDone && (
+              <button type="button" onClick={openRates} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
+            )}
+            <p className="text-[11px] leading-relaxed text-neutral-400">
+              {t("tour.wsFillShort")}
+              <InfoHint label={t("tour.wsFillInfo")}>{t("tour.wsFillLong")}</InfoHint>
+            </p>
+            {fillReport && (
+              <p className="mt-1 rounded-xl bg-matchup/[0.06] px-3 py-2 text-[12px] leading-relaxed text-neutral-600">
+                {t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })}
+              </p>
+            )}
+          </section>
+
+          {/* Bei schmalem Fenster (keine eigene Detailspalte) faltet die Übersicht hier ein. */}
+          {foldOverview && (
+            <section className="border-t border-neutral-100 pt-4">{overviewSection}</section>
+          )}
+
+          {/* Meine Saison */}
+          <section>
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
+            {seasonOrdered.length === 0 ? (
+              <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1.5">
+                {start && (
+                  <li className="flex items-center gap-2 text-[13px] font-semibold text-emerald-700">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-[13px]">⌂</span>
+                    {t("tour.wsStart")}{startName ? ` · ${startName}` : ""}
+                  </li>
+                )}
+                {seasonOrdered.map(({ tt, order }) => (
+                  <li key={tt.id} className={`flex items-start gap-2 rounded-xl px-1.5 py-1 ${selectedId === tt.id ? "bg-matchup/[0.06] ring-1 ring-matchup/40" : ""}`}>
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-[11px] font-bold text-white">{order}</span>
+                    <div className="min-w-0 flex-1">
+                      <button type="button" onClick={() => setSelectedId(tt.id)} className="block w-full text-left">
+                        <p className="truncate text-[13px] font-semibold text-neutral-900">{tt.city || t("tour.fieldMissing")}<span className="text-neutral-400">, {catName(tt.country)}</span></p>
+                        <p className="text-[11px] text-neutral-500">{fmtDay(tt.tournament_monday)} · {tt.category || "—"}</p>
+                      </button>
+                      <div className="mt-0.5"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
+                    </div>
+                    <button type="button" onClick={() => toggle(tt.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-800">{t("tour.seasonRemove")}</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Turnierkatalog */}
+          <section>
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsBrowseTitle")} · {catalog.total}</h2>
+            <div className="mt-2 space-y-1">
+              {catalog.clusters.map((cl) => {
+                const open = expanded.has(cl.key);
+                const inCount = cl.items.filter((x) => seasonIds.has(x.id)).length;
+                return (
+                  <div key={cl.key} className="rounded-xl ring-1 ring-black/[0.06]">
+                    <button type="button" onClick={() => setExpanded((s) => { const n = new Set(s); if (n.has(cl.key)) n.delete(cl.key); else n.add(cl.key); return n; })} className="flex w-full items-center gap-2 px-3 py-2 text-left">
+                      <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-gradient-to-br from-matchup to-violet-500 px-1.5 text-[11px] font-bold text-white">{cl.items.length}×</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] font-semibold text-neutral-900">{cl.place}<span className="text-neutral-400">, {catName(cl.country)}</span></span>
+                        <span className="block text-[11px] text-neutral-500">{cl.items.length} {t("tour.wsWeeks")}{inCount ? ` · ${inCount} ${t("tour.wsInSeason")}` : ""}</span>
+                      </span>
+                      <span className={`text-neutral-300 transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+                    </button>
+                    {open && <div className="border-t border-black/[0.06] p-1">{cl.items.map((it) => catalogRow(it))}</div>}
+                  </div>
+                );
+              })}
+              {catalog.singles.map((tt) => catalogRow(tt))}
+              {catalog.clusters.length === 0 && catalog.singles.length === 0 && (
+                <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[13px] text-neutral-500">{t("tour.opt.emptyNoTournaments")}</p>
+              )}
+            </div>
+          </section>
+        </>
+      )}
+    </div>
+  );
+  const catalogPanel = (
+    <div className="flex h-full flex-col bg-white">
+      <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
+        <h1 className="text-xl font-extrabold tracking-tight text-neutral-900">{t("tour.plTitle")}</h1>
+      </div>
+      {catalogScroll}
+    </div>
+  );
+  // SPALTE 4 als eigenständige Fläche (Übersicht, wenn nichts gewählt ist).
+  const overviewPanel = (
+    <div className="flex h-full flex-col bg-white">
+      <div className="shrink-0 border-b border-neutral-200 px-5 py-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
+        <h2 className="text-lg font-extrabold tracking-tight text-neutral-900">{t("tour.wsOverviewTitle")}</h2>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-5">{overviewSection}</div>
+    </div>
+  );
 
   // Einführung nur beim ersten Besuch: solange keine Wohnort-KOORDINATEN im Profil stehen.
   // Bewusst auf Koordinaten, nicht auf city — profiles.city ist NOT NULL (immer gesetzt),
@@ -822,35 +987,88 @@ export default function SeasonWorkspace() {
     </button>
   );
 
+  // ── Responsive Spaltenlogik (rein aus winW, EIN Quell-Wert → deckungsgleich mit den
+  //    Breakpoint-Screenshots). Drop-Reihenfolge Filter → Detail → Katalog; Karte nie.
+  const isMobile = winW < BP_MOBILE;
+  const detailInline = winW >= BP_DETAIL;        // Detailspalte steht rechts inline (≥1200)
+  const filterCanInline = winW >= BP_FOUR;       // Filterspalte darf inline stehen (≥1520)
+  const filterInline = filterCanInline && filtersOpen;
+  const filterDrawer = filtersOpen && !filterCanInline; // sonst Overlay-Drawer (Desktop 1024–1519 + Mobile)
+  const detailDrawer = !detailInline && !!detailEl;     // Detail als rechtes Overlay (1024–1199)
+
   return (
     <div className="relative flex h-[100dvh] w-full overflow-hidden bg-white text-neutral-900">
-      <aside className="hidden shrink-0 flex-col bg-white md:flex" style={{ width: panelW }}>{surface}</aside>
-      {/* Zieh-Griff: Panel-Breite selbst einstellen (nur Desktop). */}
-      <div
-        onMouseDown={startPanelDrag}
-        role="separator"
-        aria-orientation="vertical"
-        aria-label={t("tour.panelResize")}
-        title={t("tour.panelResize")}
-        className="hidden w-1.5 shrink-0 cursor-col-resize bg-neutral-200 transition-colors hover:bg-matchup/40 active:bg-matchup/60 md:block"
-      />
+      {/* SPALTE 1 — Filter inline (≥1520, offen): schiebt Katalog/Karte nach rechts. */}
+      {!isMobile && filterInline && (
+        <aside className="flex shrink-0 flex-col border-r border-neutral-200 bg-white" style={{ width: FILTER_W }}>{filterPanel}</aside>
+      )}
+
+      {/* SPALTE 2 — Katalog (nur Desktop; mobil im Bottom-Sheet). */}
+      {!isMobile && (
+        <aside className="flex shrink-0 flex-col bg-white" style={{ width: leftW }}>{catalogPanel}</aside>
+      )}
+      {/* Zieh-Griff Katalog ↔ Karte (nur Desktop). */}
+      {!isMobile && (
+        <div
+          onMouseDown={startLeftDrag}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={t("tour.panelResize")}
+          title={t("tour.panelResize")}
+          className="w-1.5 shrink-0 cursor-col-resize bg-neutral-200 transition-colors hover:bg-matchup/40 active:bg-matchup/60"
+        />
+      )}
+
+      {/* SPALTE 3 — Karte (immer da, flex-1). */}
       <div className="relative flex-1 bg-neutral-100">
         <PlannerMap start={start} plan={planStops} candidates={candidateStops} selectedId={selectedId} onSelect={handleSelect} />
         {chip}
-        {/* Einführung als schlichte Einblendung über der Karte (Desktop). */}
-        {showIntro && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[65] hidden justify-center p-6 md:flex">
+        {/* Einführung als Einblendung über der Karte (Desktop). */}
+        {!isMobile && showIntro && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[65] flex justify-center p-6">
             <div className="pointer-events-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/5">{introBody}</div>
           </div>
         )}
       </div>
-      <div className={`absolute inset-x-0 bottom-0 z-[60] flex h-[62%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden ${sheetOpen ? "translate-y-0" : "translate-y-[calc(100%-44px)]"}`}>
-        <button type="button" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} className="flex h-11 shrink-0 items-center justify-center gap-2 border-b border-neutral-100 text-[13px] font-bold text-neutral-700">
-          {t("tour.plTitle")}<span aria-hidden className={`transition-transform ${sheetOpen ? "" : "rotate-180"}`}>▾</span>
-        </button>
-        {/* Mobil füllt die Einführung das Bottom-Sheet. */}
-        <div className="min-h-0 flex-1">{showIntro ? <div className="p-5">{introBody}</div> : surface}</div>
-      </div>
+
+      {/* SPALTE 4 — Detail inline (≥1200): Reiter, sonst Saison-Übersicht. */}
+      {!isMobile && detailInline && (
+        <aside className="flex shrink-0 flex-col border-l border-neutral-200 bg-white" style={{ width: DETAIL_W }}>{detailEl ?? overviewPanel}</aside>
+      )}
+
+      {/* Detail als rechtes Overlay (1024–1199, wenn gewählt). */}
+      {!isMobile && detailDrawer && (
+        <>
+          <div className="absolute inset-0 z-[75] bg-black/30" onClick={() => setSelectedId(null)} />
+          <aside className="absolute right-0 top-0 z-[76] flex h-full flex-col border-l border-neutral-200 bg-white shadow-2xl" style={{ width: DETAIL_W }}>{detailEl}</aside>
+        </>
+      )}
+
+      {/* Filter als Overlay-Drawer (Desktop 1024–1519). */}
+      {!isMobile && filterDrawer && (
+        <>
+          <div className="absolute inset-0 z-[75] bg-black/30" onClick={toggleFilters} />
+          <aside className="absolute left-0 top-0 z-[76] flex h-full flex-col border-r border-neutral-200 bg-white shadow-2xl" style={{ width: FILTER_W }}>{filterPanel}</aside>
+        </>
+      )}
+
+      {/* Mobile — Vollkarte + Bottom-Sheet (Detail bei Auswahl, sonst Katalog inkl. Übersicht). */}
+      {isMobile && (
+        <div className={`absolute inset-x-0 bottom-0 z-[60] flex h-[62%] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${sheetOpen ? "translate-y-0" : "translate-y-[calc(100%-44px)]"}`}>
+          <button type="button" onClick={() => setSheetOpen((o) => !o)} aria-expanded={sheetOpen} className="flex h-11 shrink-0 items-center justify-center gap-2 border-b border-neutral-100 text-[13px] font-bold text-neutral-700">
+            {t("tour.plTitle")}<span aria-hidden className={`transition-transform ${sheetOpen ? "" : "rotate-180"}`}>▾</span>
+          </button>
+          <div className="min-h-0 flex-1 overflow-hidden">{showIntro ? <div className="p-5">{introBody}</div> : detailEl ?? catalogScroll}</div>
+        </div>
+      )}
+
+      {/* Mobile — Filter als Vollflächen-Drawer von links. */}
+      {isMobile && filtersOpen && (
+        <div className="absolute inset-0 z-[85] flex">
+          <div className="absolute inset-0 bg-black/40" onClick={toggleFilters} />
+          <aside className="relative z-[86] flex h-full w-[86%] max-w-[340px] flex-col bg-white shadow-2xl">{filterPanel}</aside>
+        </div>
+      )}
 
       {/* Profil-Bearbeitung als Überlagerung (Chip-Klick). */}
       {profileOpen && profile && (

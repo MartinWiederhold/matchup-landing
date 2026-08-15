@@ -24,12 +24,12 @@ const SHOTS = "e2e/artifacts";
 const RX = {
   loginBtn: /^EINLOGGEN$|^LOG IN$/,
   startPoint: /START POINT|STARTPUNKT/i,
-  frame: /^FRAME$|^RAHMEN$/i,
   season: /YOUR SEASON|DEINE SAISON/i,
   fill: /Fill cheapest season|Günstigste Saison/i,
+  filters: /^Filters$|^Filter$/i, // Filter-Knopf im Katalog öffnet die Filterspalte
   regionAll: /^All countries$|^Alle Länder$/i,
   regionEurope: /Europe & Mediterranean|Europa & Mittelmeer/i,
-  countries: /Countries|Länder/i,
+  countries: /^Countries|^Länder/i, // Start verankert: schließt „All countries" (Region) aus, matcht aber „Countries ▾"
   chip: /Rank|Rang/,
   startInput: /search a city|Stadt suchen|Current:/i,
 };
@@ -50,11 +50,12 @@ test("/tour Saisonplaner: lädt, Startpunkt-Suche, Region, Länder-Zähler", asy
   await login(page);
   await page.goto("/tour");
 
-  // ── Planer geladen: die tragenden Abschnitte da (nicht der alte Schritt-Flow) ──
+  // ── Katalogspalte geladen: tragende Abschnitte da (Vier-Spalten-Umbau: Rahmen/Filter
+  //    liegen jetzt in einer eigenen, aufklappbaren Filterspalte). ──
   await expect(page.getByText(RX.startPoint).first()).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText(RX.frame).first()).toBeVisible();
   await expect(page.getByText(RX.season).first()).toBeVisible();
   await expect(page.getByRole("button", { name: RX.fill })).toBeVisible();
+  await expect(page.getByRole("button", { name: RX.filters }).first(), "Filter-Knopf im Katalog").toBeVisible();
   // Profil-Chip trägt den Wohnort (Beleg, dass das Konto Koordinaten hat → Intro unterdrückt).
   await expect(page.getByRole("button", { name: RX.chip }).first()).toBeVisible();
 
@@ -74,18 +75,25 @@ test("/tour Saisonplaner: lädt, Startpunkt-Suche, Region, Länder-Zähler", asy
   await page.screenshot({ path: `${SHOTS}/planner-02-search.png` });
   await page.keyboard.press("Escape").catch(() => {});
 
+  // ── Filterspalte öffnen: Serie/Belag/Region/Länder liegen jetzt dort (nicht mehr im Katalog) ──
+  await page.getByRole("button", { name: RX.filters }).first().click();
+  await page.waitForTimeout(400);
+  // Auf die Filterspalte scopen — sonst kollidiert „All countries" mit der Rahmen-Kurzfassungs-
+  // Chip im Katalog (die denselben Text trägt, sobald Region=all aktiv ist).
+  const fp = page.locator("aside").last();
+
   // ── Region umschalten (reiner Komponenten-Zustand, kein Schreiben): aktiver Zustand wechselt ──
-  const btnAll = page.getByRole("button", { name: RX.regionAll });
-  const btnEurope = page.getByRole("button", { name: RX.regionEurope });
+  const btnAll = fp.getByRole("button", { name: RX.regionAll });
+  const btnEurope = fp.getByRole("button", { name: RX.regionEurope });
   await btnAll.click();
   await expect(btnAll, "All countries wird aktiv (matchup-Hintergrund)").toHaveClass(/bg-matchup/);
   await btnEurope.click();
   await expect(btnEurope, "Europe only wird aktiv").toHaveClass(/bg-matchup/);
 
   // ── Länder-Dropdown: Zähler je Land (countByCountry aus echten Turnierdaten) ──
-  await page.getByRole("button", { name: RX.countries }).first().click();
+  await fp.getByRole("button", { name: RX.countries }).first().click();
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${SHOTS}/planner-03-countries.png` });
   // Länder-Zeilen tragen je einen Zähler (span.tabular-nums = Turnierzahl je Land).
-  await expect(page.locator("span.tabular-nums").first(), "Länder-Dropdown zeigt Zähler je Land").toBeVisible({ timeout: 8_000 });
+  await expect(fp.locator("span.tabular-nums").first(), "Länder-Dropdown zeigt Zähler je Land").toBeVisible({ timeout: 8_000 });
 });

@@ -92,14 +92,17 @@ test("/tour Turnierdetail: alle vier Reiter haben Inhalt (Como)", async ({ page 
     const item = page.locator("aside button", { hasText: /Como/i }).first();
     await expect(item, "Como steht in der Saisonliste").toBeVisible({ timeout: 30_000 });
     await item.click();
-    const aside = page.locator("aside").first(); // Detail lebt zusätzlich im Mobile-Sheet → auf die sichtbare aside scopen
+    // Vier-Spalten-Umbau: das Detail lebt jetzt in der RECHTEN Detailspalte (eigene aside,
+    // ≥1200 px inline) — nicht mehr in der Katalogspalte. Auf die aside mit der Reiter-Leiste scopen.
+    const aside = page.locator("aside").last();
     await expect(aside.getByRole("button", { name: /^Overview$|^Übersicht$/ }), "Reiter-Leiste da").toBeVisible({ timeout: 20_000 });
 
     const clickTab = async (rx: RegExp) => { await aside.getByRole("button", { name: rx }).click(); await page.waitForTimeout(300); };
 
-    // 1) Übersicht — Meldefrist-Label
+    // 1) Übersicht — Meldefrist-Label + Einreise-Abschnitt (neu: Reisedokumente)
     await clickTab(/^Overview$|^Übersicht$/);
     await expect(aside.getByText(/Meldefrist|Entry deadline/i).first(), "Übersicht hat Inhalt (Meldefrist)").toBeVisible({ timeout: 10_000 });
+    await expect(aside.getByText(/^Einreise$|^Entry$/).first(), "Übersicht zeigt den Einreise-/Visa-Abschnitt").toBeVisible({ timeout: 10_000 });
     await aside.screenshot({ path: `${SHOTS}/tabs-1-overview.png` });
 
     // 2) Vor Ort — Präsenz-Formular (Eintragen-Knopf)

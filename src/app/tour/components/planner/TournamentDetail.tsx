@@ -6,6 +6,7 @@ import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
+import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
 import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates } from "@/lib/types";
 
@@ -61,7 +62,7 @@ function useFlightPrice(city: string, country: string, start: string, end: strin
  */
 export default function TournamentDetail({
   tt, countryName, inSeason, onToggle, onClose, originCity, originLabel, nights, rates, nowMs,
-  viewerId, viewerName, viewerRank, viewerNationality,
+  viewerId, viewerName, viewerRank, viewerNationality, viewerPassports,
 }: {
   tt: TourTournament;
   countryName: string;
@@ -77,6 +78,7 @@ export default function TournamentDetail({
   viewerName: string | null;
   viewerRank: string | null;
   viewerNationality: string | null;
+  viewerPassports: string[];
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -139,6 +141,22 @@ export default function TournamentDetail({
   })();
   const unitLabel = (u: string | null) => (u ? t(`services.per${u.charAt(0).toUpperCase()}${u.slice(1)}`) : "");
 
+  // ── Reisedokumente/Einreise für das Turnierland (Übersicht-Reiter). Nationalitäts-
+  //    abhängiger Bestand (web.tour_visa_requirements) — günstigste Klasse über alle Pässe,
+  //    exakt wie /app › Visa. "loading" bis geladen; null = kein Eintrag hinterlegt. Der
+  //    passKey (join) als Dep verhindert Neu-Laden bei stabiler, nur neu erzeugter Array-Prop.
+  const passKey = viewerPassports.join(",");
+  const [visa, setVisa] = useState<NatVisaInfo | null | "loading">("loading");
+  useEffect(() => {
+    const passports = passKey ? passKey.split(",") : [];
+    if (!tt.country || passports.length === 0) { setVisa(null); return; }
+    let alive = true;
+    setVisa("loading");
+    loadEffectiveVisa(passports).then((m) => { if (alive) setVisa(m.get(tt.country as string) ?? null); }).catch(() => { if (alive) setVisa(null); });
+    return () => { alive = false; };
+  }, [tt.id, tt.country, passKey]);
+  const visaInfo = visa === "loading" ? null : visa;
+
   const start = tt.tournament_monday;
   const end = addDaysISO(start, nights > 0 ? nights : 7);
   const stop = { city: tt.city ?? "", country: countryName, start, end };
@@ -156,6 +174,22 @@ export default function TournamentDetail({
 
   // Flugpreis (Zahl oder null). "loading" → null → keine Zeile (kein Platzhalter, kein Hinweis).
   const flightPrice = price === "loading" ? null : price.price;
+
+  // Datenstand + Quelle + Konsulats-Vorbehalt stehen an JEDER Visa-Aussage (auch „keine Angabe").
+  const visaProvenance = (
+    <div className="mt-2 border-t border-black/[0.06] pt-2 text-[10.5px] leading-relaxed text-neutral-400">
+      {visaInfo ? (
+        <p>
+          {t("mode.visaNatSource", { date: visaInfo.sourceRevisedAt ? fmtDay(visaInfo.sourceRevisedAt.slice(0, 10)) : "—" })}
+          {" · "}
+          <a href={visaInfo.sourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-neutral-500 underline">{t("mode.visaNatSourceLink")}</a>
+        </p>
+      ) : (
+        <p>{t("mode.visaNatNoData")}</p>
+      )}
+      <p className="mt-0.5 font-semibold text-neutral-500">{t("mode.visaNatConsulate")}</p>
+    </div>
+  );
 
   const link = "flex items-center justify-between rounded-xl border border-black/10 px-3 py-2.5 text-[13px] font-semibold text-neutral-800 transition-colors hover:bg-black/[0.03]";
 
@@ -205,6 +239,34 @@ export default function TournamentDetail({
           <div className="mt-1"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
           <EntryPath tournament={tt} />
         </section>
+
+        {/* Reisedokumente/Einreise — nationalitätsabhängig (Muster wie /app › Visa). KEIN
+            Preisgeld: der DB-Wert ist reine Kategorie×1000 (MU-028), keine echten Preisdaten. */}
+        {tt.country && (
+          <section className="rounded-2xl border border-black/[0.07] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsVisaTitle")}</p>
+            {viewerPassports.length === 0 ? (
+              <p className="mt-1.5 text-[12px] leading-relaxed text-neutral-500">{t("tour.wsVisaNoPass")}</p>
+            ) : visa === "loading" ? (
+              <p className="mt-1.5 text-[12px] text-neutral-400">{t("tour.loading")}</p>
+            ) : visaInfo && visaInfo.requirementClass === "admission_refused" ? (
+              <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-3">
+                <p className="text-[13px] font-bold text-red-700">{t("mode.visaNatRefusedTitle")}</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-red-800">{t("mode.visaNatRefusedBody", { nat: visaInfo.nationality, country: countryName })}</p>
+                {visaProvenance}
+              </div>
+            ) : (
+              <div className="mt-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[12px] font-semibold text-neutral-700">{visaInfo ? t("mode.visaNatForPassport", { nat: visaInfo.nationality }) : t("mode.visaNatNoData")}</span>
+                  {visaInfo && <span className="shrink-0 rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{t(`mode.visaNatClass_${visaInfo.requirementClass}`)}</span>}
+                </div>
+                {visaInfo?.allowedStayDays != null && <p className="mt-1 text-[12px] text-neutral-600">{t("mode.visaNatStay", { n: visaInfo.allowedStayDays })}</p>}
+                {visaProvenance}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Kosten: Wochen-Richtwert + (NUR falls vorhanden) der Live-Flugpreis als EINE
             Zeile. Kein Preis → keine Zeile: bei ~36 % Abdeckung, nur Flügen und volatilen
