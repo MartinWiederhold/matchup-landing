@@ -521,6 +521,15 @@ export const tour = {
     wsOverviewHint: "Wähle links ein Turnier für Details, oder plane deine Saison.",
     wsVisaTitle: "Einreise",
     wsVisaNoPass: "Hinterlege deine Pässe im Profil, dann siehst du hier die Einreisebestimmungen für dieses Land.",
+    // Entschlackter Übersicht-Reiter: Einreise-Badge „keine Angabe" (neutral) + Grund hinter ⓘ.
+    wsVisaNone: "Keine Angabe",
+    wsVisaNoPassInfo: "Kein Pass im Profil hinterlegt — ergänze ihn im Profil, dann erscheint hier die Einreisebestimmung für dieses Land.",
+    wsVisaNoComboInfo: "Für dein Pass-Land ist diese Kombination nicht im Bestand hinterlegt. Keine amtliche Auskunft — vor der Reise beim Konsulat prüfen.",
+    wsVisaInfo: "Einreise — Details",
+    wsEntryInfo: "Weg zur Meldung — Details",
+    wsWeekCostLabel: "Wochenkosten",
+    wsWeekCostValue: "ca. {amount}",
+    wsWeekCostNoRates: "Für Wochenkosten die Kostensätze im Filter ergänzen.",
     // Optimierer v3: Objektiv + angenommene Zielrunde (Erwartungspunkte).
     wsObjectiveTitle: "Optimierungsziel",
     wsObjTournaments: "Meiste Turniere",
@@ -1164,6 +1173,15 @@ export const tour = {
     wsOverviewHint: "Pick a tournament on the left for details, or plan your season.",
     wsVisaTitle: "Entry",
     wsVisaNoPass: "Add your passports in your profile to see entry requirements for this country here.",
+    // Slimmed overview tab: entry badge "no data" (neutral) + reason behind the ⓘ.
+    wsVisaNone: "No data",
+    wsVisaNoPassInfo: "No passport on file — add one in your profile and the entry rule for this country will show here.",
+    wsVisaNoComboInfo: "This combination isn't on file for your passport country. Not an official source — verify with the consulate before travelling.",
+    wsVisaInfo: "Entry — details",
+    wsEntryInfo: "How to enter — details",
+    wsWeekCostLabel: "Weekly cost",
+    wsWeekCostValue: "~{amount}",
+    wsWeekCostNoRates: "Add your cost rates in the filters to see weekly cost.",
     // Optimizer v3: objective + assumed target round (expected points).
     wsObjectiveTitle: "Optimization goal",
     wsObjTournaments: "Most tournaments",

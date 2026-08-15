@@ -26,10 +26,12 @@ const DAY = 86_400_000;
 //        es gibt KEINEN öffentlichen Web-Meldelink. Als stabile offizielle Landing
 //        verlinken wir die ATP-Spielerseite — der Link führt bewusst NUR dorthin,
 //        nicht zur Meldung selbst (siehe Hinweis-Text in der UI).
-const ITF_PORTAL = "https://tourzone.world.tennis";
-const ATP_PORTAL = "https://www.atptour.com/en/players";
-const ATP_APP_IOS = "https://apps.apple.com/app/atp-playerzone/id1461247931";
-const ATP_APP_ANDROID = "https://play.google.com/store/apps/details?id=com.atptour.playerzone";
+// Exportiert (additiv), damit die kompakte Meldeweg-Zeile im Turnierdetail dieselben
+// belegten Adressen nutzt, OHNE die geteilte EntryPath-Komponente (auch in SeasonCard) zu ändern.
+export const ITF_PORTAL = "https://tourzone.world.tennis";
+export const ATP_PORTAL = "https://www.atptour.com/en/players";
+export const ATP_APP_IOS = "https://apps.apple.com/app/atp-playerzone/id1461247931";
+export const ATP_APP_ANDROID = "https://play.google.com/store/apps/details?id=com.atptour.playerzone";
 
 /**
  * Der Countdown selbst — gut sichtbar (nicht kleingedruckt). Drei Zustände:

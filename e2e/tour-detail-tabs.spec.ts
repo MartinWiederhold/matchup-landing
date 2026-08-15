@@ -57,7 +57,9 @@ function rest(token: string) {
       return new Set(((await r.json()) as { tournament_id: string }[]).map((x) => x.tournament_id));
     },
     async comoTournament(): Promise<string | null> {
-      const r = await fetch(`${SUPA_URL}/rest/v1/tour_tournaments?select=id&city=ilike.*como*&valid_to=is.null&order=tournament_monday.asc&limit=1`, { headers: base });
+      // Bewusst ein CHALLENGER in Como (ATP-Zweig): so trägt der „Weg zur Meldung"-ⓘ die
+      // PlayerZone-App-Verweise — genau die Info, die aus der Sichtfläche hinter das ⓘ zog.
+      const r = await fetch(`${SUPA_URL}/rest/v1/tour_tournaments?select=id&city=ilike.*como*&series=eq.challenger&valid_to=is.null&order=tournament_monday.asc&limit=1`, { headers: base });
       return ((await r.json()) as { id: string }[])[0]?.id ?? null;
     },
     async insertSeason(uid: string, id: string) {
@@ -99,10 +101,21 @@ test("/tour Turnierdetail: alle vier Reiter haben Inhalt (Como)", async ({ page 
 
     const clickTab = async (rx: RegExp) => { await aside.getByRole("button", { name: rx }).click(); await page.waitForTimeout(300); };
 
-    // 1) Übersicht — Meldefrist-Label + Einreise-Abschnitt (neu: Reisedokumente)
+    // 1) Übersicht — VIER sichtbare Zeilen; alles Erklärende hinter „i", aber ERREICHBAR.
+    // (Meldefrist trägt kein „i"; die anderen drei je eins → das ⓘ selbst belegt die Zeile.)
     await clickTab(/^Overview$|^Übersicht$/);
-    await expect(aside.getByText(/Meldefrist|Entry deadline/i).first(), "Übersicht hat Inhalt (Meldefrist)").toBeVisible({ timeout: 10_000 });
-    await expect(aside.getByText(/^Einreise$|^Entry$/).first(), "Übersicht zeigt den Einreise-/Visa-Abschnitt").toBeVisible({ timeout: 10_000 });
+    await expect(aside.getByText(/^Meldefrist$|^Entry deadline$/i).first(), "Zeile 1: Meldefrist").toBeVisible({ timeout: 10_000 });
+    await expect(aside.getByText(/Wochenkosten|Weekly cost/i).first(), "Zeile 2: Wochenkosten").toBeVisible();
+    const entryInfo = aside.getByRole("button", { name: /Weg zur Meldung.*Details|How to enter.*details/i });
+    const visaInfoBtn = aside.getByRole("button", { name: /Einreise.*Details|Entry.*details/i });
+    await expect(entryInfo, "Zeile 4: Weg zur Meldung (i vorhanden)").toBeVisible();
+    await expect(visaInfoBtn, "Zeile 3: Einreise (i vorhanden)").toBeVisible();
+    // „Weg zur Meldung"-ⓘ öffnen → die App-Verweise (heute sichtbar) bleiben ERREICHBAR.
+    await entryInfo.click();
+    await expect(aside.getByRole("link", { name: /^iOS-App$|^iOS app$/ }).first(), "App-Link hinter dem i erreichbar").toBeVisible({ timeout: 8_000 });
+    // Einreise-ⓘ öffnen → Grund/Datenstand/Konsulats-Hinweis bleiben ERREICHBAR.
+    await visaInfoBtn.click();
+    await expect(aside.getByText(/Konsulat|consulate|Profil|profile|Bestand|on file/i).first(), "Visa-Detail hinter dem i erreichbar").toBeVisible({ timeout: 8_000 });
     await aside.screenshot({ path: `${SHOTS}/tabs-1-overview.png` });
 
     // 2) Vor Ort — Präsenz-Formular (Eintragen-Knopf)

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useT, useLocale } from "@/lib/i18n";
-import { DeadlineCountdown, EntryPath } from "../EntryDeadline";
+import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID } from "../EntryDeadline";
+import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
@@ -175,21 +176,57 @@ export default function TournamentDetail({
   // Flugpreis (Zahl oder null). "loading" → null → keine Zeile (kein Platzhalter, kein Hinweis).
   const flightPrice = price === "loading" ? null : price.price;
 
-  // Datenstand + Quelle + Konsulats-Vorbehalt stehen an JEDER Visa-Aussage (auch „keine Angabe").
-  const visaProvenance = (
-    <div className="mt-2 border-t border-black/[0.06] pt-2 text-[10.5px] leading-relaxed text-neutral-400">
-      {visaInfo ? (
-        <p>
-          {t("mode.visaNatSource", { date: visaInfo.sourceRevisedAt ? fmtDay(visaInfo.sourceRevisedAt.slice(0, 10)) : "—" })}
-          {" · "}
-          <a href={visaInfo.sourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-neutral-500 underline">{t("mode.visaNatSourceLink")}</a>
-        </p>
+  // ── Kompakter Übersicht-Reiter: alles Erklärende wandert hinter „i". ──────────────
+  // Weg zur Meldung: dieselben belegten Adressen wie EntryPath (geteilt), nur kompakt.
+  const isItf = tt.series === "itf_wtt";
+  const portalUrl = isItf ? ITF_PORTAL : ATP_PORTAL;
+  const portalLabel = isItf ? t("tour.entryPortalItf") : t("tour.entryPortalAtp");
+  const noteCls = "font-semibold text-neutral-500 underline";
+  const entryHint = (
+    <>
+      {/* Turnierseite (aktuell nirgends gepflegt → erscheint nie) bleibt erreichbar. */}
+      {tt.website && <p><a href={tt.website} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryWebsite")} →</a></p>}
+      {isItf ? (
+        <p className={tt.website ? "mt-1" : ""}>{t("tour.entryPortalItfNote")}</p>
       ) : (
-        <p>{t("mode.visaNatNoData")}</p>
+        <>
+          <p className={tt.website ? "mt-1" : ""}>{t("tour.entryPortalAtpNote")}</p>
+          <p className="mt-1">
+            <a href={ATP_APP_IOS} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryAtpAppIos")}</a>
+            {" · "}
+            <a href={ATP_APP_ANDROID} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryAtpAppAndroid")}</a>
+          </p>
+        </>
       )}
-      <p className="mt-0.5 font-semibold text-neutral-500">{t("mode.visaNatConsulate")}</p>
-    </div>
+    </>
   );
+  // Datenstand + Quelle + Konsulats-Vorbehalt (nur wenn eine Angabe vorliegt).
+  const visaProvInner = visaInfo && (
+    <>
+      <p>{t("mode.visaNatSource", { date: visaInfo.sourceRevisedAt ? fmtDay(visaInfo.sourceRevisedAt.slice(0, 10)) : "—" })} · <a href={visaInfo.sourceUrl} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("mode.visaNatSourceLink")}</a></p>
+      <p className="mt-1 font-semibold text-neutral-500">{t("mode.visaNatConsulate")}</p>
+    </>
+  );
+  // Einreise als EIN Wort + Grund/Details hinter „i". „Keine Angabe" ist NEUTRAL (grau,
+  // keine Wertung, kein Fehler) — der häufigste Fall; der Grund steht im „i".
+  let visaWord: string;
+  let visaWordNeutral = false;
+  let visaHint: ReactNode;
+  if (visa === "loading") {
+    visaWord = "…"; visaWordNeutral = true; visaHint = <p>{t("tour.loading")}</p>;
+  } else if (viewerPassports.length === 0) {
+    visaWord = t("tour.wsVisaNone"); visaWordNeutral = true; visaHint = <p>{t("tour.wsVisaNoPassInfo")}</p>;
+  } else if (!visaInfo) {
+    visaWord = t("tour.wsVisaNone"); visaWordNeutral = true; visaHint = <p>{t("tour.wsVisaNoComboInfo")}</p>;
+  } else {
+    visaWord = t(`mode.visaNatClass_${visaInfo.requirementClass}`);
+    visaHint = (
+      <>
+        <p>{t("mode.visaNatForPassport", { nat: visaInfo.nationality })}{visaInfo.allowedStayDays != null ? ` · ${t("mode.visaNatStay", { n: visaInfo.allowedStayDays })}` : ""}</p>
+        {visaProvInner}
+      </>
+    );
+  }
 
   const link = "flex items-center justify-between rounded-xl border border-black/10 px-3 py-2.5 text-[13px] font-semibold text-neutral-800 transition-colors hover:bg-black/[0.03]";
 
@@ -212,15 +249,19 @@ export default function TournamentDetail({
           </div>
         </div>
 
-        {/* HAUPTAKTION — prominent, nicht als kleiner Link */}
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`w-full rounded-2xl px-5 py-3.5 text-[15px] font-bold transition-colors ${inSeason ? "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-300 hover:bg-emerald-500/15" : "bg-matchup text-white shadow-sm hover:bg-matchup-hover"}`}
-        >
-          {inSeason ? `✓ ${t("tour.wsDetailInSeason")}` : t("tour.wsDetailAdd")}
-        </button>
-        {inSeason && <button type="button" onClick={onToggle} className="w-full text-center text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>}
+        {/* HAUPTAKTION vs. STATUS: nicht in der Saison → prominenter Knopf (echte Aktion);
+            in der Saison → schlichte Statuszeile mit „Entfernen" (kein großer Kasten). Der
+            Kopf liegt über allen vier Reitern; die schlanke Zeile wirkt dort einheitlich. */}
+        {inSeason ? (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.02] px-3.5 py-2.5 ring-1 ring-black/5">
+            <span className="flex items-center gap-1.5 text-[13px] font-semibold text-emerald-700"><span aria-hidden>✓</span>{t("tour.wsDetailInSeason")}</span>
+            <button type="button" onClick={onToggle} className="shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>
+          </div>
+        ) : (
+          <button type="button" onClick={onToggle} className="w-full rounded-2xl bg-matchup px-5 py-3.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-matchup-hover">
+            {t("tour.wsDetailAdd")}
+          </button>
+        )}
 
         {/* Reiter */}
         <div className="flex gap-1 rounded-full bg-black/[0.04] p-1">
@@ -232,56 +273,64 @@ export default function TournamentDetail({
         </div>
 
         {activeTab === "overview" && (
-        <>
-        {/* Meldefrist + Weg zur Meldung */}
-        <section className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsDetailDeadline")}</p>
-          <div className="mt-1"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
-          <EntryPath tournament={tt} />
-        </section>
+        // Entschlackt: VIER Zeilen. Alles Erklärende hinter „i". Eine Einreisesperre bleibt
+        // sichtbar (rot), nicht aufklappbar. Nichts gestrichen — nur verlagert.
+        <div className="divide-y divide-black/[0.06]">
 
-        {/* Reisedokumente/Einreise — nationalitätsabhängig (Muster wie /app › Visa). KEIN
-            Preisgeld: der DB-Wert ist reine Kategorie×1000 (MU-028), keine echten Preisdaten. */}
-        {tt.country && (
-          <section className="rounded-2xl border border-black/[0.07] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsVisaTitle")}</p>
-            {viewerPassports.length === 0 ? (
-              <p className="mt-1.5 text-[12px] leading-relaxed text-neutral-500">{t("tour.wsVisaNoPass")}</p>
-            ) : visa === "loading" ? (
-              <p className="mt-1.5 text-[12px] text-neutral-400">{t("tour.loading")}</p>
-            ) : visaInfo && visaInfo.requirementClass === "admission_refused" ? (
-              <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-3">
-                <p className="text-[13px] font-bold text-red-700">{t("mode.visaNatRefusedTitle")}</p>
-                <p className="mt-1 text-[12px] leading-relaxed text-red-800">{t("mode.visaNatRefusedBody", { nat: visaInfo.nationality, country: countryName })}</p>
-                {visaProvenance}
+          {/* 1) Meldefrist — Countdown oder „unbekannt" */}
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsDetailDeadline")}</span>
+            <DeadlineCountdown tournament={tt} now={nowMs} />
+          </div>
+
+          {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+              {t("tour.wsWeekCostLabel")}
+              {(flightPrice != null || !ratesDone) && (
+                <InfoHint label={t("tour.wsCostInfo")}>
+                  {flightPrice != null && <p>✈ {t("tour.wsFlightLine", { origin: originLabel ?? "", amount: fmtEUR(flightPrice), date: fmtStand(nowMs) })}</p>}
+                  {!ratesDone && <p className={flightPrice != null ? "mt-1" : ""}>{t("tour.wsWeekCostNoRates")}</p>}
+                </InfoHint>
+              )}
+            </span>
+            <span className="text-[13px] font-semibold text-neutral-700">{ratesDone ? t("tour.wsWeekCostValue", { amount: fmtCur(weekMinor, rates!.currency ?? "EUR") }) : "—"}</span>
+          </div>
+
+          {/* 3) Einreise — EIN Wort. AUSNAHME: Sperre bleibt sichtbar & deutlich (rot). */}
+          {tt.country && (
+            visaInfo && visaInfo.requirementClass === "admission_refused" ? (
+              <div className="py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsVisaTitle")}</span>
+                  <span className="shrink-0 rounded-full bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-600">{t("mode.visaNatClass_admission_refused")}</span>
+                </div>
+                <p className="mt-1 text-[12px] leading-relaxed text-red-700">
+                  {t("mode.visaNatRefusedBody", { nat: visaInfo.nationality, country: countryName })}
+                  <InfoHint label={t("tour.wsVisaInfo")}>{visaProvInner}</InfoHint>
+                </p>
               </div>
             ) : (
-              <div className="mt-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[12px] font-semibold text-neutral-700">{visaInfo ? t("mode.visaNatForPassport", { nat: visaInfo.nationality }) : t("mode.visaNatNoData")}</span>
-                  {visaInfo && <span className="shrink-0 rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{t(`mode.visaNatClass_${visaInfo.requirementClass}`)}</span>}
-                </div>
-                {visaInfo?.allowedStayDays != null && <p className="mt-1 text-[12px] text-neutral-600">{t("mode.visaNatStay", { n: visaInfo.allowedStayDays })}</p>}
-                {visaProvenance}
+              <div className="flex items-center justify-between gap-3 py-2.5">
+                <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+                  {t("tour.wsVisaTitle")}
+                  <InfoHint label={t("tour.wsVisaInfo")}>{visaHint}</InfoHint>
+                </span>
+                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${visaWordNeutral ? "bg-black/[0.05] text-neutral-500" : "bg-matchup/10 text-matchup"}`}>{visaWord}</span>
               </div>
-            )}
-          </section>
-        )}
+            )
+          )}
 
-        {/* Kosten: Wochen-Richtwert + (NUR falls vorhanden) der Live-Flugpreis als EINE
-            Zeile. Kein Preis → keine Zeile: bei ~36 % Abdeckung, nur Flügen und volatilen
-            Werten trägt das keinen eigenen Block. Was fehlt, wird nicht angekündigt. */}
-        {(ratesDone || flightPrice != null) && (
-          <section className="space-y-1">
-            {ratesDone && <p className="text-[12px] text-neutral-500">{t("tour.wsWeekCostThis", { amount: fmtCur(weekMinor, rates!.currency ?? "EUR") })}</p>}
-            {flightPrice != null && (
-              // Mit Abrufdatum, weil der Preis morgen anders sein kann.
-              <p className="text-[12px] font-semibold text-neutral-700">✈ {t("tour.wsFlightLine", { origin: originLabel ?? "", amount: fmtEUR(flightPrice), date: fmtStand(nowMs) })}</p>
-            )}
-          </section>
-        )}
+          {/* 4) Weg zur Meldung — schlichter Link; App-Erklärung/Links hinter „i" */}
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+              {t("tour.entryPathTitle")}
+              <InfoHint label={t("tour.wsEntryInfo")}>{entryHint}</InfoHint>
+            </span>
+            <a href={portalUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[13px] font-semibold text-matchup hover:underline">{portalLabel} →</a>
+          </div>
 
-        </>
+        </div>
         )}
 
         {activeTab === "onsite" && (
