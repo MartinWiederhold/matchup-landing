@@ -1056,8 +1056,11 @@ export default function SeasonWorkspace() {
           <section>
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
-              {/* Zweiter Weg in die Pipeline — direkt im Saison-Kontext. */}
-              <Link href="/tour/pipeline" className="shrink-0 text-[11px] font-semibold text-matchup hover:underline">{t("tour.pipelineOpen")} →</Link>
+              {/* Zweiter Weg in Pipeline + Bilanz — direkt im Saison-Kontext. */}
+              <span className="flex shrink-0 items-center gap-2.5">
+                <Link href="/tour/pipeline" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.pipelineOpen")} →</Link>
+                <Link href="/tour/finance" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.financeOpen")} →</Link>
+              </span>
             </div>
             {seasonOrdered.length === 0 ? (
               <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
