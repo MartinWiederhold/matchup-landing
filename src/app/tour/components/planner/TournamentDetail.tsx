@@ -6,6 +6,7 @@ import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID
 import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
+import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON } from "@/lib/tourPresenceDemo";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
@@ -582,6 +583,33 @@ export default function TournamentDetail({
             </div>
           )}
           <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsHereNote")}</p>
+
+          {/* BEISPIEL-Block — reine Anzeige (nie in player_presence). Hinweis über der Liste,
+              „Beispiel"-Merkmal je Eintrag, KEIN Anschreiben/Kontakt. Abschaltbar über
+              NEXT_PUBLIC_TOUR_PRESENCE_DEMO. Siehe src/lib/tourPresenceDemo.ts (Herkunft/Lizenz). */}
+          {TOUR_PRESENCE_DEMO_ON && (
+            <div className="mt-4">
+              <p className="flex items-center gap-1.5 rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] font-semibold text-neutral-500">
+                <span aria-hidden>ⓘ</span>{t("tour.wsHereDemoBanner")}
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {demoPresenceFor(tt.id).map((d) => (
+                  <div key={d.id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                    {avatarEl(d.image, d.name)}
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="truncate text-[13px] font-semibold text-neutral-900">{d.name}</span>
+                        <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neutral-500">{t("tour.wsHereDemoBadge")}</span>
+                      </span>
+                      <span className="block truncate text-[12px] text-neutral-600">{seekText(d.looking, d.lookingRoom)}</span>
+                      <span className="block truncate text-[11px] text-neutral-400">{[d.rankLabel, d.nationality].filter(Boolean).join(" · ")}</span>
+                    </span>
+                    {/* Bewusst KEIN Anschreiben-/Kontakt-Knopf (würde an may_match scheitern). */}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         </>
