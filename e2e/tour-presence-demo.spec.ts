@@ -44,7 +44,24 @@ test("/tour Vor Ort: Beispiel-Spieler anklickbar — Profil + simuliertes Verbin
   expect(await detail.getByText(/^Beispiel$|^Example$/).count(), "fünf Beispiel-Einträge").toBe(5);
   await expect(detail.getByRole("button", { name: /^Anschreiben$|^Message$/ }), "kein Anschreiben-Knopf").toHaveCount(0);
 
-  // Klick auf einen Beispiel-Eintrag → Profilansicht.
+  // Punkt 2 — die Angaben sind reicher: die Zeile eines Beispiel-Eintrags trägt ein Detail
+  // (Belag/Zimmer/Niveau/Zeitraum), nicht nur „Sucht Unterkunft".
+  const firstDemoRow = detail.locator("button").filter({ hasText: /Beispiel|Example/ }).first();
+  await expect(firstDemoRow, "reichere Angaben in der Zeile").toContainText(/Sand|Hartplatz|Clay|Hard|Zimmer|Wohnung|Room|Apartment|ITF|ambition|locker|casual|rank|gerankt|\d{2}\.\d{2}\./);
+
+  // Punkt 1 — der Ansichts-Filter wirkt (getrennt vom eigenen Opt-in).
+  const badges = () => detail.getByText(/^Beispiel$|^Example$/).count();
+  const all = await badges();
+  await detail.getByRole("button", { name: /^Trainingspartner$|^Hitting partner$/ }).click();
+  const partner = await badges();
+  await detail.getByRole("button", { name: /^Mitbewohner$|^Room share$/ }).click();
+  const room = await badges();
+  expect(partner, "Partner-Filter zeigt ≥1").toBeGreaterThanOrEqual(1);
+  expect(room, "Mitbewohner-Filter zeigt ≥1").toBeGreaterThanOrEqual(1);
+  expect(partner < all || room < all, "mindestens ein Filter reduziert die Liste").toBeTruthy();
+  await detail.getByRole("button", { name: /^Alle$|^All$/ }).click();
+
+  // Klick auf einen Beispiel-Eintrag → Profilansicht (mit Detailzeilen).
   await detail.locator("button").filter({ hasText: /^.*(Beispiel|Example).*$/ }).first().click();
   await expect(page.getByText(/Vorschau — so läuft es|Preview — this is how it works/).first(), "Profil-Vorschau-Hinweis").toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/^Nationalität$|^Nationality$/).first(), "Profilfeld Nationalität").toBeVisible();

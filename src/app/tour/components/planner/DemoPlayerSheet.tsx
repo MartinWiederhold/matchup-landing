@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
 import type { DemoPlayer } from "@/lib/tourPresenceDemo";
 
 /**
@@ -13,8 +13,14 @@ import type { DemoPlayer } from "@/lib/tourPresenceDemo";
  */
 export default function DemoPlayerSheet({ player, city, onClose }: { player: DemoPlayer; city: string; onClose: () => void }) {
   const t = useT();
+  const { locale } = useLocale();
   const [view, setView] = useState<"profile" | "chat">("profile");
   const [draft, setDraft] = useState("");
+
+  // Lesbare Detailwerte (Niveau/Tage/Belag bzw. Zeitraum/Ort/Kosten/Art).
+  const fmtShort = (iso: string | null) => (iso ? new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z")) : "");
+  const period = player.roomFrom && player.roomTo ? `${fmtShort(player.roomFrom)}–${fmtShort(player.roomTo)}` : null;
+  const daysText = player.partnerDays.length ? player.partnerDays.map((d) => t(`tour.day_${d}`)).join("/") : null;
 
   // Absicht als lesbare Aussage (wie in der Liste).
   const intentParts: string[] = [];
@@ -70,6 +76,15 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
                 {field(t("tour.demoFieldRank"), player.rankLabel)}
                 {field(t("tour.demoFieldAge"), t("tour.demoAgeYears", { n: player.age }))}
                 {field(t("tour.demoFieldHome"), player.homeCity)}
+                {/* Trainingspartner-Details */}
+                {player.looking && player.partnerLevel && field(t("tour.wsPartnerLevel"), t(`tour.level_${player.partnerLevel}`))}
+                {player.looking && daysText && field(t("tour.wsPartnerDays"), daysText)}
+                {player.looking && player.surface && field(t("tour.wsPartnerSurface"), t(`tour.surface_${player.surface}`))}
+                {/* Unterkunft-Details */}
+                {player.lookingRoom && period && field(t("tour.demoFieldPeriod"), period)}
+                {player.lookingRoom && player.roomArea && field(t("tour.wsRoomArea"), player.roomArea)}
+                {player.lookingRoom && player.roomCost && field(t("tour.wsRoomCost"), player.roomCost)}
+                {player.lookingRoom && player.roomType && field(t("tour.wsRoomTypeLabel"), t(`tour.roomType_${player.roomType}`))}
               </div>
 
               {/* Kennzeichnung: Vorschau, nichts wird gespeichert. */}

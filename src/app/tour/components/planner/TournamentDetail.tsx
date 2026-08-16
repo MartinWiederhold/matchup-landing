@@ -6,8 +6,17 @@ import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID
 import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
-import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, type DemoPlayer } from "@/lib/tourPresenceDemo";
+import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, PARTNER_LEVELS, WEEKDAYS, type DemoPlayer } from "@/lib/tourPresenceDemo";
 import DemoPlayerSheet from "./DemoPlayerSheet";
+
+// Belag-Auswahl im Präsenz-Formular (Codes wie web.tour_tournaments.surface).
+const SURFACES = ["clay", "hard", "grass", "carpet"] as const;
+// Gemeinsame Form der Absichts-Details (echte Präsenz + Beispiel) für die Anzeige-Zeile.
+type IntentInfo = {
+  looking: boolean; lookingRoom: boolean; surface: string | null;
+  partnerLevel: string | null; partnerDays: string[] | null;
+  roomFrom: string | null; roomTo: string | null; roomArea: string | null; roomCost: string | null; roomType: string | null;
+};
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
@@ -106,6 +115,17 @@ export default function TournamentDetail({
   const [pPartner, setPPartner] = useState(true);
   const [pRoom, setPRoom] = useState(false);
   const [pBusy, setPBusy] = useState(false);
+  // Ansichts-Filter der Liste (getrennt vom eigenen Opt-in): wer welche Absicht hat.
+  const [hereFilter, setHereFilter] = useState<"all" | "partner" | "room">("all");
+  // Detailfelder des eigenen Opt-in (kurzes Formular, alles optional).
+  const [pLevel, setPLevel] = useState("");
+  const [pDays, setPDays] = useState<string[]>([]);
+  const [pSurface, setPSurface] = useState("");
+  const [pRoomFrom, setPRoomFrom] = useState("");
+  const [pRoomTo, setPRoomTo] = useState("");
+  const [pRoomArea, setPRoomArea] = useState("");
+  const [pRoomCost, setPRoomCost] = useState("");
+  const [pRoomType, setPRoomType] = useState("");
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
   // Gewählter Beispiel-Spieler → simulierte Profil-/Chat-Vorschau (nichts wird gespeichert).
   const [demoSelected, setDemoSelected] = useState<DemoPlayer | null>(null);
@@ -163,7 +183,12 @@ export default function TournamentDetail({
       if (!alive) return;
       setPresence(rows);
       const mine = rows.find((r) => r.user_id === viewerId);
-      if (mine) { setPContact(mine.contact ?? ""); setPPartner(mine.looking); setPRoom(mine.looking_room); }
+      if (mine) {
+        setPContact(mine.contact ?? ""); setPPartner(mine.looking); setPRoom(mine.looking_room);
+        setPLevel(mine.partner_level ?? ""); setPDays(mine.partner_days ?? []); setPSurface(mine.surface ?? "");
+        setPRoomFrom(mine.room_from ?? ""); setPRoomTo(mine.room_to ?? ""); setPRoomArea(mine.room_area ?? "");
+        setPRoomCost(mine.room_cost ?? ""); setPRoomType(mine.room_type ?? "");
+      }
     });
     return () => { alive = false; };
   }, [tt.id, viewerId]);
@@ -176,7 +201,10 @@ export default function TournamentDetail({
   const refreshPresence = async () => setPresence(await loadTourPresence(tt.id));
   const joinP = async () => {
     setPBusy(true);
-    await joinTourPresence(viewerId, tt.id, { name: viewerName, rankLabel: viewerRank, nationality: viewerNationality }, pPartner, pRoom, pContact);
+    await joinTourPresence(viewerId, tt.id, { name: viewerName, rankLabel: viewerRank, nationality: viewerNationality }, pPartner, pRoom, pContact, {
+      surface: pSurface || null, partnerLevel: pLevel || null, partnerDays: pDays,
+      roomFrom: pRoomFrom || null, roomTo: pRoomTo || null, roomArea: pRoomArea || null, roomCost: pRoomCost || null, roomType: pRoomType || null,
+    });
     await refreshPresence();
     setPBusy(false);
   };
@@ -323,6 +351,35 @@ export default function TournamentDetail({
     ) : (
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[15px] font-bold text-neutral-500">{(name || "?").slice(0, 1).toUpperCase()}</span>
     );
+
+  // ── Lesbare Detail-Zeile zu den Absichten (statt bloßem „Sucht Unterkunft"). ────────────
+  const fmtShort = (iso: string | null) => (iso ? new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z")) : "");
+  const surfLabel = (s: string | null) => (s ? t(`tour.surface_${s}`) : "");
+  const levelLabel = (l: string | null) => (l ? t(`tour.level_${l}`) : "");
+  const roomTypeLabel = (r: string | null) => (r ? t(`tour.roomType_${r}`) : "");
+  const daysLabel = (ds: string[] | null) => (ds && ds.length ? ds.map((d) => t(`tour.day_${d}`)).join("/") : "");
+  const intentLine = (x: IntentInfo): string => {
+    const parts: string[] = [];
+    if (x.looking) {
+      const extra = [levelLabel(x.partnerLevel), surfLabel(x.surface)].filter(Boolean).join(", ");
+      parts.push(t("tour.wsSeekPartnerStmt") + (extra ? ` · ${extra}` : ""));
+    }
+    if (x.lookingRoom) {
+      const detail = [x.roomArea || tt.city || countryName, x.roomFrom && x.roomTo ? `${fmtShort(x.roomFrom)}–${fmtShort(x.roomTo)}` : "", roomTypeLabel(x.roomType)].filter(Boolean).join(", ");
+      parts.push(t("tour.wsSeekRoomIn", { detail }));
+    }
+    return parts.length ? parts.join(" · ") : t("tour.wsHerePresent");
+  };
+  const realIntent = (r: TourPresence): IntentInfo => ({ looking: r.looking, lookingRoom: r.looking_room, surface: r.surface, partnerLevel: r.partner_level, partnerDays: r.partner_days, roomFrom: r.room_from, roomTo: r.room_to, roomArea: r.room_area, roomCost: r.room_cost, roomType: r.room_type });
+  const demoIntent = (d: DemoPlayer): IntentInfo => ({ looking: d.looking, lookingRoom: d.lookingRoom, surface: d.surface, partnerLevel: d.partnerLevel, partnerDays: d.partnerDays, roomFrom: d.roomFrom, roomTo: d.roomTo, roomArea: d.roomArea, roomCost: d.roomCost, roomType: d.roomType });
+
+  // Filter der Liste (Alle/Partner/Mitbewohner) — getrennt vom eigenen Opt-in.
+  const filterMatch = (looking: boolean, room: boolean) => hereFilter === "all" || (hereFilter === "partner" && looking) || (hereFilter === "room" && room);
+  const othersShown = others.filter((r) => filterMatch(r.looking, r.looking_room));
+  const demoAll = TOUR_PRESENCE_DEMO_ON ? demoPresenceFor(tt.id, tt.category, tt.tournament_monday) : [];
+  const demoShown = demoAll.filter((d) => filterMatch(d.looking, d.lookingRoom));
+  const toggleDay = (d: string) => setPDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
+  const selCls = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -539,6 +596,44 @@ export default function TournamentDetail({
             </label>
             <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] placeholder:text-neutral-400 focus:border-black/30 focus:outline-none" />
 
+            {/* Detailfelder — NUR zur angekreuzten Absicht, alles optional (kurzes Formular). */}
+            {pPartner && (
+              <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-black/5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.wsSeekPartner")}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsPartnerLevel")}</span>
+                    <select value={pLevel} onChange={(e) => setPLevel(e.target.value)} className={selCls}><option value="">—</option>{PARTNER_LEVELS.map((l) => <option key={l} value={l}>{t(`tour.level_${l}`)}</option>)}</select></label>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsPartnerSurface")}</span>
+                    <select value={pSurface} onChange={(e) => setPSurface(e.target.value)} className={selCls}><option value="">—</option>{SURFACES.map((s) => <option key={s} value={s}>{t(`tour.surface_${s}`)}</option>)}</select></label>
+                </div>
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsPartnerDays")}</span>
+                  <div className="flex flex-wrap gap-1">
+                    {WEEKDAYS.map((d) => <button key={d} type="button" onClick={() => toggleDay(d)} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${pDays.includes(d) ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.day_${d}`)}</button>)}
+                  </div>
+                </div>
+              </div>
+            )}
+            {pRoom && (
+              <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-black/5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.wsSeekRoom")}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomFrom")}</span>
+                    <input type="date" value={pRoomFrom} onChange={(e) => setPRoomFrom(e.target.value)} className={selCls} /></label>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomTo")}</span>
+                    <input type="date" value={pRoomTo} onChange={(e) => setPRoomTo(e.target.value)} className={selCls} /></label>
+                </div>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomArea")}</span>
+                  <input value={pRoomArea} onChange={(e) => setPRoomArea(e.target.value)} className={selCls} /></label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomCost")}</span>
+                    <input value={pRoomCost} onChange={(e) => setPRoomCost(e.target.value)} placeholder="~40 €/N" className={selCls} /></label>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomTypeLabel")}</span>
+                    <select value={pRoomType} onChange={(e) => setPRoomType(e.target.value)} className={selCls}><option value="">—</option><option value="room">{t("tour.roomType_room")}</option><option value="apartment">{t("tour.roomType_apartment")}</option></select></label>
+                </div>
+              </div>
+            )}
+
             {/* Vorschau: so erscheinst du für andere vor Ort. */}
             <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-2.5 py-2 ring-1 ring-black/5">
               {avatarEl(myPresence?.profile_image ?? null, viewerName)}
@@ -555,21 +650,29 @@ export default function TournamentDetail({
             </div>
           </div>
 
+          {/* Ansichts-Filter: wer welche Absicht hat (getrennt vom eigenen Opt-in oben). Wirkt
+              auf echte UND Beispiel-Einträge. */}
+          <div className="mt-3 flex gap-1 rounded-full bg-black/[0.04] p-1">
+            {(["all", "partner", "room"] as const).map((f) => (
+              <button key={f} type="button" onClick={() => setHereFilter(f)} className={`flex-1 rounded-full px-2 py-1.5 text-[12px] font-bold transition-colors ${hereFilter === f ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>{t(`tour.hereFilter_${f}`)}</button>
+            ))}
+          </div>
+
           {/* Andere vor Ort — lesbare Aussage mit Bild und Name statt Häkchen. */}
           {presence == null ? (
             <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
-          ) : others.length === 0 ? (
+          ) : othersShown.length === 0 ? (
             <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsHereEmpty")}</p>
           ) : (
             <div className="mt-2 space-y-1.5">
-              {others.map((r) => {
+              {othersShown.map((r) => {
                 const href = r.contact ? contactHref(r.contact) : null;
                 return (
                   <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
                     {avatarEl(r.profile_image, r.name)}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-semibold text-neutral-900">{r.name || t("tour.fieldMissing")}</span>
-                      <span className="block truncate text-[12px] text-neutral-600">{seekText(r.looking, r.looking_room)}</span>
+                      <span className="block truncate text-[12px] text-neutral-600">{intentLine(realIntent(r))}</span>
                       {(r.rank_label || r.nationality) && <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>}
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
@@ -590,13 +693,13 @@ export default function TournamentDetail({
           {/* BEISPIEL-Block — reine Anzeige (nie in player_presence). Hinweis über der Liste,
               „Beispiel"-Merkmal je Eintrag, KEIN Anschreiben/Kontakt. Abschaltbar über
               NEXT_PUBLIC_TOUR_PRESENCE_DEMO. Siehe src/lib/tourPresenceDemo.ts (Herkunft/Lizenz). */}
-          {TOUR_PRESENCE_DEMO_ON && (
+          {TOUR_PRESENCE_DEMO_ON && demoShown.length > 0 && (
             <div className="mt-4">
               <p className="flex items-center gap-1.5 rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] font-semibold text-neutral-500">
                 <span aria-hidden>ⓘ</span>{t("tour.wsHereDemoBanner")}
               </p>
               <div className="mt-2 space-y-1.5">
-                {demoPresenceFor(tt.id, tt.category).map((d) => (
+                {demoShown.map((d) => (
                   // Klick öffnet die simulierte Profil-/Chat-Vorschau. KEIN Anschreiben-/Kontakt-
                   // Knopf (würde an may_match scheitern) — die Vorschau ersetzt ihn.
                   <button key={d.id} type="button" onClick={() => setDemoSelected(d)} className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 text-left transition-colors hover:bg-black/[0.02]">
@@ -606,7 +709,7 @@ export default function TournamentDetail({
                         <span className="truncate text-[13px] font-semibold text-neutral-900">{d.name}</span>
                         <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neutral-500">{t("tour.wsHereDemoBadge")}</span>
                       </span>
-                      <span className="block truncate text-[12px] text-neutral-600">{seekText(d.looking, d.lookingRoom)}</span>
+                      <span className="block truncate text-[12px] text-neutral-600">{intentLine(demoIntent(d))}</span>
                       <span className="block truncate text-[11px] text-neutral-400">{[d.rankLabel, d.nationality].filter(Boolean).join(" · ")}</span>
                     </span>
                     <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>

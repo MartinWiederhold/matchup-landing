@@ -18,15 +18,38 @@ export type TourPresence = {
   looking: boolean;
   looking_room: boolean;
   contact: string | null;
+  // Detailfelder zu den zwei Absichten (nullable; kurzes Formular, alles optional).
+  surface: string | null; // Belag (bestehende Spalte, mit /map geteilt)
+  partner_level: string | null;
+  partner_days: string[] | null;
+  room_from: string | null;
+  room_to: string | null;
+  room_area: string | null;
+  room_cost: string | null;
+  room_type: string | null; // 'room' | 'apartment'
   profile_image: string | null; // öffentliches Avatar aus web.profiles (per user_id verknüpft)
 };
 
 export type PresenceFields = { name: string | null; rankLabel: string | null; nationality: string | null };
+/** Detailangaben zu den Absichten — alle optional. */
+export type PresenceDetails = {
+  surface: string | null;
+  partnerLevel: string | null;
+  partnerDays: string[] | null;
+  roomFrom: string | null;
+  roomTo: string | null;
+  roomArea: string | null;
+  roomCost: string | null;
+  roomType: string | null;
+};
+
+const PRESENCE_COLUMNS =
+  "user_id, name, rank_label, nationality, looking, looking_room, contact, surface, partner_level, partner_days, room_from, room_to, room_area, room_cost, room_type";
 
 export async function loadTourPresence(tournamentId: string): Promise<TourPresence[]> {
   const { data } = await supabase
     .from("player_presence")
-    .select("user_id, name, rank_label, nationality, looking, looking_room, contact")
+    .select(PRESENCE_COLUMNS)
     .eq("tournament_id", tournamentId)
     .order("updated_at", { ascending: false });
   const rows = (data as Omit<TourPresence, "profile_image">[]) ?? [];
@@ -47,7 +70,9 @@ export async function joinTourPresence(
   looking: boolean,
   lookingRoom: boolean,
   contact: string,
+  d?: PresenceDetails,
 ): Promise<boolean> {
+  const clean = (s: string | null | undefined) => (s && s.trim() !== "" ? s.trim() : null);
   const { error } = await supabase.from("player_presence").upsert(
     {
       user_id: userId,
@@ -58,6 +83,15 @@ export async function joinTourPresence(
       looking,
       looking_room: lookingRoom,
       contact: contact.trim() || null,
+      // Detailfelder nur zur jeweiligen Absicht sinnvoll — leere Werte als null.
+      surface: clean(d?.surface),
+      partner_level: looking ? clean(d?.partnerLevel) : null,
+      partner_days: looking && d?.partnerDays && d.partnerDays.length > 0 ? d.partnerDays : null,
+      room_from: lookingRoom ? clean(d?.roomFrom) : null,
+      room_to: lookingRoom ? clean(d?.roomTo) : null,
+      room_area: lookingRoom ? clean(d?.roomArea) : null,
+      room_cost: lookingRoom ? clean(d?.roomCost) : null,
+      room_type: lookingRoom ? clean(d?.roomType) : null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,tournament_id" },
