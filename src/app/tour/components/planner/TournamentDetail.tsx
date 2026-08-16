@@ -21,6 +21,7 @@ import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
+import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
 import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates, TourEntryStatus, TourEntryEvent } from "@/lib/types";
 
@@ -381,6 +382,13 @@ export default function TournamentDetail({
   const toggleDay = (d: string) => setPDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
   const selCls = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
 
+  // ── Punkte je Runde aus points.ts (belegt, ATP-Regelwerk). Nur wenn die Kategorie erkannt
+  //    ist; sonst Hinweis statt Nullen. Erstrunde (R32) = 0 bei Challenger/ITF → bewusst gezeigt.
+  const POINTS_ROUNDS: PointsRound[] = ["W", "F", "SF", "QF", "R16"];
+  const roundPts = toPointsCategory(tt.category)
+    ? POINTS_ROUNDS.map((code) => ({ code, label: t(`tour.round_${code}`), points: expectedPoints(tt.category, code, tt.tournament_monday).points }))
+    : null;
+
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Kopf mit Zurück */}
@@ -526,6 +534,33 @@ export default function TournamentDetail({
           <div className="flex items-center justify-between gap-3 py-3">
             <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600">{t("tour.wsDetailDeadline")}</span>
             <DeadlineCountdown tournament={tt} now={nowMs} size="lg" />
+          </div>
+
+          {/* Belag — aus dem Bestand (tour_tournaments), mit drinnen/draußen falls bekannt. */}
+          {tt.surface && (
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovSurfaceTitle")}</span>
+              <span className="text-[13px] font-semibold text-neutral-700">{t(`tour.surface_${tt.surface}`)}{tt.indoor != null ? ` · ${tt.indoor ? t("tour.ovIndoor") : t("tour.ovOutdoor")}` : ""}</span>
+            </div>
+          )}
+
+          {/* Punkte je Runde — belegt aus points.ts (ATP-Regelwerk). Kompakt als Pillen.
+              Erstrunde = 0 (Challenger/ITF) wird bewusst mitgezeigt. */}
+          <div className="py-2.5">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+              {t("tour.ovPointsTitle")}
+              <InfoHint label={t("tour.ovPointsInfo")}><p>{t("tour.ovPointsInfo")}</p></InfoHint>
+            </span>
+            {roundPts ? (
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {roundPts.map((r) => (
+                  <span key={r.code} className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-neutral-600"><span className="font-bold text-neutral-900 tabular-nums">{r.points}</span> {r.label}</span>
+                ))}
+                <span className="rounded-full px-2 py-0.5 text-[11px] text-neutral-400">{t("tour.ovFirstRoundZero")}</span>
+              </div>
+            ) : (
+              <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovPointsUnknownCat")}</p>
+            )}
           </div>
 
           {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
