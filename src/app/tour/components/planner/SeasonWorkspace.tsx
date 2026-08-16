@@ -16,6 +16,11 @@ import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { loadPlayerDocs, type PlayerDocs } from "@/lib/tourPlayerMaster";
 import { documentWarnings } from "@/domain/tour/documentWarnings";
+import { loadResultHistory, toMatchResults, type ResultHistoryRow } from "@/lib/tourResultHistory";
+import { pointsForecast } from "@/domain/tour/pointsForecast";
+import { loadWildcardContacts, type TourWildcardContact } from "@/lib/tourWildcards";
+import { buildActionBoard, type BoardTournament } from "@/domain/tour/actionBoard";
+import MorningBoard from "./MorningBoard";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { optimizeSeason, type SeasonObjective } from "@/domain/tour/optimizeSeason";
@@ -92,6 +97,9 @@ export default function SeasonWorkspace() {
   const [banned, setBanned] = useState<Set<string>>(new Set());
   // Dokument-Stammdaten (Pass-/Versicherungs-Ablauf) für die Ablaufwarnungen im Fristen-Block.
   const [docs, setDocs] = useState<PlayerDocs | null>(null);
+  // Für das Morgen-Dashboard: erfasste Ergebnisse (Punktestand/Verfall) + Wildcard-Anfragen.
+  const [resultHistory, setResultHistory] = useState<ResultHistoryRow[]>([]);
+  const [wildcards, setWildcards] = useState<TourWildcardContact[]>([]);
   // Entry-Status je Turnier (Planzeile) + Beobachtungs-Verlauf je Planzeile — für die
   // Status-Pills + Trend in der Saisonliste und den Editor im Detail.
   const [planByTour, setPlanByTour] = useState<Map<string, TourSeasonPlanEntry>>(new Map());
@@ -214,8 +222,8 @@ export default function SeasonWorkspace() {
     let alive = true;
     (async () => {
       try {
-        const [p, ts, ids, cr, planRows, evs, pdocs] = await Promise.all([
-          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id),
+        const [p, ts, ids, cr, planRows, evs, pdocs, rhist, wcs] = await Promise.all([
+          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id), loadResultHistory(user.id), loadWildcardContacts(user.id),
         ]);
         if (!alive) return;
         setProfile(p);
@@ -225,6 +233,8 @@ export default function SeasonWorkspace() {
         setEventsByPlan(groupEventsByPlan(evs));
         setRates(cr);
         setDocs(pdocs);
+        setResultHistory(rhist);
+        setWildcards(wcs);
         setRankingInput(p.ranking != null ? String(p.ranking) : "");
         setBudget(p.seasonBudget != null ? String(p.seasonBudget) : "");
         setStatus("ready");
@@ -599,6 +609,47 @@ export default function SeasonWorkspace() {
   const activeFilters = selSeries.length + selSurface.length + selCountries.length + (frame.to ? 1 : 0) + (frame.region !== "europe" && selCountries.length === 0 ? 1 : 0);
   const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
 
+  // ── Morgen-Dashboard: alle schon berechneten Modul-Ausgaben zur Ampel bündeln (reine Domain).
+  //    MUSS vor den Auth-/Ladegattern stehen (Hook-Regeln: kein bedingtes useMemo). Budget wird
+  //    hier aus cost/budgetMinor abgeleitet, weil die späteren cur/budgetLeftMinor erst nach den
+  //    Gattern deklariert sind.
+  const board = useMemo(() => {
+    const asOf = new Date(nowMs).toISOString().slice(0, 10);
+    const curc = rates?.currency ?? "EUR";
+    const spent = cost ? (cost.total[curc] ?? 0) : 0;
+    const budgetLeft = budgetMinor ? budgetMinor.amount - spent : null;
+    const tournaments: BoardTournament[] = seasonOrdered.map(({ tt }) => {
+      const plan = planByTour.get(tt.id);
+      const events = plan ? eventsByPlan.get(plan.id) ?? [] : [];
+      return {
+        id: tt.id, city: tt.city, country: tt.country, monday: tt.tournament_monday, series: tt.series,
+        status: plan?.status ?? "planned", alternatePosition: plan?.alternate_position ?? null,
+        feePaid: plan?.fee_paid ?? false, decision: plan?.decision ?? null, inactive: tt.valid_to != null,
+        alternateObs: events.map((e) => ({ observedAt: e.observed_at, alternatePosition: e.alternate_position })),
+      };
+    });
+    // Punkte aus der erfassten Historie (Verfall via pointsForecast → nutzt points.ts).
+    const f = pointsForecast(toMatchResults(resultHistory), asOf);
+    const soon4 = f.steps.find((s) => s.weeks === 4)?.expiring[0] ?? null;
+    const points = resultHistory.length
+      ? {
+          total: f.currentTotal,
+          nextExpiry: f.schedule[0] ? { date: f.schedule[0].expiresOn, points: f.schedule[0].points } : null,
+          expiringSoon: soon4 ? { date: soon4.expiresOn, points: soon4.points } : null,
+        }
+      : null;
+    return buildActionBoard({
+      asOf,
+      tournaments,
+      banned: [...banned],
+      docWarnings,
+      schengen: schengen ? { exceeds: schengen.exceeds, used: schengen.used, left: schengen.left } : null,
+      points,
+      wildcards: wildcards.map((wc) => ({ tournamentName: byId.get(wc.tournament_id)?.city ?? "—", tournamentId: wc.tournament_id, requestedOn: wc.requested_on, outcome: wc.outcome })),
+      budgetOver: budgetLeft != null && budgetLeft < 0 ? { amountMinor: -budgetLeft, currency: curc } : null,
+    });
+  }, [nowMs, rates, cost, budgetMinor, seasonOrdered, planByTour, eventsByPlan, resultHistory, banned, docWarnings, schengen, wildcards, byId]);
+
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
   if (authLoading) return <div className="flex h-[100dvh] items-center justify-center bg-white text-sm text-neutral-500">{t("tour.loading")}</div>;
   if (!user) {
@@ -935,6 +986,12 @@ export default function SeasonWorkspace() {
   // ── SPALTE 4 (bzw. eingefaltet): Saison-Übersicht — Kosten & Status, Schengen, Frist ──
   const overviewSection = (
     <div className="space-y-5">
+      {/* Morgen-Dashboard: die Fünf-Minuten-Übersicht. Sitzt hier, weil diese Spalte genau dann
+          erscheint, wenn KEIN Turnier gewählt ist — das ist, was man beim Öffnen zuerst sieht.
+          Ersetzt die früheren Einzel-Widgets (Nächste Frist / Doc-Warnungen / Schengen-Banner);
+          die stecken jetzt konsolidiert in HANDLUNGSBEDARF (keine Doppelung). */}
+      <MorningBoard board={board} onOpen={setSelectedId} countryName={catName} fmtDate={fmtDay} money={money} />
+
       <section className="space-y-3">
         <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
           {t("tour.wsCostTitle")}
@@ -966,40 +1023,6 @@ export default function SeasonWorkspace() {
           </div>
         ) : (
           <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[12px] leading-relaxed text-neutral-500">{t("tour.wsOverviewHint")}</p>
-        )}
-        {schengen && schengen.exceeds && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-500/10 p-3">
-            <p className="flex items-center gap-1.5 text-[13px] font-bold text-amber-800"><span aria-hidden>⚠</span> {t("tour.wsSchengenTitle")}</p>
-            <p className="mt-0.5 text-[12px] font-semibold text-amber-700">{t("tour.wsSchengenExceed", { used: schengen.used, over: schengen.used - 90 })}</p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700/90">{t("tour.wsSchengenAction")}</p>
-          </div>
-        )}
-      </section>
-
-      {/* Nächste offene Meldefrist über die Saison */}
-      <section>
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsNextDeadlineTitle")}</h2>
-        {nextDeadline ? (
-          <button type="button" onClick={() => setSelectedId(nextDeadline.id)} className="mt-2 block w-full rounded-2xl bg-black/[0.02] p-3 text-left ring-1 ring-black/5 hover:bg-black/[0.04]">
-            <p className="truncate text-[13px] font-semibold text-neutral-900">{nextDeadline.city || t("tour.fieldMissing")}<span className="text-neutral-400">, {catName(nextDeadline.country)}</span></p>
-            <div className="mt-0.5"><DeadlineCountdown tournament={nextDeadline} now={nowMs} /></div>
-          </button>
-        ) : (
-          <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsNextDeadlineNone")}</p>
-        )}
-
-        {/* Dokument-Ablaufwarnungen — gleiche Dringlichkeitsklasse wie die Frist. Ein abgelaufener
-            Pass ist ein Error (rot), „läuft bald ab"/„zu kurz" eine Warnung (bernstein). Die
-            6-Monats-Regel ist eine FAUSTREGEL und wird als solche gekennzeichnet. */}
-        {docWarnings.length > 0 && (
-          <ul className="mt-2 space-y-1.5">
-            {docWarnings.map((w, i) => (
-              <li key={`${w.kind}-${i}`} className={`rounded-xl px-3 py-2 text-[12px] leading-snug ring-1 ${w.severity === "error" ? "bg-red-50 text-red-700 ring-red-200" : "bg-amber-50 text-amber-800 ring-amber-200"}`}>
-                <span className="font-semibold">{t(`tour.docWarn_${w.kind}`, { date: w.date ?? "", days: w.days ?? 0, dest: w.destination ? catName(w.destination) : "" })}</span>
-                {w.ruleOfThumb && <span className="mt-0.5 block text-[11px] font-normal opacity-80">{t("tour.docWarnRuleOfThumb")}</span>}
-              </li>
-            ))}
-          </ul>
         )}
       </section>
 
