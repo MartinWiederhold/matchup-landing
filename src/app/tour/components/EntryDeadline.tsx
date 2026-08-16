@@ -40,21 +40,23 @@ export const ATP_APP_ANDROID = "https://play.google.com/store/apps/details?id=co
  *  - Challenger (Frist unbekannt): „Meldefrist unbekannt" (nicht geraten)
  * Ankerpunkt ist der Meldeschluss (Entry), nicht der Rückzug (Withdrawal).
  */
-export function DeadlineCountdown({ tournament, now }: { tournament: TourTournament; now: number }) {
+export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament: TourTournament; now: number; size?: "sm" | "lg" }) {
   const t = useT();
   const dl = tourDeadlines(new Date(tournament.tournament_monday + "T00:00:00Z"), tournament.series);
+  // „lg" für die prominente Anzeige im Turnierdetail (wichtigste Angabe des Reiters).
+  const sz = size === "lg" ? "text-[18px]" : "text-[13px]";
 
   if (!dl.known || !dl.entry) {
-    return <span className="text-[13px] font-semibold text-neutral-500">{t("tour.entryUnknownShort")}</span>;
+    return <span className={`${sz} font-semibold text-neutral-500`}>{t("tour.entryUnknownShort")}</span>;
   }
   const ms = dl.entry.getTime() - now;
   if (ms <= 0) {
-    return <span className="text-[13px] font-semibold text-neutral-400">{t("tour.entryExpired")}</span>;
+    return <span className={`${sz} font-semibold text-neutral-400`}>{t("tour.entryExpired")}</span>;
   }
   const days = Math.ceil(ms / DAY);
   const urgent = days <= 7; // wie NextDeadline: drängender in Bernstein, aber kein Rot/Blinken
   return (
-    <span className={`text-[13px] font-semibold ${urgent ? "text-amber-700" : "text-neutral-700"}`}>
+    <span className={`${sz} font-bold tabular-nums ${urgent ? "text-amber-700" : "text-neutral-800"}`}>
       {t("tour.entryCountdown", { n: days })}
     </span>
   );

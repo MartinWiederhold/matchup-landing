@@ -18,6 +18,7 @@ export type TourPresence = {
   looking: boolean;
   looking_room: boolean;
   contact: string | null;
+  profile_image: string | null; // öffentliches Avatar aus web.profiles (per user_id verknüpft)
 };
 
 export type PresenceFields = { name: string | null; rankLabel: string | null; nationality: string | null };
@@ -28,7 +29,15 @@ export async function loadTourPresence(tournamentId: string): Promise<TourPresen
     .select("user_id, name, rank_label, nationality, looking, looking_room, contact")
     .eq("tournament_id", tournamentId)
     .order("updated_at", { ascending: false });
-  return (data as TourPresence[]) ?? [];
+  const rows = (data as Omit<TourPresence, "profile_image">[]) ?? [];
+  if (rows.length === 0) return [];
+
+  // Avatare aus profiles nachladen (profile_image ist eine öffentliche Storage-URL; die
+  // Präsenz ist Opt-in, das Bild wird — wie in /app — zum selbst gewählten Auftritt gezeigt).
+  const ids = [...new Set(rows.map((r) => r.user_id))];
+  const { data: profs } = await supabase.from("profiles").select("id, profile_image").in("id", ids);
+  const avatarById = new Map(((profs as { id: string; profile_image: string | null }[]) ?? []).map((p) => [p.id, p.profile_image]));
+  return rows.map((r) => ({ ...r, profile_image: avatarById.get(r.user_id) ?? null }));
 }
 
 export async function joinTourPresence(

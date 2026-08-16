@@ -134,6 +134,23 @@ export default function TournamentDetail({
   };
   // Append-only: eine Fehl-Beobachtung LÖSCHEN (nicht ändern). Danach Parent neu laden.
   const delObs = async (id: string) => { await deleteEntryEvent(id); onEntryChanged(); };
+
+  // ── Schnell-Melden: der häufigste Übergang (geplant → gemeldet) mit EINEM Klick, statt den
+  // Editor zu öffnen. Schreibt den Status 'entered' an die Planzeile UND ein Verlaufs-Event.
+  const [quickBusy, setQuickBusy] = useState(false);
+  const isEnteredLike = (s: TourEntryStatus) => s === "entered" || s === "main_draw" || s === "qualifying" || s === "confirmed";
+  const quickEnter = async () => {
+    if (!planId) return;
+    setQuickBusy(true);
+    try {
+      await setEntryStatus(planId, "entered", null);
+      await logEntryEvent(viewerId, planId, { status: "entered", observedAt: new Date(nowMs).toISOString().slice(0, 10) });
+      onEntryChanged();
+    } finally {
+      setQuickBusy(false);
+    }
+  };
+  const openEntryEditor = () => { setActiveTab("overview"); setEntryOpen(true); };
   // Gebühr fällig-Warnung nur, wenn wirklich gemeldet (nicht bei geplant/zurückgezogen).
   const feeDue = !!planId && !feePaid && (entryStatus === "entered" || entryStatus === "main_draw" || entryStatus === "qualifying" || entryStatus === "alternate");
   useEffect(() => {
@@ -285,6 +302,24 @@ export default function TournamentDetail({
   const entryWord = `${t(`tour.status_${entryStatus}`)}${entryStatus === "alternate" && alternatePosition != null ? ` #${alternatePosition}` : ""}`;
   const inp2 = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
 
+  // ── „Vor Ort": aus den zwei Absichten LESBARE Aussagen bilden — „Sucht Trainingspartner",
+  // „Sucht Unterkunft in {Stadt}". Bild + Name kommen aus dem Profil (Punkt 1: Name liegt in
+  // player_presence, das Bild wird per user_id aus profiles verknüpft; fehlt es → Monogramm).
+  // Ein „bis TT.MM."-Datum gibt es in player_presence NICHT → wird bewusst nicht behauptet.
+  const seekText = (looking: boolean, room: boolean): string => {
+    const parts: string[] = [];
+    if (looking) parts.push(t("tour.wsSeekPartnerStmt"));
+    if (room) parts.push(t("tour.wsSeekRoomStmt", { city: tt.city || countryName }));
+    return parts.length ? parts.join(" · ") : t("tour.wsHerePresent");
+  };
+  const avatarEl = (src: string | null, name: string | null) =>
+    src ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt="" loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-full bg-neutral-100 object-cover" />
+    ) : (
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[15px] font-bold text-neutral-500">{(name || "?").slice(0, 1).toUpperCase()}</span>
+    );
+
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Kopf mit Zurück */}
@@ -304,18 +339,34 @@ export default function TournamentDetail({
           </div>
         </div>
 
-        {/* HAUPTAKTION vs. STATUS: nicht in der Saison → prominenter Knopf (echte Aktion);
-            in der Saison → schlichte Statuszeile mit „Entfernen" (kein großer Kasten). Der
-            Kopf liegt über allen vier Reitern; die schlanke Zeile wirkt dort einheitlich. */}
-        {inSeason ? (
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.02] px-3.5 py-2.5 ring-1 ring-black/5">
-            <span className="flex items-center gap-1.5 text-[13px] font-semibold text-emerald-700"><span aria-hidden>✓</span>{t("tour.wsDetailInSeason")}</span>
-            <button type="button" onClick={onToggle} className="shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>
-          </div>
-        ) : (
+        {/* HAUPTAKTION direkt unter dem Titel. Nicht in der Saison → aufnehmen. In der Saison →
+            der MELDE-Knopf: geplant → prominenter „Melden" (ein Klick = Status 'entered'), danach
+            grün „Gemeldet"; andere Stände öffnen den Editor. Darunter eine schlanke „Entfernen"-Zeile. */}
+        {!inSeason ? (
           <button type="button" onClick={onToggle} className="w-full rounded-2xl bg-matchup px-5 py-3.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-matchup-hover">
             {t("tour.wsDetailAdd")}
           </button>
+        ) : (
+          <div className="space-y-2">
+            {planId && entryStatus === "planned" ? (
+              <button type="button" onClick={quickEnter} disabled={quickBusy} className="w-full rounded-2xl bg-matchup px-5 py-3.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-matchup-hover disabled:opacity-60">
+                {quickBusy ? t("tour.wsFilling") : t("tour.wsReportCta")}
+              </button>
+            ) : planId && isEnteredLike(entryStatus) ? (
+              <button type="button" onClick={openEntryEditor} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 px-5 py-3.5 text-[15px] font-bold text-emerald-700 ring-1 ring-emerald-500/20 transition-colors hover:bg-emerald-500/15">
+                <span aria-hidden>✓</span>{t("tour.wsReportedCta")}{entryStatus !== "entered" ? ` · ${t(`tour.status_${entryStatus}`)}` : ""}
+              </button>
+            ) : planId ? (
+              // alternate / withdrawn / cancelled → aktuellen Stand zeigen; Klick öffnet den Editor.
+              <button type="button" onClick={openEntryEditor} className={`flex w-full items-center justify-center rounded-2xl px-5 py-3 text-[14px] font-bold ring-1 ${entryStatus === "alternate" ? "bg-amber-500/10 text-amber-700 ring-amber-500/20" : "bg-black/[0.04] text-neutral-500 ring-black/10"}`}>
+                {entryWord}
+              </button>
+            ) : null}
+            <div className="flex items-center justify-between gap-3 px-1 text-[12px]">
+              <span className="flex items-center gap-1.5 text-neutral-400"><span aria-hidden>✓</span>{t("tour.wsDetailInSeason")}</span>
+              <button type="button" onClick={onToggle} className="shrink-0 font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>
+            </div>
+          </div>
         )}
 
         {/* Reiter */}
@@ -409,10 +460,11 @@ export default function TournamentDetail({
             </button>
           )}
 
-          {/* 1) Meldefrist — Countdown oder „unbekannt" */}
-          <div className="flex items-center justify-between gap-3 py-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsDetailDeadline")}</span>
-            <DeadlineCountdown tournament={tt} now={nowMs} />
+          {/* 1) Meldefrist — die WICHTIGSTE Angabe des Reiters, daher prominent (größerer
+              Countdown, kräftigeres Label). */}
+          <div className="flex items-center justify-between gap-3 py-3">
+            <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600">{t("tour.wsDetailDeadline")}</span>
+            <DeadlineCountdown tournament={tt} now={nowMs} size="lg" />
           </div>
 
           {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
@@ -471,7 +523,8 @@ export default function TournamentDetail({
         <section>
           <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsHereTitle")}{presence ? ` · ${presence.length}` : ""}</p>
 
-          {/* Eigene Eintragung (Opt-in): zwei Absichten + Kontakt. */}
+          {/* Eigene Eintragung (Opt-in): zwei Absichten + Kontakt, PLUS eine Vorschau in genau
+              der Form, wie andere dich sehen — damit klar ist, was preisgegeben wird. */}
           <div className="mt-2 rounded-2xl border border-matchup/20 bg-matchup/5 p-3">
             <p className="text-[13px] font-bold text-neutral-800">{meListed ? t("tour.wsHereListed") : t("tour.wsHereAsk")}</p>
             <label className="mt-2 flex items-center gap-2 text-[13px] text-neutral-700">
@@ -481,13 +534,24 @@ export default function TournamentDetail({
               <input type="checkbox" checked={pRoom} onChange={(e) => setPRoom(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsSeekRoom")}
             </label>
             <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] placeholder:text-neutral-400 focus:border-black/30 focus:outline-none" />
+
+            {/* Vorschau: so erscheinst du für andere vor Ort. */}
+            <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-2.5 py-2 ring-1 ring-black/5">
+              {avatarEl(myPresence?.profile_image ?? null, viewerName)}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold text-neutral-900">{viewerName || t("tour.fieldMissing")}</span>
+                <span className="block truncate text-[12px] text-neutral-600">{seekText(pPartner, pRoom)}</span>
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-neutral-400">{t("tour.wsHerePreviewNote")}</p>
+
             <div className="mt-2 flex gap-2">
               <button type="button" onClick={joinP} disabled={pBusy} className="flex-1 rounded-full bg-matchup px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{meListed ? t("tour.wsHereUpdate") : t("tour.wsHereJoin")}</button>
               {meListed && <button type="button" onClick={leaveP} disabled={pBusy} className="rounded-full bg-neutral-100 px-3 py-2 text-[12px] font-semibold text-neutral-500 hover:bg-neutral-200 disabled:opacity-50">{t("tour.wsHereLeave")}</button>}
             </div>
           </div>
 
-          {/* Andere vor Ort */}
+          {/* Andere vor Ort — lesbare Aussage mit Bild und Name statt Häkchen. */}
           {presence == null ? (
             <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
           ) : others.length === 0 ? (
@@ -498,13 +562,11 @@ export default function TournamentDetail({
                 const href = r.contact ? contactHref(r.contact) : null;
                 return (
                   <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                    {avatarEl(r.profile_image, r.name)}
                     <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-1.5">
-                        <span className="truncate text-[13px] font-semibold text-neutral-900">{r.name || t("tour.fieldMissing")}</span>
-                        {r.looking && <span className="shrink-0 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600">🎾 {t("tour.wsPartnerBadge")}</span>}
-                        {r.looking_room && <span className="shrink-0 rounded-full bg-matchup/10 px-1.5 py-0.5 text-[9px] font-bold text-matchup">🛏 {t("tour.wsRoomBadge")}</span>}
-                      </span>
-                      <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>
+                      <span className="block truncate text-[13px] font-semibold text-neutral-900">{r.name || t("tour.fieldMissing")}</span>
+                      <span className="block truncate text-[12px] text-neutral-600">{seekText(r.looking, r.looking_room)}</span>
+                      {(r.rank_label || r.nationality) && <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>}
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
                       {canMessage && (r.looking || r.looking_room) && (
