@@ -88,6 +88,7 @@ function mapCategory(category: string | null, recognized: boolean): string {
 /** Ein wertbares Ergebnis (geht an scorePoints) plus Anzeigedaten. */
 export type PointsRow = {
   result: MatchResult; // {category, round, tournamentMonday} für scorePoints
+  tournamentId: string; // uuid des Turniers (für die Belag-Zuordnung in der Auswertung)
   tournamentName: string;
   rawRound: string | null; // Originaltext des round-Felds (für die Anzeige bei Unbekanntem)
   won: boolean | null;
@@ -207,6 +208,7 @@ export async function loadPointsData(userId: string): Promise<PointsData> {
     for (const p of parsed.filter((p) => p.unknown)) {
       rows.push({
         result: { category, round: p.raw ?? "", tournamentMonday: t.monday },
+        tournamentId: tid,
         tournamentName: t.name,
         rawRound: p.raw,
         won: p.won,
@@ -220,6 +222,7 @@ export async function loadPointsData(userId: string): Promise<PointsData> {
       if ("code" in term) {
         rows.push({
           result: { category, round: term.code, tournamentMonday: t.monday },
+          tournamentId: tid,
           tournamentName: t.name,
           rawRound: term.raw,
           won: term.won,

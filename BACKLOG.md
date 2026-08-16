@@ -237,6 +237,11 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Wirkung:** Der Wildcard-Kontakt (`tour_wildcard_contact`) ist je Edition — wer dasselbe Turnier zwei Jahre spielt, trägt den Direktor zweimal ein. Bekannte Einschränkung, keine Nachlässigkeit. Betrifft ebenso „hier habe ich letztes Jahr gut gespielt" und eine spätere Cut-off-Historie (falls je verfügbar).
 **Lösung:** Eine stabile Turnier-Serien-Kennung (z. B. normalisiert aus Ort/Kategorie/Woche oder eine kuratierte `tournament_series`-Tabelle), an die editionsübergreifende Daten hängen können. Ein „aus dem Vorjahr übernehmen"-Kopierschritt wäre die minimale Zwischenlösung.
 
+### MU-039 · Gegnerstärke fehlt für die Leistungsauswertung · M · offen
+**Problem:** Der Bericht nennt „Siegquote gegen Top 500 / gegen 500 bis 1000" als Planungsgrundlage. Das ist heute nicht berechenbar: `web.tour_events.opponent` ist FREITEXT (ein Name), es gibt KEINE Rangangabe zum Gegner. `tour_profiles.ranking` ist der eigene Rang, `player_presence.rank_label` gehört zu Discover — beide sind nicht der Gegner.
+**Wirkung:** Die Leistungsauswertung (`/tour/form`) zeigt Siegquoten nach Belag und Kategorie, aber NICHT nach Gegnerstärke. In der UI ist das benannt („kein Rang zum Gegner erfasst"), nicht geschätzt.
+**Lösung:** Spalte `opponent_rank` (int, nullable) in `web.tour_events` + Erfassung im /app-Kalender (dort werden Matches eingetragen). Dann eine Domain-Funktion, die Siegquoten nach Rang-Bändern (Top 100 / 100–250 / 250–500 / 500–1000 / >1000) bildet. **Eigener Auftrag mit /app-Eingriff** — bewusst kein Nebenschritt der Auswertung.
+
 ## Erledigt
 
 - ✅ MU-033 · Verwaister TourWorkspace-Cluster entfernt: `TourWorkspace`, `useTourWorkspace`, `sections/*` (SeasonList, SeasonOverview, MapPreview, RareStuff, NextDeadline). `SetupPanel` blieb (hängt an `/tour/setup`). Teil des /tour-Umbaus auf `SeasonWorkspace`.
