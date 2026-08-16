@@ -73,7 +73,8 @@
 **Lösung (zwei Wege, Entscheidung offen):**
 - a) Datenstruktur für Punkte je Turnier schaffen und echten Verfall rechnen.
 - b) Bis dahin die Projektion ehrlich kennzeichnen: „ohne Verfall gerechnet, tatsächlicher Rang wird niedriger liegen".
-**Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange die Projektion den Verfall verschweigt.
+**Stand (2026-08-16):** Für /tour ist Weg a) gebaut — `web.tour_result_history` + `src/domain/tour/pointsForecast.ts` (nutzt den bewiesenen Verfall aus `points.ts`) speisen die Rangprognose auf `/tour/points` (Stand + Ausblick +4/+8/+12 Wochen + Verfallsplan, PUNKTE statt Ränge). OFFEN bleibt der /app-Pfad: `projectSeasonPoints`/`CompeteRanking` in `src/lib/tournaments.ts` addiert weiterhin ohne Verfall (liegt unter `src/app/app/**` bzw. wird dort genutzt).
+**Sperre:** `COMPETE_EARLY_ACCESS_OPEN` darf nicht auf `true`, solange die /app-Projektion den Verfall verschweigt.
 
 ### MU-017 · Verwaiste Belegfotos im Bucket `tour-receipts` · M · offen · **Vor Launch**
 **Problem:** Wird eine Ausgabe gelöscht, bleibt die Belegdatei im Bucket `tour-receipts` liegen. Der naheliegende Weg über einen DB-Trigger ist auf Supabase NICHT möglich: direktes Löschen in `storage.objects` wird abgelehnt (`42501`, „Use the Storage API instead") — ein solcher Trigger würde außerdem den gesamten Löschvorgang abbrechen und /tour wie /app beschädigen. Belegt und wieder entfernt bei der Einrichtung des Buckets (`supabase/web_tour_receipts.sql`).

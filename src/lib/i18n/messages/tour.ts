@@ -590,6 +590,26 @@ export const tour = {
     round_QF: "Viertelfinale",
     round_R16: "Achtelfinale",
     round_R32: "1. Runde",
+    round_Q: "Quali",
+    round_Q2: "Quali 2",
+
+    // Rangprognose (/tour/points): Erfassung, Ausblick, Verfallsplan.
+    pointsNoRanksNote: "Die App zeigt Punkte, keine Ränge. Die Umrechnung in einen Rangplatz kennt nur die ATP — dafür fehlt uns die aktuelle Ranglistenverteilung.",
+    pointsForecastTitle: "Ausblick",
+    pointsForecastToday: "heute",
+    pointsForecastWeeks: "+{n} Wochen",
+    pointsForecastFalls: "−{n} fallen weg",
+    pointsForecastStable: "unverändert",
+    pointsDefendTitle: "Muss verteidigt werden",
+    pointsDefendHint: "Diese zählenden Punkte fallen der Reihe nach weg — das Nächste zuerst.",
+    pointsCaptureTitle: "Ergebnis erfassen",
+    pointsCaptureHint: "Turnier, Kategorie, Runde, Datum der Turnierwoche. points.ts rechnet den Verfall automatisch.",
+    pointsFieldTournament: "Turnier",
+    pointsFieldCategory: "Kategorie",
+    pointsFieldRound: "Erreichte Runde",
+    pointsFieldDate: "Datum der Turnierwoche",
+    pointsAdd: "Erfassen",
+    pointsDeleteResult: "Ergebnis löschen",
 
     // Arbeitsfläche (/tour)
     workspaceSeoTitle: "Arbeitsfläche",
@@ -1427,6 +1447,26 @@ export const tour = {
     round_QF: "Quarterfinal",
     round_R16: "Round of 16",
     round_R32: "First round",
+    round_Q: "Qualifying",
+    round_Q2: "Qualifying 2",
+
+    // Rank forecast (/tour/points): capture, outlook, expiry schedule.
+    pointsNoRanksNote: "The app shows points, not ranks. Converting to a ranking position is something only the ATP can do — we don't have the current ranking distribution.",
+    pointsForecastTitle: "Outlook",
+    pointsForecastToday: "today",
+    pointsForecastWeeks: "+{n} weeks",
+    pointsForecastFalls: "−{n} fall off",
+    pointsForecastStable: "unchanged",
+    pointsDefendTitle: "To defend",
+    pointsDefendHint: "These counting points fall off one after another — the nearest first.",
+    pointsCaptureTitle: "Record a result",
+    pointsCaptureHint: "Tournament, category, round, week date. points.ts computes the decay automatically.",
+    pointsFieldTournament: "Tournament",
+    pointsFieldCategory: "Category",
+    pointsFieldRound: "Round reached",
+    pointsFieldDate: "Tournament week date",
+    pointsAdd: "Record",
+    pointsDeleteResult: "Delete result",
 
     // Workspace (/tour)
     workspaceSeoTitle: "Workspace",
