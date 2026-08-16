@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
 import { TOUR_MAIN, EYEBROW, PAGE_H1, PAGE_SUB } from "@/app/tour/components/tourUi";
 import SetupPanel from "../components/setup/SetupPanel";
+import PlayerMasterForm from "./PlayerMasterForm";
 
 // Server Component. Kein "— Matchup"-Suffix — das Root-Layout hängt es an.
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,6 +31,10 @@ export default async function TourSetupPage({ searchParams }: { searchParams: Pr
 
       {/* Auth-Gate + Laden laufen client-seitig. Ohne onExit → Ausstieg per Link auf /tour. */}
       <SetupPanel initialStep={initialStep} />
+
+      {/* Spielerstammdaten — nur die Felder, aus denen die App etwas macht (Ablaufwarnungen,
+          Visa, Besaiter-Info). Eigener client-seitiger Abschnitt unter dem Wizard. */}
+      <PlayerMasterForm />
     </main>
   );
 }

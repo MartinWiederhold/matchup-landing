@@ -14,6 +14,8 @@ import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
 import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
+import { loadPlayerDocs, type PlayerDocs } from "@/lib/tourPlayerMaster";
+import { documentWarnings } from "@/domain/tour/documentWarnings";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { optimizeSeason, type SeasonObjective } from "@/domain/tour/optimizeSeason";
@@ -88,6 +90,8 @@ export default function SeasonWorkspace() {
   const [tours, setTours] = useState<TourTournament[]>([]);
   const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set());
   const [banned, setBanned] = useState<Set<string>>(new Set());
+  // Dokument-Stammdaten (Pass-/Versicherungs-Ablauf) für die Ablaufwarnungen im Fristen-Block.
+  const [docs, setDocs] = useState<PlayerDocs | null>(null);
   // Entry-Status je Turnier (Planzeile) + Beobachtungs-Verlauf je Planzeile — für die
   // Status-Pills + Trend in der Saisonliste und den Editor im Detail.
   const [planByTour, setPlanByTour] = useState<Map<string, TourSeasonPlanEntry>>(new Map());
@@ -210,8 +214,8 @@ export default function SeasonWorkspace() {
     let alive = true;
     (async () => {
       try {
-        const [p, ts, ids, cr, planRows, evs] = await Promise.all([
-          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(),
+        const [p, ts, ids, cr, planRows, evs, pdocs] = await Promise.all([
+          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id),
         ]);
         if (!alive) return;
         setProfile(p);
@@ -220,6 +224,7 @@ export default function SeasonWorkspace() {
         setPlanByTour(new Map(planRows.map((r) => [r.tournament_id, r])));
         setEventsByPlan(groupEventsByPlan(evs));
         setRates(cr);
+        setDocs(pdocs);
         setRankingInput(p.ranking != null ? String(p.ranking) : "");
         setBudget(p.seasonBudget != null ? String(p.seasonBudget) : "");
         setStatus("ready");
@@ -385,6 +390,23 @@ export default function SeasonWorkspace() {
     }
     return best?.tt ?? null;
   }, [seasonOrdered, nowMs]);
+
+  // Dokument-Ablaufwarnungen (Pass/Versicherung) — gehören in die Dringlichkeits-Klasse der
+  // nächsten Frist. Die nächste anstehende Reise = das nächste Fristen-Turnier (Zielland +
+  // Turniermontag als Einreise-Näherung) speist die 6-Monats-FAUSTREGEL.
+  const docWarnings = useMemo(() => {
+    if (!docs) return [];
+    const nextTrip = nextDeadline ? { destination: nextDeadline.country, entryDate: nextDeadline.tournament_monday } : null;
+    return documentWarnings({
+      passports: [
+        { country: docs.passport_country, expiry: docs.passport_expiry },
+        { country: docs.passport2_country, expiry: docs.passport2_expiry },
+      ],
+      insurance: { expiry: docs.insurance_expiry, international: docs.insurance_international },
+      nextTrip,
+      asOf: new Date(nowMs).toISOString().slice(0, 10),
+    });
+  }, [docs, nextDeadline, nowMs]);
 
   // Erwartete Punkte der geplanten Saison unter der Annahme-Runde (nur Objektiv „Punkte").
   // anyPoints=false heißt: mit dieser Runde bringt kein Turnier Punkte (z. B. R32/1. Runde).
@@ -964,6 +986,20 @@ export default function SeasonWorkspace() {
           </button>
         ) : (
           <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsNextDeadlineNone")}</p>
+        )}
+
+        {/* Dokument-Ablaufwarnungen — gleiche Dringlichkeitsklasse wie die Frist. Ein abgelaufener
+            Pass ist ein Error (rot), „läuft bald ab"/„zu kurz" eine Warnung (bernstein). Die
+            6-Monats-Regel ist eine FAUSTREGEL und wird als solche gekennzeichnet. */}
+        {docWarnings.length > 0 && (
+          <ul className="mt-2 space-y-1.5">
+            {docWarnings.map((w, i) => (
+              <li key={`${w.kind}-${i}`} className={`rounded-xl px-3 py-2 text-[12px] leading-snug ring-1 ${w.severity === "error" ? "bg-red-50 text-red-700 ring-red-200" : "bg-amber-50 text-amber-800 ring-amber-200"}`}>
+                <span className="font-semibold">{t(`tour.docWarn_${w.kind}`, { date: w.date ?? "", days: w.days ?? 0, dest: w.destination ? catName(w.destination) : "" })}</span>
+                {w.ruleOfThumb && <span className="mt-0.5 block text-[11px] font-normal opacity-80">{t("tour.docWarnRuleOfThumb")}</span>}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

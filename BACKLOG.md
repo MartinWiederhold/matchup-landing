@@ -242,6 +242,11 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Wirkung:** Die Leistungsauswertung (`/tour/form`) zeigt Siegquoten nach Belag und Kategorie, aber NICHT nach Gegnerstärke. In der UI ist das benannt („kein Rang zum Gegner erfasst"), nicht geschätzt.
 **Lösung:** Spalte `opponent_rank` (int, nullable) in `web.tour_events` + Erfassung im /app-Kalender (dort werden Matches eingetragen). Dann eine Domain-Funktion, die Siegquoten nach Rang-Bändern (Top 100 / 100–250 / 250–500 / 500–1000 / >1000) bildet. **Eigener Auftrag mit /app-Eingriff** — bewusst kein Nebenschritt der Auswertung.
 
+### MU-040 · Team-Leserecht auf Stammdaten (Besaiter/Coach) · S · offen
+**Problem:** Die Spielerstammdaten liegen nach Empfindlichkeit getrennt: `web.tour_equipment` (Ausrüstung) und `web.tour_emergency_contact` (Notfallkontakt) sind eigene Tabellen — HEUTE beide owner-only. Der Besaiter dürfte die Ausrüstung sehen, der Coach womöglich den Notfallkontakt.
+**Wirkung:** Ein Besaiter vor Ort muss die Ausrüstung heute mündlich erfragen; der Coach hat den Notfallkontakt nicht.
+**Lösung:** Je Tabelle eine rollenscharfe Read-Policy über `web.tour_team` (Muster wie die Finanz-Agent-Policy MU-026): Ausrüstung → Rolle `stringer` (die es in tour_team NOCH NICHT gibt → zuerst Rolle + Einladungs-Flow im /app-Team ergänzen), Notfallkontakt → Rolle `coach`. Der Notfallkontakt sind fremde Personendaten (MU-035) → das Freigeben bleibt eine BEWUSSTE Entscheidung des Spielers, kein Default. Die Tabellenstruktur ist bereits darauf ausgelegt (je eine Ein-Policy-Änderung).
+
 ## Erledigt
 
 - ✅ MU-033 · Verwaister TourWorkspace-Cluster entfernt: `TourWorkspace`, `useTourWorkspace`, `sections/*` (SeasonList, SeasonOverview, MapPreview, RareStuff, NextDeadline). `SetupPanel` blieb (hängt an `/tour/setup`). Teil des /tour-Umbaus auf `SeasonWorkspace`.
