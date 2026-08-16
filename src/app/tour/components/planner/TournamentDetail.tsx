@@ -6,7 +6,8 @@ import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID
 import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
-import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON } from "@/lib/tourPresenceDemo";
+import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, type DemoPlayer } from "@/lib/tourPresenceDemo";
+import DemoPlayerSheet from "./DemoPlayerSheet";
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
@@ -106,6 +107,8 @@ export default function TournamentDetail({
   const [pRoom, setPRoom] = useState(false);
   const [pBusy, setPBusy] = useState(false);
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
+  // Gewählter Beispiel-Spieler → simulierte Profil-/Chat-Vorschau (nichts wird gespeichert).
+  const [demoSelected, setDemoSelected] = useState<DemoPlayer | null>(null);
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
 
   // ── Entry-Status-Editor (nur in der Saison). Anfangswerte aus den Props; die Komponente
@@ -593,8 +596,10 @@ export default function TournamentDetail({
                 <span aria-hidden>ⓘ</span>{t("tour.wsHereDemoBanner")}
               </p>
               <div className="mt-2 space-y-1.5">
-                {demoPresenceFor(tt.id).map((d) => (
-                  <div key={d.id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                {demoPresenceFor(tt.id, tt.category).map((d) => (
+                  // Klick öffnet die simulierte Profil-/Chat-Vorschau. KEIN Anschreiben-/Kontakt-
+                  // Knopf (würde an may_match scheitern) — die Vorschau ersetzt ihn.
+                  <button key={d.id} type="button" onClick={() => setDemoSelected(d)} className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 text-left transition-colors hover:bg-black/[0.02]">
                     {avatarEl(d.image, d.name)}
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
@@ -604,8 +609,8 @@ export default function TournamentDetail({
                       <span className="block truncate text-[12px] text-neutral-600">{seekText(d.looking, d.lookingRoom)}</span>
                       <span className="block truncate text-[11px] text-neutral-400">{[d.rankLabel, d.nationality].filter(Boolean).join(" · ")}</span>
                     </span>
-                    {/* Bewusst KEIN Anschreiben-/Kontakt-Knopf (würde an may_match scheitern). */}
-                  </div>
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
                 ))}
               </div>
             </div>
@@ -716,6 +721,11 @@ export default function TournamentDetail({
           otherName={chatWith.name ?? ""}
           onClose={() => setChatWith(null)}
         />
+      )}
+
+      {/* Simulierte Vorschau eines Beispiel-Spielers (Profil + Chat) — nichts wird gespeichert. */}
+      {demoSelected && (
+        <DemoPlayerSheet player={demoSelected} city={tt.city || countryName} onClose={() => setDemoSelected(null)} />
       )}
     </div>
   );
