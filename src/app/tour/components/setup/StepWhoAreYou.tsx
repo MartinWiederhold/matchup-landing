@@ -10,18 +10,15 @@ const inputCls =
   "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
 
 /**
- * Schritt 1 „Wer bist du". Vorbefüllt aus dem geladenen Stand (Geschlecht/Ort aus
- * profiles, Nationalität/Ranking aus tour_profiles). Es wird NUR das gespeichert, was
- * sich gegenüber dem Ausgangswert geändert hat (spaltengenau in profiles).
- * Ranking ist optional; Geschlecht kennt nur die von profiles erlaubten Werte.
+ * Schritt 1 „Wer bist du". Name, Bild und Wohnort kommen aus /app (profiles) und werden als
+ * ÜBERNOMMENER Identitäts-Block angezeigt — keine Eingabe (Änderung erfolgt in /app). Eingabe
+ * bleibt NUR, was Matchup Tour zusätzlich braucht: Nationalität (für Visa) und Ranking. Es
+ * wird spaltengenau nur das gespeichert, was sich geändert hat (tour_profiles).
  */
 export default function StepWhoAreYou({ state, userId, onSaved }: { state: SetupState; userId: string; onSaved: () => void }) {
   const t = useT();
   const { locale } = useLocale();
 
-  const [gender, setGender] = useState(state.gender ?? "");
-  const [city, setCity] = useState(state.city ?? "");
-  const [country, setCountry] = useState(state.country ?? "");
   const [nationality, setNationality] = useState(state.passports[0] ?? "");
   const [ranking, setRanking] = useState(state.ranking != null ? String(state.ranking) : "");
   const [busy, setBusy] = useState(false);
@@ -41,13 +38,15 @@ export default function StepWhoAreYou({ state, userId, onSaved }: { state: Setup
     return [...set].sort((a, b) => countryName(a).localeCompare(countryName(b), locale));
   }, [state.country, state.passports, locale]);
 
+  // Übernommene Identität (aus /app). Ländername lesbar (country_name) oder aus dem Code.
+  const displayName = state.displayName || state.firstName;
+  const landName = state.countryName || (state.country ? countryName(state.country) : null);
+  const homeLine = [state.city, landName].filter(Boolean).join(", ");
+
   async function save() {
     if (busy) return;
-    // Nur geänderte Felder in den patch — sonst nichts schreiben.
+    // Nur die tour-spezifischen Felder (Nationalität/Ranking) — Identität bleibt unangetastet.
     const patch: Parameters<typeof saveWhoAmI>[1] = {};
-    if (gender !== (state.gender ?? "")) patch.gender = gender || null;
-    if (city.trim() !== (state.city ?? "")) patch.city = city.trim() || null;
-    if (country !== (state.country ?? "")) patch.country = country || null;
     const nat = nationality ? [nationality] : [];
     if (JSON.stringify(nat) !== JSON.stringify(state.passports)) patch.passports = nat;
     const rankNum = ranking.trim() === "" ? null : parseInt(ranking.trim(), 10);
@@ -72,29 +71,25 @@ export default function StepWhoAreYou({ state, userId, onSaved }: { state: Setup
       <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.setupWhoTitle")}</h2>
       <p className="mt-2 text-sm text-neutral-500">{t("tour.setupWhoIntro")}</p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.setupGender")}</span>
-          <select value={gender} onChange={(e) => { setGender(e.target.value); setStatus("idle"); }} className={inputCls}>
-            <option value="">—</option>
-            <option value="male">{t("tour.setupGenderMale")}</option>
-            <option value="female">{t("tour.setupGenderFemale")}</option>
-          </select>
-        </label>
+      {/* Identität aus /app — übernommen, keine Eingabe. */}
+      <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-black/5">
+        {state.profileImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={state.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-matchup/10 object-cover" />
+        ) : (
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(displayName?.[0] ?? "?").toUpperCase()}</span>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-bold text-neutral-900">{displayName || t("tour.fieldMissing")}</p>
+          <p className="truncate text-[12px] text-neutral-500">{homeLine || t("tour.setupHomeMissing")}</p>
+        </div>
+        <span className="ml-auto shrink-0 rounded-full bg-black/[0.04] px-2.5 py-1 text-[11px] font-semibold text-neutral-500">{t("tour.setupFromApp")}</span>
+      </div>
+      <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.setupFromAppNote")}</p>
 
-        <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.setupCity")}</span>
-          <input type="text" value={city} onChange={(e) => { setCity(e.target.value); setStatus("idle"); }} className={inputCls} />
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.setupCountry")}</span>
-          <select value={country} onChange={(e) => { setCountry(e.target.value); setStatus("idle"); }} className={inputCls}>
-            <option value="">—</option>
-            {countryOptions.map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
-          </select>
-        </label>
-
+      {/* Was Matchup Tour zusätzlich braucht — die einzigen Eingaben hier. */}
+      <p className="mt-5 text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.setupTourNeeds")}</p>
+      <div className="mt-2 grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.setupNationality")}</span>
           <select value={nationality} onChange={(e) => { setNationality(e.target.value); setStatus("idle"); }} className={inputCls}>
@@ -103,11 +98,11 @@ export default function StepWhoAreYou({ state, userId, onSaved }: { state: Setup
           </select>
         </label>
 
-        <label className="block sm:col-span-2">
+        <label className="block">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">
             {t("tour.setupRanking")} <span className="font-normal text-neutral-400">· {t("tour.setupOptional")}</span>
           </span>
-          <input type="text" inputMode="numeric" value={ranking} onChange={(e) => { setRanking(e.target.value); setStatus("idle"); }} placeholder="—" className={`${inputCls} sm:max-w-[12rem]`} />
+          <input type="text" inputMode="numeric" value={ranking} onChange={(e) => { setRanking(e.target.value); setStatus("idle"); }} placeholder="—" className={inputCls} />
         </label>
       </div>
 

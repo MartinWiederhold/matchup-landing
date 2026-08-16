@@ -1249,7 +1249,13 @@ export default function SeasonWorkspace() {
   // Profil-Chip oben rechts über der Karte (Desktop + Mobile = obere Leiste).
   const chip = profile && (
     <button type="button" onClick={() => setProfileOpen(true)} className="absolute right-3 top-3 z-[70] flex max-w-[70%] items-center gap-2 rounded-full bg-white/95 py-1.5 pl-1.5 pr-3 shadow-lg ring-1 ring-black/10 backdrop-blur hover:bg-white">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
+      {profile.profileImage ? (
+        // Profilbild aus /app (profiles.profile_image) statt Initialen.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={profile.profileImage} alt="" loading="lazy" decoding="async" className="h-8 w-8 shrink-0 rounded-full bg-matchup/10 object-cover" />
+      ) : (
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
+      )}
       <span className="min-w-0 text-left leading-tight">
         <span className="block truncate text-[13px] font-bold text-neutral-900">{profile.firstName || t("tour.plStep1")}</span>
         <span className="block truncate text-[11px] text-neutral-500">

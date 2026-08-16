@@ -16,8 +16,11 @@ import type { CostParams, Money } from "@/domain/tour/costs";
 // ── Schritt 1: Profil (Wohnort-Koordinaten + Anzeige) ───────────────────────
 export type PlannerProfile = {
   firstName: string | null;
+  displayName: string | null;   // profiles.display_name (voller Anzeigename, von /app)
   city: string | null;
   country: string | null;    // Heimatland (profiles.country)
+  countryName: string | null;   // profiles.country_name (lesbarer Ländername, von /app)
+  profileImage: string | null;  // profiles.profile_image (öffentliche Avatar-URL, von /app)
   lat: number | null;        // Wohnort-Koordinaten (profiles, aus Onboarding-Geocoding)
   lng: number | null;
   age: number | null;        // profiles.age (rohes Geburtsdatum wird NICHT gespeichert)
@@ -26,19 +29,23 @@ export type PlannerProfile = {
   seasonBudget: number | null; // tour_profiles.season_budget
 };
 
-/** Lädt die für den Planer nötigen Profilfelder — benannte Spalten, kein select *. */
+/** Lädt die für den Planer nötigen Profilfelder — benannte Spalten, kein select *.
+ *  Name/Bild/Land kommen aus /app (profiles) und werden nur GELESEN, nie in /tour geschrieben. */
 export async function loadPlannerProfile(userId: string): Promise<PlannerProfile> {
   // Eigene Koordinaten liegen in web.profiles_private (Sicherheitsaudit 2026-08),
   // nicht mehr in profiles. Eigene Zeile → RLS erlaubt das Lesen.
   const [{ data: p }, { data: tp }, { data: pp }] = await Promise.all([
-    supabase.from("profiles").select("first_name, city, country, age").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("first_name, display_name, city, country, country_name, profile_image, age").eq("id", userId).maybeSingle(),
     supabase.from("tour_profiles").select("ranking, passports, season_budget").eq("user_id", userId).maybeSingle(),
     supabase.from("profiles_private").select("latitude, longitude").eq("user_id", userId).maybeSingle(),
   ]);
   return {
     firstName: p?.first_name ?? null,
+    displayName: p?.display_name ?? null,
     city: p?.city ?? null,
     country: p?.country ?? null,
+    countryName: p?.country_name ?? null,
+    profileImage: p?.profile_image ?? null,
     lat: pp?.latitude ?? null,
     lng: pp?.longitude ?? null,
     age: p?.age ?? null,

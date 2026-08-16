@@ -57,8 +57,14 @@ export function presetFromProfile(
 // ── Einrichtungsstand ────────────────────────────────────────────────────────
 export type SetupState = {
   gender: string | null;
+  // Identität aus /app (profiles) — nur gelesen, in /tour NICHT bearbeitet.
+  firstName: string | null;
+  displayName: string | null;
   city: string | null;
-  country: string | null; // profiles.country = Heimatland
+  country: string | null; // profiles.country = Heimatland (ISO)
+  countryName: string | null; // profiles.country_name (lesbar)
+  profileImage: string | null; // profiles.profile_image (Avatar-URL)
+  hasCoords: boolean; // Wohnort-Koordinaten vorhanden (profiles_private)
   ranking: number | null;
   passports: string[];
   seasonBudget: number | null;
@@ -71,36 +77,67 @@ export type SetupState = {
   complete: boolean;
 };
 
-/** Nur die benötigten Heimatfelder aus profiles (benannte Spalten, kein select *). */
-export async function loadProfileBasics(
-  userId: string,
-): Promise<{ gender: string | null; city: string | null; country: string | null }> {
-  const { data, error } = await supabase.from("profiles").select("gender, city, country").eq("id", userId).maybeSingle();
+type ProfileBasics = {
+  gender: string | null;
+  firstName: string | null;
+  displayName: string | null;
+  city: string | null;
+  country: string | null;
+  countryName: string | null;
+  profileImage: string | null;
+};
+
+/** Nur die benötigten Heimat-/Identitätsfelder aus profiles (benannte Spalten, kein select *). */
+export async function loadProfileBasics(userId: string): Promise<ProfileBasics> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("gender, first_name, display_name, city, country, country_name, profile_image")
+    .eq("id", userId)
+    .maybeSingle();
   if (error) throw error;
-  return { gender: data?.gender ?? null, city: data?.city ?? null, country: data?.country ?? null };
+  return {
+    gender: data?.gender ?? null,
+    firstName: data?.first_name ?? null,
+    displayName: data?.display_name ?? null,
+    city: data?.city ?? null,
+    country: data?.country ?? null,
+    countryName: data?.country_name ?? null,
+    profileImage: data?.profile_image ?? null,
+  };
 }
 
 /** Berechnet die Schritt-Flags aus den vorhandenen Tabellen. */
 export async function loadSetupState(userId: string): Promise<SetupState> {
-  const [basics, profile, rates, planIds] = await Promise.all([
+  const [basics, profile, rates, planIds, { data: pp }] = await Promise.all([
     loadProfileBasics(userId),
     loadTourProfile(userId),
     loadCostRates(),
     loadSeasonTournamentIds(),
+    // Wohnort-Koordinaten liegen owner-only in profiles_private (Sicherheitsaudit 2026-08).
+    supabase.from("profiles_private").select("latitude, longitude").eq("user_id", userId).maybeSingle(),
   ]);
 
   const seasonBudget = profile?.season_budget ?? null;
   const hasRates = rates != null;
   const entriesCount = planIds.size;
+  const hasCoords = pp?.latitude != null && pp?.longitude != null;
 
-  const step1Done = !!basics.gender && !!basics.city;
+  // Schritt 1 ist erledigt, wenn Stadt UND Koordinaten aus /app kommen — dann muss der
+  // Nutzer den „Wer bist du?"-Schritt nicht durchlaufen (das Geschlecht ist KEINE Bedingung
+  // mehr; Ranking/Pässe sind tour-spezifisch und werden bei Bedarf einzeln nachgetragen).
+  const step1Done = !!basics.city && hasCoords;
   const step2Done = seasonBudget != null && hasRates;
   const step3Done = entriesCount > 0;
 
   return {
     gender: basics.gender,
+    firstName: basics.firstName,
+    displayName: basics.displayName,
     city: basics.city,
     country: basics.country, // rohes Heimatland (profiles.country); Pass-Rückfall macht der Vorfilter
+    countryName: basics.countryName,
+    profileImage: basics.profileImage,
+    hasCoords,
     ranking: profile?.ranking ?? null,
     passports: profile?.passports ?? [],
     seasonBudget,
