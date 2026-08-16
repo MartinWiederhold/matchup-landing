@@ -217,6 +217,11 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Bestand in den Turnierländern aufbauen, bevor die Oberfläche gebaut wird — Besaiter und Physios in Tunesien, der Türkei, Ägypten, Italien und Portugal. Die technische Seite ist vorbereitet: `service_providers` hat vollständige Koordinaten (77/77), `src/lib/services.ts` ist UI-unabhängig, eine Umkreissuche wäre ohne Schemaänderung möglich.
 **Entscheidung:** Vorerst **NICHT bauen**. Ein Element, das in 85% der Fälle nichts zeigt, wirkt wie ein Fehler — dasselbe Muster wie die Karte ohne Koordinaten (MU-029).
 
+### MU-041 · Beispiel-Spieler in „Vor Ort" vor dem Start mit echten Nutzern abschalten · S · offen
+**Kontext:** Der „Vor Ort"-Reiter zeigt fünf Beispiel-Spieler je Turnier (`src/lib/tourPresenceDemo.ts`) — zum Vorführen, damit die Ansicht nicht leer ist. Sie stehen NICHT in `player_presence` (reine Anzeigedaten), tragen einen Hinweis über der Liste und eine „Beispiel"-Pille, und haben keinen Anschreiben-Knopf.
+**Wirkung:** Sobald echte Spieler sich eintragen, stünden erfundene neben echten Einträgen — auch gekennzeichnet ist das unschön und kann verwirren.
+**Lösung:** Vor dem Start mit echten Nutzern in Vercel `NEXT_PUBLIC_TOUR_PRESENCE_DEMO=off` setzen und neu deployen (Vorgabe ist AN). Danach verschwinden die Beispiele; die lokalen Pexels-Bilder in `/public/seed/tour` können bleiben oder mit entfernt werden. Gehört zum Launch-Cleanup neben `COMPETE_EARLY_ACCESS_OPEN=false` und dem Löschen des Prod-Testkontos.
+
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
