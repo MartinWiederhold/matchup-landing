@@ -22,6 +22,8 @@ import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements"
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
 import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
+import { loadTournamentNote, saveTournamentNote } from "@/lib/tourTournamentNote";
+import { loadWildcardContacts } from "@/lib/tourWildcards";
 import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates, TourEntryStatus, TourEntryEvent } from "@/lib/types";
 
@@ -130,6 +132,48 @@ export default function TournamentDetail({
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
   // Gewählter Beispiel-Spieler → simulierte Profil-/Chat-Vorschau (nichts wird gespeichert).
   const [demoSelected, setDemoSelected] = useState<DemoPlayer | null>(null);
+
+  // ── Fact-Sheet-Notizen des Spielers (eigene Angaben, owner-only) + Direktor-Verweis.
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [nFee, setNFee] = useState("");
+  const [nCurrency, setNCurrency] = useState("EUR");
+  const [nCourts, setNCourts] = useState("");
+  const [nConditions, setNConditions] = useState("");
+  const [nHotel, setNHotel] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteLoaded, setNoteLoaded] = useState(false); // true, sobald geladen (für „leer vs. befüllt")
+  const [directorName, setDirectorName] = useState<string | null>(null); // read-only aus tour_wildcard_contact
+  useEffect(() => {
+    let alive = true;
+    setNoteLoaded(false);
+    Promise.all([loadTournamentNote(viewerId, tt.id), loadWildcardContacts(viewerId)]).then(([n, wcs]) => {
+      if (!alive) return;
+      setNFee(n?.fee_amount != null ? String(n.fee_amount) : "");
+      setNCurrency(n?.fee_currency || "EUR");
+      setNCourts(n?.training_courts ?? "");
+      setNConditions(n?.conditions ?? "");
+      setNHotel(n?.official_hotel ?? "");
+      setDirectorName(wcs.find((w) => w.tournament_id === tt.id)?.director_name ?? null);
+      setNoteLoaded(true);
+    }).catch(() => { if (alive) setNoteLoaded(true); });
+    return () => { alive = false; };
+  }, [tt.id, viewerId]);
+  const saveNote = async () => {
+    setNoteSaving(true);
+    try {
+      const feeNum = nFee.trim() === "" ? null : Number(nFee.replace(",", "."));
+      const nn = (s: string) => (s.trim() === "" ? null : s.trim());
+      await saveTournamentNote(viewerId, tt.id, {
+        fee_amount: feeNum != null && Number.isFinite(feeNum) ? feeNum : null,
+        fee_currency: nn(nCurrency)?.toUpperCase().slice(0, 3) ?? null,
+        training_courts: nn(nCourts), conditions: nn(nConditions), official_hotel: nn(nHotel),
+      });
+      setNoteOpen(false);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+  const hasNote = !!(nFee.trim() || nCourts.trim() || nConditions.trim() || nHotel.trim());
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
 
   // ── Entry-Status-Editor (nur in der Saison). Anfangswerte aus den Props; die Komponente
@@ -608,6 +652,52 @@ export default function TournamentDetail({
               <InfoHint label={t("tour.wsEntryInfo")}>{entryHint}</InfoHint>
             </span>
             <a href={portalUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[13px] font-semibold text-matchup hover:underline">{portalLabel} →</a>
+          </div>
+
+          {/* ── MEINE NOTIZEN (Fact Sheet) — EIGENE Angaben des Spielers, klar getrennt von den
+              Bestandsdaten darüber (Selbstauskunft, keine amtlichen Daten). ─────────────────── */}
+          <div className="py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovNotesTitle")}</span>
+              <button type="button" onClick={() => setNoteOpen((o) => !o)} className="text-[11px] font-semibold text-matchup hover:underline">{hasNote ? t("tour.ovNotesEdit") : t("tour.ovNotesAdd")}</button>
+            </div>
+            <p className="mt-0.5 text-[11px] text-neutral-400">{t("tour.ovNotesHint")}</p>
+
+            {/* Anzeige: nur befüllte Felder, gestrichelte Karte + „Eigene Notiz"-Merkmal. */}
+            {!noteOpen && hasNote && (
+              <div className="mt-2 space-y-1 rounded-xl border border-dashed border-black/15 bg-black/[0.015] p-2.5">
+                <span className="inline-flex items-center rounded-full bg-black/[0.05] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neutral-500">{t("tour.ovNotesBadge")}</span>
+                {nFee.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteFee")}: </span>{nFee} {nCurrency}</p>}
+                {nCourts.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteCourts")}: </span>{nCourts}</p>}
+                {nConditions.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteConditions")}: </span>{nConditions}</p>}
+                {nHotel.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteHotel")}: </span>{nHotel}</p>}
+              </div>
+            )}
+            {!noteOpen && !hasNote && noteLoaded && <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovNotesEmpty")}</p>}
+
+            {/* Turnierdirektor read-only aus tour_wildcard_contact (getrennt gepflegt). */}
+            {directorName && (
+              <p className="mt-2 text-[12px] text-neutral-500">{t("tour.ovNoteDirector")}: <span className="font-semibold text-neutral-700">{directorName}</span> · <a href="/tour/wildcards" className="font-semibold text-matchup hover:underline">{t("tour.wildcardsOpen")} →</a></p>
+            )}
+
+            {/* Bearbeiten — kurzes Formular. */}
+            {noteOpen && (
+              <div className="mt-2 space-y-2 rounded-xl border border-black/10 bg-black/[0.02] p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="col-span-2 block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteFee")}</span>
+                    <input value={nFee} onChange={(e) => setNFee(e.target.value)} inputMode="decimal" placeholder="40" className={selCls} /></label>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteCurrency")}</span>
+                    <input value={nCurrency} onChange={(e) => setNCurrency(e.target.value.toUpperCase().slice(0, 3))} className={selCls} /></label>
+                </div>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteCourts")}</span>
+                  <input value={nCourts} onChange={(e) => setNCourts(e.target.value)} placeholder={t("tour.ovNoteCourtsPh")} className={selCls} /></label>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteConditions")}</span>
+                  <input value={nConditions} onChange={(e) => setNConditions(e.target.value)} placeholder={t("tour.ovNoteConditionsPh")} className={selCls} /></label>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteHotel")}</span>
+                  <input value={nHotel} onChange={(e) => setNHotel(e.target.value)} className={selCls} /></label>
+                <button type="button" onClick={saveNote} disabled={noteSaving} className="w-full rounded-full bg-matchup py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{noteSaving ? t("tour.wsFilling") : t("tour.ovNotesSave")}</button>
+              </div>
+            )}
           </div>
 
         </div>
