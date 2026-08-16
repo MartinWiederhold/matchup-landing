@@ -1060,6 +1060,7 @@ export default function SeasonWorkspace() {
               <span className="flex shrink-0 items-center gap-2.5">
                 <Link href="/tour/pipeline" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.pipelineOpen")} →</Link>
                 <Link href="/tour/finance" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.financeOpen")} →</Link>
+                <Link href="/tour/wildcards" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.wildcardsOpen")} →</Link>
               </span>
             </div>
             {seasonOrdered.length === 0 ? (

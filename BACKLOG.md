@@ -232,6 +232,11 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Wirkung:** Kosmetisch. Das dokumentierte Generali-Open-Problem.
 **Lösung:** Logos kuratiert hinterlegen oder sauberer Fallback (Landesflagge oder Monogramm) statt Favicon-Rateversuch.
 
+### MU-038 · Jahresübergreifende Turnier-Identität fehlt · M · offen
+**Problem:** `web.tour_tournaments` führt einen Eintrag je AUSGABE und Jahr (`source_ref` ist jahresspezifisch, z. B. `itf:m-itf-tun-2025-032`); es gibt KEINE Kennung, die dasselbe Turnier über die Jahre verbindet. Alles, was pro Turnier hängt, hängt damit am Turnier 2026, nicht am Turnier überhaupt.
+**Wirkung:** Der Wildcard-Kontakt (`tour_wildcard_contact`) ist je Edition — wer dasselbe Turnier zwei Jahre spielt, trägt den Direktor zweimal ein. Bekannte Einschränkung, keine Nachlässigkeit. Betrifft ebenso „hier habe ich letztes Jahr gut gespielt" und eine spätere Cut-off-Historie (falls je verfügbar).
+**Lösung:** Eine stabile Turnier-Serien-Kennung (z. B. normalisiert aus Ort/Kategorie/Woche oder eine kuratierte `tournament_series`-Tabelle), an die editionsübergreifende Daten hängen können. Ein „aus dem Vorjahr übernehmen"-Kopierschritt wäre die minimale Zwischenlösung.
+
 ## Erledigt
 
 - ✅ MU-033 · Verwaister TourWorkspace-Cluster entfernt: `TourWorkspace`, `useTourWorkspace`, `sections/*` (SeasonList, SeasonOverview, MapPreview, RareStuff, NextDeadline). `SetupPanel` blieb (hängt an `/tour/setup`). Teil des /tour-Umbaus auf `SeasonWorkspace`.
