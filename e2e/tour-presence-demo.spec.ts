@@ -47,7 +47,7 @@ test("/tour Vor Ort: Beispiel-Spieler anklickbar — Profil + simuliertes Verbin
   // Punkt 2 — die Angaben sind reicher: die Zeile eines Beispiel-Eintrags trägt ein Detail
   // (Belag/Zimmer/Niveau/Zeitraum), nicht nur „Sucht Unterkunft".
   const firstDemoRow = detail.locator("button").filter({ hasText: /Beispiel|Example/ }).first();
-  await expect(firstDemoRow, "reichere Angaben in der Zeile").toContainText(/Sand|Hartplatz|Clay|Hard|Zimmer|Wohnung|Room|Apartment|ITF|ambition|locker|casual|rank|gerankt|\d{2}\.\d{2}\./);
+  await expect(firstDemoRow, "reichere Angaben in der Zeile").toContainText(/\d{1,2}:\d{2}|vormittags|nachmittags|Zimmer|Wohnung|Room|Apartment|\d{2}\.\d{2}\./);
 
   // Punkt 1 — der Ansichts-Filter wirkt (getrennt vom eigenen Opt-in).
   const badges = () => detail.getByText(/^Beispiel$|^Example$/).count();

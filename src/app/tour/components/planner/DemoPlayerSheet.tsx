@@ -20,7 +20,7 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
   // Lesbare Detailwerte (Niveau/Tage/Belag bzw. Zeitraum/Ort/Kosten/Art).
   const fmtShort = (iso: string | null) => (iso ? new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z")) : "");
   const period = player.roomFrom && player.roomTo ? `${fmtShort(player.roomFrom)}–${fmtShort(player.roomTo)}` : null;
-  const daysText = player.partnerDays.length ? player.partnerDays.map((d) => t(`tour.day_${d}`)).join("/") : null;
+  const whenText = player.partnerDays.length ? player.partnerDays.join(" · ") : null; // Freitext „Wann"
 
   // Absicht als lesbare Aussage (wie in der Liste).
   const intentParts: string[] = [];
@@ -76,10 +76,8 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
                 {field(t("tour.demoFieldRank"), player.rankLabel)}
                 {field(t("tour.demoFieldAge"), t("tour.demoAgeYears", { n: player.age }))}
                 {field(t("tour.demoFieldHome"), player.homeCity)}
-                {/* Trainingspartner-Details */}
-                {player.looking && player.partnerLevel && field(t("tour.wsPartnerLevel"), t(`tour.level_${player.partnerLevel}`))}
-                {player.looking && daysText && field(t("tour.wsPartnerDays"), daysText)}
-                {player.looking && player.surface && field(t("tour.wsPartnerSurface"), t(`tour.surface_${player.surface}`))}
+                {/* Trainingspartner-Detail: nur WANN (Belag kommt vom Turnier, Niveau steht im Rang). */}
+                {player.looking && whenText && field(t("tour.wsPartnerWhen"), whenText)}
                 {/* Unterkunft-Details */}
                 {player.lookingRoom && period && field(t("tour.demoFieldPeriod"), period)}
                 {player.lookingRoom && player.roomArea && field(t("tour.wsRoomArea"), player.roomArea)}
