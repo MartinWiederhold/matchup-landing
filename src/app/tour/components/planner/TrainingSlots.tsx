@@ -7,6 +7,7 @@ import {
   loadTournamentSlots, loadSlotPeople, addSlot, removeSlot, respondToSlot, removeResponse, setResponseStatus,
   type TrainingSlot, type SlotResponse, type SlotPerson,
 } from "@/lib/tourTrainingSlots";
+import TourChatPanel from "./TourChatPanel";
 
 // getUTCDay()-Index → Wochentag-Code (für die i18n-Kürzel Mo…So).
 const WD = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -25,6 +26,8 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
   const [responses, setResponses] = useState<SlotResponse[]>([]);
   const [people, setPeople] = useState<Map<string, SlotPerson>>(new Map());
   const [busy, setBusy] = useState(false);
+  // Nach einer Zusage: Chat auf Knopfdruck öffnen (nicht automatisch) — may_match-Zweig 4 trägt.
+  const [chatWith, setChatWith] = useState<{ id: string; name: string } | null>(null);
   const today = new Date(nowMs).toISOString().slice(0, 10);
 
   const reload = useCallback(async () => {
@@ -104,7 +107,12 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
                         <button type="button" disabled={busy} onClick={() => run(() => setResponseStatus(r.id, "declined"))} className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-semibold text-neutral-500 hover:bg-neutral-200 disabled:opacity-50">{t("tour.tsDecline")}</button>
                       </>
                     ) : (
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${r.status === "accepted" ? "bg-emerald-500/10 text-emerald-700" : "bg-black/[0.05] text-neutral-500"}`}>{statusLabel(r.status)}</span>
+                      <>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${r.status === "accepted" ? "bg-emerald-500/10 text-emerald-700" : "bg-black/[0.05] text-neutral-500"}`}>{statusLabel(r.status)}</span>
+                        {r.status === "accepted" && (
+                          <button type="button" onClick={() => setChatWith({ id: r.responder_id, name: personName(r.responder_id) })} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.tsChat")}</button>
+                        )}
+                      </>
                     )}
                   </span>
                 </div>
@@ -132,7 +140,9 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
                   {my ? (
                     <span className="flex shrink-0 items-center gap-1.5">
                       <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${my.status === "accepted" ? "bg-emerald-500/10 text-emerald-700" : my.status === "declined" ? "bg-black/[0.05] text-neutral-500" : "bg-amber-500/10 text-amber-700"}`}>{t(`tour.tsMyResp_${my.status}`)}</span>
-                      {my.status !== "accepted" && <button type="button" disabled={busy} onClick={() => run(() => removeResponse(my.id))} aria-label={t("tour.tsWithdraw")} className="text-neutral-300 hover:text-red-500">✕</button>}
+                      {my.status === "accepted"
+                        ? <button type="button" onClick={() => setChatWith({ id: s.user_id, name: personName(s.user_id) })} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.tsChat")}</button>
+                        : <button type="button" disabled={busy} onClick={() => run(() => removeResponse(my.id))} aria-label={t("tour.tsWithdraw")} className="text-neutral-300 hover:text-red-500">✕</button>}
                     </span>
                   ) : (
                     <button type="button" disabled={busy} onClick={() => run(() => respondToSlot(s.id, viewerId, viewerContact))} className="shrink-0 rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover disabled:opacity-50">{t("tour.tsRespond")}</button>
@@ -144,6 +154,10 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
         )}
       </div>
       <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.tsNote")}</p>
+
+      {chatWith && (
+        <TourChatPanel meId={viewerId} otherId={chatWith.id} otherName={chatWith.name} onClose={() => setChatWith(null)} />
+      )}
     </section>
   );
 }
