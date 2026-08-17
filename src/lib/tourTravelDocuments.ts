@@ -29,6 +29,7 @@ export type TravelDocInput = {
   valid_until: string | null;
   status: TravelDocStatus;
   note: string | null;
+  lead_weeks: number | null; // Nutzerangabe: Vorlaufzeit des Antrags in Wochen (für die Warnung)
 };
 
 /** Dokument anlegen. */

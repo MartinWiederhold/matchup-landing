@@ -16,6 +16,9 @@ import { hasSchengenPassport } from "@/lib/visa";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { loadPlayerDocs, type PlayerDocs } from "@/lib/tourPlayerMaster";
 import { documentWarnings } from "@/domain/tour/documentWarnings";
+import { visaLeadWarnings } from "@/domain/tour/visaLeadWarnings";
+import { loadTravelDocuments } from "@/lib/tourTravelDocuments";
+import type { TourTravelDocument } from "@/lib/types";
 import { loadResultHistory, toMatchResults, type ResultHistoryRow } from "@/lib/tourResultHistory";
 import { pointsForecast } from "@/domain/tour/pointsForecast";
 import { loadWildcardContacts, type TourWildcardContact } from "@/lib/tourWildcards";
@@ -100,6 +103,7 @@ export default function SeasonWorkspace() {
   // Für das Morgen-Dashboard: erfasste Ergebnisse (Punktestand/Verfall) + Wildcard-Anfragen.
   const [resultHistory, setResultHistory] = useState<ResultHistoryRow[]>([]);
   const [wildcards, setWildcards] = useState<TourWildcardContact[]>([]);
+  const [travelDocs, setTravelDocs] = useState<TourTravelDocument[]>([]);
   // Entry-Status je Turnier (Planzeile) + Beobachtungs-Verlauf je Planzeile — für die
   // Status-Pills + Trend in der Saisonliste und den Editor im Detail.
   const [planByTour, setPlanByTour] = useState<Map<string, TourSeasonPlanEntry>>(new Map());
@@ -222,10 +226,11 @@ export default function SeasonWorkspace() {
     let alive = true;
     (async () => {
       try {
-        const [p, ts, ids, cr, planRows, evs, pdocs, rhist, wcs] = await Promise.all([
-          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id), loadResultHistory(user.id), loadWildcardContacts(user.id),
+        const [p, ts, ids, cr, planRows, evs, pdocs, rhist, wcs, tdocs] = await Promise.all([
+          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id), loadResultHistory(user.id), loadWildcardContacts(user.id), loadTravelDocuments(user.id),
         ]);
         if (!alive) return;
+        setTravelDocs(tdocs);
         setProfile(p);
         setTours(ts);
         setSeasonIds(ids);
@@ -638,6 +643,13 @@ export default function SeasonWorkspace() {
           expiringSoon: soon4 ? { date: soon4.expiresOn, points: soon4.points } : null,
         }
       : null;
+    // Vorlaufzeit-Warnungen: je Saison-Turnier ein passendes Dokument (Bereich) mit
+    // gesetzter Nutzer-Vorlaufzeit, das noch fehlt und dessen Antrag knapp wird.
+    const visaLead = visaLeadWarnings({
+      asOf,
+      tournaments: seasonOrdered.map(({ tt }) => ({ id: tt.id, city: tt.city, country: tt.country, monday: tt.tournament_monday })),
+      docs: travelDocs.map((d) => ({ scope: d.scope, status: d.status, valid_until: d.valid_until, lead_weeks: d.lead_weeks })),
+    });
     return buildActionBoard({
       asOf,
       tournaments,
@@ -647,8 +659,9 @@ export default function SeasonWorkspace() {
       points,
       wildcards: wildcards.map((wc) => ({ tournamentName: byId.get(wc.tournament_id)?.city ?? "—", tournamentId: wc.tournament_id, requestedOn: wc.requested_on, outcome: wc.outcome })),
       budgetOver: budgetLeft != null && budgetLeft < 0 ? { amountMinor: -budgetLeft, currency: curc } : null,
+      visaLead,
     });
-  }, [nowMs, rates, cost, budgetMinor, seasonOrdered, planByTour, eventsByPlan, resultHistory, banned, docWarnings, schengen, wildcards, byId]);
+  }, [nowMs, rates, cost, budgetMinor, seasonOrdered, planByTour, eventsByPlan, resultHistory, banned, docWarnings, schengen, wildcards, byId, travelDocs]);
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
   if (authLoading) return <div className="flex h-[100dvh] items-center justify-center bg-white text-sm text-neutral-500">{t("tour.loading")}</div>;

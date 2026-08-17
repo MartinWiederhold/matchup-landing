@@ -567,6 +567,9 @@ export const tour = {
     tdNoNumber: "Keine Dokumentnummer speichern — dieselbe Regel wie beim Pass.",
     tdAdd: "Hinzufügen",
     tdRemove: "Entfernen",
+    tdLeadWeeks: "Vorlaufzeit (Wochen)",
+    tdLeadUnit: "Wo.",
+    tdLeadHint: "Vorlaufzeit: Wochen, die der Antrag laut offizieller Quelle dauert — deine Angabe. Nur damit warnt das Dashboard, wenn ein Turnier näher liegt als der Antrag dauert.",
     docWarn_passport_expired: "Pass abgelaufen (seit {date}).",
     docWarn_passport_expiring: "Pass läuft in {days} Tagen ab ({date}).",
     docWarn_passport_too_short: "Pass für {dest} evtl. zu kurz gültig (läuft {date} ab).",
@@ -598,6 +601,8 @@ export const tour = {
     action_decision_open: "Woche entscheiden · {city}",
     action_budget_over: "Über Budget · {amount}",
     action_tournament_inactive: "Turnier nicht mehr verfügbar · {city}",
+    action_visa_lead: "Reisedokument für {dest} beantragen — Turnier in {weeks} Wochen · {city}, du rechnest mit {lead}",
+    visaLeadUserEstimate: "Vorlaufzeit ist deine Angabe.",
     tournamentInactive: "Dieses Turnier ist nicht mehr verfügbar. Es bleibt in deiner Saison, bis du es entfernst.",
 
     // Punkte-Seite (/tour/points)
@@ -1586,6 +1591,9 @@ export const tour = {
     tdNoNumber: "No document number stored — the same rule as for your passport.",
     tdAdd: "Add",
     tdRemove: "Remove",
+    tdLeadWeeks: "Lead time (weeks)",
+    tdLeadUnit: "wk",
+    tdLeadHint: "Lead time: weeks the application takes per the official source — your own estimate. It's the only thing that lets the dashboard warn you when a tournament is closer than the application takes.",
     docWarn_passport_expired: "Passport expired (since {date}).",
     docWarn_passport_expiring: "Passport expires in {days} days ({date}).",
     docWarn_passport_too_short: "Passport may be too short for {dest} (expires {date}).",
@@ -1617,6 +1625,8 @@ export const tour = {
     action_decision_open: "Decide this week · {city}",
     action_budget_over: "Over budget · {amount}",
     action_tournament_inactive: "Tournament no longer available · {city}",
+    action_visa_lead: "Apply for travel document for {dest} — tournament in {weeks} weeks · {city}, you expect {lead}",
+    visaLeadUserEstimate: "Lead time is your own estimate.",
     tournamentInactive: "This tournament is no longer available. It stays in your season until you remove it.",
 
     // Points page (/tour/points)

@@ -19,7 +19,8 @@ const KINDS: TravelDocKind[] = ["esta", "eta", "schengen_visa", "national_visa",
 const STATUSES: TravelDocStatus[] = ["have", "applied", "none"];
 
 const nn = (s: string): string | null => (s.trim() === "" ? null : s.trim());
-const emptyDraft: TravelDocInput = { kind: "esta", scope: "US", valid_until: null, status: "have", note: null };
+const intOrNull = (s: string): number | null => { const n = parseInt(s, 10); return s.trim() === "" || Number.isNaN(n) || n < 0 ? null : Math.min(n, 104); };
+const emptyDraft: TravelDocInput = { kind: "esta", scope: "US", valid_until: null, status: "have", note: null, lead_weeks: null };
 
 /**
  * Reisedokumente-Ablage auf /tour/setup (web.tour_travel_document, owner-only): mehrere
@@ -90,6 +91,10 @@ export default function TravelDocsCard() {
               </select>
               <input type="date" value={d.valid_until ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { valid_until: nn(e.target.value) }))} disabled={busy} className="rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]" />
               {d.valid_until && <span className="text-[11px] text-neutral-400">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
+              <label className="flex items-center gap-1 text-[11px] text-neutral-500">
+                <input type="number" min={0} max={104} value={d.lead_weeks ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { lead_weeks: intOrNull(e.target.value) }))} disabled={busy} placeholder="—" className="w-14 rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]" />
+                {t("tour.tdLeadUnit")}
+              </label>
               <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto text-[12px] font-semibold text-neutral-400 hover:text-red-500">{t("tour.tdRemove")}</button>
             </div>
           ))}
@@ -116,13 +121,17 @@ export default function TravelDocsCard() {
             {STATUSES.map((s) => <option key={s} value={s}>{t(`tour.tdStatus_${s}`)}</option>)}
           </select>
         </label>
+        <label className="block"><span className={lbl}>{t("tour.tdLeadWeeks")}</span>
+          <input type="number" min={0} max={104} value={draft.lead_weeks ?? ""} onChange={(e) => setDraft({ ...draft, lead_weeks: intOrNull(e.target.value) })} placeholder="6" className={inp} />
+        </label>
         {draft.kind === "other" && (
           <label className="block sm:col-span-2 lg:col-span-4"><span className={lbl}>{t("tour.tdNote")}</span>
             <input value={draft.note ?? ""} onChange={(e) => setDraft({ ...draft, note: nn(e.target.value.slice(0, 200)) })} placeholder={t("tour.tdNotePlaceholder")} className={inp} />
           </label>
         )}
       </div>
-      <p className="mt-2 text-[11px] text-neutral-400">{t("tour.tdNoNumber")}</p>
+      <p className="mt-2 text-[11px] text-neutral-400">{t("tour.tdLeadHint")}</p>
+      <p className="mt-1 text-[11px] text-neutral-400">{t("tour.tdNoNumber")}</p>
       <button type="button" onClick={add} disabled={busy || !canAdd} className={btn}>{t("tour.tdAdd")}</button>
     </div>
   );

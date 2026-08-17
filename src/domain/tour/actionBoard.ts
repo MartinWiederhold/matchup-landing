@@ -25,6 +25,7 @@
 
 import { tourDeadlines, type TourSeries } from "./deadlines";
 import { alternateTrend } from "./entryTrend";
+import type { VisaLeadWarning } from "./visaLeadWarnings";
 
 export const ACTION_BOARD_VERSION = "v1";
 
@@ -45,7 +46,8 @@ export type ActionKind =
   | "entry_missed" | "entry_deadline" | "withdrawal_deadline" | "fee_unpaid"
   | "doc_expired" | "doc_expiring" | "schengen_exceeded" | "schengen_near"
   | "entry_banned" | "points_expiring" | "wildcard_no_answer"
-  | "alternate_moving" | "decision_open" | "budget_over" | "tournament_inactive";
+  | "alternate_moving" | "decision_open" | "budget_over" | "tournament_inactive"
+  | "visa_lead";
 
 /** Weg zur Erledigung: ein Saison-Turnier im Planer öffnen ODER eine Route aufrufen. */
 export type ActionTarget = { type: "tournament"; id: string } | { type: "route"; href: string };
@@ -86,6 +88,7 @@ export type BoardInput = {
   points: BoardPoints;
   wildcards: BoardWildcard[];
   budgetOver: { amountMinor: number; currency: string } | null; // >0 = über Budget
+  visaLead?: VisaLeadWarning[]; // Vorlaufzeit-Warnungen (Nutzerangabe), optional
 };
 
 // ── Ausgaben ──────────────────────────────────────────────────────────────────
@@ -200,6 +203,13 @@ export function buildActionBoard(input: BoardInput): ActionBoard {
       // Läuft ab / zu kurz (BERNSTEIN).
       push("doc_expiring", "amber", { type: "route", href: "/tour/setup" }, w.days ?? 30, { kind: w.kind, date: w.date ?? "", days: w.days ?? 0, dest: w.destination ?? "", ruleOfThumb: w.ruleOfThumb ? 1 : 0 });
     }
+  }
+
+  // ── Reisedokument: Antrag dauert länger als bis zum Turnier (BERNSTEIN, Nutzerangabe) ──
+  // Vorausschau, kein eingetretener Zustand → nie rot. Weg zur Handlung: das Turnier öffnen
+  // (dort stehen Einreise-Zeile + Antragslink). Sort = Wochen bis zum Turnier (nächstes zuerst).
+  for (const v of input.visaLead ?? []) {
+    push("visa_lead", "amber", { type: "tournament", id: v.tournamentId }, v.weeksUntil, { city: v.city ?? "", dest: v.dest, weeks: v.weeksUntil, lead: v.leadWeeks });
   }
 
   // ── Schengen ──────────────────────────────────────────────────────────────────

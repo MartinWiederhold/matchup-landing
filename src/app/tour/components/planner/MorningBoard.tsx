@@ -40,9 +40,12 @@ export default function MorningBoard({
     if (a.kind === "budget_over") return t("tour.action_budget_over", { amount: money(Number(p.amount), String(p.currency)) });
     if (a.kind === "entry_banned") return t("tour.action_entry_banned", { city: p.city ?? "", dest: countryName(String(p.dest)) });
     if (a.kind === "points_expiring") return t("tour.action_points_expiring", { points: p.points ?? 0, date: fmtDate(String(p.date)) });
+    if (a.kind === "visa_lead") return t("tour.action_visa_lead", { city: p.city ?? "", dest: countryName(String(p.dest)), weeks: p.weeks ?? 0, lead: p.lead ?? 0 });
     return t(`tour.action_${a.kind}`, p);
   };
   const isRuleOfThumb = (a: ActionItem) => (a.kind === "doc_expiring" || a.kind === "doc_expired") && a.params.ruleOfThumb === 1;
+  // Vorlaufzeit beruht auf der eigenen Angabe → als Schätzung kennzeichnen (wie die Faustregel).
+  const isUserEstimate = (a: ActionItem) => a.kind === "visa_lead";
 
   return (
     <div className="space-y-5">
@@ -107,6 +110,7 @@ export default function MorningBoard({
                   <span className="min-w-0">
                     {actionText(a)}
                     {isRuleOfThumb(a) && <span className="mt-0.5 block text-[11px] font-normal opacity-80">{t("tour.docWarnRuleOfThumb")}</span>}
+                    {isUserEstimate(a) && <span className="mt-0.5 block text-[11px] font-normal opacity-80">{t("tour.visaLeadUserEstimate")}</span>}
                   </span>
                 </span>
               );
