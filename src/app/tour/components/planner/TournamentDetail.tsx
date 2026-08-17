@@ -22,6 +22,7 @@ import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements"
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
 import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
+import { tourDeadlines } from "@/domain/tour/deadlines";
 import { loadTournamentNote, saveTournamentNote } from "@/lib/tourTournamentNote";
 import { loadWildcardContacts } from "@/lib/tourWildcards";
 import TourChatPanel from "./TourChatPanel";
@@ -429,9 +430,16 @@ export default function TournamentDetail({
   // ── Punkte je Runde aus points.ts (belegt, ATP-Regelwerk). Nur wenn die Kategorie erkannt
   //    ist; sonst Hinweis statt Nullen. Erstrunde (R32) = 0 bei Challenger/ITF → bewusst gezeigt.
   const POINTS_ROUNDS: PointsRound[] = ["W", "F", "SF", "QF", "R16"];
+  // Kurze Labels (Sieg/F/HF/VF/AF) für die EINE-Zeile-Darstellung — die Punkte sind eine
+  // Aufzählung, keine Auswahl; als Zeile liest es sich schneller als in zwei Pillen-Reihen.
   const roundPts = toPointsCategory(tt.category)
-    ? POINTS_ROUNDS.map((code) => ({ code, label: t(`tour.round_${code}`), points: expectedPoints(tt.category, code, tt.tournament_monday).points }))
+    ? POINTS_ROUNDS.map((code) => ({ code, label: t(`tour.ovRnd_${code}`), points: expectedPoints(tt.category, code, tt.tournament_monday).points }))
     : null;
+
+  // Meldefrist prominent (groß) NUR bei echtem Countdown. Die große Darstellung war für den
+  // laufenden Countdown gedacht — nicht für ein „unbekannt" (Challenger) oder „abgelaufen".
+  const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series);
+  const hasCountdown = dl.known && !!dl.entry && dl.entry.getTime() > nowMs;
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -447,8 +455,9 @@ export default function TournamentDetail({
           <h2 className="text-xl font-extrabold tracking-tight text-neutral-900">{tt.city || t("tour.fieldMissing")}</h2>
           <p className="text-[13px] text-neutral-500">{countryName} · {fmtDay(start)}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* Belag NICHT mehr als Chip hier — er steht jetzt als eigene Zeile im Übersicht-
+                Reiter (mit drinnen/draußen), dort ist er nicht doppelt. */}
             {tt.category && <span className="rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{tt.category}</span>}
-            {tt.surface && <span className="rounded-full bg-black/[0.04] px-2.5 py-0.5 text-[11px] font-semibold text-neutral-600">{tt.surface}</span>}
           </div>
         </div>
 
@@ -492,10 +501,38 @@ export default function TournamentDetail({
         </div>
 
         {activeTab === "overview" && (
-        // Entschlackt: VIER Zeilen. Alles Erklärende hinter „i". Eine Einreisesperre bleibt
-        // sichtbar (rot), nicht aufklappbar. Nichts gestrichen — nur verlagert.
+        // Gruppiert: erst TURNIER-FAKTEN (Belag, Punkte je Runde), dann MEIN STAND (Entry-
+        // Status, Gebühr, Frist), dann REFERENZ (Kosten, Einreise, Weg zur Meldung, Notizen).
+        // Alles Erklärende hinter „i". Eine Einreisesperre bleibt sichtbar (rot).
         <div className="divide-y divide-black/[0.06]">
 
+          {/* ── TURNIER-FAKTEN ───────────────────────────────────────────────────────────── */}
+          {/* Belag — aus dem Bestand (tour_tournaments), mit drinnen/draußen falls bekannt. */}
+          {tt.surface && (
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovSurfaceTitle")}</span>
+              <span className="text-[13px] font-semibold text-neutral-700">{t(`tour.surface_${tt.surface}`)}{tt.indoor != null ? ` · ${tt.indoor ? t("tour.ovIndoor") : t("tour.ovOutdoor")}` : ""}</span>
+            </div>
+          )}
+
+          {/* Punkte je Runde — belegt aus points.ts (ATP-Regelwerk). EINE Zeile (Aufzählung,
+              keine Auswahl). Erstrunde = 0 bleibt SICHTBAR in derselben Zeile (der ehrliche
+              Teil), nicht hinter dem „i". */}
+          <div className="py-2.5">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+              {t("tour.ovPointsTitle")}
+              <InfoHint label={t("tour.ovPointsInfo")}><p>{t("tour.ovPointsInfo")}</p></InfoHint>
+            </span>
+            {roundPts ? (
+              <p className="mt-1 text-[12px] leading-relaxed text-neutral-700">
+                {roundPts.map((r) => `${r.label} ${r.points}`).join(" · ")} <span className="text-neutral-400">· {t("tour.ovFirstRoundLine")}</span>
+              </p>
+            ) : (
+              <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovPointsUnknownCat")}</p>
+            )}
+          </div>
+
+          {/* ── MEIN STAND ───────────────────────────────────────────────────────────────── */}
           {/* Entry-Status — nur in der Saison (dann existiert eine Planzeile). Der Kern des
               Management-Werkzeugs: wo stehe ich? Bearbeiten öffnet den Editor darunter. */}
           {planId && (
@@ -573,38 +610,12 @@ export default function TournamentDetail({
             </button>
           )}
 
-          {/* 1) Meldefrist — die WICHTIGSTE Angabe des Reiters, daher prominent (größerer
-              Countdown, kräftigeres Label). */}
-          <div className="flex items-center justify-between gap-3 py-3">
-            <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600">{t("tour.wsDetailDeadline")}</span>
-            <DeadlineCountdown tournament={tt} now={nowMs} size="lg" />
-          </div>
-
-          {/* Belag — aus dem Bestand (tour_tournaments), mit drinnen/draußen falls bekannt. */}
-          {tt.surface && (
-            <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovSurfaceTitle")}</span>
-              <span className="text-[13px] font-semibold text-neutral-700">{t(`tour.surface_${tt.surface}`)}{tt.indoor != null ? ` · ${tt.indoor ? t("tour.ovIndoor") : t("tour.ovOutdoor")}` : ""}</span>
-            </div>
-          )}
-
-          {/* Punkte je Runde — belegt aus points.ts (ATP-Regelwerk). Kompakt als Pillen.
-              Erstrunde = 0 (Challenger/ITF) wird bewusst mitgezeigt. */}
-          <div className="py-2.5">
-            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
-              {t("tour.ovPointsTitle")}
-              <InfoHint label={t("tour.ovPointsInfo")}><p>{t("tour.ovPointsInfo")}</p></InfoHint>
-            </span>
-            {roundPts ? (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {roundPts.map((r) => (
-                  <span key={r.code} className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] text-neutral-600"><span className="font-bold text-neutral-900 tabular-nums">{r.points}</span> {r.label}</span>
-                ))}
-                <span className="rounded-full px-2 py-0.5 text-[11px] text-neutral-400">{t("tour.ovFirstRoundZero")}</span>
-              </div>
-            ) : (
-              <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovPointsUnknownCat")}</p>
-            )}
+          {/* Meldefrist (mein Stand) — GROSS nur bei echtem Countdown; sonst normale Zeile.
+              Grund: die Prominenz war für den laufenden Countdown gedacht, nicht für ein
+              „unbekannt" (Challenger) oder „abgelaufen". */}
+          <div className={`flex items-center justify-between gap-3 ${hasCountdown ? "py-3" : "py-2.5"}`}>
+            <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600" : "text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400"}>{t("tour.wsDetailDeadline")}</span>
+            <DeadlineCountdown tournament={tt} now={nowMs} size={hasCountdown ? "lg" : "sm"} />
           </div>
 
           {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
