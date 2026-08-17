@@ -8,6 +8,7 @@ import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
 import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, type DemoPlayer } from "@/lib/tourPresenceDemo";
 import DemoPlayerSheet from "./DemoPlayerSheet";
+import TrainingSlots from "./TrainingSlots";
 
 // Gemeinsame Form der Absichts-Details (echte Präsenz + Beispiel) für die Anzeige-Zeile.
 type IntentInfo = {
@@ -128,7 +129,6 @@ export default function TournamentDetail({
   const [pRoomArea, setPRoomArea] = useState("");
   const [pRoomCost, setPRoomCost] = useState("");
   const [pRoomType, setPRoomType] = useState("");
-  const [pWhenDraft, setPWhenDraft] = useState(""); // Eingabe für einen „Wann"-Eintrag
   const [chatWith, setChatWith] = useState<TourPresence | null>(null);
   // Gewählter Beispiel-Spieler → simulierte Profil-/Chat-Vorschau (nichts wird gespeichert).
   const [demoSelected, setDemoSelected] = useState<DemoPlayer | null>(null);
@@ -421,11 +421,6 @@ export default function TournamentDetail({
   const othersShown = others.filter((r) => filterMatch(r.looking, r.looking_room));
   const demoAll = TOUR_PRESENCE_DEMO_ON ? demoPresenceFor(tt.id, tt.category, tt.tournament_monday) : [];
   const demoShown = demoAll.filter((d) => filterMatch(d.looking, d.lookingRoom));
-  // „Wann"-Einträge stehen als Freitext in partner_days (kein neues Feld nötig): jeder Eintrag
-  // ist Tag+Uhrzeit, z. B. „Mo 09:00". Belag/Niveau sind bewusst NICHT mehr im Formular
-  // (Belag kommt vom Turnier, Niveau steht schon im Profil/Rang) — die Spalten bleiben nur.
-  const addWhen = () => { const v = pWhenDraft.trim(); if (v && !pDays.includes(v)) { setPDays([...pDays, v]); setPWhenDraft(""); } };
-  const removeWhen = (w: string) => setPDays((cur) => cur.filter((x) => x !== w));
   const selCls = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
 
   // ── Punkte je Runde aus points.ts (belegt, ATP-Regelwerk). Nur wenn die Kategorie erkannt
@@ -734,23 +729,8 @@ export default function TournamentDetail({
             <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] placeholder:text-neutral-400 focus:border-black/30 focus:outline-none" />
 
             {/* Detailfelder — NUR zur angekreuzten Absicht, alles optional (kurzes Formular). */}
-            {pPartner && (
-              <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-black/5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.wsSeekPartner")}</p>
-                {/* WANN — Tag + Uhrzeit als Freitext (z. B. „Mo 09:00", „Di nachmittags"). Mehrere
-                    Einträge möglich; landen als Freitext in partner_days. Belag/Niveau bewusst weg. */}
-                <span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsPartnerWhen")}</span>
-                <div className="flex gap-1.5">
-                  <input value={pWhenDraft} onChange={(e) => setPWhenDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addWhen(); } }} placeholder={t("tour.wsPartnerWhenPh")} className={selCls} />
-                  <button type="button" onClick={addWhen} className="shrink-0 rounded-lg bg-neutral-900 px-3 text-[15px] font-bold text-white hover:bg-neutral-700">+</button>
-                </div>
-                {pDays.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {pDays.map((w) => <button key={w} type="button" onClick={() => removeWhen(w)} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[11px] font-semibold text-matchup">{w} <span className="text-matchup/60">✕</span></button>)}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Partner-Zeiten laufen jetzt über die Trainingsslots (unten), nicht mehr als
+                Freitext im Opt-in. */}
             {pRoom && (
               <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-black/5">
                 <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.wsSeekRoom")}</p>
@@ -856,6 +836,9 @@ export default function TournamentDetail({
             </div>
           )}
         </section>
+
+        {/* Trainingsslots — eigene anbieten, fremde sehen/melden, Anfragen zu-/absagen. */}
+        <TrainingSlots tournamentId={tt.id} tournamentMonday={tt.tournament_monday} viewerId={viewerId} viewerContact={pContact.trim() || null} nowMs={nowMs} />
 
         </>
         )}
