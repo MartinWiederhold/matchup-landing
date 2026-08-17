@@ -253,6 +253,11 @@ Flag `lead_capture`. Wizard „Allgemeine Beratung" speichert Anfragen.
 **Wirkung:** Ein Besaiter vor Ort muss die Ausrüstung heute mündlich erfragen; der Coach hat den Notfallkontakt nicht.
 **Lösung:** Je Tabelle eine rollenscharfe Read-Policy über `web.tour_team` (Muster wie die Finanz-Agent-Policy MU-026): Ausrüstung → Rolle `stringer` (die es in tour_team NOCH NICHT gibt → zuerst Rolle + Einladungs-Flow im /app-Team ergänzen), Notfallkontakt → Rolle `coach`. Der Notfallkontakt sind fremde Personendaten (MU-035) → das Freigeben bleibt eine BEWUSSTE Entscheidung des Spielers, kein Default. Die Tabellenstruktur ist bereits darauf ausgelegt (je eine Ein-Policy-Änderung).
 
+### MU-042 · Aufräum-Cron für vergangene Trainingsslots · S · offen
+**Problem:** Vergangene Trainingsslots (`web.tour_training_slot` mit `slot_date < heute`) werden im „Vor Ort"-Reiter nur AUSGEBLENDET (Anzeige-Filter `isPastSlot`), nicht gelöscht. Ebenso hängen die zugehörigen `web.tour_training_slot_response`-Zeilen (per FK `on delete cascade` an den Slot gebunden).
+**Wirkung:** Bei einem aktiven Spieler sammeln sich über eine Saison hunderte Slot-Zeilen plus Antworten an — tote Daten, die nie wieder sichtbar werden. Kein Handlungsdruck, rein hygienisch.
+**Lösung:** Täglicher Cron (Muster wie `/api/sync/tournaments` in `vercel.json`, Service-Client), der `web.tour_training_slot` mit `slot_date < current_date` löscht; die Antworten gehen per Cascade mit. Karenz erwägen (z. B. `slot_date < current_date - 7`), damit eine gerade vergangene, noch relevante Verabredung nicht sofort verschwindet. Kein UI-Eingriff.
+
 ## Erledigt
 
 - ✅ MU-033 · Verwaister TourWorkspace-Cluster entfernt: `TourWorkspace`, `useTourWorkspace`, `sections/*` (SeasonList, SeasonOverview, MapPreview, RareStuff, NextDeadline). `SetupPanel` blieb (hängt an `/tour/setup`). Teil des /tour-Umbaus auf `SeasonWorkspace`.
