@@ -18,6 +18,11 @@ type IntentInfo = {
 };
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadEffectiveVisa, type NatVisaInfo } from "@/lib/tourVisaRequirements";
+import { loadTravelDocuments } from "@/lib/tourTravelDocuments";
+import { bestDocumentFor, needsDocument } from "@/domain/tour/travelDocMatch";
+import { isSchengen } from "@/lib/schengen";
+import { countryRegime, regimeFacts } from "@/lib/visa";
+import type { TourTravelDocument } from "@/lib/types";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
 import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
@@ -295,6 +300,17 @@ export default function TournamentDetail({
   }, [tt.id, tt.country, passKey]);
   const visaInfo = visa === "loading" ? null : visa;
 
+  // Eigene Reisedokumente des Nutzers (owner-only). Zuordnung zum Turnierland über den
+  // Geltungsbereich (Land/Schengen-Raum), nicht über die Art — siehe travelDocMatch.
+  const [travelDocs, setTravelDocs] = useState<TourTravelDocument[]>([]);
+  useEffect(() => {
+    let alive = true;
+    loadTravelDocuments(viewerId).then((d) => { if (alive) setTravelDocs(d); }).catch(() => { if (alive) setTravelDocs([]); });
+    return () => { alive = false; };
+  }, [viewerId]);
+  const destIsSchengen = isSchengen(countryName);
+  const myDoc = tt.country && visaInfo ? bestDocumentFor(travelDocs, tt.country, destIsSchengen) : null;
+
   const start = tt.tournament_monday;
   const end = addDaysISO(start, nights > 0 ? nights : 7);
   const stop = { city: tt.city ?? "", country: countryName, start, end };
@@ -365,6 +381,29 @@ export default function TournamentDetail({
         {visaProvInner}
       </>
     );
+  }
+
+  // Eigener Dokument-Stand für dieses Turnierland — nur bei Klassen, die ein Dokument brauchen.
+  // „du hast eins bis …" / „beantragt" / „noch nicht beantragt" (+ Antragslink).
+  const showDocLine = !!visaInfo && needsDocument(visaInfo.requirementClass);
+  const todayDocIso = new Date(nowMs).toISOString().slice(0, 10);
+  // Antragslink: zielland-basiertes Regime aus visa.ts; sonst die Bestand-Quelle (Konsulat prüfen).
+  const applyUrl = (countryName && regimeFacts(countryRegime(countryName)).officialUrl) || visaInfo?.sourceUrl || "";
+  let docNode: ReactNode = null;
+  if (showDocLine) {
+    if (myDoc && myDoc.status === "have") {
+      const expired = myDoc.valid_until ? myDoc.valid_until < todayDocIso : false;
+      docNode = <p className={`mt-1 text-[12px] font-semibold ${expired ? "text-amber-700" : "text-emerald-700"}`}>{myDoc.valid_until ? t("tour.wsDocHave", { date: fmtDay(myDoc.valid_until) }) : t("tour.wsDocHaveNoDate")}</p>;
+    } else if (myDoc && myDoc.status === "applied") {
+      docNode = <p className="mt-1 text-[12px] text-neutral-500">{t("tour.wsDocApplied")}</p>;
+    } else {
+      docNode = (
+        <p className="mt-1 text-[12px] text-neutral-500">
+          {t("tour.wsDocNone")}
+          {applyUrl && <> · <a href={applyUrl} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.wsDocApply")} ↗</a></>}
+        </p>
+      );
+    }
   }
 
   const link = "flex items-center justify-between rounded-xl border border-black/10 px-3 py-2.5 text-[13px] font-semibold text-neutral-800 transition-colors hover:bg-black/[0.03]";
@@ -642,12 +681,15 @@ export default function TournamentDetail({
                 </p>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-3 py-2.5">
-                <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
-                  {t("tour.wsVisaTitle")}
-                  <InfoHint label={t("tour.wsVisaInfo")}>{visaHint}</InfoHint>
-                </span>
-                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${visaWordNeutral ? "bg-black/[0.05] text-neutral-500" : "bg-matchup/10 text-matchup"}`}>{visaWord}</span>
+              <div className="py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+                    {t("tour.wsVisaTitle")}
+                    <InfoHint label={t("tour.wsVisaInfo")}>{visaHint}</InfoHint>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${visaWordNeutral ? "bg-black/[0.05] text-neutral-500" : "bg-matchup/10 text-matchup"}`}>{visaWord}</span>
+                </div>
+                {docNode}
               </div>
             )
           )}

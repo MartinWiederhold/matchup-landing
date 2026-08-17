@@ -630,6 +630,28 @@ export interface TourVisaRequirement {
   updated_at: string; // ISO timestamp
 }
 
+/** Art eines eigenen Reisedokuments. ESTA und eTA getrennt (Nutzersicht), obwohl der
+ *  Bestand beide grob als requirement_class 'eta' führt. */
+export type TravelDocKind = "esta" | "eta" | "schengen_visa" | "national_visa" | "other";
+/** Besitzstand eines Reisedokuments: habe ich · beantragt · nicht vorhanden. */
+export type TravelDocStatus = "have" | "applied" | "none";
+
+/** Ein eigenes Reisedokument des Spielers (web.tour_travel_document, owner-only).
+ *  scope = ISO-3166-1 alpha-2 Zielland ODER 'SCHENGEN' (Raum); deckt der Bereich das
+ *  Turnierland, gilt das Dokument. KEINE Dokumentnummer — dieselbe Regel wie beim Pass. */
+export interface TourTravelDocument {
+  id: string;
+  user_id: string;
+  kind: TravelDocKind;
+  scope: string | null; // ISO2 oder 'SCHENGEN'; null nur bei kind='other'
+  valid_until: string | null; // ISO-Datum „gültig bis"; null bei beantragt/nicht vorhanden
+  status: TravelDocStatus;
+  lead_weeks: number | null; // Nutzerangabe: Vorlaufzeit des Antrags in Wochen (für die Warnung)
+  note: string | null; // Freitext für „sonstiges"; KEINE Nummer
+  created_at: string;
+  updated_at: string;
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];

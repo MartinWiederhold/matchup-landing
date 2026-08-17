@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { TOUR_MAIN, EYEBROW, PAGE_H1, PAGE_SUB } from "@/app/tour/components/tourUi";
 import SetupPanel from "../components/setup/SetupPanel";
 import PlayerMasterForm from "./PlayerMasterForm";
+import TravelDocsCard from "./TravelDocsCard";
 
 // Server Component. Kein "— Matchup"-Suffix — das Root-Layout hängt es an.
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,6 +36,9 @@ export default async function TourSetupPage({ searchParams }: { searchParams: Pr
       {/* Spielerstammdaten — nur die Felder, aus denen die App etwas macht (Ablaufwarnungen,
           Visa, Besaiter-Info). Eigener client-seitiger Abschnitt unter dem Wizard. */}
       <PlayerMasterForm />
+
+      {/* Reisedokumente-Ablage (mehrere je Nutzer) — verknüpft im Turnierdetail mit „ESTA nötig". */}
+      <TravelDocsCard />
     </main>
   );
 }
