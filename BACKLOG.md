@@ -81,7 +81,7 @@
 **Wirkung:** Gelöschte Belege leben als Datei weiter. Auf einem Bon stehen Ort, Uhrzeit und oft Kartenstellen. Besonders relevant, weil /app (`ExpensesView`) Ausgaben löscht, ohne den Beleg zu kennen.
 **Lösung (zwei Teile):**
 - a) /tour löscht beim Entfernen einer Ausgabe die Datei über die Storage-API mit (`storage.from('tour-receipts').remove([...])`) — deckt den Normalfall, kommt mit der Datenschicht.
-- b) Ein geplanter Aufräum-Lauf (Edge Function oder Cron mit Service-Rolle), der Objekte ohne passende `tour_expenses`-Zeile entfernt — deckt /app-Löschungen und Abbrüche beim Upload.
+- b) Ein geplanter Aufräum-Lauf (Edge Function oder Cron mit Service-Rolle), der Objekte ohne passende `tour_expenses`-Zeile entfernt — deckt /app-Löschungen und Abbrüche beim Upload. **Gilt auch für den Bucket `tour-documents`** (Turnier-Ordner): dort ist der Hauptvektor bereits geschlossen (nur /tour schreibt; Upload mit Kompensation; Löschen entfernt die Datei zuerst), Restvektor ist der Profil-Hard-Delete (Cascade löscht die Zeile, nicht die Datei). Derselbe Lauf entfernt Objekte ohne passende `tour_tournament_document`-Zeile — der Pfad `<uid>/<tournament_id>/…` macht die Zuordnung eindeutig.
 **Sperre:** Nicht mit echten Nutzern starten, solange b) fehlt.
 
 ### MU-018 · Schengen-Zähler unterschätzt den Aufenthalt · M · offen · **Vor Launch**

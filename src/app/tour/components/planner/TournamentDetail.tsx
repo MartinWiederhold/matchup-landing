@@ -9,6 +9,7 @@ import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, typ
 import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, type DemoPlayer } from "@/lib/tourPresenceDemo";
 import DemoPlayerSheet from "./DemoPlayerSheet";
 import TrainingSlots from "./TrainingSlots";
+import TournamentDocuments from "./TournamentDocuments";
 
 // Gemeinsame Form der Absichts-Details (echte Präsenz + Beispiel) für die Anzeige-Zeile.
 type IntentInfo = {
@@ -48,6 +49,7 @@ const DETAIL_TABS = [
   { k: "onsite", label: "tour.tabOnSite" },
   { k: "services", label: "tour.tabServices" },
   { k: "booking", label: "tour.tabBooking" },
+  { k: "documents", label: "tour.tabDocuments" },
 ] as const;
 type DetailTab = (typeof DETAIL_TABS)[number]["k"];
 // Website-Logo je Anbieter = Favicon der eigenen Website (öffentliche Marke, KEIN
@@ -526,10 +528,12 @@ export default function TournamentDetail({
           </div>
         )}
 
-        {/* Reiter */}
-        <div className="flex gap-1 rounded-full bg-black/[0.04] p-1">
+        {/* Reiter — fünf Pills: auf Desktop füllen sie gleichmäßig (flex-1), auf schmalem
+            Schirm (≈390 px) verhindert min-w-fit das Abschneiden und die Leiste scrollt
+            horizontal statt umzubrechen (bewusst: scrollen, nicht zusammenlegen). */}
+        <div className="flex gap-1 overflow-x-auto rounded-full bg-black/[0.04] p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {DETAIL_TABS.map((tab) => (
-            <button key={tab.k} type="button" onClick={() => setActiveTab(tab.k)} className={`flex-1 rounded-full px-2 py-1.5 text-[12px] font-bold transition-colors ${activeTab === tab.k ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>
+            <button key={tab.k} type="button" onClick={() => setActiveTab(tab.k)} className={`min-w-fit flex-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[12px] font-bold transition-colors ${activeTab === tab.k ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>
               {t(tab.label)}
             </button>
           ))}
@@ -976,6 +980,10 @@ export default function TournamentDetail({
           <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBookNote")}</p>
         </section>
         </>
+        )}
+
+        {activeTab === "documents" && (
+          <TournamentDocuments tournamentId={tt.id} viewerId={viewerId} />
         )}
       </div>
 

@@ -652,6 +652,28 @@ export interface TourTravelDocument {
   updated_at: string;
 }
 
+/** Art einer Datei im Turnier-Ordner. 'visa' = eigener Scan (eigene Kopie im privaten
+ *  Bucket) — bewusst erlaubt; anders als tour_travel_document, das die NUMMER als
+ *  strukturiertes Feld vermeidet (ein selbst hochgeladener Scan ist etwas anderes). */
+export type TourTournamentDocumentKind =
+  | "fact_sheet" | "confirmation" | "draw" | "visa" | "flight" | "hotel" | "transport" | "insurance" | "other";
+
+/** Eine Datei im Turnier-Ordner (web.tour_tournament_document, owner-only). Die Datei liegt
+ *  im privaten Bucket tour-documents; Zugriff nur über kurzlebige signierte Links. KEINE
+ *  öffentliche URL. */
+export interface TourTournamentDocument {
+  id: string;
+  user_id: string;
+  tournament_id: string;
+  kind: TourTournamentDocumentKind;
+  label: string | null;
+  storage_path: string; // <user_id>/<tournament_id>/<name>.<ext>
+  mime: string | null;
+  size_bytes: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Filter-State für Discover
 export interface FilterState {
   sports: Sport[];
