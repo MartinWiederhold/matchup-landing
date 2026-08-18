@@ -131,6 +131,7 @@ export default function SeasonWorkspace() {
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
   const countryBoxRef = useRef<HTMLDivElement>(null);
+  const budgetRef = useRef<HTMLInputElement>(null);
 
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
@@ -161,6 +162,13 @@ export default function SeasonWorkspace() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   useEffect(() => { try { setFiltersOpen(localStorage.getItem(FILTERS_OPEN_KEY) === "1"); } catch { /* egal */ } }, []);
   const toggleFilters = useCallback(() => setFiltersOpen((o) => { const n = !o; try { localStorage.setItem(FILTERS_OPEN_KEY, n ? "1" : "0"); } catch { /* egal */ } return n; }), []);
+  // Filterspalte öffnen UND ans Budget-Feld springen (Chip/Hinweis führen hierher — das
+  // Budget ist die zweitwichtigste Eingabe, es soll nicht hinter einem zugeklappten Filter liegen).
+  const openBudget = useCallback(() => {
+    setFiltersOpen(true);
+    try { localStorage.setItem(FILTERS_OPEN_KEY, "1"); } catch { /* egal */ }
+    requestAnimationFrame(() => requestAnimationFrame(() => { budgetRef.current?.scrollIntoView({ block: "center" }); budgetRef.current?.focus(); }));
+  }, []);
   // Fensterbreite steuert, welche Spalten inline stehen und welche zu Overlays werden.
   // SSR-stabiler Default (Desktop-Annahme), danach gemessen + auf resize aktualisiert.
   const [winW, setWinW] = useState(1440);
@@ -216,8 +224,8 @@ export default function SeasonWorkspace() {
 
   const [stays, setStays] = useState<Stay[]>([]);
   const [filling, setFilling] = useState(false);
-  // MU-037: Rückmeldung nach dem Füllen (ergänzt / bereits belegte Wochen).
-  const [fillReport, setFillReport] = useState<{ added: number; occupied: number } | null>(null);
+  // MU-037: Rückmeldung nach dem Füllen. reason erklärt, WARUM nichts dazukam.
+  const [fillReport, setFillReport] = useState<{ added: number; occupied: number; reason: "added" | "weeks_full" | "budget" | "no_candidates" } | null>(null);
   const [costOpen, setCostOpen] = useState(false); // Kostensätze/Nächte bearbeiten (aufklappbar, wenn Sätze schon da sind)
   const [nowMs] = useState(() => Date.now()); // Stichtag für den Meldefrist-Countdown (aus der Komponente)
 
@@ -520,7 +528,15 @@ export default function SeasonWorkspace() {
         await Promise.all(picks.map((p) => addToSeason(user.id, p.id)));
         await reloadEntries(); // Planzeilen der neu gefüllten Turniere nachladen
       }
-      setFillReport({ added: picks.length, occupied: blockedWeeks.size });
+      // Grund für „nichts ergänzt" unterscheiden: alle Wochen belegt · Budget erschöpft ·
+      // keine Kandidaten im Rahmen. (Bei added>0 ist reason egal.)
+      let reason: "added" | "weeks_full" | "budget" | "no_candidates" = "added";
+      if (picks.length === 0) {
+        if (candidates.length === 0) reason = blockedWeeks.size > 0 ? "weeks_full" : "no_candidates";
+        else if ((remainingM != null && remainingM.amount <= 0) || result.rejected.some((r) => r.reasons.some((x) => x.code === "budget_erschoepft"))) reason = "budget";
+        else reason = "no_candidates";
+      }
+      setFillReport({ added: picks.length, occupied: blockedWeeks.size, reason });
     } catch {
       // Bei Fehler den echten Stand zurückholen, damit Anzeige und DB nicht auseinanderlaufen.
       try { setSeasonIds(await loadSeasonTournamentIds()); } catch { /* egal */ }
@@ -549,14 +565,8 @@ export default function SeasonWorkspace() {
     void saveWhoAmI(user.id, { ranking: value }).then(() => setProfile((p) => (p ? { ...p, ranking: value } : p)));
   }, [user, rankingInput]);
 
-  // Wohnland (profiles.country) — steuert die Heimatnähe des Optimierers (country|city).
-  const saveCountry = useCallback((iso: string) => {
-    if (!user) return;
-    const value = iso || null;
-    setProfile((p) => (p ? { ...p, country: value } : p)); // optimistisch
-    void saveWhoAmI(user.id, { country: value });
-  }, [user]);
-
+  // Wohnland kommt aus dem /app-Profil (profiles.country/country_name) und wird im
+  // Identitäts-Block nur ANGEZEIGT (übernommen) — Ändern über /app bzw. den Startpunkt.
   // Pässe (tour_profiles.passports) — Nationalität. Ändert Katalog-Sperren + Schengen
   // (beides hängt REAKTIV an passportsKey/schengenApplies, siehe Effekte oben).
   const setPassports = useCallback((next: string[]) => {
@@ -743,13 +753,6 @@ export default function SeasonWorkspace() {
           <button type="button" onClick={saveRanking} className="shrink-0 rounded-xl bg-neutral-900 px-4 text-[13px] font-bold text-white hover:bg-neutral-700">{t("common.save")}</button>
         </div>
       </label>
-      <label className="block">
-        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsHome")}</span>
-        <select value={profile.country ?? ""} onChange={(e) => saveCountry(e.target.value)} className={inp}>
-          <option value="">—</option>
-          {COUNTRY_CODES.map((c) => <option key={c} value={c}>{catName(c)}</option>)}
-        </select>
-      </label>
       <div>
         <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsPassports")}</span>
         {profile.passports.length > 0 && (
@@ -920,7 +923,7 @@ export default function SeasonWorkspace() {
         {/* Budget */}
         <label className="block">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plBudget")}</span>
-          <input value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
+          <input ref={budgetRef} value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
           {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
         </label>
         {/* Kostensätze */}
@@ -961,7 +964,7 @@ export default function SeasonWorkspace() {
   const budgetNum = Number(budget.trim().replace(",", "."));
   const budgetLabel = Number.isFinite(budgetNum) && budget.trim() !== "" ? `${t("tour.plBudget")} ${money(Math.round(budgetNum) * 100, cur)}` : t("tour.plBudget");
   const clearCountries = () => setFrame((f) => ({ ...f, countries: [] }));
-  const activeChips: { key: string; label: string; onRemove: () => void }[] = [
+  const activeChips: { key: string; label: string; onRemove: () => void; open?: () => void }[] = [
     ...selSeries.map((v) => ({ key: `series-${v}`, label: SERIES_OPTS.find((o) => o.v === v)?.label ?? v, onRemove: () => toggleSeries(v) })),
     ...selSurface.map((s) => ({ key: `surface-${s}`, label: t(`tour.surface_${s}`), onRemove: () => toggleSurface(s) })),
     ...(selCountries.length === 1
@@ -970,7 +973,7 @@ export default function SeasonWorkspace() {
         ? [{ key: "countries", label: t("tour.wsCountriesN", { n: selCountries.length }), onRemove: clearCountries }]
         : []),
     ...(dateActive ? [{ key: "date", label: dateLabel, onRemove: () => setFrame((f) => ({ ...f, from: defaultFrom, to: "" })) }] : []),
-    ...(budget.trim() !== "" ? [{ key: "budget", label: budgetLabel, onRemove: () => setBudget("") }] : []),
+    ...(budget.trim() !== "" ? [{ key: "budget", label: budgetLabel, onRemove: () => setBudget(""), open: openBudget }] : []),
   ];
   const filterBar = (
     <div className="flex items-center gap-2">
@@ -980,13 +983,19 @@ export default function SeasonWorkspace() {
         <div className="no-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto">
           {activeChips.map((chip) => (
             <span key={chip.key} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-black/[0.05] py-1 pl-2.5 pr-1 text-[11px] font-semibold text-neutral-600">
-              <button type="button" onClick={toggleFilters} className="max-w-[9rem] truncate hover:text-neutral-900">{chip.label}</button>
+              <button type="button" onClick={chip.open ?? toggleFilters} className="max-w-[9rem] truncate hover:text-neutral-900">{chip.label}</button>
               <button type="button" onClick={chip.onRemove} aria-label={t("tour.wsChipRemove", { label: chip.label })} className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-neutral-400 hover:bg-black/[0.08] hover:text-neutral-700">✕</button>
             </span>
           ))}
         </div>
       ) : (
         <div className="min-w-0 flex-1" />
+      )}
+      {/* Kein Budget gesetzt → kein Chip, sondern ein Hinweis mit Weg zum Feld. */}
+      {budget.trim() === "" && (
+        <button type="button" onClick={openBudget} className="flex shrink-0 items-center gap-1 rounded-full bg-black/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-neutral-500 hover:bg-black/[0.08] hover:text-neutral-800">
+          <span aria-hidden>＋</span> {t("tour.wsBudgetSet")}
+        </button>
       )}
       <button type="button" onClick={toggleFilters} className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ring-1 ${filtersOpen ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
         <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
@@ -1114,7 +1123,11 @@ export default function SeasonWorkspace() {
             </p>
             {fillReport && (
               <p className="mt-1 rounded-xl bg-matchup/[0.06] px-3 py-2 text-[12px] leading-relaxed text-neutral-600">
-                {t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })}
+                {fillReport.added > 0
+                  ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
+                  : fillReport.reason === "weeks_full" ? t("tour.wsFillWeeksFull")
+                  : fillReport.reason === "budget" ? t("tour.wsFillBudget")
+                  : t("tour.wsFillNoCandidates")}
               </p>
             )}
           </section>
@@ -1366,10 +1379,25 @@ export default function SeasonWorkspace() {
       {profileOpen && profile && (
         <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onClick={() => setProfileOpen(false)}>
           <div className="max-h-[85vh] w-[420px] max-w-full overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-[15px] font-extrabold text-neutral-900">{profile.firstName || t("tour.plStep1")}</h2>
-              <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
+            {/* Identitäts-Block: aus dem /app-Profil ÜBERNOMMEN — Bild, voller Name, Wohnland. */}
+            <div className="mb-1 flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {profile.profileImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-matchup/10 object-cover" />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
+                )}
+                <div className="min-w-0">
+                  <h2 className="truncate text-[16px] font-extrabold text-neutral-900">{profile.displayName || profile.firstName || t("tour.plStep1")}</h2>
+                  {(profile.countryName || profile.country || profile.city) && (
+                    <p className="truncate text-[12px] text-neutral-500">{[profile.countryName || (profile.country ? catName(profile.country) : ""), profile.city].filter(Boolean).join(" · ")}</p>
+                  )}
+                </div>
+              </div>
+              <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
             </div>
+            <p className="mb-4 text-[11px] text-neutral-400">{t("tour.wsIdentityFrom")}</p>
             {profileEditor}
           </div>
         </div>
