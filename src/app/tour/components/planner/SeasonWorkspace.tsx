@@ -114,6 +114,8 @@ export default function SeasonWorkspace() {
 
   // Profil (aufklappbar) + Ranking-Bearbeitung.
   const [profileOpen, setProfileOpen] = useState(false);
+  // Kurze Rückmeldung, wenn ein neuer Wohnort das Wohnland ändert (steuert Visa-Warnungen).
+  const [homeCountryMsg, setHomeCountryMsg] = useState<string | null>(null);
   const [rankingInput, setRankingInput] = useState("");
 
   // Startpunkt: Suche + gewählter Startpunkt (Session; überschreibt das Profil für die Route).
@@ -583,11 +585,18 @@ export default function SeasonWorkspace() {
   // rechnet der Planer Anreise + Kosten je Turnierwoche → Einblendung verschwindet danach.
   const pickHome = useCallback((c: { city: string; country: string | null; lat: number; lng: number }) => {
     if (!user) return;
-    const country = profile?.country ?? c.country;
+    // Neu gewählter Wohnort ÜBERNIMMT das Land aus dem Geocoder (c.country) — der kennt es
+    // genauer als ein evtl. alter/falscher Profilwert. Fehlt das Geocoder-Land (kuratierte
+    // Schnellwahl ohne Land), bleibt das bisherige. Startpunkt-Suche (pickStart) ist davon
+    // getrennt und schreibt NIE ein Land — nur pickHome (Onboarding) setzt das Wohnland.
+    const country = c.country ?? profile?.country ?? null;
+    const changed = country != null && country !== (profile?.country ?? null);
     void saveHome(user.id, c.city, country, c.lat, c.lng);
     setProfile((p) => (p ? { ...p, city: c.city, country, lat: c.lat, lng: c.lng } : p));
     setLocQuery("");
-  }, [user, profile?.country]);
+    // NICHT still: sichtbar machen, dass sich das Wohnland (→ Visa-Warnungen) geändert hat.
+    if (changed) { setHomeCountryMsg(catName(country)); window.setTimeout(() => setHomeCountryMsg(null), 6000); }
+  }, [user, profile?.country, catName]);
 
   // Außenklick/Escape schließt das Länder-Dropdown.
   useEffect(() => {
@@ -1328,6 +1337,12 @@ export default function SeasonWorkspace() {
       <div className="relative flex-1 bg-neutral-100">
         <PlannerMap start={start} plan={planStops} candidates={candidateStops} selectedId={selectedId} onSelect={handleSelect} />
         {chip}
+        {/* Wohnland geändert → kurze, sichtbare Rückmeldung (steuert Visa-Warnungen). */}
+        {homeCountryMsg && (
+          <div className="pointer-events-none absolute left-1/2 top-3 z-[72] -translate-x-1/2">
+            <span className="rounded-full bg-emerald-600 px-3.5 py-1.5 text-[12px] font-bold text-white shadow-lg">{t("tour.wsHomeCountrySet", { country: homeCountryMsg })}</span>
+          </div>
+        )}
         {/* Einführung als Einblendung über der Karte (Desktop). */}
         {!isMobile && showIntro && (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[65] flex justify-center p-6">
