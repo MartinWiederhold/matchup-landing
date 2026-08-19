@@ -27,6 +27,7 @@ export type PlannerProfile = {
   ranking: number | null;    // tour_profiles.ranking
   passports: string[];       // tour_profiles.passports
   seasonBudget: number | null; // tour_profiles.season_budget
+  hasProfile: boolean;       // true = eine web.profiles-Zeile existiert (sonst: in /app anlegen)
 };
 
 /** Lädt die für den Planer nötigen Profilfelder — benannte Spalten, kein select *.
@@ -52,6 +53,7 @@ export async function loadPlannerProfile(userId: string): Promise<PlannerProfile
     ranking: tp?.ranking ?? null,
     passports: tp?.passports ?? [],
     seasonBudget: tp?.season_budget ?? null,
+    hasProfile: !!p,
   };
 }
 

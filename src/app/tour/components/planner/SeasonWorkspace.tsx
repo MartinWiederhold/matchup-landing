@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as R
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
+import TourLoginCard from "@/app/tour/components/TourLoginCard";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
@@ -684,15 +685,9 @@ export default function SeasonWorkspace() {
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
   if (authLoading) return <div className="flex h-[100dvh] items-center justify-center bg-white text-sm text-neutral-500">{t("tour.loading")}</div>;
-  if (!user) {
-    return (
-      <div className="flex h-[100dvh] flex-col items-center justify-center gap-3 bg-white px-6 text-center">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-2 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
+  // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
+  // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
+  if (!user) return <TourLoginCard />;
 
   const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
 
@@ -791,6 +786,18 @@ export default function SeasonWorkspace() {
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRemindersHint")}</p>
       </div>
+    </div>
+  );
+
+  // Eingeloggt, aber keine web.profiles-Zeile: /tour zeigt sonst leere Felder ohne Erklärung
+  // (und Speichern schlägt still fehl, weil das Update 0 Zeilen trifft). Stattdessen ein klarer
+  // Hinweis mit Weg ins /app-Onboarding, das die Zeile UND die Identität (Name/Foto/Land) anlegt.
+  const noProfileHint = (
+    <div className="text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-matchup/10 text-[20px]" aria-hidden>👤</div>
+      <h3 className="mt-2 text-[15px] font-extrabold text-neutral-900">{t("tour.npTitle")}</h3>
+      <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">{t("tour.npBody")}</p>
+      <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover">{t("tour.npCta")}</Link>
     </div>
   );
 
@@ -1250,7 +1257,9 @@ export default function SeasonWorkspace() {
   const homeSet = profile?.lat != null && profile?.lng != null;
   const showIntro = status === "ready" && !homeSet && !profileOpen;
 
-  const introBody = (
+  const introBody = profile && !profile.hasProfile ? (
+    <div className="w-[360px] max-w-full">{noProfileHint}</div>
+  ) : (
     <div className="w-[360px] max-w-full">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
       {/* Der eine Satz sagt, WOZU der Wohnort dient — nicht nur, dass er fehlt. */}
@@ -1292,11 +1301,20 @@ export default function SeasonWorkspace() {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
       )}
       <span className="min-w-0 text-left leading-tight">
-        <span className="block truncate text-[13px] font-bold text-neutral-900">{profile.firstName || t("tour.plStep1")}</span>
-        <span className="block truncate text-[11px] text-neutral-500">
-          {profile.ranking != null ? `${t("tour.rankLabel")} ${profile.ranking}` : t("tour.noRank")}
-          {profile.city ? ` · ${profile.city}` : ""}
-        </span>
+        {profile.hasProfile ? (
+          <>
+            <span className="block truncate text-[13px] font-bold text-neutral-900">{profile.displayName || profile.firstName || t("tour.plStep1")}</span>
+            <span className="block truncate text-[11px] text-neutral-500">
+              {profile.ranking != null ? `${t("tour.rankLabel")} ${profile.ranking}` : t("tour.noRank")}
+              {profile.city ? ` · ${profile.city}` : ""}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="block truncate text-[13px] font-bold text-neutral-900">{t("tour.profileSetup")}</span>
+            <span className="block truncate text-[11px] text-neutral-500">{t("tour.npChipSub")}</span>
+          </>
+        )}
       </span>
     </button>
   );
@@ -1394,26 +1412,32 @@ export default function SeasonWorkspace() {
       {profileOpen && profile && (
         <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onClick={() => setProfileOpen(false)}>
           <div className="max-h-[85vh] w-[420px] max-w-full overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Identitäts-Block: aus dem /app-Profil ÜBERNOMMEN — Bild, voller Name, Wohnland. */}
-            <div className="mb-1 flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                {profile.profileImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-matchup/10 object-cover" />
-                ) : (
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
-                )}
-                <div className="min-w-0">
-                  <h2 className="truncate text-[16px] font-extrabold text-neutral-900">{profile.displayName || profile.firstName || t("tour.plStep1")}</h2>
-                  {(profile.countryName || profile.country || profile.city) && (
-                    <p className="truncate text-[12px] text-neutral-500">{[profile.countryName || (profile.country ? catName(profile.country) : ""), profile.city].filter(Boolean).join(" · ")}</p>
-                  )}
-                </div>
-              </div>
+            <div className="mb-2 flex justify-end">
               <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
             </div>
-            <p className="mb-4 text-[11px] text-neutral-400">{t("tour.wsIdentityFrom")}</p>
-            {profileEditor}
+            {profile.hasProfile ? (
+              <>
+                {/* Identitäts-Block: aus dem /app-Profil ÜBERNOMMEN — Bild, voller Name, Wohnland. */}
+                <div className="-mt-6 mb-1 flex min-w-0 items-center gap-3 pr-10">
+                  {profile.profileImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-matchup/10 object-cover" />
+                  ) : (
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
+                  )}
+                  <div className="min-w-0">
+                    <h2 className="truncate text-[16px] font-extrabold text-neutral-900">{profile.displayName || profile.firstName || t("tour.plStep1")}</h2>
+                    {(profile.countryName || profile.country || profile.city) && (
+                      <p className="truncate text-[12px] text-neutral-500">{[profile.countryName || (profile.country ? catName(profile.country) : ""), profile.city].filter(Boolean).join(" · ")}</p>
+                    )}
+                  </div>
+                </div>
+                <p className="mb-4 text-[11px] text-neutral-400">{t("tour.wsIdentityFrom")}</p>
+                {profileEditor}
+              </>
+            ) : (
+              <div className="-mt-4 pb-2">{noProfileHint}</div>
+            )}
           </div>
         </div>
       )}
