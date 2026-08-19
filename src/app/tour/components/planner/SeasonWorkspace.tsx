@@ -19,6 +19,7 @@ import { loadPlayerDocs, type PlayerDocs } from "@/lib/tourPlayerMaster";
 import { documentWarnings } from "@/domain/tour/documentWarnings";
 import { visaLeadWarnings } from "@/domain/tour/visaLeadWarnings";
 import { loadTravelDocuments } from "@/lib/tourTravelDocuments";
+import { loadPlayerMaster } from "@/lib/tourPlayerMaster";
 import type { TourTravelDocument } from "@/lib/types";
 import { loadResultHistory, toMatchResults, type ResultHistoryRow } from "@/lib/tourResultHistory";
 import { pointsForecast } from "@/domain/tour/pointsForecast";
@@ -135,6 +136,13 @@ export default function SeasonWorkspace() {
   const [countryQuery, setCountryQuery] = useState("");
   const countryBoxRef = useRef<HTMLDivElement>(null);
   const budgetRef = useRef<HTMLInputElement>(null);
+  // Pass-Auswahl als EIGENES Element (kein natives select — das rendert auf iOS Safari
+  // unzuverlässig, Optionen fielen als Fließtext heraus). Muster wie der Länder-Filter.
+  const [passportOpen, setPassportOpen] = useState(false);
+  const [passportQuery, setPassportQuery] = useState("");
+  const passportBoxRef = useRef<HTMLDivElement>(null);
+  // Stand der Stammdaten (für die Übersicht im Profil-Overlay), lazy beim Öffnen geladen.
+  const [setupSummary, setSetupSummary] = useState<{ travelDocs: number; equipment: boolean; emergency: boolean; passport: boolean; insurance: boolean } | null>(null);
 
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
@@ -609,6 +617,37 @@ export default function SeasonWorkspace() {
     return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onEsc); };
   }, [countryOpen]);
 
+  // Außenklick/Escape schließt das Pass-Dropdown.
+  useEffect(() => {
+    if (!passportOpen) return;
+    const onDoc = (e: MouseEvent) => { if (passportBoxRef.current && !passportBoxRef.current.contains(e.target as Node)) setPassportOpen(false); };
+    const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setPassportOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onEsc);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onEsc); };
+  }, [passportOpen]);
+
+  // Stammdaten-Stand für die Übersicht im Profil-Overlay — lazy bei jedem Öffnen frisch.
+  useEffect(() => {
+    if (!user || !profileOpen) return;
+    let alive = true;
+    (async () => {
+      try {
+        const [m, tdocs] = await Promise.all([loadPlayerMaster(user.id), loadTravelDocuments(user.id)]);
+        if (!alive) return;
+        const eq = m.equipment;
+        setSetupSummary({
+          travelDocs: tdocs.length,
+          equipment: !!(eq && (eq.racket || eq.string_model || eq.tension_main != null || eq.tension_cross != null || eq.grip_size)),
+          emergency: !!(m.emergency && m.emergency.contact_name),
+          passport: !!(m.docs && (m.docs.passport_country || m.docs.passport_expiry)),
+          insurance: !!(m.docs && (m.docs.insurance_provider || m.docs.insurance_expiry)),
+        });
+      } catch { /* still */ }
+    })();
+    return () => { alive = false; };
+  }, [user, profileOpen]);
+
   const selCountries = frame.countries ?? [];
   const toggleCountry = (iso: string) => setFrame((f) => {
     const cur = new Set(f.countries ?? []);
@@ -747,6 +786,12 @@ export default function SeasonWorkspace() {
   const budgetLeftMinor = budgetMinor ? budgetMinor.amount - spentMinor : null;
   const budgetPct = budgetMinor && budgetMinor.amount > 0 ? Math.min(100, Math.round((spentMinor / budgetMinor.amount) * 100)) : 0;
 
+  // Pass-Kandidaten (noch nicht gewählt, nach Suchtext gefiltert) für das eigene Auswahl-Element.
+  const pq = passportQuery.trim().toLowerCase();
+  const passportOptions = profile
+    ? COUNTRY_CODES.filter((c) => !profile.passports.includes(c) && (pq === "" || catName(c).toLowerCase().includes(pq) || c.toLowerCase().includes(pq)))
+    : [];
+
   // Profil-Editor (Ranking/Wohnland/Pässe) — liegt jetzt in der Chip-Überlagerung, nicht mehr im Panel.
   const profileEditor = profile && (
     <div className="space-y-3">
@@ -768,10 +813,26 @@ export default function SeasonWorkspace() {
             ))}
           </div>
         )}
-        <select value="" onChange={(e) => { if (e.target.value) setPassports([...profile.passports, e.target.value]); }} className={inp}>
-          <option value="">{t("tour.wsAddPassport")}</option>
-          {COUNTRY_CODES.filter((c) => !profile.passports.includes(c)).map((c) => <option key={c} value={c}>{catName(c)}</option>)}
-        </select>
+        {/* Eigenes Auswahl-Element statt nativem select (iOS-Safari-Renderfehler). */}
+        <div className="relative" ref={passportBoxRef}>
+          <button type="button" onClick={() => setPassportOpen((o) => !o)} className={`${inp} flex items-center justify-between`}>
+            <span className="text-neutral-500">{t("tour.wsAddPassport")}</span>
+            <span className={`text-neutral-400 transition-transform ${passportOpen ? "rotate-180" : ""}`}>▾</span>
+          </button>
+          {passportOpen && (
+            <div className="absolute left-0 right-0 z-30 mt-1.5 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
+              <input value={passportQuery} onChange={(e) => setPassportQuery(e.target.value)} placeholder={t("tour.wsCountrySearch")} className={`${inp} mb-2`} autoFocus />
+              <div className="max-h-56 overflow-auto">
+                {passportOptions.map((iso) => (
+                  <button key={iso} type="button" onClick={() => { setPassports([...profile.passports, iso]); setPassportOpen(false); setPassportQuery(""); }} className="flex w-full items-center rounded-lg px-2 py-1.5 text-left text-[13px] text-neutral-800 hover:bg-black/[0.03]">
+                    {catName(iso)}
+                  </button>
+                ))}
+                {passportOptions.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-neutral-400">—</p>}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsProfileNote")}</p>
 
@@ -1434,6 +1495,42 @@ export default function SeasonWorkspace() {
                 </div>
                 <p className="mb-4 text-[11px] text-neutral-400">{t("tour.wsIdentityFrom")}</p>
                 {profileEditor}
+
+                {/* Übersicht: was ist erfasst, mit Weg zu /tour/setup (bzw. /app fürs Alter). */}
+                <div className="mt-4 border-t border-black/[0.06] pt-3">
+                  <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.suTitle")}</p>
+                  <div className="space-y-0.5">
+                    {[
+                      { key: "passport", label: t("tour.suPassport"), done: setupSummary?.passport },
+                      { key: "insurance", label: t("tour.suInsurance"), done: setupSummary?.insurance },
+                      { key: "emergency", label: t("tour.suEmergency"), done: setupSummary?.emergency },
+                      { key: "equipment", label: t("tour.suEquipment"), done: setupSummary?.equipment },
+                    ].map((r) => (
+                      <Link key={r.key} href="/tour/setup" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                        <span className="text-neutral-700">{r.label}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : r.done ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : r.done ? t("tour.suDone") : t("tour.suMissing")}</span>
+                          <span className="text-neutral-300">→</span>
+                        </span>
+                      </Link>
+                    ))}
+                    <Link href="/tour/setup" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                      <span className="text-neutral-700">{t("tour.suTravelDocs")}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : setupSummary.travelDocs > 0 ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : t("tour.suCount", { n: setupSummary.travelDocs })}</span>
+                        <span className="text-neutral-300">→</span>
+                      </span>
+                    </Link>
+                    {/* Alter kommt aus dem /app-Profil (kein Geburtsdatum gespeichert) → Link zur App. */}
+                    <Link href="/app" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                      <span className="text-neutral-700">{t("tour.suAge")}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[12px] font-semibold text-neutral-500">{profile.age != null ? t("tour.suAgeVal", { n: profile.age }) : t("tour.suMissing")}</span>
+                        <span className="text-neutral-300">→</span>
+                      </span>
+                    </Link>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="-mt-4 pb-2">{noProfileHint}</div>
