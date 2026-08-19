@@ -74,6 +74,10 @@ Konkrete Fallstricke:
 - Feature-Flags in `src/lib/feature-flags` steuern die Advice-Ausbaustufen. Nur `advisory_enabled=true`. Flags nicht ohne Auftrag umlegen.
 - `COMPETE_EARLY_ACCESS_OPEN` in `src/lib/tour.ts` bleibt bis Launch `false`.
 
+## UI-Fallstricke
+
+- **Kein natives `<select>` für Auswahlfelder mit VIELEN Einträgen (Länder, Turniere …).** iOS Safari rendert solche `<select>` unzuverlässig — die Optionen fallen als Fließtext heraus statt als Dropdown. Der **DOM ist dabei korrekt** (ein `select`, alle `option`s), deshalb fällt es beim Prüfen mit Chromium/DevTools NICHT auf — genau das ist die Falle. Stattdessen ein **eigenes Auswahl-Element** bauen (Knopf + eigenes Such-Dropdown mit Buttons), Muster: die Pass-/Länder-Auswahl in `SeasonWorkspace.tsx`. Kurze Enum-Selects (2–6 Optionen) sind unkritisch.
+
 ## Gate / Middleware
 
 Die gesamte Seite liegt hinter einem Pre-Launch-Gate (`src/proxy.ts`). Freigeschaltet über Cookie `mu_gate === SITE_GATE_TOKEN`, sonst Rewrite auf `/locked`.
