@@ -87,10 +87,26 @@ const OVERRIDES = [
   { city: "Yecla", country: "ES", pick: [38.6136, -1.1158], note: "A: Yecla (Region Murcia); zweiter Treffer heißt 'Yecla de Yeltes' (anderer Ort)" },
   { city: "Sibenik", country: "HR", pick: [43.7340, 15.8945], note: "A: Šibenik, Adriaküste (einziger Treffer)" },
   { city: "Redbridge", country: "GB", pick: [51.5763, 0.0454], note: "A: London Borough of Redbridge (einziger Treffer)" },
-  // Sharm El Sheikh: EINDEUTIG (Rotmeer-Resort), aber die ITF-Schreibweise 'ElSheikh'
-  // (ohne Leerzeichen) hat der Geocoder nicht gefunden → verifizierte Koordinate aus dem
-  // Geocoder-Treffer für 'Sharm El Sheikh' direkt gesetzt (coord statt Cache-Abgleich).
-  { city: "Sharm ElSheikh", country: "EG", coord: [27.8644, 34.2954], note: "A: Sharm El Sheikh (Südsinai); Geocoder-Koordinate für die korrekte Schreibweise" },
+  // Sharm El Sheikh: der WICHTIGSTE Fund dieser Runde — 24 Turniere an einem der größten
+  // ITF-Cluster für die Zielgruppe, komplett aus dem Optimierer gefallen, nur weil die
+  // ITF-Schreibweise 'ElSheikh' (ohne Leerzeichen) den Geocoder-Cache verfehlt. EINDEUTIG
+  // (Rotmeer-Resort Südsinai) → verifizierte Koordinate aus dem Geocoder-Treffer für die
+  // korrekte Schreibweise 'Sharm El Sheikh' direkt gesetzt (coord statt Cache-Abgleich).
+  // Lehre: bei fehlenden Koordinaten immer zuerst die Schreibweise gegen den Cache prüfen.
+  { city: "Sharm ElSheikh", country: "EG", coord: [27.8644, 34.2954], note: "A: Sharm El Sheikh (Südsinai), 24 Turniere; Schreibweise ohne Leerzeichen verfehlte den Geocoder" },
+  // ── Vom Nutzer entschiedene Mehrdeutigkeiten (2026-08-20) ──────────────────
+  { city: "Offenbach", country: "DE", pick: [50.1055, 8.7611], note: "Nutzer: Offenbach am Main (TC Offenbach richtet ITF aus); Offenbach a. d. Queich hat 5.000 Ew." },
+  { city: "Essen", country: "DE", pick: [51.4580, 7.0160], note: "Nutzer: Essen an der Ruhr (ETUF Ausrichter); Essen (Oldenburg) ist ein Dorf" },
+  { city: "Radom", country: "PL", pick: [51.4170, 21.1570], note: "Nutzer: Stadt Radom, Masowien (200.000 Ew.); zweiter Treffer ist ein Dorf in Großpolen" },
+  // 'Szczawno' (ITF-Schreibweise) hat im Cache keinen Kandidaten nahe Szczawno-Zdrój
+  // (nächster > 0.02° entfernt) → bestätigte Kurort-Koordinate direkt per coord.
+  { city: "Szczawno", country: "PL", coord: [50.7950, 16.2350], note: "Nutzer: Szczawno-Zdrój, Kurort mit Tennistradition; die übrigen Treffer sind Dörfer" },
+  // Câmpulung: über den ITF-Turnierlink verifiziert — Veranstalter CS Ceramus, Str. Fundătura
+  // Gruiului, liegt in Câmpulung Muscel (Argeș), NICHT Câmpulung Moldovenesc (Suceava).
+  { city: "Campulung", country: "RO", pick: [45.2700, 25.0450], note: "Link-Beleg: CS Ceramus (Câmpulung Muscel, Argeș); über tournamentLink/Veranstalter verifiziert" },
+  // Vale do Lobo: Algarve-Resort — kein Geocoder-Kandidat traf die Küstenlage (nur Binnenland),
+  // deshalb verifizierte Koordinate direkt gesetzt und vom Nutzer bestätigt.
+  { city: "Vale do Lobo", country: "PT", coord: [37.0610, -8.0280], note: "Nutzer bestätigt: Algarve-Resort; kein Geocoder-Kandidat passte zur Küstenlage" },
 ];
 
 // ── Service-Client (Key aus .env.local, wird NIE ausgegeben) ────────────────
