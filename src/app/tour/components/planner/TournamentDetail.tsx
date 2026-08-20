@@ -335,7 +335,7 @@ export default function TournamentDetail({
 
   // ── Kompakter Übersicht-Reiter: alles Erklärende wandert hinter „i". ──────────────
   // Weg zur Meldung: dieselben belegten Adressen wie EntryPath (geteilt), nur kompakt.
-  const isItf = tt.series === "itf_wtt";
+  const isItf = tt.series !== "challenger"; // WTT UND Junioren melden über IPIN/ITF, nicht ATP
   const portalUrl = isItf ? ITF_PORTAL : ATP_PORTAL;
   const portalLabel = isItf ? t("tour.entryPortalItf") : t("tour.entryPortalAtp");
   const noteCls = "font-semibold text-neutral-500 underline";
@@ -656,6 +656,12 @@ export default function TournamentDetail({
             <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600" : "text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400"}>{t("tour.wsDetailDeadline")}</span>
             <DeadlineCountdown tournament={tt} now={nowMs} size={hasCountdown ? "lg" : "sm"} />
           </div>
+          {/* Junioren: Meldung erst ab 13 (§4) — benannt, weil öffentlich sichtbar. */}
+          {tt.series === "itf_juniors" && (
+            <p className="mb-1 rounded-md bg-amber-50 px-2.5 py-1.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-200">
+              {t("tour.juniorsUnder13")}
+            </p>
+          )}
 
           {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
           <div className="flex items-center justify-between gap-3 py-2.5">

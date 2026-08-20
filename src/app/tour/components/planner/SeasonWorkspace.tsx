@@ -658,6 +658,7 @@ export default function SeasonWorkspace() {
   // Serie/Belag (Mehrfachauswahl). Leere Auswahl = kein Filter (siehe matchesFrameKind).
   const SERIES_OPTS: { v: string; label: string }[] = [
     { v: "itf_wtt", label: t("tour.seriesItf") },
+    { v: "itf_juniors", label: t("tour.seriesJuniors") },
     { v: "challenger", label: t("tour.seriesChallenger") },
   ];
   const SURFACE_OPTS = ["clay", "hard", "grass", "carpet"] as const;

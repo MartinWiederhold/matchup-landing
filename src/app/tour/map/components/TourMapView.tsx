@@ -121,7 +121,7 @@ export default function TourMapView({
           const x = e.tournament;
           const cat = x.category ? esc(x.category) : t("tour.fieldMissing");
           const surf = x.surface ? t(`tour.surface_${x.surface}`) : t("tour.fieldMissing");
-          const series = x.series === "itf_wtt" ? t("tour.seriesItf") : t("tour.seriesChallenger");
+          const series = x.series === "itf_wtt" ? t("tour.seriesItf") : x.series === "itf_juniors" ? t("tour.seriesJuniors") : t("tour.seriesChallenger");
           return `<div style="padding:2px 0;border-top:1px solid rgba(0,0,0,.06);"><div>${t("tour.mondayLabel")} ${fmtMonday(x.tournament_monday, locale)} · ${cat} · ${surf}</div><div style="color:#888;font-size:11px;">${series}</div></div>`;
         }).join("");
         const el = document.createElement("div");

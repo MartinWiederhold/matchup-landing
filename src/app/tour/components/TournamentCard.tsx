@@ -51,7 +51,7 @@ export default function TournamentCard({
             <span className="text-neutral-600">{countryName}</span>
           </h2>
           <p className="mt-0.5 text-[12px] text-neutral-500">
-            {x.series === "itf_wtt" ? t("tour.seriesItf") : t("tour.seriesChallenger")}
+            {x.series === "itf_wtt" ? t("tour.seriesItf") : x.series === "itf_juniors" ? t("tour.seriesJuniors") : t("tour.seriesChallenger")}
             {" · "}
             {t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}
           </p>

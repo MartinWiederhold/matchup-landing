@@ -68,7 +68,7 @@ export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament
  */
 export function EntryPath({ tournament }: { tournament: TourTournament }) {
   const t = useT();
-  const isItf = tournament.series === "itf_wtt";
+  const isItf = tournament.series !== "challenger"; // WTT UND Junioren melden über IPIN/ITF, nicht ATP
   const link = "block font-semibold text-matchup hover:underline";
   const note = "mt-0.5 text-[11px] leading-relaxed text-neutral-400";
 
