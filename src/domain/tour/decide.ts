@@ -105,7 +105,8 @@ export function decideTournament(input: DecideInput): TournamentDecision {
   const { tournament: t, now, cost } = input;
 
   // Fristen aus dem bestehenden Baustein holen (verändert deadlines.ts nicht).
-  const dl = tourDeadlines(t.tournamentMonday, t.series);
+  // Grad mitgeben — nur für Junioren relevant, bestimmt dort die Berechenbarkeit des Entry.
+  const dl = tourDeadlines(t.tournamentMonday, t.series, t.category);
   const mondayMs = dl.tournamentMonday.getTime(); // bereits auf 00:00 UTC normalisiert
   const nowMs = now.getTime();
 
@@ -125,9 +126,21 @@ export function decideTournament(input: DecideInput): TournamentDecision {
       classification = "fristen_unbekannt";
       reasons.push({ code: "fristenregel_unbekannt", direction: "neutral" });
     }
+  } else if (!dl.entry) {
+    // Junioren J500/Grand Slam (oder Grad unbekannt): Meldeschluss turnierspezifisch, hier
+    // nicht bestimmbar. Entry ist der Handlungsanker — ohne ihn wird NICHT geraten, sondern
+    // ehrlich „Frist unbekannt" ausgewiesen (wie bei Challengern). Withdrawal/Freeze der
+    // Junioren sind zwar bekannt, aber die Pipeline-Klassifikation hängt am Entry (Schritt 2).
+    if (tournamentPast) {
+      classification = "frist_verstrichen";
+      reasons.push({ code: "turnier_bereits_vorbei", direction: "dagegen" });
+    } else {
+      classification = "fristen_unbekannt";
+      reasons.push({ code: "fristenregel_unbekannt", direction: "neutral" });
+    }
   } else {
-    // ITF World Tennis Tour: Fristen bekannt; Entry ist der handlungsrelevante Bezug.
-    const entry = dl.entry!; // bei ITF stets gesetzt (deadlines.ts liefert known=true)
+    // ITF World Tennis Tour (und Junioren J30–J300): Entry bekannt, handlungsrelevanter Bezug.
+    const entry = dl.entry;
     if (tournamentPast) {
       classification = "frist_verstrichen";
       reasons.push({ code: "turnier_bereits_vorbei", direction: "dagegen" });

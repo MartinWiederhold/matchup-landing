@@ -475,7 +475,7 @@ export default function TournamentDetail({
 
   // Meldefrist prominent (groß) NUR bei echtem Countdown. Die große Darstellung war für den
   // laufenden Countdown gedacht — nicht für ein „unbekannt" (Challenger) oder „abgelaufen".
-  const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series);
+  const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series, tt.category);
   const hasCountdown = dl.known && !!dl.entry && dl.entry.getTime() > nowMs;
 
   return (

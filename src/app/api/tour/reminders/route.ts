@@ -27,7 +27,7 @@ function authorized(req: Request): boolean {
 }
 
 type PlanRow = { user_id: string; tournament_id: string; status: TourEntryStatus };
-type TourRow = { id: string; tournament_monday: string; series: "itf_wtt" | "challenger"; name: string | null; city: string | null; country: string | null };
+type TourRow = { id: string; tournament_monday: string; series: "itf_wtt" | "challenger" | "itf_juniors"; category: string | null; name: string | null; city: string | null; country: string | null };
 
 export async function GET(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
   if (planRows.length === 0) return NextResponse.json({ now: now.toISOString(), dryRun, candidates: 0, sent: 0 });
 
   const tourIds = [...new Set(planRows.map((p) => p.tournament_id))];
-  const { data: tours } = await svc.from("tour_tournaments").select("id, tournament_monday, series, name, city, country").in("id", tourIds).is("valid_to", null);
+  const { data: tours } = await svc.from("tour_tournaments").select("id, tournament_monday, series, category, name, city, country").in("id", tourIds).is("valid_to", null);
   const tourById = new Map(((tours as TourRow[]) ?? []).map((t) => [t.id, t]));
 
   const settingsByUser = new Map(((settings as { user_id: string; enabled: boolean; locale: string }[]) ?? []).map((s) => [s.user_id, s]));
@@ -66,7 +66,7 @@ export async function GET(req: Request) {
     if (settingsByUser.get(p.user_id)?.enabled === false) continue; // abbestellt; fehlende Zeile = an (Vorgabe)
     const t = tourById.get(p.tournament_id);
     if (!t) continue;
-    const dl = tourDeadlines(new Date(t.tournament_monday + "T00:00:00Z"), t.series);
+    const dl = tourDeadlines(new Date(t.tournament_monday + "T00:00:00Z"), t.series, t.category);
     const alreadySent = sentByUserTour.get(`${p.user_id}|${p.tournament_id}`) ?? new Set<string>();
     for (const kind of dueReminders({ known: dl.known, entry: dl.entry, withdrawal: dl.withdrawal, status: p.status, now, alreadySent })) {
       cands.push({ userId: p.user_id, tour: t, kind });
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
     const email = await getEmail(c.userId);
     if (!email) continue;
     const locale = (settingsByUser.get(c.userId)?.locale as EmailLocale) ?? "de";
-    const dl = tourDeadlines(new Date(c.tour.tournament_monday + "T00:00:00Z"), c.tour.series);
+    const dl = tourDeadlines(new Date(c.tour.tournament_monday + "T00:00:00Z"), c.tour.series, c.tour.category);
     const deadline = REMINDER_BASE[c.kind] === "entry" ? dl.entry : dl.withdrawal;
     if (!deadline) continue;
     const sig = reminderSig(c.userId);

@@ -1,17 +1,17 @@
 # ITF-Import — SCHARFER LAUF
 
-> `scripts/itf-import.mjs` · 2026-08-20T16:35:26.844Z · Zeitraum 2026-08-20 … 2027-12-31 · Abrufe: 9
+> `scripts/itf-import.mjs` · 2026-08-20T21:27:06.894Z · Zeitraum 2026-08-20 … 2027-12-31 · Abrufe: 9
 > Quelle: ITF TournamentApi/GetCalendar (browserartiger Client, Pausen 3000 ms).
 
 ## 1. Je Kategorie: Menge, Zukunft, neu/Dublette
 
 | Circuit | Serie | gesamt | verwertbar | in Zukunft | NEU | Dublette (source_ref) | Soft-Dublette (gleiches Land+Woche+Kat, anderer Key) |
 |---|---|---:|---:|---:|---:|---:|---:|
-| MT — Herren (M15/M25) | itf_wtt | 209 | 209 | 195 | 209 | 0 | 0 |
+| MT — Herren (M15/M25) | itf_wtt | 209 | 209 | 195 | 198 | 11 | 0 |
 | WT — Damen (W15–W100) | itf_wtt | 200 | 200 | 190 | 200 | 0 | 0 |
-| JT — Junioren (J30–J500) | itf_juniors ⚠️ | 395 | 395 | 370 | 395 | 0 | 0 |
+| JT — Junioren (J30–J500) | itf_juniors | 395 | 395 | 370 | 395 | 0 | 0 |
 
-⚠️ **Junioren (JT) sind mit dem heutigen Schema NICHT schreibbar:** `tour_tournaments_series_check` erlaubt nur `itf_wtt`/`challenger`. Zum Import bräuchte es (a) eine CHECK-Erweiterung um `itf_juniors` und (b) eigene Fristenregeln in `deadlines.ts` (Junioren ≠ WTT). Der scharfe Lauf **überspringt JT**.
+✅ **Junioren (JT) sind seit MU-043 Schritt 1 schreibbar:** `tour_tournaments_series_check` erlaubt `itf_juniors`, und `deadlines.ts` kennt die Junioren-Fristen (§39 i/vi: Entry Di −20 für J30–J300, J500/Grand Slam turnierspezifisch → unbekannt; Withdrawal Di −13; Freeze Mi davor). Der scharfe Lauf **schreibt JT mit**.
 
 ## 2. Verworfene Zeilen nach Grund
 
@@ -330,6 +330,6 @@ Je Kategorie die DISTINKTEN Preisgeld-Werte aus dem Endpunkt. Mehr als ein Wert 
 - **Dedup:** `upsert onConflict source_ref`. `source_ref = "itf:" + tournamentKey` (lowercase) deckt sich 1:1 mit dem Wikipedia-Bestand (`itf:m-itf-…`) → Herren-Dubletten fallen sauber zusammen; Damen/Junioren sind neu.
 - **Preisgeld:** echter Endpunkt-Wert, Claim-Quelle `itf_endpoint`, confidence 0.9 — schlägt den abgeleiteten Wikipedia-Wert (0.5) in `resolve-tournaments.mjs` (MU-028).
 - **Nicht aus dem Endpunkt:** Meldefrist (rechnet `deadlines.ts` aus dem Montag), Punkte (`points.ts`). Nichts erfunden.
-- **Junioren:** nur Bericht — Schreiben blockiert der series-CHECK (s. §1).
+- **Junioren:** werden geschrieben (series `itf_juniors`); Fristen via §39 in `deadlines.ts`. Alterskontingent/Belastungssteuerung ist Schritt 2 (braucht Geburtsdatum).
 
-**Geschrieben:** 409 Turniere, 4090 Claims, 0 Fehler; JT übersprungen: 395.
+**Geschrieben:** 804 Turniere, 7250 Claims, 0 Fehler; JT übersprungen: 0.

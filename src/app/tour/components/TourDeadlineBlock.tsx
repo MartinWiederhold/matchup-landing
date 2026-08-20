@@ -42,16 +42,23 @@ export default function TourDeadlineBlock({ tournament: x }: { tournament: TourT
   const t = useT();
   // Turniermontag als UTC-Mitternacht in die reine Domain-Funktion.
   const monday = new Date(x.tournament_monday + "T00:00:00Z");
-  const dl = tourDeadlines(monday, x.series);
+  const dl = tourDeadlines(monday, x.series, x.category);
+
+  // Bekannte Serie mit mindestens einer belegten Frist. Bei Junioren J500/Grand Slam fehlt der
+  // Entry (turnierspezifisch) — Withdrawal/Freeze sind aber bekannt und werden trotzdem gezeigt.
+  const hasAny = dl.known && (dl.entry || dl.withdrawal || dl.freezeVarianteA);
+  // „Ungeprüft" nur bei der mehrdeutigen WTT-Freeze (zwei Lesarten). Die Junioren-Freeze ist
+  // eindeutig (§39 vi) → freezeVarianteB === null → kein Hinweis.
+  const freezeUnverified = dl.freezeVarianteB != null;
 
   return (
     <div className="mt-4 border-t border-black/[0.06] pt-3">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.deadlinesTitle")}</p>
-      {dl.known && dl.entry && dl.withdrawal && dl.freezeVarianteA ? (
+      {hasAny ? (
         <div className="mt-1">
-          <DeadlineRow label={t("tour.entry")} date={dl.entry} />
-          <DeadlineRow label={t("tour.withdrawal")} date={dl.withdrawal} />
-          <DeadlineRow label={t("tour.freeze")} date={dl.freezeVarianteA} suffix={t("tour.freezeUnverified")} />
+          {dl.entry && <DeadlineRow label={t("tour.entry")} date={dl.entry} />}
+          {dl.withdrawal && <DeadlineRow label={t("tour.withdrawal")} date={dl.withdrawal} />}
+          {dl.freezeVarianteA && <DeadlineRow label={t("tour.freeze")} date={dl.freezeVarianteA} suffix={freezeUnverified ? t("tour.freezeUnverified") : undefined} />}
           <p className="mt-2 text-[11px] text-neutral-400">{t("tour.tzHint")}</p>
         </div>
       ) : (

@@ -496,8 +496,8 @@ export interface TourTournament {
   id: string;
   source_ref: string; // stabile, quellenübergreifende ID (z. B. "itf:m-itf-tun-2025-032") — NOT NULL, UNIQUE
   tournament_monday: string; // date (ISO yyyy-mm-dd) — Bezugspunkt für alle Fristen
-  series: "itf_wtt" | "challenger";
-  category: string | null; // M15/M25/Challenger NN — frei (kein starrer CHECK)
+  series: "itf_wtt" | "challenger" | "itf_juniors";
+  category: string | null; // M15/M25/Challenger NN / J30…J500 — frei (kein starrer CHECK)
   category_recognized: boolean; // generiert: liegt category im bekannten Katalog?
   name: string | null; // bei ITF oft leer
   city: string | null;

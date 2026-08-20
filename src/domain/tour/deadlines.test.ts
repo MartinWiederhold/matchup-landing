@@ -87,6 +87,68 @@ describe("tourDeadlines – Challenger: Regeln unbekannt", () => {
   });
 });
 
+describe("tourDeadlines – Junioren: Standardgrad (J100), §39", () => {
+  // 2025-06-16 ist ein Montag.
+  const monday = new Date(Date.UTC(2025, 5, 16));
+  const r = tourDeadlines(monday, "itf_juniors", "J100");
+
+  it("Serie bekannt, unter-13-Hinweis immer gesetzt", () => {
+    expect(r.known).toBe(true);
+    expect(r.notes).toContain("unter_13_nicht_meldeberechtigt");
+    expect(r.notes).not.toContain("entry_grad_unbekannt");
+    expect(r.rulesVersion).toBe(TOUR_RULES_VERSION);
+  });
+
+  it("Entry = Di, 20 T vorher (§39 i), 14:00 UTC — anders als WTT (Do −18)", () => {
+    expect(r.entry?.toISOString()).toBe(iso1400(2025, 4, 27)); // 2025-05-27
+    expect(r.entry?.getUTCDay()).toBe(2); // Dienstag
+  });
+
+  it("Withdrawal = Di, 13 T vorher (§39 i) — stimmt NUR ZUFÄLLIG mit WTT überein", () => {
+    expect(r.withdrawal?.toISOString()).toBe(iso1400(2025, 5, 3)); // 2025-06-03
+    expect(r.withdrawal?.getUTCDay()).toBe(2); // Dienstag
+  });
+
+  it("Freeze = Mi vor der Turnierwoche (§39 vi), eindeutig (keine Variante B)", () => {
+    expect(r.freezeVarianteA?.toISOString()).toBe(iso1400(2025, 5, 11)); // 2025-06-11
+    expect(r.freezeVarianteA?.getUTCDay()).toBe(3); // Mittwoch
+    expect(r.freezeVarianteB).toBeNull();
+  });
+});
+
+describe("tourDeadlines – Junioren: J500/Grand Slam = Meldeschluss UNBEKANNT", () => {
+  const monday = new Date(Date.UTC(2025, 5, 16));
+
+  it("J500: Entry null + Code, Withdrawal/Freeze bleiben bekannt", () => {
+    const r = tourDeadlines(monday, "itf_juniors", "J500");
+    expect(r.known).toBe(true);
+    expect(r.entry).toBeNull();
+    expect(r.notes).toContain("entry_unbekannt_j500_gs");
+    expect(r.withdrawal?.getUTCDay()).toBe(2);
+    expect(r.freezeVarianteA?.getUTCDay()).toBe(3);
+  });
+
+  it("Grand Slam (Langform + ITF-Kürzel JGS): Entry null + selber Code", () => {
+    for (const g of ["Junior Grand Slam", "JGS"]) {
+      const r = tourDeadlines(monday, "itf_juniors", g);
+      expect(r.entry).toBeNull();
+      expect(r.notes).toContain("entry_unbekannt_j500_gs");
+    }
+  });
+
+  it("unbekanntes Kürzel (z. B. GC): Entry null, aber grad_unbekannt (kein j500_gs, kein Raten)", () => {
+    const r = tourDeadlines(monday, "itf_juniors", "GC");
+    expect(r.entry).toBeNull();
+    expect(r.notes).toContain("entry_grad_unbekannt");
+  });
+
+  it("ohne Grad: Entry null + entry_grad_unbekannt (nichts geraten)", () => {
+    const r = tourDeadlines(monday, "itf_juniors");
+    expect(r.entry).toBeNull();
+    expect(r.notes).toContain("entry_grad_unbekannt");
+  });
+});
+
 describe("tourDeadlines – Determinismus", () => {
   it("gleiche Eingabe → exakt gleiches Ergebnis", () => {
     const monday = new Date(Date.UTC(2025, 8, 22)); // Montag

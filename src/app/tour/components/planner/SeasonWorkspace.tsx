@@ -417,7 +417,7 @@ export default function SeasonWorkspace() {
   const nextDeadline = useMemo(() => {
     let best: { tt: TourTournament; ms: number } | null = null;
     for (const { tt } of seasonOrdered) {
-      const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series);
+      const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series, tt.category);
       const ms = dl.entry ? dl.entry.getTime() : null;
       if (ms == null || ms < nowMs) continue;
       if (!best || ms < best.ms) best = { tt, ms };

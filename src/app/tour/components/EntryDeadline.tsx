@@ -42,7 +42,7 @@ export const ATP_APP_ANDROID = "https://play.google.com/store/apps/details?id=co
  */
 export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament: TourTournament; now: number; size?: "sm" | "lg" }) {
   const t = useT();
-  const dl = tourDeadlines(new Date(tournament.tournament_monday + "T00:00:00Z"), tournament.series);
+  const dl = tourDeadlines(new Date(tournament.tournament_monday + "T00:00:00Z"), tournament.series, tournament.category);
   // „lg" für die prominente Anzeige im Turnierdetail (wichtigste Angabe des Reiters).
   const sz = size === "lg" ? "text-[18px]" : "text-[13px]";
 

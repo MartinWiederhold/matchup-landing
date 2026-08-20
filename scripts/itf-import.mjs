@@ -42,12 +42,12 @@ const today = new Date();
 const DATE_FROM = today.toISOString().slice(0, 10);
 const DATE_TO = `${today.getUTCFullYear() + 1}-12-31`;
 
-// circuitCode → Serie/Beschreibung. Junioren nur als Bericht (series-CHECK erlaubt
-// sie NICHT — s. Bericht), daher writable=false.
+// circuitCode → Serie/Beschreibung. Junioren seit MU-043 Schritt 1 schreibbar: der
+// series-CHECK erlaubt jetzt 'itf_juniors', deadlines.ts kennt die Junioren-Fristen (§39).
 const CIRCUITS = [
   { code: "MT", label: "Herren (M15/M25)", series: "itf_wtt", writable: true },
   { code: "WT", label: "Damen (W15–W100)", series: "itf_wtt", writable: true },
-  { code: "JT", label: "Junioren (J30–J500)", series: "itf_juniors", writable: false },
+  { code: "JT", label: "Junioren (J30–J500)", series: "itf_juniors", writable: true },
 ];
 
 // Ländername → ISO 3166-1 alpha-2 (VERBATIM aus wikipedia-import.mjs übernommen).
@@ -304,7 +304,7 @@ for (const c of CIRCUITS) {
   md.push(`| ${c.code} — ${c.label} | ${c.series}${c.writable ? "" : " ⚠️"} | ${p.total} | ${p.kept.length} | ${p.future} | ${p.neu} | ${p.dup} | ${p.softDup} |`);
 }
 md.push("");
-md.push(`⚠️ **Junioren (JT) sind mit dem heutigen Schema NICHT schreibbar:** \`tour_tournaments_series_check\` erlaubt nur \`itf_wtt\`/\`challenger\`. Zum Import bräuchte es (a) eine CHECK-Erweiterung um \`itf_juniors\` und (b) eigene Fristenregeln in \`deadlines.ts\` (Junioren ≠ WTT). Der scharfe Lauf **überspringt JT**.`);
+md.push(`✅ **Junioren (JT) sind seit MU-043 Schritt 1 schreibbar:** \`tour_tournaments_series_check\` erlaubt \`itf_juniors\`, und \`deadlines.ts\` kennt die Junioren-Fristen (§39 i/vi: Entry Di −20 für J30–J300, J500/Grand Slam turnierspezifisch → unbekannt; Withdrawal Di −13; Freeze Mi davor). Der scharfe Lauf **schreibt JT mit**.`);
 md.push("");
 
 md.push(`## 2. Verworfene Zeilen nach Grund`);
@@ -368,7 +368,7 @@ md.push(`- **Trockenlauf ist Voreinstellung.** Ohne \`--write\` wird NICHT gesch
 md.push(`- **Dedup:** \`upsert onConflict source_ref\`. \`source_ref = "itf:" + tournamentKey\` (lowercase) deckt sich 1:1 mit dem Wikipedia-Bestand (\`itf:m-itf-…\`) → Herren-Dubletten fallen sauber zusammen; Damen/Junioren sind neu.`);
 md.push(`- **Preisgeld:** echter Endpunkt-Wert, Claim-Quelle \`itf_endpoint\`, confidence ${CONF_OBSERVED} — schlägt den abgeleiteten Wikipedia-Wert (0.5) in \`resolve-tournaments.mjs\` (MU-028).`);
 md.push(`- **Nicht aus dem Endpunkt:** Meldefrist (rechnet \`deadlines.ts\` aus dem Montag), Punkte (\`points.ts\`). Nichts erfunden.`);
-md.push(`- **Junioren:** nur Bericht — Schreiben blockiert der series-CHECK (s. §1).`);
+md.push(`- **Junioren:** werden geschrieben (series \`itf_juniors\`); Fristen via §39 in \`deadlines.ts\`. Alterskontingent/Belastungssteuerung ist Schritt 2 (braucht Geburtsdatum).`);
 if (writeSummary) md.push(`\n**Geschrieben:** ${writeSummary.okT} Turniere, ${writeSummary.okC} Claims, ${writeSummary.errN} Fehler; JT übersprungen: ${writeSummary.skippedJuniors}.`);
 md.push("");
 

@@ -156,10 +156,14 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
-### MU-043 · Junioren-Turniere (Circuit JT) nicht importierbar — Schema + eigene Fristenregeln · M · offen
-**Problem:** Der ITF-Endpunkt liefert 395 Junioren-Turniere (Circuit `JT`, J30–J500), aber `scripts/itf-import.mjs` kann sie NICHT schreiben: `tour_tournaments_series_check` erlaubt nur `itf_wtt` und `challenger`. Der scharfe Lauf überspringt JT bewusst.
-**Wirkung:** Junioren-Spieler haben keinen planbaren Kalender — dieselbe Lücke, die MU-032 für die World Tennis Tour geschlossen hat, bleibt für Junioren offen.
-**Lösung (zwei Teile):** (a) `tour_tournaments_series_check` um `itf_juniors` erweitern (Migration nach `supabase/`, danach `notify pgrst`). (b) **Eigene Fristenregeln in `deadlines.ts`** — die Junioren-Meldefristen unterscheiden sich von der World Tennis Tour und müssen aus dem **Junioren-Regelwerk belegt** werden, nicht von `itf_wtt` übernommen (kein Raten einer Frist). Danach reicht ein erneuter `itf-import.mjs --write` (idempotent, Circuit JT dann writable) + resolve + geocode.
+### MU-043 · Junioren-Turniere (Circuit JT) — Schritt 1 erledigt, Schritt 2 (Alterskontingent) offen · M · teilweise
+**Schritt 1 — ✅ ERLEDIGT (Import + Fristen):**
+- `tour_tournaments_series_check` um `itf_juniors` erweitert (`supabase/web_tour_tournaments_series_juniors.sql`, additive Allowlist, Rollback im File).
+- `deadlines.ts` v2: Junioren-Fristen **eigenständig aus dem Junioren-Regelwerk §39 belegt** (nicht von der WTT übernommen): Entry Di −20 (nur J30–J300), Withdrawal Di −13, Freeze Mi davor, je 14:00 GMT. **J500 / Junior Grand Slam (JGS): Meldeschluss UNBEKANNT** (41/34/27/20 T turnierspezifisch → `entry = null`, wie bei Challengern). Im Code ausdrücklich vermerkt, dass Withdrawal/Freeze nur ZUFÄLLIG mit der WTT übereinstimmen. Grad wird durch die Fristen-UI + reminders-Route durchgereicht (`decide.ts` gegen null-Entry abgesichert).
+- **392 Junioren importiert** (`itf-import.mjs --write`, JT jetzt writable) + resolve. Grade: J30 190, J60 105, J100 56, J200 25, J300 9 (Standard, Frist berechnet) · J500 3, JGS/GC/JM 4 (Entry unbekannt).
+- **Minderjährige unter 13 nicht meldeberechtigt** (§4 b / Age Eligibility Chart Note 3): jedes Junioren-Fristen-Ergebnis trägt den Code `unter_13_nicht_meldeberechtigt`. Domain benennt es; die **UI-Anzeige dieses Hinweises steht noch aus** (kleiner Rest von Schritt 1 → Schritt 2 oder eigener UI-Task).
+
+**Schritt 2 — offen (Belastungssteuerung/Alterskontingent):** Turnieranzahl pro Jahr nach Alter (§ Age Eligibility Chart: 13→10, 14→14, 15→18, 16→25, 17/18 unbegrenzt; gezählt **ab Geburtstag**, nicht Kalenderjahr; max. 3 Meldungen/Woche). Braucht ein **Geburtsdatum** — `profiles` speichert bewusst keins. Bewusste Produktentscheidung (Datenschutz Minderjähriger), nicht nebenbei bauen. Ebenfalls hier: den `unter_13`-Hinweis in der Junioren-Ansicht sichtbar machen (i18n DE/EN).
 
 ### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
 **Ausgangslage:** Alle 1489 Zeilen in `web.tour_tournaments` hatten `latitude`/`longitude` auf `null`; der Wikipedia-Import befüllte die Spalten nie, eine Geocodierung fand nicht statt. `/tour/map` und die Kartenvorschau zeigten für JEDEN Nutzer „keine Turniere mit Koordinaten".
