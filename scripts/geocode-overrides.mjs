@@ -81,6 +81,16 @@ const OVERRIDES = [
   { city: "Doboj", country: "BA", pick: [44.7325, 18.0850], note: "B" },
   { city: "Hagen", country: "DE", pick: [51.3583, 7.4733], note: "B" },
   { city: "Castelo Branco", country: "PT", pick: [39.9768, -7.4461], note: "B" },
+  // ── Nachtrag nach ITF-Import (neue mehrdeutige Zielregion-Orte) ─────────────
+  // EINDEUTIG: nur EIN realer Ort dieses Namens im Land (zweiter Cache-Treffer trägt
+  // einen ANDEREN Namen bzw. ist ein Weiler) → direkt aufgelöst.
+  { city: "Yecla", country: "ES", pick: [38.6136, -1.1158], note: "A: Yecla (Region Murcia); zweiter Treffer heißt 'Yecla de Yeltes' (anderer Ort)" },
+  { city: "Sibenik", country: "HR", pick: [43.7340, 15.8945], note: "A: Šibenik, Adriaküste (einziger Treffer)" },
+  { city: "Redbridge", country: "GB", pick: [51.5763, 0.0454], note: "A: London Borough of Redbridge (einziger Treffer)" },
+  // Sharm El Sheikh: EINDEUTIG (Rotmeer-Resort), aber die ITF-Schreibweise 'ElSheikh'
+  // (ohne Leerzeichen) hat der Geocoder nicht gefunden → verifizierte Koordinate aus dem
+  // Geocoder-Treffer für 'Sharm El Sheikh' direkt gesetzt (coord statt Cache-Abgleich).
+  { city: "Sharm ElSheikh", country: "EG", coord: [27.8644, 34.2954], note: "A: Sharm El Sheikh (Südsinai); Geocoder-Koordinate für die korrekte Schreibweise" },
 ];
 
 // ── Service-Client (Key aus .env.local, wird NIE ausgegeben) ────────────────
@@ -145,10 +155,12 @@ let matched = 0, tournaments = 0;
 for (const o of OVERRIDES) {
   const ids = byKey.get(norm(o.city, o.country));
   if (!ids || ids.length === 0) { console.log(`  ⚠ kein Turnier ohne Koordinaten fuer: ${o.city}, ${o.country} (evtl. schon gesetzt)`); continue; }
-  const cand = resolveFromCache(o);
+  // coord = verifizierte Koordinate direkt (für Orte, die der Geocoder wegen der
+  // Schreibweise nicht fand); sonst den passenden Cache-Kandidaten wählen.
+  const cand = o.coord ? { lat: o.coord[0], lon: o.coord[1] } : resolveFromCache(o);
   if (!cand) { console.log(`  ⚠ kein Cache-Kandidat passt zur Auswahl fuer: ${o.city}, ${o.country} — uebersprungen (kein Raten)`); continue; }
   matched++; tournaments += ids.length;
-  const url = osmUrl(cand);
+  const url = o.coord ? null : osmUrl(cand);
   for (const id of ids) {
     claimRows.push({ tournament_id: id, field_name: "latitude", field_value: String(cand.lat), source: "manual", source_url: url, confidence: CONF_MANUAL });
     claimRows.push({ tournament_id: id, field_name: "longitude", field_value: String(cand.lon), source: "manual", source_url: url, confidence: CONF_MANUAL });
