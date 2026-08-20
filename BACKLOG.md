@@ -126,11 +126,10 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Ablaufdatum je Einladung, Token nach Annahme entwerten, und dem Spieler anzeigen, wann ein Link erzeugt wurde und ob er noch offen ist.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein einmal erzeugter Einladungslink unbegrenzt gültig bleibt.
 
-### MU-032 · Kein ITF-Turnier mit offener Meldefrist — Planer für Futures-Spieler leer · L · offen · **Vor Launch**
+### MU-032 · Kein ITF-Turnier mit offener Meldefrist — Planer für Futures-Spieler leer · L · ✅ ERLEDIGT
 **Problem:** Kein aktives ITF-Turnier hat eine offene Meldefrist. Der späteste ITF-Turniermontag im Bestand ist `2026-08-03`, heute ist `2026-08-09`. Ursache: Wikipedia trägt ITF-Turniere erst nach, wenn sie laufen — der Kalender endet strukturell in der Vergangenheit.
 **Wirkung:** Für einen Futures-Spieler ist der Planer leer. Alle 1007 ITF-Turniere zeigen „Meldeschluss abgelaufen", der Optimierer wählt nur aus Challengern. Der Meldefrist-Countdown (`aba9789`) greift bei null Turnieren. Das trifft genau die Zielgruppe.
-**Lösung:** Eine vorausschauende Quelle für ITF-Turniere. Die Verbandsrecherche nennt Spanien (RFET), Türkei (TTF) und Deutschland (DTB) als machbar; für Nordafrika (Monastir, Sharm) gibt es keinen Verbandskalender — dort wären die Veranstalter anzuschreiben (Magic Tours, Soho Square).
-**Sperre:** Nicht mit echten Nutzern starten, solange der Kalender keine planbaren Turniere enthält.
+**Gelöst** durch `scripts/itf-import.mjs` (Endpunkt `TournamentApi/GetCalendar`, Circuits MT und WT). 409 Turniere importiert, davon 291 mit offener Meldefrist. Der Optimierer findet 172 Kandidaten in Europa für die nächsten drei Monate — vorher 0. Junioren (395) bleiben offen, siehe MU-043.
 
 ### MU-035 · Fremde Personenfotos ohne Einwilligung in `service_providers.image_url` · M · offen · **Vor Launch** · **Rechtsfrage**
 **Problem:** Alle 77 Einträge in `web.service_providers` tragen ein `image_url`, das auf einen fremden Server zeigt. 33 sind Website-Favicons über `icons.duckduckgo.com` — als Anbieterfoto wertlos. Die übrigen 44 sind von den Websites der Anbieter gehotlinkt; jedes Personenfoto darunter erscheint ohne Einwilligung der abgebildeten Person. Ein Porträt ist ein personenbezogenes Datum, eine Rechtsgrundlage liegt nicht vor. Aus der URL lässt sich nicht unterscheiden, welche Bilder Personen zeigen. Verschärfend: Die Bilder werden live von fremden Servern geladen — fremde Bandbreite, und wer die Datei dort austauscht, ändert das Bild in unserer App.
@@ -156,6 +155,11 @@ Attribution in beiden Fällen sicherstellen.
 **Sperre:** Nicht mit echten Nutzern starten, solange ein Klick eine geplante Saison löschen kann.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
+
+### MU-043 · Junioren-Turniere (Circuit JT) nicht importierbar — Schema + eigene Fristenregeln · M · offen
+**Problem:** Der ITF-Endpunkt liefert 395 Junioren-Turniere (Circuit `JT`, J30–J500), aber `scripts/itf-import.mjs` kann sie NICHT schreiben: `tour_tournaments_series_check` erlaubt nur `itf_wtt` und `challenger`. Der scharfe Lauf überspringt JT bewusst.
+**Wirkung:** Junioren-Spieler haben keinen planbaren Kalender — dieselbe Lücke, die MU-032 für die World Tennis Tour geschlossen hat, bleibt für Junioren offen.
+**Lösung (zwei Teile):** (a) `tour_tournaments_series_check` um `itf_juniors` erweitern (Migration nach `supabase/`, danach `notify pgrst`). (b) **Eigene Fristenregeln in `deadlines.ts`** — die Junioren-Meldefristen unterscheiden sich von der World Tennis Tour und müssen aus dem **Junioren-Regelwerk belegt** werden, nicht von `itf_wtt` übernommen (kein Raten einer Frist). Danach reicht ein erneuter `itf-import.mjs --write` (idempotent, Circuit JT dann writable) + resolve + geocode.
 
 ### MU-029 · Turniere ohne Koordinaten — Karte unvollständig · M · offen
 **Ausgangslage:** Alle 1489 Zeilen in `web.tour_tournaments` hatten `latitude`/`longitude` auf `null`; der Wikipedia-Import befüllte die Spalten nie, eine Geocodierung fand nicht statt. `/tour/map` und die Kartenvorschau zeigten für JEDEN Nutzer „keine Turniere mit Koordinaten".
@@ -192,10 +196,10 @@ Attribution in beiden Fällen sicherstellen.
 **Dateien:** `src/lib/tournaments.ts` (`computePlan`/`leg`/`PlanCost`), `src/app/map/SeasonPlanner.tsx` (Anzeige), Muster: `src/domain/tour/costs.ts` + Test.
 **Fertig wenn:** Ein Cluster von drei Wochen am selben Ort wird im Planer nachweislich günstiger dargestellt als drei verschiedene Orte; keine Float-Zwischenwerte; mehrere Währungen (falls je eingeführt) getrennt ausgewiesen.
 
-### MU-028 · Preisgeld-Ableitung ohne Jahres-Staffelung · M · offen
+### MU-028 · Preisgeld-Ableitung ohne Jahres-Staffelung · M · ✅ ERLEDIGT
 **Problem:** `PRIZE_USD` in `scripts/wikipedia-import.mjs` (Zeile 90–95) leitet das Preisgeld aus der Kategorie ab, mit festen, JAHRES-UNABHÄNGIGEN Werten. M25 steht dort auf 25000 USD; laut 2026-WTT-Regelwerk sind es 2026 aber 30000. Die Struktur kann Jahresänderungen grundsätzlich nicht abbilden.
 **Wirkung:** Alle 2026er M25-Turniere tragen einen um 5000 USD zu niedrigen Preisgeld-Claim. Bei jeder künftigen ITF-Preisgeldreform wiederholt sich der Fehler still. Entschärfend: Der Wert ist als Ableitung mit niedriger confidence markiert, nicht als Beobachtung.
-**Lösung:** `PRIZE_USD` nach Jahr staffeln (Kategorie + Jahr → Betrag), mit Quellenangabe je Jahrgang. Danach die betroffenen Claims neu berechnen — der Import ist idempotent, ein erneuter Lauf reicht. Belegt in `scripts/punkte-tabellen-report.md` §2b.
+**Gelöst** — der Endpunkt (`scripts/itf-import.mjs`) liefert echte Preisgelder, die vom abgeleiteten Kategorie-mal-tausend abweichen (M25 = 30.000 statt 25.000, W35 mit zwei verschiedenen Werten). Als Claim mit Confidence 0.9 importiert; `resolveClaimField` zieht sie dem abgeleiteten Wert (0.5) vor. Auf den Live-Zeilen bestätigt.
 
 ### MU-030 · Spieler-Setups im Konfigurator ohne Datenstand und Quelle · M · offen
 **Problem:** Die zwölf Spieler-Setups im Konfigurator (`src/components/shop/BespannungConfigurator.tsx`) tragen weder Datenstand noch Quellenangabe. Tour-Setups ändern sich saisonal — belegt am Fall **Alcaraz**, dessen Saite von RPM Blast auf RPM Team wechselte und an zwei Stellen unterschiedlich stand (behoben mit `3ad5897`). Für die übrigen elf ist die Aktualität unbekannt: keine Quelle, kein Datum.
