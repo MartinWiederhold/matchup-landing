@@ -1,0 +1,115 @@
+# ITF-Turnier-Import — täglicher Lauf
+#
+# Warum GitHub Actions und nicht ein Vercel-Cron: Der ITF-Endpunkt sitzt hinter
+# Incapsula und braucht einen browserartigen Client (Playwright/Chromium). Der läuft
+# in einer Vercel-Funktion nicht zuverlässig (Chromium-Bundle, 60-s-Grenze, und
+# Rechenzentrums-IPs werden von Incapsula eher geblockt). Auf einem GitHub-Runner
+# läuft das bestehende Skript `scripts/itf-import.mjs` UNVERÄNDERT.
+#
+# Pipeline (Reihenfolge ist wichtig — resolve läuft ZULETZT):
+#   1. itf-import      → schreibt Identität + Claims (upsert onConflict source_ref;
+#                        NIE löschen — verschwundene Turniere behalten ihre Zeile)
+#   2. geocode         → Nominatim, NUR Orte ohne Koordinaten; mehrdeutige Orte lässt
+#                        das Skript bewusst offen (kein Raten)
+#   3. geocode-overrides → kuratierte manuelle Koordinaten erneut anwenden
+#   4. resolve         → Claims → Stammfelder (jüngeres observed_at gewinnt → ein
+#                        verlegtes Turnier bekommt das neue Datum)
+#
+# WICHTIG: `schedule` feuert nur auf dem DEFAULT-Branch (main). Diese Datei muss auf
+# `main` liegen, damit der Tageslauf startet. `workflow_dispatch` erlaubt manuelles
+# Auslösen (auch von einem Feature-Branch aus) zum Testen.
+#
+# Nötige Repo-Secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_SERVICE_ROLE_KEY   (service_role, NICHT NEXT_PUBLIC)
+#   NEXT_PUBLIC_SUPABASE_URL
+
+name: ITF-Import (täglich)
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # 04:00 UTC — vor den beiden App-Crons (05:30 / 06:00)
+  workflow_dispatch: {} # manuell auslösbar
+
+# Keine parallelen Läufe (sonst zwei Importe gleichzeitig in dieselben Tabellen).
+concurrency:
+  group: itf-import
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Chromium für Playwright installieren
+        run: npx playwright install --with-deps chromium
+
+      # Secrets früh prüfen — ein fehlendes Secret soll sofort auffallen, nicht erst
+      # nach dem langen ITF-Abruf.
+      - name: Secrets vorhanden?
+        run: |
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::SUPABASE_SERVICE_ROLE_KEY fehlt"; exit 1; }
+          test -n "$NEXT_PUBLIC_SUPABASE_URL" || { echo "::error::NEXT_PUBLIC_SUPABASE_URL fehlt"; exit 1; }
+
+      # 1. Import. Der eingebaute Wächter (writableKept===0 → exit 1) macht einen
+      #    stillen Nulllauf (Incapsula-Blockade) zu einem ROTEN Lauf.
+      - name: 1 · ITF-Import (scharf)
+        run: node scripts/itf-import.mjs --write
+
+      - name: 2 · Geokodierung (neue Orte)
+        run: node scripts/geocode-tournaments.mjs
+
+      - name: 3 · Manuelle Overrides
+        run: node scripts/geocode-overrides.mjs --write
+
+      - name: 4 · Claims auflösen
+        run: node scripts/resolve-tournaments.mjs --write
+
+      # Kennzahlen in die Job-Zusammenfassung — damit man ohne Log-Wühlen sieht, was lief.
+      - name: Zusammenfassung
+        if: always()
+        run: |
+          {
+            echo "## ITF-Import — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            if [ -f scripts/itf-import-report.md ]; then
+              echo "### Import"
+              sed -n '1,12p' scripts/itf-import-report.md
+              echo ""
+            fi
+            if [ -f scripts/geocoding-report.md ]; then
+              echo "### Geokodierung (noch ohne Koordinaten = Kuratierung nötig)"
+              grep -iE "ohne Koordinaten|mehrdeutig|nicht gefunden|ambiguous|not_found" scripts/geocoding-report.md | head -20 || true
+              echo ""
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Berichte als Artefakt — 14 Tage abrufbar, auch bei Fehlschlag.
+      - name: Berichte hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: itf-import-reports
+          path: |
+            scripts/itf-import-report.md
+            scripts/geocoding-report.md
+            scripts/resolve-report.md
+          if-no-files-found: ignore
+          retention-days: 14

@@ -380,3 +380,14 @@ const totalNew = CIRCUITS.reduce((a, c) => a + perCircuit[c.code].neu, 0);
 const totalDup = CIRCUITS.reduce((a, c) => a + perCircuit[c.code].dup, 0);
 console.log(`\n${WRITE ? "SCHARF" : "TROCKENLAUF"} · verwertbar=${totalKept} neu=${totalNew} dublette=${totalDup}`);
 console.log(`Bericht: scripts/itf-import-report.md`);
+
+// Wächter gegen den STILLEN NULLLAUF: Liefern die schreibbaren Circuits (Herren+Damen)
+// nichts Verwertbares, ist das fast sicher eine Incapsula-Blockade oder ein kaputter
+// Endpunkt — NICHT ein leerer Kalender (es stehen immer Turniere in der Zukunft). Ohne
+// diesen Abbruch sähe ein Nulllauf aus wie Erfolg, und Wochen später wären die
+// Meldefristen ungesehen abgelaufen. Darum: harter Fehler → roter CI-Lauf → Mail.
+const writableKept = CIRCUITS.filter((c) => c.writable).reduce((a, c) => a + perCircuit[c.code].kept.length, 0);
+if (writableKept === 0) {
+  console.error("ABBRUCH: 0 verwertbare Turniere aus Herren+Damen — vermutlich Incapsula-Blockade oder Endpunkt kaputt. Kein stiller Nulllauf.");
+  process.exit(1);
+}
