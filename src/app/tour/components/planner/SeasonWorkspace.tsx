@@ -1523,14 +1523,14 @@ export default function SeasonWorkspace() {
                         <span className="text-neutral-300">→</span>
                       </span>
                     </Link>
-                    {/* Alter kommt aus dem /app-Profil (kein Geburtsdatum gespeichert) → Link zur App. */}
-                    <Link href="/app" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                    {/* Alter ist aus dem Matchup-Profil abgeleitet (Geburtsdatum, das die Tour
+                        bewusst nicht speichert). REINE INFO — kein Link nach /app: eine
+                        Weiterleitung aus dem Tour-Planer heraus wirkte wie eine Sackgasse
+                        (dieselbe Lehre wie beim Wohnland). Kein Pfeil, nicht klickbar. */}
+                    <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px]">
                       <span className="text-neutral-700">{t("tour.suAge")}</span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-[12px] font-semibold text-neutral-500">{profile.age != null ? t("tour.suAgeVal", { n: profile.age }) : t("tour.suMissing")}</span>
-                        <span className="text-neutral-300">→</span>
-                      </span>
-                    </Link>
+                      <span className="text-[12px] font-semibold text-neutral-500">{profile.age != null ? t("tour.suAgeVal", { n: profile.age }) : t("tour.suMissing")}</span>
+                    </div>
                   </div>
                 </div>
               </>
