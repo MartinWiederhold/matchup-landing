@@ -126,7 +126,7 @@ describe("scorePoints – Vorjahres-Ergebnis fällt zum richtigen Zeitpunkt hera
   });
 });
 
-describe("scorePoints – mehr Ergebnisse als zählen (beste sieben bzw. sechs)", () => {
+describe("scorePoints – Zählgrenze best 18/19 (ATP 9.03 B inkl. Pflicht-Umwandlung)", () => {
   // Acht Challenger-Ergebnisse mit acht verschiedenen Punktwerten, alle in derselben
   // Turnierwoche (2025-11-03, Montag), alle zum Stichtag wirksam.
   // Sortiert absteigend: 175, 125, 100, 90, 75, 64, 50, 44.
@@ -141,20 +141,52 @@ describe("scorePoints – mehr Ergebnisse als zählen (beste sieben bzw. sechs)"
     { category: "challenger_75", round: "F", tournamentMonday: "2025-11-03" }, // 44
   ];
 
-  it("Stichtag 2025 → beste sieben (679), schwächstes (44) fällt raus", () => {
+  it("Stichtag 2025 → Grenze 19 (9.03 B, best 7 + 12 Pflichtplätze) → alle acht zählen", () => {
     const out = scorePoints(acht, "2025-11-10");
-    expect(out.countingLimit).toBe(7);
-    expect(out.countingTotal).toBe(175 + 125 + 100 + 90 + 75 + 64 + 50); // 679
-    const raus = out.results.find((s) => s.points === 44)!;
-    expect(raus.counts).toBe(false);
-    expect(raus.notes).toContain("nicht_unter_besten_n");
+    expect(out.countingLimit).toBe(19);
+    expect(out.countingTotal).toBe(175 + 125 + 100 + 90 + 75 + 64 + 50 + 44); // 723
+    expect(out.results.every((s) => s.counts)).toBe(true);
   });
 
-  it("Stichtag 2026 → beste sechs (629), 50 und 44 fallen raus", () => {
+  it("Stichtag 2026 → Grenze 18 (best 6 + 12) → alle acht zählen", () => {
     const out = scorePoints(acht, "2026-01-05");
-    expect(out.countingLimit).toBe(6);
-    expect(out.countingTotal).toBe(175 + 125 + 100 + 90 + 75 + 64); // 629
-    expect(out.results.filter((s) => s.counts).length).toBe(6);
+    expect(out.countingLimit).toBe(18);
+    expect(out.countingTotal).toBe(723);
+  });
+});
+
+describe("scorePoints – MU-047: zehn Ergebnisse zählen alle (107 statt 92)", () => {
+  // Fall aus dem Bericht. Punkte (2026-Werte), absteigend: 25,22,15,14,8,8,7,4,3,1 → Summe 107.
+  // Früher (fälschlich best 6): 25+22+15+14+8+8 = 92. Korrekt (best 18): alle zehn = 107.
+  const zehn: MatchResult[] = [
+    { category: "m25", round: "W", tournamentMonday: "2026-03-02" },            // 25
+    { category: "challenger_75", round: "SF", tournamentMonday: "2026-03-02" }, // 22
+    { category: "m15", round: "W", tournamentMonday: "2026-03-02" },            // 15
+    { category: "m25", round: "F", tournamentMonday: "2026-03-02" },            // 14
+    { category: "challenger_50", round: "QF", tournamentMonday: "2026-03-02" }, // 8
+    { category: "m15", round: "F", tournamentMonday: "2026-03-02" },            // 8
+    { category: "m25", round: "SF", tournamentMonday: "2026-03-02" },           // 7
+    { category: "m15", round: "SF", tournamentMonday: "2026-03-02" },           // 4
+    { category: "m25", round: "QF", tournamentMonday: "2026-03-02" },           // 3
+    { category: "m25", round: "R16", tournamentMonday: "2026-03-02" },          // 1
+  ];
+  it("Grenze 18, alle zehn zählen, Summe 107", () => {
+    const out = scorePoints(zehn, "2026-06-01");
+    expect(out.countingLimit).toBe(18);
+    expect(out.countingTotal).toBe(107);
+    expect(out.results.filter((s) => s.counts).length).toBe(10);
+  });
+});
+
+describe("scorePoints – Cap greift weiterhin bei > 18 Ergebnissen", () => {
+  it("zwanzig gleiche Challenger-Siege (50) → nur beste 18 zählen (900), 2 fallen raus", () => {
+    const zwanzig: MatchResult[] = Array.from({ length: 20 }, () => ({
+      category: "challenger_50", round: "W", tournamentMonday: "2026-03-02",
+    }));
+    const out = scorePoints(zwanzig, "2026-06-01");
+    expect(out.countingLimit).toBe(18);
+    expect(out.countingTotal).toBe(18 * 50); // 900
+    expect(out.results.filter((s) => s.counts).length).toBe(18);
   });
 });
 
@@ -298,9 +330,9 @@ describe("scorePoints – Damen zählen nach WTA (beste 18), nicht ATP (6/7)", (
     expect(out.notes).toContain("wta_einrechnung_verzoegerung_unbelegt");
   });
 
-  it("Herren-Ergebnisse behalten die ATP-Zählgrenze (2026 ⇒ 6), keine WTA-Lücke", () => {
+  it("Herren-Ergebnisse: ATP-Zählgrenze (2026 ⇒ 18, 9.03 B), keine WTA-Lücke", () => {
     const out = scorePoints([{ category: "m25", round: "W", tournamentMonday: "2026-03-02" }], "2026-06-01");
-    expect(out.countingLimit).toBe(6);
+    expect(out.countingLimit).toBe(18);
     expect(out.notes).not.toContain("wta_einrechnung_verzoegerung_unbelegt");
   });
 });

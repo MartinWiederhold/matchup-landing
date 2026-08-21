@@ -203,10 +203,16 @@ Aus dem Fließtext des Kapitels 9 (wörtlich geprüft), relevant für den Rechne
    any points earned, as per the following table, **with the exception of ITF Men's WTT events**."*
    — **Regel 9.03 G.3**, 2024 **S. 254**, 2026 **S. 272**. (Deckt sich mit §3a: Challenger hat
    Q/Q2-Werte, ITF nicht.)
-3. **Zählende Ergebnisse: 2024/2025 „best seven", 2026 „best six".** 2024/2025: *„… his best seven
-   (7) results from the United Cup, all ATP Tour 500, ATP Tour 250, ATP Challenger Tour and …"* —
-   2024 **S. 250**. 2026: *„… his best six (6) results …"* — 2026 **S. 268**. (Zählregel, Abschnitt
-   9.03 A/B — die Zahl der zählenden Nicht-Pflicht-Turniere sinkt 2026 von 7 auf 6.)
+3. **Zählende Ergebnisse (9.03 B): best 7/6 PLUS Pflicht-Umwandlung → tatsächlich best 19/18.**
+   ⚠️ **KORREKTUR (MU-047):** Das frühere Zitat hier war VOR der entscheidenden Klausel abgeschnitten
+   („… and …") und verleitete zu „für die Zielgruppe schlicht best 6/7". Das war falsch. Vollständig:
+   *„… his best seven (7) results from the United Cup, all ATP Tour 500, ATP Tour 250, ATP Challenger
+   Tour and ITF Men's WTT tournaments. **For every Grand Slam or mandatory ATP Tour Masters 1000
+   tournament for which a player is not in the main draw … the number of his results from all other
+   eligible tournaments … that count for his ranking, is increased by one (1).**"* — 9.03 B, 2024
+   **S. 250** (best 7) / 2026 **S. 268** (best 6). **Folge:** Für die Zielgruppe außerhalb der Top 30
+   (in keinem der 12 Pflichtturniere: 4 Grand Slams + 8 Masters 1000) ist die tatsächliche Grenze
+   **best 7 + 12 = 19** (2024/25) bzw. **best 6 + 12 = 18** (2026). Umgesetzt in `points.ts` (v4).
 4. **ITF-Turniere kommen erst am zweiten Montag nach der Turnierwoche ins System.** Wortlaut:
    *„ITF tournaments … are only entered into the system on the second Monday following the
    tournament's week."* — **Regel 9.01 E**, 2024 **S. 249**, 2026 **S. 267**. (Wichtig für die

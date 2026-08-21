@@ -15,7 +15,7 @@ describe("pointsForecast – aktueller Stand + Ausblick", () => {
   it("aktueller Stand summiert beide zählenden Ergebnisse", () => {
     const f = pointsForecast(results, asOf);
     expect(f.currentTotal).toBe(133); // 8 + 125
-    expect(f.countingLimit).toBe(6); // Stichtag 2026 → beste 6
+    expect(f.countingLimit).toBe(18); // Stichtag 2026 → beste 18 (9.03 B, MU-047)
   });
 
   it("+4 Wochen: die 8 Punkte verfallen (2026-08-31), netto 125", () => {

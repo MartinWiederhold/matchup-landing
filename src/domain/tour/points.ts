@@ -26,8 +26,10 @@
  *  - Qualifikationspunkte gibt es bei Challenger (Q/Q2), bei ITF NICHT (9.03 G.3-Ausnahme).
  *  - Die Punktetabellen sind JAHRESABHÄNGIG: M25 F/SF wurden 2026 von 16/8 auf 14/7 gesenkt.
  *    Maßgeblich ist das Jahr des ERGEBNISSES (der Turnierwoche), nicht das aktuelle Jahr.
- *  - Zählende Ergebnisse: 2024/2025 die besten sieben, ab 2026 die besten sechs neben den
- *    Pflichtturnieren (9.03 A/B). Für die Zielgruppe (ohne Pflichtturniere) schlicht: best n.
+ *  - Zählende Ergebnisse (9.03 B): best 7 (2024/25) bzw. best 6 (2026) NEBEN den Pflichtturnieren
+ *    UND „increased by one (1)" je Pflichtturnier (Grand Slam / Masters 1000) ohne Hauptfeld-Platz.
+ *    Die Zielgruppe (außerhalb Top 30) steht in KEINEM der 12 → tatsächliche Grenze best 19 (2024/25)
+ *    bzw. best 18 (2026). Der frühere Schluss „schlicht best n" war FALSCH (Umwandlung übersehen).
  */
 
 /**
@@ -50,7 +52,8 @@
 
 // v2: WTA-Punktemodell (Damen W15–W100) ergänzt; ATP/Challenger-Logik unverändert.
 // v3: WTA-Aggregatregel — Damen-Zählgrenze best 18 (WTA VIII.4.a.i), Herren unverändert.
-export const POINTS_RULES_VERSION = "v3";
+// v4: Herren-Zählgrenze korrigiert best 6/7 → best 18/19 (9.03-B-Pflicht-Umwandlung, MU-047).
+export const POINTS_RULES_VERSION = "v4";
 
 const DAY = 86_400_000; // ms/Tag
 const VALID_DAYS = 364; // 52 Wochen Gültigkeit ab Wirksamwerden
@@ -151,7 +154,7 @@ export type ScoredResult = {
 export type PointsSummary = {
   rulesVersion: string;
   results: ScoredResult[]; // in Eingabereihenfolge
-  countingLimit: 6 | 7 | 18; // Herren best 6/7 (ATP 9.03 A/B) · Damen best 18 (WTA VIII.4.a.i)
+  countingLimit: 18 | 19; // Herren best 18 (2026) / 19 (2024/25) inkl. Pflicht-Umwandlung (9.03 B) · Damen best 18 (WTA VIII.4.a.i)
   countingTotal: number; // Summe der zählenden Ergebnisse
   expiringSoon: { index: number; expiresOn: string }[]; // wirksame Ergebnisse, die bald verfallen
   notes: string[]; // nur Codes (globale Hinweise)
@@ -264,7 +267,7 @@ export function scorePoints(
   if (Number.isNaN(asOfMs)) {
     return {
       rulesVersion: POINTS_RULES_VERSION,
-      results: [], countingLimit: 7, countingTotal: 0, expiringSoon: [],
+      results: [], countingLimit: 18, countingTotal: 0, expiringSoon: [],
       notes: ["ungueltiger_stichtag"],
     };
   }
@@ -280,8 +283,27 @@ export function scorePoints(
   const anyMen = cats.some((c) => c != null && (CHALLENGER_CATS.has(c) || ITF_CATS.has(c)));
   const wtaRanking = anyWomen && !anyMen;
 
-  // Zählgrenze: Damen 18 (WTA), sonst nach Jahr des Stichtags (ATP 9.03 A/B): ≤2025 → 7, ≥2026 → 6.
-  const countingLimit: 6 | 7 | 18 = wtaRanking ? 18 : asOfYear >= 2026 ? 6 : 7;
+  // ── Zählgrenze (HERREN, ATP 9.03 B „Non-commitment Players") ────────────────
+  // Das Modell nutzte früher fälschlich best 6 (2026) / 7 (2024/25). Das ist die halbe Regel.
+  // WÖRTLICH und VOLLSTÄNDIG (ATP Rulebook Kap. IX, 9.03 B — NICHT kürzen, das gekürzte Zitat
+  // in scripts/punkte-tabellen-report.md war die Fehlerursache, MU-047):
+  //
+  //   „The … ATP Rankings is based on calculating, for each player, his total points from the
+  //    four (4) Grand Slams, the eight (8) mandatory ATP Tour Masters 1000 tournaments and the
+  //    Nitto ATP Finals … and his best seven (7) results from the United Cup, all ATP Tour 500,
+  //    ATP Tour 250, ATP Challenger Tour and ITF Men's WTT tournaments. FOR EVERY GRAND SLAM OR
+  //    MANDATORY ATP TOUR MASTERS 1000 TOURNAMENT FOR WHICH A PLAYER IS NOT IN THE MAIN DRAW …
+  //    THE NUMBER OF HIS RESULTS FROM ALL OTHER ELIGIBLE TOURNAMENTS … THAT COUNT FOR HIS
+  //    RANKING, IS INCREASED BY ONE (1)."
+  //
+  // Diese App erfasst NUR ITF/Challenger-Ergebnisse (m15/m25/challenger_*) — nie ein Grand-Slam-
+  // oder Masters-1000-Hauptfeld. Die Zielgruppe (außerhalb Top 30) steht also in KEINEM der
+  // zwölf Pflichtturniere (4 GS + 8 M1000) → best-n wird um 12 erhöht:
+  //   2024/2025: best 7 + 12 = 19 · 2026: best 6 + 12 = 18.
+  // (Würde die App je GS/Masters-Ergebnisse führen, müsste hier je gespieltem Pflichtturnier
+  //  um 1 reduziert werden. Tut sie nicht — daher fix 18/19.)
+  // Damen: 18 (WTA VIII.4.a.i, analog: best 7 + 11 Pflichtplätze).
+  const countingLimit: 18 | 19 = wtaRanking ? 18 : asOfYear >= 2026 ? 18 : 19;
   if (!wtaRanking && (asOfYear < 2024 || asOfYear > 2026)) topNotes.push("zaehlgrenze_ausserhalb_beleg");
   // LÜCKE (belegt-teilweise): Die WTA-EINRECHNUNGS-VERZÖGERUNG ist nur für W15/W35 belegt
   // („mind. 1 Woche nach Turnierende", VIII.3.d) und dort unscharf; für W50/W75/W100 NICHT
