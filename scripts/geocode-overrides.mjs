@@ -107,6 +107,23 @@ const OVERRIDES = [
   // Vale do Lobo: Algarve-Resort — kein Geocoder-Kandidat traf die Küstenlage (nur Binnenland),
   // deshalb verifizierte Koordinate direkt gesetzt und vom Nutzer bestätigt.
   { city: "Vale do Lobo", country: "PT", coord: [37.0610, -8.0280], note: "Nutzer bestätigt: Algarve-Resort; kein Geocoder-Kandidat passte zur Küstenlage" },
+  // ── WTA-Haupttour (2026-08-21). Alles bekannte Großstädte; die „Mehrdeutigkeit" ist
+  //    Nominatim-Rauschen (gleichnamige Kleinorte / Stadt vs. Bundesstaat). Verifizierte
+  //    Großstadt-Koordinate; keine echte Doppeldeutigkeit → direkt aufgelöst.
+  { city: "LUANDA", country: "AO", coord: [-8.8368, 13.2343], note: "Luanda, Hauptstadt Angola" },
+  { city: "BUENOS AIRES", country: "AR", coord: [-34.6037, -58.3816], note: "Buenos Aires (Stadt)" },
+  { city: "CURITIBA", country: "BR", coord: [-25.4284, -49.2733], note: "Curitiba, Paraná" },
+  { city: "RIO DE JANEIRO", country: "BR", coord: [-22.9068, -43.1729], note: "Rio de Janeiro (Stadt, nicht Bundesstaat)" },
+  { city: "SAO PAULO", country: "BR", coord: [-23.5505, -46.6333], note: "São Paulo (Stadt, nicht Bundesstaat)" },
+  { city: "COLINA", country: "CL", coord: [-33.2028, -70.6753], note: "Colina bei Santiago (WTA-Austragungsort)" },
+  { city: "JINGSHAN", country: "CN", coord: [31.0170, 113.1150], note: "Jingshan, Hubei" },
+  { city: "SUZHOU", country: "CN", coord: [31.2989, 120.5853], note: "Suzhou, Jiangsu (bekannte Stadt)" },
+  { city: "HONG KONG", country: "HK", coord: [22.3193, 114.1694], note: "Hong Kong" },
+  { city: "ROVERETO", country: "IT", coord: [45.8906, 11.0400], note: "Rovereto, Trentino (einzige relevante)" },
+  { city: "QUERETARO", country: "MX", coord: [20.5888, -100.3899], note: "Querétaro (Stadt)" },
+  { city: "CINCINNATI", country: "US", coord: [39.1031, -84.5120], note: "Cincinnati, Ohio (WTA 1000)" },
+  { city: "MIAMI", country: "US", coord: [25.7617, -80.1918], note: "Miami, Florida (WTA 1000); zweiter Treffer Miami/Ohio" },
+  { city: "PHILADELPHIA", country: "US", coord: [39.9526, -75.1652], note: "Philadelphia, Pennsylvania" },
   // ── Junioren, europäische eindeutige Orte (2026-08-21). Bekannte Stadt gewählt; die
   //    übrigen Nominatim-Cluster sind gleichnamige Mini-Dörfer (Rauschen), keine echte
   //    Mehrdeutigkeit. Koordinate = verifizierter OSM-Knoten der bekannten Stadt.
