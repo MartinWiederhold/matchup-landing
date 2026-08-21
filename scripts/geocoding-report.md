@@ -1,4 +1,4 @@
-# Geocodierung Turniere — SCHARFER LAUF
+# Geocodierung Turniere — TROCKENLAUF (nichts geschrieben)
 
 > Erzeugt von `scripts/geocode-tournaments.mjs`. Quelle: **Nominatim / OpenStreetMap**
 > Richtlinie: https://operations.osmfoundation.org/policies/nominatim/ · Attribution "© OpenStreetMap contributors".
@@ -8,35 +8,23 @@
 
 | | Anzahl |
 |---|---:|
-| Turniere ohne Koordinaten | 651 |
-| Distinkte Orte (Stadt+Land) | 381 |
-| **abgefragt (fertig)** | 381 |
+| Turniere ohne Koordinaten | 330 |
+| Distinkte Orte (Stadt+Land) | 164 |
+| **abgefragt (fertig)** | 164 |
 | noch offen (--limit) | 0 |
-| aufgeloest | 215 |
-| mehrdeutig | 154 |
+| aufgeloest | 0 |
+| mehrdeutig | 152 |
 | nicht gefunden | 12 |
 | falsches Land | 0 |
 | Fehler/keine Antwort | 0 |
-| Netz-Abfragen in diesem Lauf | 0 (Cache: 381) |
+| Netz-Abfragen in diesem Lauf | 0 (Cache: 164) |
 
-**Wuerde geschrieben:** 638 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 215 Orte / 319 Turniere.
-
-**Geschrieben:** 638 Claims ok, 0 Fehler (von 638).
+**Wuerde geschrieben:** 0 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 0 Orte / 0 Turniere.
 
 ## Stichprobe: 10 aufgeloeste Orte (zur Pruefung)
 
 | Ort | Land | lat | lon | Turniere | OSM |
 |---|---|---:|---:|---:|---|
-| Augsburg | DE | 48.36903 | 10.89795 | 1 | https://www.openstreetmap.org/relation/62407 |
-| Kreuzlingen | CH | 47.64644 | 9.17256 | 1 | https://www.openstreetmap.org/relation/1684537 |
-| Accra | GH | 5.55711 | -0.20124 | 6 | https://www.openstreetmap.org/relation/12803764 |
-| Phan Thiet | VN | 10.94184 | 108.08231 | 2 | https://www.openstreetmap.org/node/2283324650 |
-| Loughborough | GB | 52.77239 | -1.20780 | 3 | https://www.openstreetmap.org/node/10021975 |
-| Repentigny | CA | 45.73261 | -73.45283 | 1 | https://www.openstreetmap.org/relation/7706380 |
-| Bulawayo | ZW | -20.10539 | 28.54269 | 2 | https://www.openstreetmap.org/relation/3337019 |
-| Cholpon-Ata | KG | 42.64171 | 77.06652 | 2 | https://www.openstreetmap.org/way/123651264 |
-| San Pedro Sula | HN | 15.50535 | -88.02508 | 1 | https://www.openstreetmap.org/relation/6057211 |
-| Shenzhen | CN | 22.54457 | 114.05454 | 1 | https://www.openstreetmap.org/relation/3464353 |
 
 ## Mehrdeutige Orte (NICHT uebernommen — bitte pruefen)
 
@@ -103,9 +91,6 @@
   - -6.6968, -35.5370 · Belém, Paraíba, Northeast Region, Brazil
   - -9.5715, -36.4928 · Belém, Alagoas, Northeast Region, 57630-000, Brazil
   - -23.5349, -46.5949 · Belém, São Paulo, Southeast Region, Brazil
-- **Trnava, SK** (1 Turniere) — 2 verschiedene Orte:
-  - 48.3768, 17.5858 · Trnava, District of Trnava, Region of Trnava, Slovakia
-  - 48.8167, 21.9335 · Trnava pri Laborci, District of Michalovce, Region of Košice, Slovakia
 - **Ponts de Ce, FR** (1 Turniere) — 2 verschiedene Orte:
   - 47.4252, -0.5257 · Château des Ponts de Cé, Rue Charles de Gaulle, La Filerie, Les Ponts-de-Cé, Angers, Maine-et-Loire, Pays de la Loire, Metropolitan France, 49130, France
   - 50.7184, 1.6135 · Rue des Deux Ponts, Bréquerecque, Boulogne-sur-Mer, Pas-de-Calais, Hauts-de-France, Metropolitan France, 62200, France
@@ -527,9 +512,6 @@
   - 43.1214, -70.9177 · Durham, Strafford County, New Hampshire, 03824, United States
   - 38.4851, -97.2282 · Durham, Marion County, Kansas, 67438, United States
   - 41.4818, -72.6812 · Durham, Lower Connecticut River Valley Planning Region, Connecticut, 06422, United States
-- **Sofia, BG** (1 Turniere) — 2 verschiedene Orte:
-  - 42.6977, 23.3217 · Sofia, Sredec, Stolichna, Sofia-City, Bulgaria
-  - 42.6419, 23.9736 · Sofia, Bulgaria
 - **Austin, US** (2 Turniere) — 5 verschiedene Orte:
   - 30.2711, -97.7437 · Austin, Travis County, Texas, United States
   - 29.8916, -96.2443 · Austin County, Texas, United States
@@ -698,221 +680,6 @@ Keine.
 
 | Ort | Land | lat | lon | Turniere |
 |---|---|---:|---:|---:|
-| Augsburg | DE | 48.36903 | 10.89795 | 1 |
-| Kreuzlingen | CH | 47.64644 | 9.17256 | 1 |
-| Accra | GH | 5.55711 | -0.20124 | 6 |
-| Phan Thiet | VN | 10.94184 | 108.08231 | 2 |
-| Loughborough | GB | 52.77239 | -1.20780 | 3 |
-| Repentigny | CA | 45.73261 | -73.45283 | 1 |
-| Bulawayo | ZW | -20.10539 | 28.54269 | 2 |
-| Cholpon-Ata | KG | 42.64171 | 77.06652 | 2 |
-| San Pedro Sula | HN | 15.50535 | -88.02508 | 1 |
-| Shenzhen | CN | 22.54457 | 114.05454 | 1 |
-| Skopje | MK | 41.99622 | 21.43189 | 2 |
-| Merida | MX | 20.96708 | -89.62374 | 1 |
-| Christchurch | NZ | -43.53095 | 172.63643 | 1 |
-| Huamantla | MX | 19.32333 | -97.91457 | 2 |
-| Pszczyna | PL | 49.97781 | 18.94237 | 1 |
-| Nicosia | CY | 35.17465 | 33.36388 | 2 |
-| Algiers | DZ | 36.77293 | 3.05884 | 3 |
-| Cluj Napoca | RO | 46.76938 | 23.58995 | 1 |
-| NAIROBI | KE | -1.28900 | 36.81728 | 3 |
-| Sydney | AU | -33.86984 | 151.20828 | 2 |
-| MARIBOR | SI | 46.55764 | 15.64559 | 2 |
-| Luque | PY | -25.26654 | -57.49269 | 2 |
-| PESCARA | IT | 42.30976 | 13.95800 | 1 |
-| Bridgetown | BB | 13.09778 | -59.61842 | 1 |
-| Lautoka | FJ | -17.60461 | 177.44828 | 2 |
-| Maria-Lanzendorf | AT | 48.09872 | 16.41952 | 3 |
-| Auckland | NZ | -36.85209 | 174.76318 | 1 |
-| Nuevo Leon | MX | 26.23844 | -99.88730 | 2 |
-| Aizkraukle | LV | 56.60108 | 25.25425 | 5 |
-| Djibouti | DJ | 11.81460 | 42.84531 | 2 |
-| Rungsted Kyst | DK | 55.88244 | 12.53151 | 2 |
-| Casablanca | MA | 33.59451 | -7.62003 | 2 |
-| Santa Tecla | SV | 13.67375 | -89.28860 | 2 |
-| Brasov | RO | 45.65251 | 25.61057 | 1 |
-| TIRANA | AL | 41.32815 | 19.81844 | 2 |
-| Zephyrhills | US | 28.23362 | -82.18119 | 1 |
-| Samobor | HR | 45.80186 | 15.70971 | 1 |
-| Montreal | CA | 45.50318 | -73.56981 | 1 |
-| Athens | GR | 37.97556 | 23.73483 | 2 |
-| Telavi | GE | 41.91972 | 45.47032 | 2 |
-| Paralimni | CY | 35.03915 | 33.98280 | 1 |
-| Dhaka | BD | 23.76439 | 90.38901 | 1 |
-| Adelaide | AU | -34.92818 | 138.59993 | 2 |
-| Islamabad | PK | 33.69381 | 73.06515 | 3 |
-| Chiclayo | PE | -6.77161 | -79.83872 | 2 |
-| Gaborone | BW | -24.65814 | 25.90885 | 3 |
-| Stellenbosch | ZA | -33.93444 | 18.86917 | 2 |
-| Osaka | JP | 34.69376 | 135.50145 | 2 |
-| Fergana | UZ | 40.37649 | 71.79132 | 2 |
-| Cakovec | HR | 46.38923 | 16.43686 | 1 |
-| Managua | NI | 12.15471 | -86.27372 | 4 |
-| Leon | MX | 21.12196 | -101.68298 | 2 |
-| Santo Domingo | DO | 18.47139 | -69.89184 | 2 |
-| Zhangjiagang | CN | 31.87830 | 120.55146 | 1 |
-| Humenne | SK | 48.93500 | 21.90203 | 2 |
-| Targu Jiu | RO | 45.04229 | 23.27281 | 1 |
-| Stirling | GB | 56.11812 | -3.93600 | 1 |
-| Punta del Este | UY | -34.96323 | -54.94400 | 1 |
-| Cabarete | DO | 19.74962 | -70.41393 | 2 |
-| Dushanbe | TJ | 38.57670 | 68.78543 | 5 |
-| San Jose | CR | 9.93277 | -84.07961 | 2 |
-| Astana | KZ | 51.11599 | 71.46771 | 2 |
-| Albany | NZ | -36.72793 | 174.70865 | 1 |
-| La Nucia | ES | 38.61337 | -0.12573 | 1 |
-| Kawaguchi | JP | 35.80782 | 139.72411 | 1 |
-| Wulkenzin | DE | 53.54492 | 13.16992 | 1 |
-| Clermont-Ferrand | FR | 45.77746 | 3.08194 | 1 |
-| Jelgava | LV | 56.65221 | 23.72920 | 1 |
-| Istanbul | TR | 41.00638 | 28.97587 | 4 |
-| Vilamoura | PT | 37.07595 | -8.11654 | 1 |
-| Bucharest | RO | 44.43614 | 26.10268 | 1 |
-| PUNTA CANA | DO | 18.55655 | -68.36916 | 2 |
-| Andijan | UZ | 40.78335 | 72.35067 | 2 |
-| Larnaca | CY | 34.92361 | 33.62362 | 1 |
-| Székesfehérvár | HU | 47.19102 | 18.41081 | 1 |
-| Cape Town | ZA | -33.92883 | 18.41722 | 2 |
-| Tainan | TW | 22.99123 | 120.18498 | 1 |
-| Liepaja | LV | 56.50484 | 21.00709 | 2 |
-| Corpus Christi | US | 27.76353 | -97.40332 | 1 |
-| Pretoria | ZA | -25.74593 | 28.18791 | 1 |
-| Antananarivo | MG | -18.91001 | 47.52558 | 2 |
-| Male | MV | 4.17799 | 73.51074 | 2 |
-| Surabaya | ID | -7.24628 | 112.73777 | 1 |
-| Iasi | RO | 47.16156 | 27.58378 | 1 |
-| Johannesburg | ZA | -26.20500 | 28.04972 | 1 |
-| Bytom | PL | 50.36529 | 18.87226 | 1 |
-| Manama | BH | 26.22350 | 50.58224 | 3 |
-| Nonthaburi | TH | 13.86109 | 100.34568 | 2 |
-| 55218  Ingelheim | DE | 49.97078 | 8.05876 | 1 |
-| Douala | CM | 4.04294 | 9.70620 | 2 |
-| Bielsko - Biala | PL | 49.82212 | 19.04489 | 1 |
-| Cairo | EG | 30.04439 | 31.23573 | 8 |
-| Santiago | CL | -33.43770 | -70.65107 | 1 |
-| Budapest | HU | 47.49788 | 19.04024 | 1 |
-| Phoenix | MU | -20.28179 | 57.50253 | 1 |
-| GUWAHATI | IN | 26.18060 | 91.75394 | 1 |
-| Fes | MA | 34.03465 | -5.01619 | 1 |
-| Wanju | KR | 35.90390 | 127.16220 | 1 |
-| San Miguel de Tucumán | AR | -26.83037 | -65.20381 | 1 |
-| Yaounde | CM | 3.86899 | 11.52133 | 2 |
-| Concepcion | CL | -36.82707 | -73.05021 | 1 |
-| Rueschlikon | CH | 47.30747 | 8.55464 | 1 |
-| Mostar | BA | 43.34359 | 17.80766 | 1 |
-| Lome | TG | 6.13042 | 1.21583 | 2 |
-| Singapore | SG | 1.35711 | 103.81950 | 2 |
-| Szabolcsveresmart | HU | 48.29244 | 22.01981 | 1 |
-| Majadahonda | ES | 40.47284 | -3.87235 | 1 |
-| Dunakeszi | HU | 47.63167 | 19.12941 | 2 |
-| Belgrade | RS | 44.81533 | 20.44566 | 1 |
-| Chigasaki | JP | 35.32948 | 139.40537 | 1 |
-| Hyderabad | IN | 17.36059 | 78.47406 | 1 |
-| Almaty | KZ | 43.23639 | 76.94573 | 2 |
-| Kelibia | TN | 36.84566 | 11.09357 | 1 |
-| Ulcinj | ME | 41.92601 | 19.20556 | 1 |
-| Portimao | PT | 37.13758 | -8.53684 | 1 |
-| Salvador | BR | -12.98225 | -38.48128 | 1 |
-| Limassol | CY | 34.68529 | 33.03327 | 2 |
-| Gothenburg | SE | 57.70723 | 11.96702 | 1 |
-| Fort Lauderdale | US | 26.12231 | -80.14338 | 1 |
-| BANDAR ENSTEK | MY | 2.75745 | 101.76750 | 1 |
-| Antalya | TR | 36.88657 | 30.70302 | 2 |
-| Pazardzhik | BG | 42.14868 | 24.15319 | 2 |
-| Frydek Mistek | CZ | 49.68563 | 18.34834 | 1 |
-| Burgas | BG | 42.49366 | 27.47213 | 1 |
-| Tsaghkadzor | AM | 40.51535 | 44.67215 | 2 |
-| DOMZALE | SI | 46.13943 | 14.59446 | 1 |
-| Bujumbura | BI | -3.36381 | 29.36750 | 2 |
-| Rabat | MA | 34.02185 | -6.84089 | 1 |
-| Dakar | SN | 14.69342 | -17.44794 | 2 |
-| Seogwipo | KR | 33.25285 | 126.56103 | 1 |
-| Quito | EC | -0.22016 | -78.51233 | 2 |
-| Rakovnik | CZ | 50.10411 | 13.73105 | 2 |
-| Chihuahua | MX | 28.50000 | -106.00000 | 2 |
-| Uppsala | SE | 59.85861 | 17.63874 | 1 |
-| Pancevo | RS | 44.87057 | 20.63996 | 2 |
-| Rijeka | HR | 45.32680 | 14.44221 | 1 |
-| Vina del Mar | CL | -33.02445 | -71.55176 | 1 |
-| Vic | ES | 41.93020 | 2.25459 | 1 |
-| Tallinn | EE | 59.43724 | 24.75727 | 1 |
-| PALERMO | IT | 38.11123 | 13.35244 | 1 |
-| Arnhem | NL | 52.00566 | 5.87623 | 1 |
-| Aridea 2 | GR | 40.97559 | 22.06137 | 1 |
-| Beijing | CN | 39.90571 | 116.39130 | 1 |
-| MURSKA SOBOTA | SI | 46.66246 | 16.16553 | 1 |
-| Miaoli | TW | 24.56477 | 120.82052 | 1 |
-| New Delhi | IN | 28.61390 | 77.20901 | 1 |
-| Balma | FR | 43.60966 | 1.49801 | 1 |
-| Tegucigalpa | HN | 14.10581 | -87.20471 | 1 |
-| Dublin | IE | 53.34938 | -6.26056 | 1 |
-| Petit Camp Phoenix | MU | -20.27319 | 57.49928 | 1 |
-| Szczawno Zdrój | PL | 50.80081 | 16.25157 | 1 |
-| Sandefjord | NO | 59.07990 | 10.28043 | 1 |
-| Isa Town | BH | 26.17420 | 50.54734 | 3 |
-| Andong | KR | 36.56349 | 128.72608 | 2 |
-| Akouda | TN | 35.86573 | 10.56784 | 1 |
-| Baku | AZ | 40.37559 | 49.83280 | 2 |
-| Tacarigua | TT | 10.64374 | -61.36117 | 1 |
-| Colombo | LK | 6.93886 | 79.85420 | 2 |
-| AMBATO | EC | -1.24224 | -78.62876 | 1 |
-| Sanxenxo | ES | 42.42208 | -8.83534 | 1 |
-| Changhua | TW | 24.07557 | 120.54447 | 2 |
-| Jakarta | ID | -6.17540 | 106.82717 | 1 |
-| Liverpool | GB | 53.39334 | -2.91664 | 2 |
-| Vilnius | LT | 54.68705 | 25.28291 | 1 |
-| Montevideo | UY | -34.90589 | -56.19131 | 1 |
-| Liège | BE | 50.64509 | 5.57361 | 1 |
-| Seoul | KR | 37.56668 | 126.97829 | 1 |
-| Qionghai | CN | 19.25912 | 110.47020 | 1 |
-| Msaken | TN | 35.72526 | 10.58328 | 1 |
-| Kozerki | PL | 52.09030 | 20.58872 | 1 |
-| BARCELONA | ES | 41.38258 | 2.17707 | 2 |
-| Prostejov | CZ | 49.47215 | 17.11180 | 1 |
-| Tanger | MA | 35.76963 | -5.80335 | 1 |
-| Taichung | TW | 24.16316 | 120.64783 | 1 |
-| Oujda | MA | 34.67787 | -1.92931 | 1 |
-| Megrine | TN | 36.77034 | 10.23159 | 2 |
-| Le Bouscat | FR | 44.86618 | -0.59924 | 1 |
-| Rotterdam | NL | 51.92444 | 4.47775 | 1 |
-| Chengdu | CN | 30.65987 | 104.06332 | 1 |
-| Hammam Sousse | TN | 35.87498 | 10.59352 | 1 |
-| Luzern | CH | 47.05214 | 8.30581 | 1 |
-| Pereira | CO | 4.78546 | -75.78832 | 1 |
-| El Prat de Llobregat | ES | 41.33059 | 2.09308 | 1 |
-| Barranquilla | CO | 11.01019 | -74.82318 | 1 |
-| Valledupar | CO | 10.34311 | -73.37579 | 1 |
-| Stavanger | NO | 58.96997 | 5.73181 | 1 |
-| Oberpullendorf | AT | 47.50126 | 16.50546 | 1 |
-| Mogyorod | HU | 47.59866 | 19.23842 | 1 |
-| Vigo | ES | 42.19864 | -8.72796 | 1 |
-| Bayonne | FR | 43.49451 | -1.47367 | 1 |
-| Wierden | NL | 52.35799 | 6.59218 | 1 |
-| Harare | ZW | -17.85670 | 31.06016 | 1 |
-| Alcalá de Henares | ES | 40.48195 | -3.36398 | 1 |
-| Quebec City | CA | 46.81374 | -71.20841 | 1 |
-| Zlatibor | RS | 43.67424 | 19.61246 | 1 |
-| Siauliai | LT | 55.93408 | 23.31578 | 1 |
-| Lagos | NG | 6.45506 | 3.39418 | 2 |
-| Bengaluru | IN | 12.97679 | 77.59008 | 1 |
-| CHENNAI | IN | 13.08369 | 80.27019 | 1 |
-| Boca Raton | US | 26.35869 | -80.08310 | 1 |
-| Le Chambon-sur-Lignon | FR | 45.06081 | 4.30294 | 1 |
-| Dijon | FR | 47.32158 | 5.04147 | 1 |
-| Peja | XK | 42.65940 | 20.28858 | 2 |
-| Chuncheon | KR | 37.88106 | 127.72976 | 1 |
-| Aridea 1 | GR | 40.97559 | 22.06137 | 1 |
-| bari | IT | 41.12578 | 16.86203 | 1 |
-| Jeju | KR | 33.48877 | 126.49871 | 1 |
-| Hoofddorp | NL | 52.30555 | 4.69266 | 1 |
-| Varna | BG | 43.20739 | 27.91667 | 1 |
-| Kaohsiung | TW | 22.62033 | 120.31204 | 2 |
-| Dubrovnik | HR | 42.64910 | 18.09395 | 1 |
-| Bursa | TR | 40.18257 | 29.06750 | 1 |
-| Kram | TN | 36.84800 | 10.29436 | 1 |
-| Tampere | FI | 61.49780 | 23.76163 | 1 |
-| Lahore | PK | 31.56568 | 74.31418 | 1 |
 
 ## Hinweise
 

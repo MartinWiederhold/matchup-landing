@@ -107,6 +107,22 @@ const OVERRIDES = [
   // Vale do Lobo: Algarve-Resort — kein Geocoder-Kandidat traf die Küstenlage (nur Binnenland),
   // deshalb verifizierte Koordinate direkt gesetzt und vom Nutzer bestätigt.
   { city: "Vale do Lobo", country: "PT", coord: [37.0610, -8.0280], note: "Nutzer bestätigt: Algarve-Resort; kein Geocoder-Kandidat passte zur Küstenlage" },
+  // ── Junioren, europäische eindeutige Orte (2026-08-21). Bekannte Stadt gewählt; die
+  //    übrigen Nominatim-Cluster sind gleichnamige Mini-Dörfer (Rauschen), keine echte
+  //    Mehrdeutigkeit. Koordinate = verifizierter OSM-Knoten der bekannten Stadt.
+  { city: "Leimen", country: "DE", coord: [49.3491, 8.6910], note: "Leimen, Rhein-Neckar-Kreis (bei Heidelberg, Tennis); übrige Treffer Mini-Dörfer" },
+  { city: "Frederiksberg", country: "DK", coord: [55.6780, 12.5326], note: "Frederiksberg, Kopenhagen-Enklave (KB Tennis); zweiter Treffer Dorf in Sorø" },
+  { city: "Holte", country: "DK", coord: [55.8125, 12.4688], note: "Holte, Rudersdal (Kopenhagen-Vorort, Holte Tennisklub); übrige klein" },
+  { city: "Silla", country: "ES", coord: [39.3632, -0.4113], note: "Silla, l'Horta Sud bei Valencia; zweiter Treffer Weiler bei Cádiz" },
+  { city: "ESTEPONA", country: "ES", coord: [36.4268, -5.1468], note: "Estepona, Málaga/Costa del Sol; zweiter Treffer winziger Ort in Biscaya" },
+  { city: "Vierumaki", country: "FI", coord: [61.1046, 25.9324], note: "Vierumäki, Heinola — Sportinstitut; übrige gleichnamige Weiler" },
+  { city: "Saint Gregoire", country: "FR", coord: [48.1524, -1.6854], note: "Saint-Grégoire bei Rennes; übrige Treffer klein (Albi, Lot-et-Garonne)" },
+  { city: "Ponts de Ce", country: "FR", coord: [47.4252, -0.5257], note: "Les Ponts-de-Cé bei Angers (ITF-Schreibweise ohne 'Les'); zweiter Treffer Straße in Boulogne" },
+  { city: "Porec", country: "HR", coord: [45.2272, 13.5957], note: "Poreč, Istrien (Küstenstadt, Tennis); zweiter Treffer Dorf in Slawonien" },
+  { city: "Veli Losinj", country: "HR", coord: [44.5211, 14.5017], note: "Veli Lošinj, Insel Lošinj; zweiter Treffer winzig bei Vis" },
+  { city: "Livorno", country: "IT", coord: [43.5507, 10.3091], note: "Livorno, Hafenstadt Toskana; erster Cluster war ein fehlplatzierter Knoten Richtung Elba" },
+  { city: "Meknes", country: "MA", coord: [33.8984, -5.5322], note: "Meknès, Stadt; zweiter Treffer war der Regions-Mittelpunkt Fès-Meknès" },
+  { city: "Leszno", country: "PL", coord: [51.8436, 16.5744], note: "Leszno, Großpolen (Stadt ~64k, Tennis); übrige Treffer Dörfer (Warschau-Umland, Kartuzy)" },
 ];
 
 // ── Service-Client (Key aus .env.local, wird NIE ausgegeben) ────────────────
