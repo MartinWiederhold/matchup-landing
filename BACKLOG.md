@@ -162,6 +162,14 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
+### MU-045 · Damen-Turniere ohne Punktemodell — WTA-Punkte fehlen in points.ts · M · offen
+**Problem:** `points.ts` modelliert ausschließlich **ATP**-Punkte (Quelle: ATP-Regelwerk Kapitel 9, `scripts/punkte-tabellen-report.md`). Die 200 Damen-Turniere (W15, W35, W50, W75, W100 — dazu ein W25) haben **keine** Kategorie-Zuordnung: `CAT_DISPLAY_TO_POINTS` kennt sie nicht → `toPointsCategory("W35")` liefert `null` → `expectedPoints` gibt `{ points: 0, note: "erwartungspunkte_null" }`.
+**Wirkung:** Unter dem Optimierer-Objektiv **„meiste Punkte" (most_points)** tragen Damen-Turniere **0** bei und landen in der Beam-Sortierung (`b.points - a.points`) hinten. Sie werden nur als **Lückenfüller** gewählt, nie wegen ihres Werts; eine reine Damen-Saison degeneriert zu „alle 0" (Auswahl entscheidet dann nur die Kostenskala). **Kein Absturz, kein sichtbares Symptom — der Fehler ist still.** Unter „meiste Turniere" (Standard-Objektiv) ist es folgenlos: Damen zählen dort gleichwertig (geprüft: 103 Damen vs. 103 Herren, Europa/3 Monate).
+**Lösung:** Ein **eigenes WTA-Punktemodell**, belegt aus dem **WTA-Regelwerk** — **KEIN Kopieren der Herrenwerte.** Die Punkte je Runde unterscheiden sich zwischen ATP und WTA. Analog zur ATP-Quelle vorgehen: Werte belegen (Regelwerk-Fassung + Seite), Jahrgangsabhängigkeit prüfen, nichts schätzen.
+**Betroffen:** `src/domain/tour/points.ts` (Kategorien-Typ, `CAT_DISPLAY_TO_POINTS`, Punktetabellen), `src/domain/tour/optimizeSeason.ts` (nutzt `expectedPoints` — greift automatisch, sobald points.ts Damen kennt). Tests: neue Vitest-Fälle für die W-Kategorien; ggf. `POINTS_RULES_VERSION` hochziehen.
+**Nicht Teil davon (geprüft, korrekt):** Beschriftung (Damen = `itf_wtt` → „ITF World Tennis Tour"), Meldeweg (IPIN), Fristen (Do −18 / Di −13 / Do-Freeze, belegt aus dem gemeinsamen WTT-Regelwerk), Preisgeld (echt im Stamm, W35 zwei Werte).
+**Fertig wenn:** `toPointsCategory` bildet W15–W100 (und W25) auf belegte WTA-Punkte ab; unter „most_points" tragen Damen-Turniere ihren echten Wert; Tests grün.
+
 ### MU-043 · Junioren-Turniere (Circuit JT) — Schritt 1 erledigt, Schritt 2 (Alterskontingent) offen · M · teilweise
 **Schritt 1 — ✅ ERLEDIGT (Import + Fristen):**
 - `tour_tournaments_series_check` um `itf_juniors` erweitert (`supabase/web_tour_tournaments_series_juniors.sql`, additive Allowlist, Rollback im File).
