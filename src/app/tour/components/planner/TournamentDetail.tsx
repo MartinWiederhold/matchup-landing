@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useT, useLocale } from "@/lib/i18n";
-import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID } from "../EntryDeadline";
+import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, WTA_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID } from "../EntryDeadline";
 import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
@@ -335,15 +335,19 @@ export default function TournamentDetail({
 
   // ── Kompakter Übersicht-Reiter: alles Erklärende wandert hinter „i". ──────────────
   // Weg zur Meldung: dieselben belegten Adressen wie EntryPath (geteilt), nur kompakt.
-  const isItf = tt.series !== "challenger"; // WTT UND Junioren melden über IPIN/ITF, nicht ATP
-  const portalUrl = isItf ? ITF_PORTAL : ATP_PORTAL;
-  const portalLabel = isItf ? t("tour.entryPortalItf") : t("tour.entryPortalAtp");
+  // Meldeweg je Serie: Challenger → ATP · WTA-Haupttour → WTA PlayerZone · sonst (WTT/Junioren) → ITF.
+  const isChallenger = tt.series === "challenger";
+  const isWta = tt.series === "wta";
+  const portalUrl = isWta ? WTA_PORTAL : isChallenger ? ATP_PORTAL : ITF_PORTAL;
+  const portalLabel = isWta ? t("tour.entryPortalWta") : isChallenger ? t("tour.entryPortalAtp") : t("tour.entryPortalItf");
   const noteCls = "font-semibold text-neutral-500 underline";
   const entryHint = (
     <>
       {/* Turnierseite (aktuell nirgends gepflegt → erscheint nie) bleibt erreichbar. */}
       {tt.website && <p><a href={tt.website} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryWebsite")} →</a></p>}
-      {isItf ? (
+      {isWta ? (
+        <p className={tt.website ? "mt-1" : ""}>{t("tour.entryPortalWtaNote")}</p>
+      ) : !isChallenger ? (
         <p className={tt.website ? "mt-1" : ""}>{t("tour.entryPortalItfNote")}</p>
       ) : (
         <>
@@ -653,7 +657,12 @@ export default function TournamentDetail({
               Grund: die Prominenz war für den laufenden Countdown gedacht, nicht für ein
               „unbekannt" (Challenger) oder „abgelaufen". */}
           <div className={`flex items-center justify-between gap-3 ${hasCountdown ? "py-3" : "py-2.5"}`}>
-            <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600" : "text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400"}>{t("tour.wsDetailDeadline")}</span>
+            <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600" : "text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400"}>
+              {t("tour.wsDetailDeadline")}
+              {/* WTA: Frist ist berechnet (−28 T) mit Vorbehalt „unless otherwise determined by the WTA".
+                  Knapp gehalten (ein Zusatz, kein Satz); das Fact-Sheet-Detail bleibt im „i". */}
+              {tt.series === "wta" && <span className="ml-1.5 normal-case tracking-normal font-medium text-neutral-400">· {t("tour.entryMayVary")}</span>}
+            </span>
             <DeadlineCountdown tournament={tt} now={nowMs} size={hasCountdown ? "lg" : "sm"} />
           </div>
           {/* Junioren: Meldung erst ab 13 (§4) — benannt, weil öffentlich sichtbar. */}

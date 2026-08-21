@@ -659,6 +659,7 @@ export default function SeasonWorkspace() {
   const SERIES_OPTS: { v: string; label: string }[] = [
     { v: "itf_wtt", label: t("tour.seriesItf") },
     { v: "itf_juniors", label: t("tour.seriesJuniors") },
+    { v: "wta", label: t("tour.seriesWta") },
     { v: "challenger", label: t("tour.seriesChallenger") },
   ];
   const SURFACE_OPTS = ["clay", "hard", "grass", "carpet"] as const;

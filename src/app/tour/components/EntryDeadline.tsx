@@ -30,6 +30,9 @@ const DAY = 86_400_000;
 // belegten Adressen nutzt, OHNE die geteilte EntryPath-Komponente (auch in SeasonCard) zu ändern.
 export const ITF_PORTAL = "https://tourzone.world.tennis";
 export const ATP_PORTAL = "https://www.atptour.com/en/players";
+// WTA-Haupttour meldet über die WTA PlayerZone (belegt: WTA Rulebook „enter online via
+// PlayerZone"; öffentlich auffindbar unter live.apps.wtatennis.com). Nicht ITF, nicht ATP.
+export const WTA_PORTAL = "https://live.apps.wtatennis.com/login-or-register.html";
 export const ATP_APP_IOS = "https://apps.apple.com/app/atp-playerzone/id1461247931";
 export const ATP_APP_ANDROID = "https://play.google.com/store/apps/details?id=com.atptour.playerzone";
 
@@ -68,7 +71,9 @@ export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament
  */
 export function EntryPath({ tournament }: { tournament: TourTournament }) {
   const t = useT();
-  const isItf = tournament.series !== "challenger"; // WTT UND Junioren melden über IPIN/ITF, nicht ATP
+  // Meldeweg je Serie: Challenger → ATP · WTA-Haupttour → WTA PlayerZone · sonst (WTT/Junioren) → ITF.
+  const isChallenger = tournament.series === "challenger";
+  const isWta = tournament.series === "wta";
   const link = "block font-semibold text-matchup hover:underline";
   const note = "mt-0.5 text-[11px] leading-relaxed text-neutral-400";
 
@@ -87,7 +92,14 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
         </a>
       )}
 
-      {isItf ? (
+      {isWta ? (
+        <>
+          <a href={WTA_PORTAL} target="_blank" rel="noopener noreferrer" className={link}>
+            {t("tour.entryPortalWta")} →
+          </a>
+          <p className={note}>{t("tour.entryPortalWtaNote")}</p>
+        </>
+      ) : !isChallenger ? (
         <>
           <a href={ITF_PORTAL} target="_blank" rel="noopener noreferrer" className={link}>
             {t("tour.entryPortalItf")} →
