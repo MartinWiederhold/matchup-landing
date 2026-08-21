@@ -188,12 +188,13 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** **Kein Scraping** (robots-gesperrt + IP-Sperre-Präzedenz). Der einzige saubere Weg ist eine **offizielle Datenfreigabe** von **Tennis Europe** oder **Visual Reality** (Betreiber von tournamentsoftware.com). Beide wären anzuschreiben (Daten-/API-Vereinbarung). Erst mit Freigabe wieder aufgreifen.
 **Verwandt:** Untersuchung dokumentiert im Verlauf; Kontrast zur ITF (offener `GetCalendar`-Endpunkt, MU-032/043). Fristen für U12–U16 kämen aus dem Tennis-Europe-Regelwerk (analog Junioren, MU-043).
 
-### MU-046 · WTA-Einrechnungsverzögerung für Damen nicht sauber belegt · S · offen
-**Kontext (MU-045-Folge):** Die WTA-Aggregatregel wurde recherchiert und die belegten Teile gebaut — **Zählgrenze best 18** und **52 Wochen** (2026 WTA Rulebook, Section VIII.4.a.i, S.141). `scorePoints` nutzt für Damen jetzt best 18 (statt fälschlich ATP best 6/7), und `tourPoints.ts` mappt W15–W100 in den Rechner.
-**Lücke:** Die **Verzögerung bis zur Einrechnung** ist NICHT sauber belegt: Das WTA-Regelwerk (VIII.3.d) nennt nur „ITF W35 and W15 events are processed a **minimum of one (1) week** following the completion of the tournament" — (a) unscharf (Minimum, kein exakter Stichtag: +7 vs. +14 Tage), (b) **W50/W75/W100 gar nicht genannt**. Zum Vergleich Herren-ITF: fester „zweiter Montag" (+14 T, ATP 9.01 E).
-**Aktueller Stand im Code:** Damen laufen bewusst mit **KEINEM** Verzug (Wirksamwerden ab Turniermontag), gekennzeichnet über den Code `wta_einrechnung_verzoegerung_unbelegt` in `scorePoints` — nicht still. Effekt: der Verfallszeitpunkt kann ~1–2 Wochen zu früh liegen. Zweitrangig gegenüber der Zählgrenze, aber offen.
-**Lösung:** In der WTA-Primärquelle (oder per Rückfrage bei der ITF/WTA) den exakten Einrechnungs-Stichtag je Kategorie klären, dann in `scorePoints` (Wirksamwerden) belegen — analog zum ATP-`ITF_ENTRY_DELAY_DAYS`. Erst dann den Lücken-Code entfernen.
-**Nebenbefund (separat prüfen):** Auch das **Herren**-Modell nutzt best 6/7, während das ATP-Regelwerk (analog zur WTA-„+1 pro nicht gezähltem Pflichtturnier") auf ~19 käme. Ob die 6/7-Vereinfachung für die Zielgruppe korrekt ist, wäre eigens zu belegen.
+### MU-046 · WTA-Einrechnungsverzögerung für Damen · S · **erledigt**
+**Erledigt:** Die Verzögerung IST belegbar — in MU-046 hatte ich nur VIII.3.d gesehen; die entscheidende Stelle ist **VIII.A.3.c**, die W50/W75/W100 sehr wohl nennt. Voller Wortlaut (WTA Rulebook 2026, Section VIII.A.3 „Processing of Rankings"):
+- **c. ITF W100/W75/W50 (Normalfall):** „If an ITF W100, W75, or W50 event is completed by 11:59 p.m. U.S. Eastern time on the Sunday of that week, such Tournament is **processed in the current week's rankings**." → erster Montag, **+7 T**.
+- **d. ITF W35/W15:** „ITF W35 and W15 events are processed a **minimum of one (1) week following the completion** of the tournament." → zweiter Montag, **+14 T** (Abschluss Sonntag + 1 Woche → nächster Ranglisten-Montag).
+**Umgesetzt (`points.ts` v5):** `entryDelayDays()` — Damen W50/W75/W100 = +7, W15/W35 = +14; Herren-ITF unverändert +14 (9.01 E), Challenger +0. Voller Zitat-Wortlaut im Kommentar. Lücken-Code `wta_einrechnung_verzoegerung_unbelegt` entfernt. 4 neue Tests (Wirksamwerden + Verfall je Kategorie). 264 Tests grün.
+**Frühere Näherung war die schlechtere:** Der bisherige Zustand (kein Verzug, +0) legte den Verfall für W50+ **7 T** und für W15/W35 **14 T** zu früh. Die pauschale Herrenregel (+14 für alle) wäre für W15/W35 richtig gewesen, aber für W50+ falsch (die sind +7) — genau darum war die kategorienweise Belegung nötig und keine Übernahme (Lehre MU-047).
+**Nebenbefund bleibt (→ war MU-047, erledigt):** Herren-Zählgrenze best 6/7 → 18/19 wurde in MU-047 behoben.
 
 ### MU-043 · Junioren-Turniere (Circuit JT) — Schritt 1 erledigt, Schritt 2 (Alterskontingent) offen · M · teilweise
 **Schritt 1 — ✅ ERLEDIGT (Import + Fristen):**

@@ -53,11 +53,28 @@
 // v2: WTA-Punktemodell (Damen W15–W100) ergänzt; ATP/Challenger-Logik unverändert.
 // v3: WTA-Aggregatregel — Damen-Zählgrenze best 18 (WTA VIII.4.a.i), Herren unverändert.
 // v4: Herren-Zählgrenze korrigiert best 6/7 → best 18/19 (9.03-B-Pflicht-Umwandlung, MU-047).
-export const POINTS_RULES_VERSION = "v4";
+// v5: Damen-WTA-Einrechnung belegt (VIII.A.3): W50/W75/W100 +7 T, W15/W35 +14 T (MU-046 geschlossen).
+export const POINTS_RULES_VERSION = "v5";
 
 const DAY = 86_400_000; // ms/Tag
 const VALID_DAYS = 364; // 52 Wochen Gültigkeit ab Wirksamwerden
 const ITF_ENTRY_DELAY_DAYS = 14; // zweiter Montag nach der Turnierwoche (9.01 E)
+// Damen-WTA-Einrechnung (belegt, WTA Rulebook VIII.A.3 — voller Wortlaut an der effMs-Stelle):
+const WTA_LARGE_DELAY_DAYS = 7; // W50/W75/W100: „processed in the current week's rankings" → erster Montag
+const WTA_SMALL_DELAY_DAYS = 14; // W15/W35: „a minimum of one (1) week following completion" → zweiter Montag
+const WTA_DELAY_LARGE: ReadonlySet<string> = new Set(["w50", "w75", "w100"]);
+const WTA_DELAY_SMALL: ReadonlySet<string> = new Set(["w15", "w35"]);
+
+/**
+ * Verzögerung (Tage nach dem Turniermontag), ab der ein Ergebnis wirksam wird und die
+ * 52-Wochen-Frist läuft. Belegt je Kategorie; Challenger ohne belegten Zusatzverzug.
+ */
+function entryDelayDays(category: string): number {
+  if (ITF_CATS.has(category)) return ITF_ENTRY_DELAY_DAYS; // Herren-ITF (9.01 E)
+  if (WTA_DELAY_LARGE.has(category)) return WTA_LARGE_DELAY_DAYS; // Damen W50/W75/W100
+  if (WTA_DELAY_SMALL.has(category)) return WTA_SMALL_DELAY_DAYS; // Damen W15/W35
+  return 0; // Challenger: ab Turniermontag
+}
 
 // ── Kategorien ──────────────────────────────────────────────────────────────
 export type PointsCategory =
@@ -305,11 +322,6 @@ export function scorePoints(
   // Damen: 18 (WTA VIII.4.a.i, analog: best 7 + 11 Pflichtplätze).
   const countingLimit: 18 | 19 = wtaRanking ? 18 : asOfYear >= 2026 ? 18 : 19;
   if (!wtaRanking && (asOfYear < 2024 || asOfYear > 2026)) topNotes.push("zaehlgrenze_ausserhalb_beleg");
-  // LÜCKE (belegt-teilweise): Die WTA-EINRECHNUNGS-VERZÖGERUNG ist nur für W15/W35 belegt
-  // („mind. 1 Woche nach Turnierende", VIII.3.d) und dort unscharf; für W50/W75/W100 NICHT
-  // genannt. Bis zur Klärung nutzt das Wirksamwerden unten für Damen KEINEN Verzug (wie
-  // Challenger). Das kann den Verfallszeitpunkt um ~1–2 Wochen zu früh legen. Siehe MU-046.
-  if (wtaRanking) topNotes.push("wta_einrechnung_verzoegerung_unbelegt");
 
   // 1) Jedes Ergebnis bewerten: Punkte, Wirksamwerden, Verfall.
   const scored: ScoredResult[] = results.map((r): ScoredResult => {
@@ -327,12 +339,21 @@ export function scorePoints(
     const { points, note } = lookupPoints(r.category, r.round, era);
     if (note) notes.push(note);
 
-    // Wirksamwerden: ITF (Herren) erst am zweiten Montag danach (+14 T), Challenger ab Montag.
-    // Damen (WTA): Zählgrenze ist belegt (best 18, oben), aber die EINRECHNUNGS-VERZÖGERUNG
-    // ist es nur für W15/W35 („mind. 1 Woche", VIII.3.d) und dort unscharf, für W50+ gar nicht.
-    // Deshalb hier bewusst KEIN Verzug für Damen (Kategorie nicht in ITF_CATS) — als Lücke
-    // gekennzeichnet (topNotes: wta_einrechnung_verzoegerung_unbelegt), Ausbau in MU-046.
-    const effMs = mondayMs + (ITF_CATS.has(r.category) ? ITF_ENTRY_DELAY_DAYS * DAY : 0);
+    // Wirksamwerden (ab wann im Ranking → Start der 52-Wochen-Frist). Je Kategorie belegt:
+    //  - Herren-ITF: zweiter Montag nach der Turnierwoche (+14 T, ATP 9.01 E).
+    //  - Challenger: ab dem Turniermontag (kein belegter Zusatzverzug).
+    //  - Damen-WTA: belegt aus dem WTA Rulebook, Section VIII.A.3 „Processing of Rankings"
+    //    (MU-046 geschlossen). VOLLSTÄNDIG (nicht kürzen, Lehre aus MU-047):
+    //    c. ITF W100, W75, and W50 Events — In All Other Weeks: „If an ITF W100, W75, or W50
+    //       event is completed by 11:59 p.m. U.S. Eastern time on the Sunday of that week, such
+    //       Tournament is processed in the current week's rankings." → erster Montag (+7 T).
+    //    d. ITF W35 and W15 Events: „ITF W35 and W15 events are processed a minimum of one (1)
+    //       week following the completion of the tournament." → zweiter Montag (+14 T; der
+    //       belegte Mindestwert: Abschluss Sonntag + 1 Woche → nächster Ranglisten-Montag).
+    //    (Feinheiten in 3.c — Woche vor einem Grand Slam bzw. Finale nicht bis So 23:59 ET
+    //     fertig → Halbfinal-/Finalpunkte werden getrennt verbucht — verschieben den Verfall
+    //     bei 52-Wochen-Fenster nicht materiell und werden hier nicht abgebildet.)
+    const effMs = mondayMs + entryDelayDays(r.category) * DAY;
     const expMs = effMs + VALID_DAYS * DAY;
 
     if (asOfMs < effMs) notes.push("noch_nicht_im_system"); // ITF-Verzögerung noch nicht abgelaufen

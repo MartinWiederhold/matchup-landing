@@ -327,12 +327,39 @@ describe("scorePoints – Damen zählen nach WTA (beste 18), nicht ATP (6/7)", (
     const out = scorePoints(results, "2026-06-01");
     expect(out.countingLimit).toBe(18);
     expect(out.countingTotal).toBe(50 + 23 + 29); // alle zählen (3 < 18)
-    expect(out.notes).toContain("wta_einrechnung_verzoegerung_unbelegt");
   });
 
-  it("Herren-Ergebnisse: ATP-Zählgrenze (2026 ⇒ 18, 9.03 B), keine WTA-Lücke", () => {
+  it("Herren-Ergebnisse: ATP-Zählgrenze (2026 ⇒ 18, 9.03 B)", () => {
     const out = scorePoints([{ category: "m25", round: "W", tournamentMonday: "2026-03-02" }], "2026-06-01");
     expect(out.countingLimit).toBe(18);
-    expect(out.notes).not.toContain("wta_einrechnung_verzoegerung_unbelegt");
+  });
+});
+
+describe("scorePoints – MU-046: WTA-Einrechnungsverzögerung belegt (VIII.A.3)", () => {
+  // Turniermontag 2026-03-02 (Montag). Wirksamwerden = Montag + Verzug.
+  const monday = "2026-03-02";
+  const eff = (cat: string) => scorePoints([{ category: cat, round: "W", tournamentMonday: monday }], "2026-06-01").results[0].effectiveDate;
+
+  it("W50/W75/W100 → +7 T (erster Montag, 'current week's rankings')", () => {
+    expect(eff("w50")).toBe("2026-03-09");  // +7
+    expect(eff("w75")).toBe("2026-03-09");
+    expect(eff("w100")).toBe("2026-03-09");
+  });
+
+  it("W15/W35 → +14 T (zweiter Montag, 'minimum one week following completion')", () => {
+    expect(eff("w15")).toBe("2026-03-16");  // +14
+    expect(eff("w35")).toBe("2026-03-16");
+  });
+
+  it("Verfall folgt dem Wirksamwerden (52 Wochen = 364 T): W50 vs W15 eine Woche auseinander", () => {
+    const w50 = scorePoints([{ category: "w50", round: "W", tournamentMonday: monday }], "2026-06-01").results[0];
+    const w15 = scorePoints([{ category: "w15", round: "W", tournamentMonday: monday }], "2026-06-01").results[0];
+    expect(w50.expiresOn).toBe("2027-03-08"); // 2026-03-09 + 364
+    expect(w15.expiresOn).toBe("2027-03-15"); // 2026-03-16 + 364
+  });
+
+  it("Herren-ITF unverändert +14 (zweiter Montag, 9.01 E), Challenger +0", () => {
+    expect(eff("m25")).toBe("2026-03-16");
+    expect(eff("challenger_100")).toBe("2026-03-02");
   });
 });
