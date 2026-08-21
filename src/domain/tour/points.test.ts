@@ -237,3 +237,49 @@ describe("expectedPoints – Erwartungspunkte unter Annahme-Runde", () => {
     expect(expectedPoints("M25", "W", "kein-datum")).toEqual({ points: 0, note: "ungueltiges_datum" });
   });
 });
+
+describe("Damen (WTA) – toPointsCategory + expectedPoints (Appendix K, 32S)", () => {
+  it("W-Kategorien werden gemappt; W25 ist bewusst eine Lücke (Altname)", () => {
+    expect(toPointsCategory("W15")).toBe("w15");
+    expect(toPointsCategory("W35")).toBe("w35");
+    expect(toPointsCategory("W50")).toBe("w50");
+    expect(toPointsCategory("W75")).toBe("w75");
+    expect(toPointsCategory("W100")).toBe("w100");
+    expect(toPointsCategory("W25")).toBeNull(); // 2026 keine gültige Kategorie
+  });
+
+  it("Sieger = Kategoriezahl; belegte Runden-Werte (WTA, nicht ATP)", () => {
+    expect(expectedPoints("W100", "W", "2026-03-02").points).toBe(100);
+    expect(expectedPoints("W75", "W", "2026-03-02").points).toBe(75);
+    expect(expectedPoints("W50", "W", "2026-03-02").points).toBe(50);
+    expect(expectedPoints("W35", "W", "2026-03-02").points).toBe(35);
+    expect(expectedPoints("W15", "W", "2026-03-02").points).toBe(15);
+  });
+
+  it("R16 je Kategorie (32S): W100 12, W75 9, W50 6, W35 4, W15 1", () => {
+    expect(expectedPoints("W100", "R16", "2026-03-02").points).toBe(12);
+    expect(expectedPoints("W75", "R16", "2026-03-02").points).toBe(9);
+    expect(expectedPoints("W50", "R16", "2026-03-02").points).toBe(6);
+    expect(expectedPoints("W35", "R16", "2026-03-02").points).toBe(4); // 32S-Annahme (48S wäre 5)
+    expect(expectedPoints("W15", "R16", "2026-03-02").points).toBe(1);
+  });
+
+  it("Finalist unterscheidet sich klar von ATP (W35 F=23, nicht Herrenwert)", () => {
+    expect(expectedPoints("W35", "F", "2026-03-02").points).toBe(23);
+    expect(expectedPoints("W100", "F", "2026-03-02").points).toBe(65);
+  });
+
+  it("WTA-Quali trägt Punkte (Q=QFR): W100 5, W50 2", () => {
+    expect(expectedPoints("W100", "Q", "2026-03-02").points).toBe(5);
+    expect(expectedPoints("W50", "Q", "2026-03-02").points).toBe(2);
+  });
+
+  it("Runde ohne Wert im 32er-Feld ⇒ 0 (keine_punkte), kein ATP-Erstrunden-Code", () => {
+    expect(expectedPoints("W35", "R32", "2026-03-02")).toEqual({ points: 0, note: "keine_punkte" });
+    expect(expectedPoints("W15", "R32", "2026-03-02")).toEqual({ points: 0, note: "keine_punkte" });
+  });
+
+  it("W25 (Lücke) ⇒ 0 mit erwartungspunkte_null (nicht geraten)", () => {
+    expect(expectedPoints("W25", "W", "2026-03-02")).toEqual({ points: 0, note: "erwartungspunkte_null" });
+  });
+});

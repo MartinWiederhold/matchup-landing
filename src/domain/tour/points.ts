@@ -30,7 +30,26 @@
  *    Pflichtturnieren (9.03 A/B). Für die Zielgruppe (ohne Pflichtturniere) schlicht: best n.
  */
 
-export const POINTS_RULES_VERSION = "v1";
+/**
+ * ── DAMEN (WTA-Punkte, Frauen-WTT W15–W100) ─────────────────────────────────
+ * Quelle: 2026 ITF Men's & Women's World Tennis Tour Regulations, Appendix K „WTA /
+ * ITF World Tennis Ranking Point Tables", Abschnitt 1 „WTA Ranking Points" (S. 180).
+ * Das sind WTA-Punkte — NICHT aus den ATP-Werten abgeleitet, sie unterscheiden sich je Runde.
+ *
+ * ‼️ WICHTIG — anders als bei der ATP hängen die WTA-Punkte von der FELDGRÖSSE ab (48er- vs.
+ * 32er-Hauptfeld). Wer das später „vereinheitlicht" (eine Tabelle je Kategorie wie bei den
+ * Herren, ohne Feldgröße), macht es falsch. Beispiel W35: R16 = 5 (48S) ODER 4 (32S).
+ *
+ * Der ITF-Endpunkt liefert KEINE Feldgröße (27 Felder geprüft: category, prizeMoney, …, aber
+ * kein drawSize/mainDrawSize). Deshalb ist hier die **32er-Zeile** je Kategorie hinterlegt —
+ * eine ANNAHME, nicht belegt fürs Einzelturnier. Formatabhängig weicht davon ab: W35 R16 4
+ * statt 5 (und die unteren Runden R32/R48). Für W15/W50/W75/W100 sind W…R16 formatgleich.
+ *
+ * W25 gibt es 2026 offiziell nicht (Altname, vor 2024 → W35). Bewusst NICHT gemappt → null.
+ */
+
+// v2: WTA-Punktemodell (Damen W15–W100) ergänzt; ATP/Challenger-Logik unverändert.
+export const POINTS_RULES_VERSION = "v2";
 
 const DAY = 86_400_000; // ms/Tag
 const VALID_DAYS = 364; // 52 Wochen Gültigkeit ab Wirksamwerden
@@ -39,7 +58,9 @@ const ITF_ENTRY_DELAY_DAYS = 14; // zweiter Montag nach der Turnierwoche (9.01 E
 // ── Kategorien ──────────────────────────────────────────────────────────────
 export type PointsCategory =
   | "challenger_175" | "challenger_125" | "challenger_100" | "challenger_75" | "challenger_50"
-  | "m25" | "m25_h" | "m15" | "m15_h";
+  | "m25" | "m25_h" | "m15" | "m15_h"
+  // Damen (WTA): W15–W100. Getrennte Tabelle, andere Werte als die Herren.
+  | "w15" | "w35" | "w50" | "w75" | "w100";
 
 // Runden inkl. Qualifikationsstufen. R32 = Erstrundenverlust im 32er-Feld (gültige Runde,
 // aber 0 Punkte — kein Rate-Fall). R64/R128/Q3 kommen für diese Kategorien nicht vor.
@@ -49,6 +70,7 @@ const CHALLENGER_CATS: ReadonlySet<string> = new Set([
   "challenger_175", "challenger_125", "challenger_100", "challenger_75", "challenger_50",
 ]);
 const ITF_CATS: ReadonlySet<string> = new Set(["m25", "m25_h", "m15", "m15_h"]);
+const WOMEN_CATS: ReadonlySet<string> = new Set(["w15", "w35", "w50", "w75", "w100"]);
 const VALID_ROUNDS: ReadonlySet<string> = new Set(["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"]);
 
 // ── Punktetabellen (Quelle: ATP-Regelwerk Kap. 9, „5) Singles Point table") ──
@@ -89,6 +111,20 @@ const ATP_SINGLES_POINTS_2024_2025: Record<string, Partial<Record<PointsRound, n
 };
 const ATP_SINGLES_POINTS_2026: Record<string, Partial<Record<PointsRound, number>>> = {
   ...CHALLENGER_POINTS, ...ITF_POINTS_2026,
+};
+
+// ── WTA-Einzel (Damen-WTT) — Appendix K §1, „WTA Ranking Points", S. 180 (2026). ──
+// Hinterlegt ist je Kategorie die **32er-Hauptfeld-Zeile** (32S) — der Endpunkt liefert
+// keine Feldgröße (s. Datei-Doku), 32S ist die dokumentierte ANNAHME. Q/Q2 = QFR/FQR
+// (Qualifier / Qualifying-Finalist) aus derselben Tabelle.
+// FORMAT-ABWEICHUNG (48S): W35 R16 5 statt 4 (und untere Runden). W15/W50/W75/W100 sind
+// bis R16 formatgleich. NICHT „vereinheitlichen" — WTA ist feldgrößenabhängig, ATP nicht.
+const WTA_SINGLES_POINTS: Record<string, Partial<Record<PointsRound, number>>> = {
+  w100: { W: 100, F: 65, SF: 39, QF: 21, R16: 12, R32: 1, Q: 5, Q2: 3 },
+  w75: { W: 75, F: 49, SF: 29, QF: 16, R16: 9, R32: 1, Q: 3, Q2: 2 },
+  w50: { W: 50, F: 33, SF: 20, QF: 11, R16: 6, R32: 1, Q: 2, Q2: 1 },
+  w35: { W: 35, F: 23, SF: 14, QF: 8, R16: 4, Q: 1 }, // 32S: R32-Erstrundenverlust = 0 (kein Eintrag); FQR entfällt
+  w15: { W: 15, F: 10, SF: 6, QF: 3, R16: 1 }, // 32S: keine Quali-Punkte, R32 = 0
 };
 
 // ── Ein-/Ausgabetypen ───────────────────────────────────────────────────────
@@ -142,9 +178,19 @@ function eraForYear(year: number, notes: string[]): 2025 | 2026 {
 
 /** Schlägt die Punkte für Kategorie+Runde in der Jahrgangstabelle nach; liefert ggf. einen Hinweiscode. */
 function lookupPoints(category: string, round: string, era: 2025 | 2026): { points: number; note?: string } {
-  if (!CHALLENGER_CATS.has(category) && !ITF_CATS.has(category)) return { points: 0, note: "unbekannte_kategorie" };
+  const isWoman = WOMEN_CATS.has(category);
+  if (!isWoman && !CHALLENGER_CATS.has(category) && !ITF_CATS.has(category)) return { points: 0, note: "unbekannte_kategorie" };
   if (!VALID_ROUNDS.has(round)) return { points: 0, note: "unbekannte_runde" };
 
+  // Damen (WTA): eigene Tabelle, KEINE Jahrgangs-Ära (nur 2026 belegt), keine ATP-Sonderregeln.
+  if (isWoman) {
+    const wval = WTA_SINGLES_POINTS[category]?.[round as PointsRound];
+    if (typeof wval === "number") return { points: wval };
+    // Gültige Runde ohne Wert in dieser Kategorie (z. B. W35/W15 R32 im 32er-Feld) = 0.
+    return { points: 0, note: "keine_punkte" };
+  }
+
+  // Herren (ATP/Challenger + ITF-M).
   const table = era === 2026 ? ATP_SINGLES_POINTS_2026 : ATP_SINGLES_POINTS_2024_2025;
   const val = table[category]?.[round as PointsRound];
   if (typeof val === "number") return { points: val };
@@ -169,6 +215,12 @@ const CAT_DISPLAY_TO_POINTS: Record<string, PointsCategory> = {
   "challenger 100": "challenger_100",
   "challenger 125": "challenger_125",
   "challenger 175": "challenger_175",
+  // Damen (WTA). W25 fehlt BEWUSST — 2026 keine gültige Kategorie (Altname) → toPointsCategory=null.
+  w15: "w15",
+  w35: "w35",
+  w50: "w50",
+  w75: "w75",
+  w100: "w100",
 };
 
 /** DB-Kategorie („M25", „Challenger 125") → PointsCategory. Unbekannt/null → null. */
@@ -237,6 +289,11 @@ export function scorePoints(
     if (note) notes.push(note);
 
     // Wirksamwerden: ITF erst am zweiten Montag danach (+14 T), Challenger ab dem Montag selbst.
+    // ACHTUNG Damen (WTA): Die WTA-Wirksamkeits-/Zählregeln (Verzug, best-n) sind hier NICHT
+    // belegt (Appendix K liefert nur die Punkte je Runde). Der Optimierer nutzt nur
+    // expectedPoints (Werte korrekt); die AGGREGAT-Bewertung erzielter Damen-Ergebnisse in
+    // scorePoints übernimmt vorläufig die ATP-Struktur (kein +14-Verzug, ATP-Zählgrenze) —
+    // eigener Beleg-/Ausbauschritt, falls scorePoints je für Damen genutzt wird (MU-045-Folge).
     const effMs = mondayMs + (ITF_CATS.has(r.category) ? ITF_ENTRY_DELAY_DAYS * DAY : 0);
     const expMs = effMs + VALID_DAYS * DAY;
 
