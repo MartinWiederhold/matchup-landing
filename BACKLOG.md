@@ -187,8 +187,18 @@ Attribution in beiden Fällen sicherstellen.
 **Nötig:** (a) `tour_tournaments_series_check` um `wta` erweitern (analog `itf_juniors`, MU-043). (b) **Punktetabelle WTA 125–1000** aus dem WTA-Regelwerk belegen (eigene Werte, nicht aus ITF/ATP ableiten — Lehre MU-045/047). (c) **Fristenregel belegen** (nicht im Endpunkt; aus dem WTA-Regelwerk, VIII o. ä.).
 **Priorität 2, nicht 1:** Betrifft die **Weltspitze**, nicht die Kernzielgruppe (aufstrebende ITF/Challenger-Spieler). Sauberster offener Zugang nach der ITF, aber nachrangig im Produktwert.
 
-### MU-051 · Deutsche Turniere über nuLiga · M · offen · **untersucht**
-**Befund:** Offen zugänglich — `www.tennis.de` robots offen, die Daten liegen in **nuLiga** (`*.liga.nu`). nuLiga-robots sperrt nur `*.inc` und `*.csi`, der `tournamentCalendar` ist frei. **Serverseitig gerendertes HTML** (WebObjects `nuLigaTENDE.woa`), **kein JSON-Endpunkt**, keine Bot-Challenge.
+### MU-051 · Deutsche Turniere über nuLiga · M · **ZURÜCKGESTELLT** (Probe gelaufen)
+**Probe für Baden gebaut und gelaufen** (`scripts/nuliga-import.mjs`, Trockenlauf, Bericht in `scripts/nuliga-import-report.md`). **Ergebnis: zurückgestellt.** Drei Gründe:
+1. **Meldefrist nicht regelkonform abrufbar.** Die Listenzeilen verlinken das Detail nur auf `tennis.de/…#detail/<id>`; **Meldeschluss, Nenngeld und Belag kommen nachweislich von `widgets.tennis.de`** (`.zul` + `zkau`-POST), und dessen robots.txt ist `Disallow: /`. Damit fällt genau der Mehrwert weg, wegen dem nuLiga interessant war — die **gelesene statt gerechnete Frist**.
+2. **Backend trägt keinen regelmäßigen Lauf.** Im Trockenlauf **56 von 56 Abrufen HTTP 503 über ~9 Minuten** (Baden). Kein Bot-Schutz, sondern Überlastung — ein Import müsste mit stundenlangem Backoff rechnen.
+3. **Aufwand.** ~18 Regionen, HTML-Parsing, **kein Ort-Feld** (Verein + Ort im Namen verschmolzen), Datumsbereiche, Regionen-Doppelungen (Dedup) — mehr als der gesamte ITF-Import, für weniger Daten.
+
+**Was die Probe belegt hat (falls je aufgegriffen):** Der **Listen-Parser funktioniert** — von 36 Turnieren einer Baden-Woche bleiben nach Filter **15** (Vereinsmeisterschaften + Jugend/Senioren raus); die **Zielgruppentrennung trägt**. **series-Wert-Vorschlag: `dtb`.** Die deutsche **Leistungsklasse** passt nicht ins ATP/WTA-Punktemodell → eigenes Feld ohne Punkte. Fristen-Integration: optionales `entry_deadline` am Turnier, das `deadlines.ts` vorginge (gelesen vor gerechnet).
+
+**Lösung:** Wie bei Tennis Europe (MU-049) **nur über eine offizielle Datenfreigabe des DTB** (bzw. Visual Reality/nuLiga für das Detail). Erst dann wieder aufgreifen.
+
+---
+**Ursprünglicher Untersuchungsbefund (Kontext):** Offen zugänglich — `www.tennis.de` robots offen, die Daten liegen in **nuLiga** (`*.liga.nu`). nuLiga-robots sperrt nur `*.inc` und `*.csi`, der `tournamentCalendar` ist frei. **Serverseitig gerendertes HTML** (WebObjects `nuLigaTENDE.woa`), **kein JSON-Endpunkt**, keine Bot-Challenge.
 **Regionen (~18 DTB-Landesverbände):** je `<verband>.liga.nu` mit `?federation=XXX&region=DE.…` (bestätigt `baden.liga.nu`/BAD, `wtb.liga.nu`/WTB — identisches URL-Muster + identische robots). Keine konsolidierte nuLiga-Übersicht; maßgeblich ist die DTB-Landesverbandsliste.
 
 **Listenstruktur (SSR-Tabelle):** Spalten **Datum | Turnier | Konkurrenz | LK | Offen für**; Wochen-Blätterung über `&date=YYYY-MM-DD`. Filterformular: Region/Bezirk, Konkurrenz (Herren/Damen/Senioren/Jugend × Einzel/Doppel), LK1–LK23. **Größe:** ~36 Turniere je Wochenansicht (Baden) → national vierstellig/Saison, aber wettkampf-offener Erwachsenen-Anteil = Bruchteil.
