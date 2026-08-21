@@ -54,7 +54,9 @@
 // v3: WTA-Aggregatregel — Damen-Zählgrenze best 18 (WTA VIII.4.a.i), Herren unverändert.
 // v4: Herren-Zählgrenze korrigiert best 6/7 → best 18/19 (9.03-B-Pflicht-Umwandlung, MU-047).
 // v5: Damen-WTA-Einrechnung belegt (VIII.A.3): W50/W75/W100 +7 T, W15/W35 +14 T (MU-046 geschlossen).
-export const POINTS_RULES_VERSION = "v5";
+// v6: WTA-HAUPTTOUR (wta_1000/500/250/125) ergänzt — Punkte belegt aus WTA Rulebook VIII.A.5,
+//     Meldefrist −28 T (III.A.2.a.i), Einrechnung +7 T (VIII.A.3.b). ITF-Damen/Herren unverändert.
+export const POINTS_RULES_VERSION = "v6";
 
 const DAY = 86_400_000; // ms/Tag
 const VALID_DAYS = 364; // 52 Wochen Gültigkeit ab Wirksamwerden
@@ -64,6 +66,10 @@ const WTA_LARGE_DELAY_DAYS = 7; // W50/W75/W100: „processed in the current wee
 const WTA_SMALL_DELAY_DAYS = 14; // W15/W35: „a minimum of one (1) week following completion" → zweiter Montag
 const WTA_DELAY_LARGE: ReadonlySet<string> = new Set(["w50", "w75", "w100"]);
 const WTA_DELAY_SMALL: ReadonlySet<string> = new Set(["w15", "w35"]);
+// WTA-Haupttour: „processed on a weekly basis" (VIII.A.3.b) → laufende Woche = erster Montag (+7 T).
+// KEINE ITF-Sonderregel (die +14/+7 aus VIII.A.3.c/d galten nur für ITF-Kategorien).
+const WTA_MAIN_DELAY_DAYS = 7;
+const WTA_MAIN_CATS: ReadonlySet<string> = new Set(["wta_1000", "wta_500", "wta_250", "wta_125"]);
 
 /**
  * Verzögerung (Tage nach dem Turniermontag), ab der ein Ergebnis wirksam wird und die
@@ -73,6 +79,7 @@ function entryDelayDays(category: string): number {
   if (ITF_CATS.has(category)) return ITF_ENTRY_DELAY_DAYS; // Herren-ITF (9.01 E)
   if (WTA_DELAY_LARGE.has(category)) return WTA_LARGE_DELAY_DAYS; // Damen W50/W75/W100
   if (WTA_DELAY_SMALL.has(category)) return WTA_SMALL_DELAY_DAYS; // Damen W15/W35
+  if (WTA_MAIN_CATS.has(category)) return WTA_MAIN_DELAY_DAYS; // WTA-Haupttour (VIII.A.3.b)
   return 0; // Challenger: ab Turniermontag
 }
 
@@ -81,18 +88,21 @@ export type PointsCategory =
   | "challenger_175" | "challenger_125" | "challenger_100" | "challenger_75" | "challenger_50"
   | "m25" | "m25_h" | "m15" | "m15_h"
   // Damen (WTA): W15–W100. Getrennte Tabelle, andere Werte als die Herren.
-  | "w15" | "w35" | "w50" | "w75" | "w100";
+  | "w15" | "w35" | "w50" | "w75" | "w100"
+  // WTA-Haupttour (125–1000). Eigene Tabelle, WTA-Werte (nicht aus ATP/ITF abgeleitet).
+  | "wta_1000" | "wta_500" | "wta_250" | "wta_125";
 
-// Runden inkl. Qualifikationsstufen. R32 = Erstrundenverlust im 32er-Feld (gültige Runde,
-// aber 0 Punkte — kein Rate-Fall). R64/R128/Q3 kommen für diese Kategorien nicht vor.
-export type PointsRound = "W" | "F" | "SF" | "QF" | "R16" | "R32" | "Q" | "Q2";
+// Runden inkl. Qualifikationsstufen. R32 = Erstrundenverlust im 32er-Feld. R64 nur bei
+// großen WTA-Haupttour-Feldern (96er/48er). Q/Q2 = Qualifikationsstufen.
+export type PointsRound = "W" | "F" | "SF" | "QF" | "R16" | "R32" | "R64" | "Q" | "Q2";
 
 const CHALLENGER_CATS: ReadonlySet<string> = new Set([
   "challenger_175", "challenger_125", "challenger_100", "challenger_75", "challenger_50",
 ]);
 const ITF_CATS: ReadonlySet<string> = new Set(["m25", "m25_h", "m15", "m15_h"]);
 const WOMEN_CATS: ReadonlySet<string> = new Set(["w15", "w35", "w50", "w75", "w100"]);
-const VALID_ROUNDS: ReadonlySet<string> = new Set(["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"]);
+const WTA_MAIN_SET: ReadonlySet<string> = new Set(["wta_1000", "wta_500", "wta_250", "wta_125"]);
+const VALID_ROUNDS: ReadonlySet<string> = new Set(["W", "F", "SF", "QF", "R16", "R32", "R64", "Q", "Q2"]);
 
 // ── Punktetabellen (Quelle: ATP-Regelwerk Kap. 9, „5) Singles Point table") ──
 //
@@ -148,6 +158,30 @@ const WTA_SINGLES_POINTS: Record<string, Partial<Record<PointsRound, number>>> =
   w15: { W: 15, F: 10, SF: 6, QF: 3, R16: 1 }, // 32S: keine Quali-Punkte, R32 = 0
 };
 
+// ── WTA-HAUPTTOUR (125–1000) — WTA Rulebook VIII.A.5, „2025 WTA Ranking Point Chart …
+//    Singles and Doubles Ranking Points by Round" (S.144). WTA-Werte, NICHT aus ATP/ITF.
+//    Spalten dort: W F SF QF R16 R32 R64 R128 QLFR Q3 Q2 Q1. Hier Einzel-Hauptfeld (Q = QLFR).
+//    Wörtlich (Einzel):
+//      WTA 1000 (96M,48Q): 1000 650 390 215 120 65 35 (R128 10) · QLFR 30 Q1 2
+//      WTA 1000 (56M,32Q): 1000 650 390 215 120 65 10           · QLFR 30 Q1 2
+//      WTA 500  (48M,24Q):  500 325 195 108  60 32  1           · QLFR 25 Q1 1
+//      WTA 500  (30/28M):   500 325 195 108  60  1              · QLFR 25 Q1 1
+//      WTA 250  (32M):      250 163  98  54  30  1              · QLFR 18 Q1 1
+//      WTA 125  (32M):      125  81  49  27  15  1              · QLFR  6 Q1 1
+//
+// ‼️ FELDGRÖSSENABHÄNGIG (wie bei den ITF-Damen) — ABER anders als dort ist die Feldgröße
+//    hier BELEGT: der WTA-Endpunkt liefert `singlesDrawSize`. Die Abhängigkeit betrifft nur die
+//    UNTEREN Runden (R32/R64): 1000 96er R64=35 vs 56er R64=10; 500 48er R32=32 vs 30/28er R32=1.
+//    W/F/SF/QF/R16 sind je Level IDENTISCH → für den Optimierer (Zielrunde R16) irrelevant.
+//    Hinterlegt: die GRÖSSERE Draw-Zeile (96M/48M) als Default; Q = QLFR (Qualifier-Bonus).
+//    NICHT „vereinheitlichen": die unteren Runden je nach singlesDrawSize verfeinern, wenn nötig.
+const WTA_MAIN_POINTS: Record<string, Partial<Record<PointsRound, number>>> = {
+  wta_1000: { W: 1000, F: 650, SF: 390, QF: 215, R16: 120, R32: 65, R64: 35, Q: 30 }, // 96M-Zeile
+  wta_500: { W: 500, F: 325, SF: 195, QF: 108, R16: 60, R32: 32, R64: 1, Q: 25 },     // 48M-Zeile
+  wta_250: { W: 250, F: 163, SF: 98, QF: 54, R16: 30, R32: 1, Q: 18 },
+  wta_125: { W: 125, F: 81, SF: 49, QF: 27, R16: 15, R32: 1, Q: 6 },
+};
+
 // ── Ein-/Ausgabetypen ───────────────────────────────────────────────────────
 /** Ein erzieltes Ergebnis. `category`/`round` bewusst als string, damit unbekannte Werte erkennbar bleiben. */
 export type MatchResult = {
@@ -200,8 +234,16 @@ function eraForYear(year: number, notes: string[]): 2025 | 2026 {
 /** Schlägt die Punkte für Kategorie+Runde in der Jahrgangstabelle nach; liefert ggf. einen Hinweiscode. */
 function lookupPoints(category: string, round: string, era: 2025 | 2026): { points: number; note?: string } {
   const isWoman = WOMEN_CATS.has(category);
-  if (!isWoman && !CHALLENGER_CATS.has(category) && !ITF_CATS.has(category)) return { points: 0, note: "unbekannte_kategorie" };
+  const isWtaMain = WTA_MAIN_SET.has(category);
+  if (!isWoman && !isWtaMain && !CHALLENGER_CATS.has(category) && !ITF_CATS.has(category)) return { points: 0, note: "unbekannte_kategorie" };
   if (!VALID_ROUNDS.has(round)) return { points: 0, note: "unbekannte_runde" };
+
+  // WTA-Haupttour: eigene Tabelle (VIII.A.5), keine Jahrgangs-Ära, keine ATP-Sonderregeln.
+  if (isWtaMain) {
+    const mval = WTA_MAIN_POINTS[category]?.[round as PointsRound];
+    if (typeof mval === "number") return { points: mval };
+    return { points: 0, note: "keine_punkte" }; // gültige Runde ohne Wert in dieser Kategorie
+  }
 
   // Damen (WTA): eigene Tabelle, KEINE Jahrgangs-Ära (nur 2026 belegt), keine ATP-Sonderregeln.
   if (isWoman) {
@@ -242,6 +284,11 @@ const CAT_DISPLAY_TO_POINTS: Record<string, PointsCategory> = {
   w50: "w50",
   w75: "w75",
   w100: "w100",
+  // WTA-Haupttour. Endpunkt-`level` = „WTA 1000" … „WTA 125".
+  "wta 1000": "wta_1000",
+  "wta 500": "wta_500",
+  "wta 250": "wta_250",
+  "wta 125": "wta_125",
 };
 
 /** DB-Kategorie („M25", „Challenger 125") → PointsCategory. Unbekannt/null → null. */

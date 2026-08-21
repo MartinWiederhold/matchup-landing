@@ -363,3 +363,40 @@ describe("scorePoints – MU-046: WTA-Einrechnungsverzögerung belegt (VIII.A.3)
     expect(eff("challenger_100")).toBe("2026-03-02");
   });
 });
+
+describe("WTA-Haupttour (VIII.A.5) – toPointsCategory + expectedPoints", () => {
+  it("Level-Mapping WTA 125–1000", () => {
+    expect(toPointsCategory("WTA 1000")).toBe("wta_1000");
+    expect(toPointsCategory("WTA 500")).toBe("wta_500");
+    expect(toPointsCategory("WTA 250")).toBe("wta_250");
+    expect(toPointsCategory("WTA 125")).toBe("wta_125");
+  });
+
+  it("Sieger = Levelzahl; belegte Runden-Werte (WTA, nicht ATP/ITF)", () => {
+    expect(expectedPoints("WTA 1000", "W", "2026-03-02").points).toBe(1000);
+    expect(expectedPoints("WTA 1000", "F", "2026-03-02").points).toBe(650);
+    expect(expectedPoints("WTA 1000", "SF", "2026-03-02").points).toBe(390);
+    expect(expectedPoints("WTA 1000", "QF", "2026-03-02").points).toBe(215);
+    expect(expectedPoints("WTA 500", "W", "2026-03-02").points).toBe(500);
+    expect(expectedPoints("WTA 250", "W", "2026-03-02").points).toBe(250);
+    expect(expectedPoints("WTA 125", "W", "2026-03-02").points).toBe(125);
+  });
+
+  it("R16 je Level (feldgrößen-invariant): 120 / 60 / 30 / 15", () => {
+    expect(expectedPoints("WTA 1000", "R16", "2026-03-02").points).toBe(120);
+    expect(expectedPoints("WTA 500", "R16", "2026-03-02").points).toBe(60);
+    expect(expectedPoints("WTA 250", "R16", "2026-03-02").points).toBe(30);
+    expect(expectedPoints("WTA 125", "R16", "2026-03-02").points).toBe(15);
+  });
+
+  it("untere Runden aus der größeren Draw-Zeile (R64 nur WTA 1000)", () => {
+    expect(expectedPoints("WTA 1000", "R64", "2026-03-02").points).toBe(35); // 96er-Zeile
+    expect(expectedPoints("WTA 500", "R32", "2026-03-02").points).toBe(32);  // 48er-Zeile
+  });
+
+  it("Einrechnung +7 T (VIII.A.3.b, laufende Woche), keine ITF-Sonderregel", () => {
+    const out = scorePoints([{ category: "wta_1000", round: "W", tournamentMonday: "2026-03-02" }], "2026-06-01");
+    expect(out.results[0].effectiveDate).toBe("2026-03-09"); // +7
+    expect(out.results[0].points).toBe(1000);
+  });
+});

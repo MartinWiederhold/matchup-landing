@@ -49,7 +49,7 @@
 // v2: Junioren-Regeln (itf_juniors) ergänzt; WTT/Challenger-Logik unverändert.
 export const TOUR_RULES_VERSION = "v2";
 
-export type TourSeries = "itf_wtt" | "challenger" | "itf_juniors";
+export type TourSeries = "itf_wtt" | "challenger" | "itf_juniors" | "wta";
 
 export type TourDeadlines = {
   series: TourSeries;
@@ -92,6 +92,14 @@ function deadlineAt(mondayMs: number, minusDays: number): Date {
   return new Date(mondayMs - minusDays * DAY + GMT_1400);
 }
 
+// Wie deadlineAt, aber OHNE Uhrzeit (00:00 UTC). Für die WTA-Haupttour: das Regelwerk nennt
+// nur ein DATUM (4 Wochen vor dem Montag), KEINE Uhrzeit — anders als die ITF (14:00 GMT).
+// Deshalb hier bewusst keine Uhrzeit erfinden (nicht die ITF-Zeit annehmen, weil sie sonst
+// überall steht). Reine Datumsableitung, deterministisch.
+function deadlineDateOnly(mondayMs: number, minusDays: number): Date {
+  return new Date(mondayMs - minusDays * DAY);
+}
+
 /**
  * Berechnet die Meldefristen eines Turniers aus dem Montag der Turnierwoche.
  *
@@ -130,6 +138,39 @@ export function tourDeadlines(tournamentMonday: Date, series: TourSeries, grade?
       freezeVarianteA: null,
       freezeVarianteB: null,
       notes: [...notes, "regel_unbekannt"],
+    };
+  }
+
+  if (series === "wta") {
+    // WTA-HAUPTTOUR (WTA 125–1000). Meldeschluss belegt, wörtlich (WTA Rulebook, Section
+    // III.A.2.a.i „Main Draw Entry Deadlines"):
+    //   „Main Draw Entry Deadlines for WTA 1000 Mandatory, WTA 500, WTA 250, and WTA 125
+    //    Tournaments are FOUR (4) WEEKS PRIOR TO THE MONDAY of the week in which each
+    //    Tournament's Main Draw starts unless otherwise determined by the WTA. This deadline
+    //    shall not apply to the WTA Finals."
+    // → Entry = Turniermontag − 28 Tage. ZWEI bewusste Abweichungen von der ITF:
+    //   (a) KEINE Uhrzeit im Regelwerk (ITF: 14:00 GMT) → nur Datum (deadlineDateOnly), keine
+    //       ITF-Zeit annehmen.
+    //   (b) Vorbehalt „unless otherwise determined by the WTA" → Frist ist BERECHNET, kann
+    //       aber turnierspezifisch abweichen → Code `entry_kann_abweichen_wta` (die UI kann
+    //       „berechnet, kann abweichen" zeigen; der Fact-Sheet-Hinweis deckt den Rest).
+    // Withdrawal/Freeze: KEINE saubere Universalregel in Section III/V. Der Rückzug läuft über
+    // „Late Withdrawal"-Strafen (Rang/Zeitpunkt), kein Offset wie ITF (Di −13). Ein Freeze
+    // Deadline existiert nur BEDINGT: „If there is no Qualifying draw, the Freeze Deadline will
+    // be 2:00 p.m. Eastern Time on the Thursday before the Tournament week" (V.A.1.b.iii) — zu
+    // bedingt zum Rechnen. Daher beide null, als unbelegt gekennzeichnet.
+    const wtaEntry = deadlineDateOnly(mondayMs, 28); // 4 Wochen vor dem Montag
+    if (wtaEntry.getUTCDay() !== MONDAY) notes.push("entry_wochentag_inkonsistent");
+    return {
+      series,
+      rulesVersion: TOUR_RULES_VERSION,
+      tournamentMonday: monday,
+      known: true,
+      entry: wtaEntry,
+      withdrawal: null,
+      freezeVarianteA: null,
+      freezeVarianteB: null,
+      notes: [...notes, "entry_ohne_uhrzeit_wta", "entry_kann_abweichen_wta", "rueckzug_freeze_unbelegt_wta"],
     };
   }
 

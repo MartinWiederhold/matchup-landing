@@ -158,3 +158,25 @@ describe("tourDeadlines – Determinismus", () => {
     expect(a.rulesVersion).toBe(TOUR_RULES_VERSION);
   });
 });
+
+describe("tourDeadlines – WTA-Haupttour (Section III.A.2.a.i)", () => {
+  // 2026-03-02 ist ein Montag; −28 Tage = 2026-02-02 (ebenfalls Montag).
+  const monday = new Date(Date.UTC(2026, 2, 2));
+  const r = tourDeadlines(monday, "wta");
+
+  it("Entry = Montag − 28 T (4 Wochen), OHNE Uhrzeit (kein 14:00 GMT erfunden)", () => {
+    expect(r.known).toBe(true);
+    expect(r.entry?.toISOString().slice(0, 10)).toBe("2026-02-02");
+    expect(r.entry?.getUTCHours()).toBe(0); // Datum ohne Uhrzeit — WTA-Regel nennt keine
+    expect(r.entry?.getUTCDay()).toBe(1); // Montag
+  });
+
+  it("Vorbehalt + fehlende Uhrzeit als Codes; Withdrawal/Freeze null (unbelegt)", () => {
+    expect(r.notes).toContain("entry_ohne_uhrzeit_wta");
+    expect(r.notes).toContain("entry_kann_abweichen_wta");
+    expect(r.notes).toContain("rueckzug_freeze_unbelegt_wta");
+    expect(r.withdrawal).toBeNull();
+    expect(r.freezeVarianteA).toBeNull();
+    expect(r.freezeVarianteB).toBeNull();
+  });
+});
