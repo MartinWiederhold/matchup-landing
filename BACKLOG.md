@@ -182,6 +182,12 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
+### MU-049 · Tennis Europe (U12/U14/U16) nicht abrufbar — nur über offizielle Freigabe · M · offen
+**Befund:** Tennis Europe (U12, U14, U16) ist **nicht abrufbar**. `tenniseurope.org` ist kein eigenes System, sondern ein **Theme auf `tournamentsoftware.com`** — Skripte, Styles und Daten kommen von dort (Startseite ist eine 10-KB-Cookie-Hülle, alle Assets von `static.tournamentsoftware.com`). Die `robots.txt` von tenniseurope.org sperrt sämtliche Turnierpfade: `/sport/`, `/tournament/`, `/calendar-entry/`, `/online-entry/`, `/individual-entry/`, `/AjaxForm/`, `/form/`, `/find/…`, `/file/`; eine eigene Regelgruppe schließt einzelne Crawler komplett aus (`Disallow: /`). Dazu der **belegte Fall einer IP-Sperre** auf derselben Plattform (tournamentsoftware.com). Kein offener Endpunkt wie bei der ITF.
+**Wirkung:** Die **Altersspanne 12–16 fehlt komplett**. ITF-Junioren beginnen erst mit 13 (J30–J500); Tennis Europe deckt darunter ab — und ist die Ebene, auf der europäische Nachwuchsspieler ihre **ersten internationalen Turniere** spielen. Ohne sie hat die App für diese Gruppe keinen Kalender.
+**Lösung:** **Kein Scraping** (robots-gesperrt + IP-Sperre-Präzedenz). Der einzige saubere Weg ist eine **offizielle Datenfreigabe** von **Tennis Europe** oder **Visual Reality** (Betreiber von tournamentsoftware.com). Beide wären anzuschreiben (Daten-/API-Vereinbarung). Erst mit Freigabe wieder aufgreifen.
+**Verwandt:** Untersuchung dokumentiert im Verlauf; Kontrast zur ITF (offener `GetCalendar`-Endpunkt, MU-032/043). Fristen für U12–U16 kämen aus dem Tennis-Europe-Regelwerk (analog Junioren, MU-043).
+
 ### MU-046 · WTA-Einrechnungsverzögerung für Damen nicht sauber belegt · S · offen
 **Kontext (MU-045-Folge):** Die WTA-Aggregatregel wurde recherchiert und die belegten Teile gebaut — **Zählgrenze best 18** und **52 Wochen** (2026 WTA Rulebook, Section VIII.4.a.i, S.141). `scorePoints` nutzt für Damen jetzt best 18 (statt fälschlich ATP best 6/7), und `tourPoints.ts` mappt W15–W100 in den Rechner.
 **Lücke:** Die **Verzögerung bis zur Einrechnung** ist NICHT sauber belegt: Das WTA-Regelwerk (VIII.3.d) nennt nur „ITF W35 and W15 events are processed a **minimum of one (1) week** following the completion of the tournament" — (a) unscharf (Minimum, kein exakter Stichtag: +7 vs. +14 Tage), (b) **W50/W75/W100 gar nicht genannt**. Zum Vergleich Herren-ITF: fester „zweiter Montag" (+14 T, ATP 9.01 E).
