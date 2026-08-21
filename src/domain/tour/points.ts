@@ -49,7 +49,8 @@
  */
 
 // v2: WTA-Punktemodell (Damen W15–W100) ergänzt; ATP/Challenger-Logik unverändert.
-export const POINTS_RULES_VERSION = "v2";
+// v3: WTA-Aggregatregel — Damen-Zählgrenze best 18 (WTA VIII.4.a.i), Herren unverändert.
+export const POINTS_RULES_VERSION = "v3";
 
 const DAY = 86_400_000; // ms/Tag
 const VALID_DAYS = 364; // 52 Wochen Gültigkeit ab Wirksamwerden
@@ -150,7 +151,7 @@ export type ScoredResult = {
 export type PointsSummary = {
   rulesVersion: string;
   results: ScoredResult[]; // in Eingabereihenfolge
-  countingLimit: 6 | 7; // best n nach Jahr des Stichtags (9.03 A/B)
+  countingLimit: 6 | 7 | 18; // Herren best 6/7 (ATP 9.03 A/B) · Damen best 18 (WTA VIII.4.a.i)
   countingTotal: number; // Summe der zählenden Ergebnisse
   expiringSoon: { index: number; expiresOn: string }[]; // wirksame Ergebnisse, die bald verfallen
   notes: string[]; // nur Codes (globale Hinweise)
@@ -268,9 +269,25 @@ export function scorePoints(
     };
   }
   const asOfYear = new Date(asOfMs).getUTCFullYear();
-  // Zählgrenze nach Jahr des Stichtags (9.03 A/B): ≤2025 → 7, ≥2026 → 6.
-  const countingLimit: 6 | 7 = asOfYear >= 2026 ? 6 : 7;
-  if (asOfYear < 2024 || asOfYear > 2026) topNotes.push("zaehlgrenze_ausserhalb_beleg");
+
+  // WTA vs. ATP: Damen-Ranking zählt ANDERS als das der Herren. Belegt aus dem WTA-Regelwerk
+  // (2026 WTA Rulebook, Section VIII.4.a.i, S.141): beste ACHTZEHN (18) Ergebnisse über 52
+  // Wochen (für die Zielgruppe ohne Pflichtturniere: best 7 + 11 nicht gezählte Pflichtplätze
+  // = 18). Die Herren-Zählgrenze (best 6/7, ATP 9.03 A/B) gilt NICHT für Damen.
+  // Erkennung: alle wertbaren Kategorien sind Damen-Kategorien (und keine Herren-Kategorie).
+  const cats = results.map((r) => toPointsCategory(r.category));
+  const anyWomen = cats.some((c) => c != null && WOMEN_CATS.has(c));
+  const anyMen = cats.some((c) => c != null && (CHALLENGER_CATS.has(c) || ITF_CATS.has(c)));
+  const wtaRanking = anyWomen && !anyMen;
+
+  // Zählgrenze: Damen 18 (WTA), sonst nach Jahr des Stichtags (ATP 9.03 A/B): ≤2025 → 7, ≥2026 → 6.
+  const countingLimit: 6 | 7 | 18 = wtaRanking ? 18 : asOfYear >= 2026 ? 6 : 7;
+  if (!wtaRanking && (asOfYear < 2024 || asOfYear > 2026)) topNotes.push("zaehlgrenze_ausserhalb_beleg");
+  // LÜCKE (belegt-teilweise): Die WTA-EINRECHNUNGS-VERZÖGERUNG ist nur für W15/W35 belegt
+  // („mind. 1 Woche nach Turnierende", VIII.3.d) und dort unscharf; für W50/W75/W100 NICHT
+  // genannt. Bis zur Klärung nutzt das Wirksamwerden unten für Damen KEINEN Verzug (wie
+  // Challenger). Das kann den Verfallszeitpunkt um ~1–2 Wochen zu früh legen. Siehe MU-046.
+  if (wtaRanking) topNotes.push("wta_einrechnung_verzoegerung_unbelegt");
 
   // 1) Jedes Ergebnis bewerten: Punkte, Wirksamwerden, Verfall.
   const scored: ScoredResult[] = results.map((r): ScoredResult => {
@@ -288,12 +305,11 @@ export function scorePoints(
     const { points, note } = lookupPoints(r.category, r.round, era);
     if (note) notes.push(note);
 
-    // Wirksamwerden: ITF erst am zweiten Montag danach (+14 T), Challenger ab dem Montag selbst.
-    // ACHTUNG Damen (WTA): Die WTA-Wirksamkeits-/Zählregeln (Verzug, best-n) sind hier NICHT
-    // belegt (Appendix K liefert nur die Punkte je Runde). Der Optimierer nutzt nur
-    // expectedPoints (Werte korrekt); die AGGREGAT-Bewertung erzielter Damen-Ergebnisse in
-    // scorePoints übernimmt vorläufig die ATP-Struktur (kein +14-Verzug, ATP-Zählgrenze) —
-    // eigener Beleg-/Ausbauschritt, falls scorePoints je für Damen genutzt wird (MU-045-Folge).
+    // Wirksamwerden: ITF (Herren) erst am zweiten Montag danach (+14 T), Challenger ab Montag.
+    // Damen (WTA): Zählgrenze ist belegt (best 18, oben), aber die EINRECHNUNGS-VERZÖGERUNG
+    // ist es nur für W15/W35 („mind. 1 Woche", VIII.3.d) und dort unscharf, für W50+ gar nicht.
+    // Deshalb hier bewusst KEIN Verzug für Damen (Kategorie nicht in ITF_CATS) — als Lücke
+    // gekennzeichnet (topNotes: wta_einrechnung_verzoegerung_unbelegt), Ausbau in MU-046.
     const effMs = mondayMs + (ITF_CATS.has(r.category) ? ITF_ENTRY_DELAY_DAYS * DAY : 0);
     const expMs = effMs + VALID_DAYS * DAY;
 

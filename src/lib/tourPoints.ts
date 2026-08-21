@@ -63,6 +63,12 @@ const CATEGORY_MAP: Record<string, string> = {
   "Challenger 100": "challenger_100",
   "Challenger 125": "challenger_125",
   "Challenger 175": "challenger_175",
+  // Damen (WTA). W25 fehlt bewusst (2026 keine gültige Kategorie) → "" → unbekannte_kategorie.
+  W15: "w15",
+  W35: "w35",
+  W50: "w50",
+  W75: "w75",
+  W100: "w100",
 };
 
 /** Normalisiert eine Runden-Schreibweise auf den Vergleichsschlüssel. */

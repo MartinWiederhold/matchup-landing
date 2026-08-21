@@ -175,6 +175,13 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
+### MU-046 · WTA-Einrechnungsverzögerung für Damen nicht sauber belegt · S · offen
+**Kontext (MU-045-Folge):** Die WTA-Aggregatregel wurde recherchiert und die belegten Teile gebaut — **Zählgrenze best 18** und **52 Wochen** (2026 WTA Rulebook, Section VIII.4.a.i, S.141). `scorePoints` nutzt für Damen jetzt best 18 (statt fälschlich ATP best 6/7), und `tourPoints.ts` mappt W15–W100 in den Rechner.
+**Lücke:** Die **Verzögerung bis zur Einrechnung** ist NICHT sauber belegt: Das WTA-Regelwerk (VIII.3.d) nennt nur „ITF W35 and W15 events are processed a **minimum of one (1) week** following the completion of the tournament" — (a) unscharf (Minimum, kein exakter Stichtag: +7 vs. +14 Tage), (b) **W50/W75/W100 gar nicht genannt**. Zum Vergleich Herren-ITF: fester „zweiter Montag" (+14 T, ATP 9.01 E).
+**Aktueller Stand im Code:** Damen laufen bewusst mit **KEINEM** Verzug (Wirksamwerden ab Turniermontag), gekennzeichnet über den Code `wta_einrechnung_verzoegerung_unbelegt` in `scorePoints` — nicht still. Effekt: der Verfallszeitpunkt kann ~1–2 Wochen zu früh liegen. Zweitrangig gegenüber der Zählgrenze, aber offen.
+**Lösung:** In der WTA-Primärquelle (oder per Rückfrage bei der ITF/WTA) den exakten Einrechnungs-Stichtag je Kategorie klären, dann in `scorePoints` (Wirksamwerden) belegen — analog zum ATP-`ITF_ENTRY_DELAY_DAYS`. Erst dann den Lücken-Code entfernen.
+**Nebenbefund (separat prüfen):** Auch das **Herren**-Modell nutzt best 6/7, während das ATP-Regelwerk (analog zur WTA-„+1 pro nicht gezähltem Pflichtturnier") auf ~19 käme. Ob die 6/7-Vereinfachung für die Zielgruppe korrekt ist, wäre eigens zu belegen.
+
 ### MU-043 · Junioren-Turniere (Circuit JT) — Schritt 1 erledigt, Schritt 2 (Alterskontingent) offen · M · teilweise
 **Schritt 1 — ✅ ERLEDIGT (Import + Fristen):**
 - `tour_tournaments_series_check` um `itf_juniors` erweitert (`supabase/web_tour_tournaments_series_juniors.sql`, additive Allowlist, Rollback im File).

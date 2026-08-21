@@ -50,7 +50,7 @@ export type PointsForecast = {
   rulesVersion: string;
   asOf: string;
   currentTotal: number;
-  countingLimit: 6 | 7;
+  countingLimit: 6 | 7 | 18; // Herren 6/7 (ATP) · Damen 18 (WTA VIII.4.a.i)
   results: ForecastResult[]; // alle Ergebnisse mit Bewertung
   steps: ForecastStep[]; // Ausblick je Horizont
   schedule: ExpiryItem[]; // zählende Ergebnisse nach Verfallsdatum aufsteigend — „verteidigen"

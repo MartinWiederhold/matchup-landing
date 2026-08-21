@@ -283,3 +283,24 @@ describe("Damen (WTA) – toPointsCategory + expectedPoints (Appendix K, 32S)", 
     expect(expectedPoints("W25", "W", "2026-03-02")).toEqual({ points: 0, note: "erwartungspunkte_null" });
   });
 });
+
+describe("scorePoints – Damen zählen nach WTA (beste 18), nicht ATP (6/7)", () => {
+  it("reine Damen-Ergebnisse ⇒ Zählgrenze 18 + Verzögerungs-Lücke als Code", () => {
+    // scorePoints erhält normalisierte Codes (wie tourPoints.ts sie liefert), nicht "W50".
+    const results: MatchResult[] = [
+      { category: "w50", round: "W", tournamentMonday: "2026-03-02" },  // 50
+      { category: "w35", round: "F", tournamentMonday: "2026-03-09" },  // 23
+      { category: "w75", round: "SF", tournamentMonday: "2026-03-16" }, // 29
+    ];
+    const out = scorePoints(results, "2026-06-01");
+    expect(out.countingLimit).toBe(18);
+    expect(out.countingTotal).toBe(50 + 23 + 29); // alle zählen (3 < 18)
+    expect(out.notes).toContain("wta_einrechnung_verzoegerung_unbelegt");
+  });
+
+  it("Herren-Ergebnisse behalten die ATP-Zählgrenze (2026 ⇒ 6), keine WTA-Lücke", () => {
+    const out = scorePoints([{ category: "m25", round: "W", tournamentMonday: "2026-03-02" }], "2026-06-01");
+    expect(out.countingLimit).toBe(6);
+    expect(out.notes).not.toContain("wta_einrechnung_verzoegerung_unbelegt");
+  });
+});
