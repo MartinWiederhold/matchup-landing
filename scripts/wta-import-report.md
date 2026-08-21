@@ -1,6 +1,6 @@
-# WTA-Haupttour-Import — TROCKENLAUF (nichts geschrieben)
+# WTA-Haupttour-Import — SCHARFER LAUF
 
-> `scripts/wta-import.mjs` · 2026-08-21T19:52:25.286Z · Zeitraum 2026-08-21 … 2027-12-31
+> `scripts/wta-import.mjs` · 2026-08-21T20:16:17.420Z · Zeitraum 2026-08-21 … 2027-12-31
 > Quelle: api.wtatennis.com/tennis/tournaments (offen, keine Bot-Abwehr). ITF ausgeschlossen.
 
 ## Menge
@@ -307,3 +307,5 @@ CN 6 · TR 4 · US 3 · MX 3 · CO 3 · BR 3 · PT 3 · IT 3 · ES 2 · JP 2 · 
 - **Keine Meldefrist im Endpunkt** — berechnet in `deadlines.ts` (Serie `wta`): Entry = Montag −28 T (belegt, III.A.2.a.i), OHNE Uhrzeit, Vorbehalt „unless otherwise determined by the WTA". Withdrawal/Freeze null.
 - **Punkte** in `points.ts` (v6, Serie-Kategorien wta_1000/500/250/125, VIII.A.5). `singlesDrawSize` liegt als Rohfeld vor (feldgrößenabhängige untere Runden).
 - **series-CHECK** muss vor `--write` um `wta` erweitert sein (MU-050).
+
+**Geschrieben:** 44 Turniere, 440 Claims, 0 Fehler.
