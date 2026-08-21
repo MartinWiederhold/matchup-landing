@@ -6,14 +6,20 @@
 # Rechenzentrums-IPs werden von Incapsula eher geblockt). Auf einem GitHub-Runner
 # läuft das bestehende Skript `scripts/itf-import.mjs` UNVERÄNDERT.
 #
-# Pipeline (Reihenfolge ist wichtig — resolve läuft ZULETZT):
-#   1. itf-import      → schreibt Identität + Claims (upsert onConflict source_ref;
-#                        NIE löschen — verschwundene Turniere behalten ihre Zeile)
-#   2. geocode         → Nominatim, NUR Orte ohne Koordinaten; mehrdeutige Orte lässt
-#                        das Skript bewusst offen (kein Raten)
-#   3. geocode-overrides → kuratierte manuelle Koordinaten erneut anwenden
-#   4. resolve         → Claims → Stammfelder (jüngeres observed_at gewinnt → ein
-#                        verlegtes Turnier bekommt das neue Datum)
+# Pipeline (Reihenfolge wichtig — beide Importe ZUERST, dann EIN Geocoding, resolve ZULETZT):
+#   1. itf-import      → ITF (MT/WT/JT) über Playwright/Chromium (Incapsula). Identität + Claims
+#                        (upsert onConflict source_ref; NIE löschen — verschwundene Turniere bleiben)
+#   2. wta-import      → WTA-Haupttour über reines fetch (Endpunkt hinter AWS CloudFront, KEINE
+#                        Bot-Abwehr wie Incapsula → kein Playwright nötig)
+#   3. geocode         → Nominatim, NUR Orte ohne Koordinaten — ITF UND WTA in EINEM Durchlauf.
+#                        Nominatim erlaubt ≥1 Anfrage/Sekunde, der Cache greift → NICHT zweimal
+#                        geocoden. Mehrdeutige Orte bleiben bewusst offen (kein Raten).
+#   4. geocode-overrides → kuratierte manuelle Koordinaten erneut anwenden
+#   5. resolve         → Claims → Stammfelder (jüngeres observed_at gewinnt → ein verlegtes
+#                        Turnier bekommt das neue Datum)
+#
+# Beide Importe haben denselben exit-1-Wächter: 0 verwertbare Turniere → roter Lauf (kein
+# stiller Nulllauf). resolve läuft NUR, wenn beide Importe erfolgreich waren (Step-Abhängigkeit).
 #
 # WICHTIG: `schedule` feuert nur auf dem DEFAULT-Branch (main). Diese Datei muss auf
 # `main` liegen, damit der Tageslauf startet. `workflow_dispatch` erlaubt manuelles
@@ -23,7 +29,7 @@
 #   SUPABASE_SERVICE_ROLE_KEY   (service_role, NICHT NEXT_PUBLIC)
 #   NEXT_PUBLIC_SUPABASE_URL
 
-name: ITF-Import (täglich)
+name: Tour-Import ITF + WTA (täglich)
 
 on:
   schedule:
@@ -68,18 +74,24 @@ jobs:
           test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::SUPABASE_SERVICE_ROLE_KEY fehlt"; exit 1; }
           test -n "$NEXT_PUBLIC_SUPABASE_URL" || { echo "::error::NEXT_PUBLIC_SUPABASE_URL fehlt"; exit 1; }
 
-      # 1. Import. Der eingebaute Wächter (writableKept===0 → exit 1) macht einen
-      #    stillen Nulllauf (Incapsula-Blockade) zu einem ROTEN Lauf.
+      # 1. ITF-Import. Wächter (writableKept===0 → exit 1) macht einen stillen Nulllauf
+      #    (Incapsula-Blockade) zu einem ROTEN Lauf.
       - name: 1 · ITF-Import (scharf)
         run: node scripts/itf-import.mjs --write
 
-      - name: 2 · Geokodierung (neue Orte)
+      # 2. WTA-Haupttour. Eigener Wächter (kept===0 → exit 1). Ein Fehlschlag hier stoppt
+      #    die Kette VOR dem Geocoding (Steps laufen nur bei Erfolg der vorigen).
+      - name: 2 · WTA-Import (scharf)
+        run: node scripts/wta-import.mjs --write
+
+      # 3. EIN Geocoding für ALLE neuen Orte (ITF + WTA) — der Cache verhindert Doppelabrufe.
+      - name: 3 · Geokodierung (neue Orte, ITF + WTA)
         run: node scripts/geocode-tournaments.mjs
 
-      - name: 3 · Manuelle Overrides
+      - name: 4 · Manuelle Overrides
         run: node scripts/geocode-overrides.mjs --write
 
-      - name: 4 · Claims auflösen
+      - name: 5 · Claims auflösen
         run: node scripts/resolve-tournaments.mjs --write
 
       # Kennzahlen in die Job-Zusammenfassung — damit man ohne Log-Wühlen sieht, was lief.
@@ -87,11 +99,16 @@ jobs:
         if: always()
         run: |
           {
-            echo "## ITF-Import — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "## Tour-Import ITF + WTA — $(date -u '+%Y-%m-%d %H:%M UTC')"
             echo ""
             if [ -f scripts/itf-import-report.md ]; then
-              echo "### Import"
+              echo "### ITF-Import"
               sed -n '1,12p' scripts/itf-import-report.md
+              echo ""
+            fi
+            if [ -f scripts/wta-import-report.md ]; then
+              echo "### WTA-Import"
+              sed -n '1,8p' scripts/wta-import-report.md
               echo ""
             fi
             if [ -f scripts/geocoding-report.md ]; then
@@ -106,9 +123,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: itf-import-reports
+          name: tour-import-reports
           path: |
             scripts/itf-import-report.md
+            scripts/wta-import-report.md
             scripts/geocoding-report.md
             scripts/resolve-report.md
           if-no-files-found: ignore

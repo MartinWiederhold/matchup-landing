@@ -216,3 +216,12 @@ if (writeSummary) md.push(`\n**Geschrieben:** ${writeSummary.okT} Turniere, ${wr
 writeFileSync(join(__dirname, "wta-import-report.md"), md.join("\n"), "utf8");
 console.log(`${WRITE ? "SCHARF" : "TROCKENLAUF"} · verwertbar=${kept.length} neu=${neu} dublette=${dub}`);
 console.log(`Bericht: scripts/wta-import-report.md`);
+
+// Wächter gegen den STILLEN NULLLAUF (wie itf-import): 0 verwertbare Turniere heißt fast
+// sicher blockierter/kaputter Endpunkt, NICHT ein leerer Kalender (die Haupttour hat immer
+// künftige Turniere). Ohne Abbruch sähe ein Nulllauf aus wie Erfolg, und Wochen später
+// wären Meldefristen ungesehen abgelaufen. Darum: harter Fehler → roter CI-Lauf → Mail.
+if (kept.length === 0) {
+  console.error("ABBRUCH: 0 verwertbare WTA-Turniere — vermutlich Endpunkt blockiert/kaputt. Kein stiller Nulllauf.");
+  process.exit(1);
+}
