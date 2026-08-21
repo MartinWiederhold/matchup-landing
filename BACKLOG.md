@@ -182,6 +182,17 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
+### MU-050 · WTA-Haupttour importierbar (offene JSON-API) · M · offen
+**Befund:** `api.wtatennis.com/tennis/tournaments/` ist **offen** — robots.txt ohne Sperre (`Disallow:` leer), **keine Bot-Abwehr** (curl direkt genügt, HTTP 200 application/json). Params `page/pageSize/from/to/levels/excludeLevels`. **89 Turniere** Aug–Dez 2026 (Haupttour, ITF ausgeschlossen). Felder: **Titel, Stadt, Land, Datum (start/end), Level (WTA 125–1000), Belag, inOutdoor, Feldgröße (Einzel/Doppel), Preisgeld + Währung, Status, Sieger**. **Keine Meldefrist** im Endpunkt.
+**Nötig:** (a) `tour_tournaments_series_check` um `wta` erweitern (analog `itf_juniors`, MU-043). (b) **Punktetabelle WTA 125–1000** aus dem WTA-Regelwerk belegen (eigene Werte, nicht aus ITF/ATP ableiten — Lehre MU-045/047). (c) **Fristenregel belegen** (nicht im Endpunkt; aus dem WTA-Regelwerk, VIII o. ä.).
+**Priorität 2, nicht 1:** Betrifft die **Weltspitze**, nicht die Kernzielgruppe (aufstrebende ITF/Challenger-Spieler). Sauberster offener Zugang nach der ITF, aber nachrangig im Produktwert.
+
+### MU-051 · Deutsche Turniere über nuLiga · M · offen
+**Befund:** Offen zugänglich — `www.tennis.de` robots offen, die Daten liegen in **nuLiga** (`*.liga.nu`). nuLiga-robots sperrt nur `*.inc` und `*.csi`, der `tournamentCalendar` ist frei. **Serverseitig gerendertes HTML** (157 KB, Turniertabellen inline), **kein JSON-Endpunkt**, keine Bot-Challenge.
+**Haken:** **Föderiert über ~17 Regionalinstanzen** (`baden.liga.nu`, `btv.liga.nu`, `wtb.liga.nu`, … je `federation=XXX`) — **jede einzeln zu lesen**.
+**Vorteil:** Als echtes **Meldesystem** dürfte es die **Meldefrist je Turnier** enthalten — anders als WTA (MU-050) und ATP. Das wäre der erste Kanal mit belegter Frist statt gerechneter.
+**Aufwand:** **HTML-Parsing je Region** (kein JSON), robustes Selektor-Handling; Serie/Kategorie-Mapping auf das deutsche LK-/Turniersystem.
+
 ### MU-049 · Tennis Europe (U12/U14/U16) nicht abrufbar — nur über offizielle Freigabe · M · offen
 **Befund:** Tennis Europe (U12, U14, U16) ist **nicht abrufbar**. `tenniseurope.org` ist kein eigenes System, sondern ein **Theme auf `tournamentsoftware.com`** — Skripte, Styles und Daten kommen von dort (Startseite ist eine 10-KB-Cookie-Hülle, alle Assets von `static.tournamentsoftware.com`). Die `robots.txt` von tenniseurope.org sperrt sämtliche Turnierpfade: `/sport/`, `/tournament/`, `/calendar-entry/`, `/online-entry/`, `/individual-entry/`, `/AjaxForm/`, `/form/`, `/find/…`, `/file/`; eine eigene Regelgruppe schließt einzelne Crawler komplett aus (`Disallow: /`). Dazu der **belegte Fall einer IP-Sperre** auf derselben Plattform (tournamentsoftware.com). Kein offener Endpunkt wie bei der ITF.
 **Wirkung:** Die **Altersspanne 12–16 fehlt komplett**. ITF-Junioren beginnen erst mit 13 (J30–J500); Tennis Europe deckt darunter ab — und ist die Ebene, auf der europäische Nachwuchsspieler ihre **ersten internationalen Turniere** spielen. Ohne sie hat die App für diese Gruppe keinen Kalender.
@@ -271,6 +282,13 @@ Attribution in beiden Fällen sicherstellen.
 **Lösung:** Vor dem Start mit echten Nutzern in Vercel `NEXT_PUBLIC_TOUR_PRESENCE_DEMO=off` setzen und neu deployen (Vorgabe ist AN). Danach verschwinden die Beispiele; die lokalen Pexels-Bilder in `/public/seed/tour` können bleiben oder mit entfernt werden. Gehört zum Launch-Cleanup neben `COMPETE_EARLY_ACCESS_OPEN=false` und dem Löschen des Prod-Testkontos.
 
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
+
+### MU-052 · ATP, USTA, Ten'Up, RFET — nicht zugänglich · S · offen (dokumentiert)
+Ergebnis der Zugangs-Prüfung (nur Doku; kein Import möglich):
+- **ATP (atptour.com)** und **USTA Serve Tennis (playtennis.usta.com)** sperren **KI-Nutzung ausdrücklich** in der robots.txt: `User-agent: ClaudeBot/GPTBot/CCBot/Google-Extended … Disallow: /`, dazu Cloudflare-Content-Signal `ai-train=no`, unter Berufung auf **EU-Richtlinie 2019/790 Artikel 4**. Technisch existieren Endpunkte (ATP: `atptour.com/en/-/tournaments/calendar/tour`; USTA: SPA-Backend), aber der Betreiber untersagt es — **nur über offizielle Freigabe** (wie Tennis Europe, MU-049).
+- **Ten'Up (Frankreich, tenup.fft.fr)** läuft hinter **Queue-it** (Virtual Waiting Room + Bot-Mitigation, JS/Cookie-Challenge schon vor der robots.txt) — härter als Incapsula. **Kein Zugang.**
+- **RFET (Spanien, rfet.es)** ist robots-offen, hat aber nur **PDF-Kalender** und SSR-HTML, **keine strukturierten Daten / keinen Endpunkt**. Ohne Datenschnittstelle nicht sinnvoll importierbar.
+**Fazit:** Keine dieser vier Quellen ist ohne offizielle Vereinbarung erschließbar. Ticket dient als Beleg, damit die Prüfung nicht wiederholt wird; bei ATP/USTA wäre der Weg eine Daten-/API-Freigabe.
 
 ### MU-048 · Senioren & Rollstuhl abrufbar (VT/WCT) — Import zurückgestellt · M · offen
 **Befund:** Senioren und Rollstuhl sind über denselben ITF-Endpunkt (`TournamentApi/GetCalendar`) abrufbar — Codes **`VT`** (World Tennis Masters Tour, 302 Turniere Aug–Dez 2026) und **`WCT`** (UNIQLO Wheelchair Tour, 66 Turniere). **Dieselben 27 Felder wie MT/WT**, saubere JSON-Antwort, keine Drosselung. Codes an den Kalenderseiten abgelesen (nicht geraten): `world-tennis-masters-tour-calendar` → VT, `uniqlo-wheelchair-tennis-calendar` → WCT.
