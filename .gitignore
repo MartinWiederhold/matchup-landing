@@ -48,3 +48,4 @@ scripts/.et-cache/
 /e2e/.playwright/
 /test-results/
 /playwright-report/
+scripts/.nuliga-cache.json
