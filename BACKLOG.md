@@ -265,6 +265,15 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 3 — Advice-Ausbaustufen (Flags aktuell aus)
 
+### MU-048 · Senioren & Rollstuhl abrufbar (VT/WCT) — Import zurückgestellt · M · offen
+**Befund:** Senioren und Rollstuhl sind über denselben ITF-Endpunkt (`TournamentApi/GetCalendar`) abrufbar — Codes **`VT`** (World Tennis Masters Tour, 302 Turniere Aug–Dez 2026) und **`WCT`** (UNIQLO Wheelchair Tour, 66 Turniere). **Dieselben 27 Felder wie MT/WT**, saubere JSON-Antwort, keine Drosselung. Codes an den Kalenderseiten abgelesen (nicht geraten): `world-tennis-masters-tour-calendar` → VT, `uniqlo-wheelchair-tennis-calendar` → WCT.
+**Nicht importiert, weil:**
+- Das **`category`-Feld hält die TURNIERSTUFE** (MT100–MT1000 bzw. 25–1000), **NICHT die Alters- oder Rollstuhlklasse**. Die Klassen (30+…90+ bzw. Open/Quad/Herren/Damen) sind Wettbewerbe *innerhalb* eines Turniers und stehen NICHT im Kalender-Endpunkt. Ein 45-Jähriger sähe alle 302 Senioren-Turniere, ohne zu wissen, welche für ihn gelten.
+- Beide brauchen **eigene Fristenregeln aus eigenen Regelwerken** (wie bei den Junioren, MU-043).
+- **WCT mischt** Junioren-Rollstuhl (ITF Junior Series/Grand Slam) und **Team-/Regionalwettbewerbe** (World Team Cup, Regional Games) hinein — gesondert zu behandeln.
+- **Senioren haben kein Preisgeld** im Endpunkt (Feld leer).
+**Stand:** Falls Senioren oder Rollstuhl später Zielgruppe werden, ist der Zugang damit vorbereitet — es fehlt nur die **Klassen-Ebene** (eine Ebene tiefer als der Kalender) und die **Fristen**. Series-CHECK müsste analog zu `itf_juniors` erweitert werden.
+
 ### MU-020 · Pro-Setup-Datenbank statt hardcodiertem Bespannungs-Block · M · offen
 Aktuell sind Profi-Besaitungen hart im Code. Auf Datenquelle mit Provenance/Confidence umstellen, wie bei Rackets/Strings.
 
