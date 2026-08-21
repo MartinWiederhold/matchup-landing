@@ -12,6 +12,12 @@
 
 ## Priorität 1 — vor Launch
 
+### MU-044 · Reihenfolge bei Datenimporten: Code zuerst deployen, Daten danach · S · offen
+**Problem:** Das Seiten-Gate wurde am 09.08. entfernt (Commit `6050fbb`). Seither ist `/tour` (und `/tour/browse`) für **jeden eingeloggten Nutzer** erreichbar; `COMPETE_EARLY_ACCESS_OPEN` steuert nur noch den Mode-Umschalter INNERHALB `/app`, nicht die eigenständigen `/tour/*`-Routen.
+**Wirkung:** Neue Daten gehen **sofort live, sobald sie in der (gemeinsamen) Prod-DB stehen — ohne Deploy, ohne Prüfung**. Bei den 392 Junioren-Turnieren (MU-043) ist genau das passiert: sie waren öffentlich sichtbar mit **falschen Fristen** (Do −18 statt Di −20) und **falscher Beschriftung** („ATP Challenger"), weil der zugehörige Code erst später deployt wurde. Der Zustand war zwischenzeitlich schlechter als vorher.
+**Lösung:** **Reihenfolge umkehren — Code ZUERST deployen, Daten DANACH importieren.** Für jeden Import, der neue Serien/Kategorien/Felder einführt, die die UI anders darstellt: (1) UI/Domain-Code deployen, der die neuen Daten korrekt rendert, (2) erst dann `--write` in die Prod-DB, (3) Prod prüfen. Als Regel in `CLAUDE.md` verankert (Supabase-Abschnitt).
+**Fertig wenn:** Die Regel steht in `CLAUDE.md` und wird bei künftigen Importen befolgt. (Regel eingetragen — Ticket bleibt offen als Erinnerung, bis das Muster ein paarmal gelebt wurde.)
+
 ### MU-001 · Turnier-Logos zuverlässig machen · M · offen
 **Problem:** `tournamentLogo()` holt Logos über den Google-Favicon-Dienst der Turnier-Domain. Für kleine Domains (z. B. `generali-open.at`) gibt es kein Favicon → generischer Globus. Der Home-Tab zeigt stattdessen Länder-Flaggen-Emojis, die Map echte Logos. Inkonsistent.
 **Lösung:** Override-Tabelle pro Turnier (lokale Logos in `public/tournaments/`) + sauberer Fallback-Verlauf: lokales Logo → Favicon → **Flagge oder Monogramm**, nie Globus. Home und Map benutzen dieselbe Funktion.
