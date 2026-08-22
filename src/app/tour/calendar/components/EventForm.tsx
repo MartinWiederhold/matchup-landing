@@ -22,18 +22,20 @@ export default function EventForm({
   season,
   userId,
   defaultDate,
+  defaultKind,
   onDone,
 }: {
   event: TourEvent | null; // null = neu
   season: SeasonEntry[];
   userId: string;
   defaultDate: string;
+  defaultKind?: EventKind; // Vorwahl der Art (z. B. beim Anlegen aus einer Zeitstrahl-Spur)
   onDone: () => void;
 }) {
   const t = useT();
 
   const [kind, setKind] = useState<EventKind>(
-    event && (EVENT_KINDS as string[]).includes(event.kind) ? (event.kind as EventKind) : "training",
+    event && (EVENT_KINDS as string[]).includes(event.kind) ? (event.kind as EventKind) : (defaultKind ?? "training"),
   );
   const [title, setTitle] = useState(event?.title ?? "");
   const [date, setDate] = useState(event?.event_date ?? defaultDate ?? todayISO());
