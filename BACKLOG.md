@@ -12,6 +12,10 @@
 
 ## Priorität 1 — vor Launch
 
+### MU-058 · Saison-Zeitstrahl `/tour/timeline` · M · **erledigt**
+**Ziel:** Kalenderwoche zu klein für die Saisonplanung — Martin wollte den ganzen Verlauf auf einer durchgehenden Zeitachse (Prinzip Assemble, nicht dessen Aussehen).
+**Erledigt:** Vollbild-Route `/tour/timeline`, alles Zeitliche auf einer Achse: Turnierwochen als Mo–So-Balken (Serie=Farbe), Termine als Spur (verdichtet bei kleiner Skala, einzeln im Woche-Zoom), **Meldefristen als prominente Pins in drei Zuständen** (bevorstehend farbig + Countdown/amber ≤7 T · verstrichen grau · Challenger „unbekannt" als gestricheltes „?", nie als „keine Frist nötig"), knappe Anreise (MU-057) als ⚠, Schengen-Wochen als dezentes Band, Heute-Linie. Öffnet auf dem **relevanten Bereich** (nächstes Turnier, nicht heute) + Knopf „Zum nächsten Turnier". Zoom Saison/Monat/Woche (Standard Saison=fit). Read-only + Navigation (Wochen fest): Tap → Detailkarte + „Im Planer öffnen". **Handy:** derselbe Strahl vertikal. Dreistufiger Umschalter Liste · Kalender · Zeitstrahl; `/tour/calendar` bleibt (7-Tage-Detail vs. Saison-Überblick). Reine Logik in `domain/tour/timeline` (+ Test). Keine neuen Dependencies, kein DB-Code, DE+EN.
+
 ### MU-057 · Optimierer plant ohne Anreisezeit — Reisepuffer zwischen Turnieren · M · **erledigt**
 **Problem:** Der Optimierer plante Woche an Woche ohne Puffer (Sonntag Monastir → Montag Antalya galt als machbar).
 **Erledigt:** Nutzerangabe „Anreisepuffer zwischen Orten (Tage)" neben den Nächten (`mu_tour_buffer_days`, Vorgabe 2, Faustregel im Hinweis; ehrlich als Annahme — Distanz ≠ Reisezeit). Cluster-aware: gleicher Ort = kein Puffer. Optimierer v4: enger Übergang (Ruhetage < Puffer) ist **weicher** Tiebreaker nach den Kosten — bei gleicher Turnierzahl wird die pufferfreie Variante bevorzugt; **kein** Turnier fällt je wegen des Puffers raus (Pick trägt `enge_anreise:<Tage>`). Markierung „Knappe Anreise" in Saisonliste **und** Kalender. Reine Logik in `domain/tour/travelBuffer` (+ Test); Optimierer-Tests für Markieren/nie-droppen/Cluster/Vorgabe. DE+EN.
