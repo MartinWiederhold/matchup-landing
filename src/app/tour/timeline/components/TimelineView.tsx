@@ -29,7 +29,9 @@ import EventForm from "./EventForm";
 
 type LoadState = "loading" | "error" | "done";
 type Zoom = "season" | "month" | "week";
-const PX_PER_DAY: Record<Exclude<Zoom, "season">, number> = { month: 14, week: 42 };
+const PX_PER_DAY: Record<Exclude<Zoom, "season">, number> = { month: 18, week: 44 };
+// Kurzform der Kategorie für schmale Balken: „Challenger 75" → „C75".
+const shortCat = (c: string | null) => (c ? c.replace(/^ATP\s+Challenger\s*/i, "C").replace(/^Challenger\s*/i, "C") : "—");
 const BP_MOBILE = 720;
 const BUFFER_KEY = "mu_tour_buffer_days";
 function readBufferDays(): number {
@@ -112,7 +114,7 @@ export default function TimelineView() {
   const [events, setEvents] = useState<TourEvent[]>([]);
   const [profile, setProfile] = useState<PlannerProfile | null>(null);
   const [state, setState] = useState<LoadState>("loading");
-  const [zoom, setZoom] = useState<Zoom>("season");
+  const [zoom, setZoom] = useState<Zoom>("month");
   const [selected, setSelected] = useState<string | null>(null);
   const [form, setForm] = useState<{ event: TourEvent | null; kind?: EventKind; date?: string } | null>(null);
   const [viewW, setViewW] = useState(1000);
@@ -283,7 +285,9 @@ export default function TimelineView() {
             return (
               <div key={lane.key} className="flex flex-col justify-center border-b border-black/[0.04] px-4" style={{ height: lane.h }}>
                 <span className="text-[13px] font-bold text-neutral-800">{laneLabel(lane.key)}</span>
-                {count > 0 && <span className="text-[11px] text-neutral-400">{count}</span>}
+                {count > 0
+                  ? <span className="text-[11px] text-neutral-400">{count}</span>
+                  : lane.key !== "tournaments" && <span className="text-[11px] text-neutral-300">＋ {t("tour.tlAddLaneHint")}</span>}
               </div>
             );
           })}
@@ -319,7 +323,7 @@ export default function TimelineView() {
             {/* Fristen-Pills auf der Achse */}
             {deadlines.map((d) => {
               const x0 = xForMs(d.mondayMs, bounds.startMs, pxPerDay);
-              if (d.kind === "unknown") return <div key={"dl" + d.id} className="absolute z-20 -translate-x-1/2 rounded-full border border-dashed border-neutral-400 bg-white px-1.5 py-0.5 text-[9px] font-bold text-neutral-400" style={{ left: x0 + pxPerDay * 3.5, top: AXIS_H - 16 }} title={t("tour.entryUnknownShort")}>?</div>;
+              if (d.kind === "unknown") return <div key={"dl" + d.id} className="absolute z-20 h-2.5 w-2.5 -translate-x-1/2 rounded-full border border-dashed border-neutral-300" style={{ left: x0 + pxPerDay * 3.5, top: AXIS_H - 14 }} title={t("tour.entryUnknownShort")} />;
               if (d.entryMs == null) return null;
               const x = xForMs(d.entryMs, bounds.startMs, pxPerDay);
               if (d.kind === "passed") return <div key={"dl" + d.id} className="absolute z-20 h-2 w-2 -translate-x-1/2 rounded-full bg-neutral-300 ring-1 ring-white" style={{ left: x, top: AXIS_H - 12 }} title={t("tour.entryExpired")} />;
@@ -356,16 +360,22 @@ export default function TimelineView() {
               const wk = Date.parse(tt.tournament_monday + "T00:00:00Z");
               const b = weekBar(wk, bounds.startMs, pxPerDay);
               const st = styleFor(tt.series);
-              const compact = b.width < 96;
+              const w = b.width - 4;
+              const showFull = w >= 150;  // Stadt + Kategorie + Avatar
+              const showCat = w >= 62;    // Kategorie-Kurzform
               return (
                 <button key={tt.id} type="button" onClick={() => setSelected(tt.id)}
-                  className={`absolute flex items-center gap-2 overflow-hidden rounded-full bg-white py-1 pl-1 pr-2 text-left shadow-sm ring-1 ring-black/[0.08] transition hover:ring-matchup/50 ${selected === tt.id ? "ring-2 ring-matchup" : ""}`}
-                  style={{ left: b.left + 2, width: b.width - 4, top: laneTop(0) + (LANE_TOUR_H - 40) / 2, height: 40 }}
+                  className={`absolute flex items-center gap-1.5 overflow-hidden rounded-full bg-white py-1 pl-1 pr-2 text-left shadow-sm ring-1 ring-black/[0.08] transition hover:ring-matchup/50 ${selected === tt.id ? "ring-2 ring-matchup" : ""}`}
+                  style={{ left: b.left + 2, width: w, top: laneTop(0) + (LANE_TOUR_H - 40) / 2, height: 40 }}
                   title={`${tt.city ?? ""}${tt.category ? " · " + tt.category : ""}`}>
                   <IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />
-                  {!compact && <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold leading-tight text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}</span><span className={`block truncate text-[11px] leading-tight ${st.text}`}>{tt.category || "—"}</span></span>}
-                  {!compact && <Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} />}
-                  {tight.has(tt.id) && <span className="absolute right-0.5 top-0 text-[11px] text-amber-700" title={t("tour.calTightArrival", { n: tight.get(tt.id)! })}>⚠</span>}
+                  {showFull ? (
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold leading-tight text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}</span><span className={`block truncate text-[11px] leading-tight ${st.text}`}>{tt.category || "—"}</span></span>
+                  ) : showCat ? (
+                    <span className={`min-w-0 flex-1 truncate text-[11px] font-semibold ${st.text}`}>{shortCat(tt.category)}</span>
+                  ) : null}
+                  {showFull && <Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} />}
+                  {tight.has(tt.id) && <span className="absolute right-1 top-0.5 text-[10px] text-amber-600" title={t("tour.calTightArrival", { n: tight.get(tt.id)! })}>⚠</span>}
                 </button>
               );
             })}
