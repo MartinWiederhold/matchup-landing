@@ -230,7 +230,7 @@ export default function DiscoverTab() {
         <TourHome />
       ) : (
       <div className="pb-28">
-        {/* Hero-Text (kompakt, bleibt oben) */}
+        {/* Hero-Text */}
         <div className="px-4">
           <h1 className="mt-5 text-[30px] font-medium leading-[1.15] tracking-tight text-black">
             Your <span className="font-extrabold">Journey</span>
@@ -239,20 +239,16 @@ export default function DiscoverTab() {
           </h1>
         </div>
 
-        {/* Players ZUERST — direkt unter dem Titel, sofort sichtbar (mit Überschrift).
-            Kuratierte Demo-Profile (Anzeige); „Finden" öffnet die echte Suche. */}
-        <SeedStoryRow title={t("discover.newPeople")} onFind={() => openSubView({ type: "select-profile" })} />
+        {/* Beitrag verfassen (wie mockup2 Home) */}
+        <PostComposerCard onCompose={() => setComposerOpen(true)} />
 
-        {/* Laufende Turniere — Live im Profitennis (Grand-Slam-Widget) */}
+        {/* Live im Profitennis — Google-Style-Widget (wie mockup2) */}
         <div className="mt-6 px-4">
           <WimbledonWidget theme="light" />
         </div>
 
-        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) */}
-        <NewsSection />
-
-        {/* Beitrag verfassen (wie mockup2 Home) — unter Players/Turniere/News */}
-        <PostComposerCard onCompose={() => setComposerOpen(true)} />
+        {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
+        <SeedStoryRow onFind={() => openSubView({ type: "select-profile" })} />
 
         {/* Nach Sportart (Tennis/Padel/Pickleball) */}
         <SportGroups
@@ -267,6 +263,9 @@ export default function DiscoverTab() {
 
         {/* Dein nächstes Spiel */}
         <NextGameCard onOpen={(id) => openSubView({ type: "game-detail", gameId: id })} onAll={() => setActiveTab("games")} />
+
+        {/* Schlagzeilen (Tennis/Padel/Pickleball-News) */}
+        <NewsSection />
 
         {/* Community-Puls */}
         <CommunityCard onOpen={() => setActiveTab("matches")} />

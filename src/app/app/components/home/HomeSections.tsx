@@ -169,15 +169,10 @@ const SEED_PEOPLE: { name: string; img: string }[] = (() => {
   return out;
 })();
 
-export function SeedStoryRow({ onFind, title }: { onFind: () => void; title?: string }) {
+export function SeedStoryRow({ onFind }: { onFind: () => void }) {
   const t = useT();
   return (
     <section className="mt-6 px-4">
-      {title && (
-        <div className="mb-2.5 px-1">
-          <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-neutral-400">{title}</span>
-        </div>
-      )}
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto">
         <button type="button" onClick={onFind} className="flex w-[60px] shrink-0 flex-col items-center gap-1.5">
           <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-black text-white"><PlusIcon size={22} /></span>
