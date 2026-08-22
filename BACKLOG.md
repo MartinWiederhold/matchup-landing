@@ -12,6 +12,10 @@
 
 ## Priorität 1 — vor Launch
 
+### MU-057 · Optimierer plant ohne Anreisezeit — Reisepuffer zwischen Turnieren · M · **erledigt**
+**Problem:** Der Optimierer plante Woche an Woche ohne Puffer (Sonntag Monastir → Montag Antalya galt als machbar).
+**Erledigt:** Nutzerangabe „Anreisepuffer zwischen Orten (Tage)" neben den Nächten (`mu_tour_buffer_days`, Vorgabe 2, Faustregel im Hinweis; ehrlich als Annahme — Distanz ≠ Reisezeit). Cluster-aware: gleicher Ort = kein Puffer. Optimierer v4: enger Übergang (Ruhetage < Puffer) ist **weicher** Tiebreaker nach den Kosten — bei gleicher Turnierzahl wird die pufferfreie Variante bevorzugt; **kein** Turnier fällt je wegen des Puffers raus (Pick trägt `enge_anreise:<Tage>`). Markierung „Knappe Anreise" in Saisonliste **und** Kalender. Reine Logik in `domain/tour/travelBuffer` (+ Test); Optimierer-Tests für Markieren/nie-droppen/Cluster/Vorgabe. DE+EN.
+
 ### MU-056 · Kalender im Planer fehlt — geplante Turniere nirgends als Termin · M · **Schritt 1 erledigt, Schritt 2 + ICS offen**
 **Problem:** `/tour/calendar` zeigte nur handeingetragene `tour_events`; geplante Saison-Turniere erschienen **nirgends als Termin**, und die Seite war **nicht verlinkt**.
 **Schritt 1 (erledigt, deployt):** Saison-Turniere read-only im Kalender — aus der Saison gelesen (nie nach `tour_events` kopiert), mehrtägiger Mo–So-Block oben in der Woche, „Turnier"-Badge, verlinkt in den Planer. Meldefrist über `DeadlineCountdown`. Leer-Zustand korrigiert (Woche mit nur Turnier ≠ „keine Termine", Regressionstest in `domain/tour/calendarWeek`). Vorwärts-Zeiger „Nächstes Turnier" springt zur richtigen Woche, falls die Saison weiter hinten beginnt.
