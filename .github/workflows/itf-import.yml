@@ -11,15 +11,20 @@
 #                        (upsert onConflict source_ref; NIE löschen — verschwundene Turniere bleiben)
 #   2. wta-import      → WTA-Haupttour über reines fetch (Endpunkt hinter AWS CloudFront, KEINE
 #                        Bot-Abwehr wie Incapsula → kein Playwright nötig)
-#   3. geocode         → Nominatim, NUR Orte ohne Koordinaten — ITF UND WTA in EINEM Durchlauf.
-#                        Nominatim erlaubt ≥1 Anfrage/Sekunde, der Cache greift → NICHT zweimal
+#   3. wikipedia-import (--series=challenger) → ATP Challenger Tour aus Wikipedia (atptour.com
+#                        sperrt KI-Nutzung; Wikipedia ist der einzige erlaubte Zugang, MU-053).
+#                        Jahre DYNAMISCH (laufendes + Folgejahr) — kein verdrahtetes Jahr.
+#                        Vorbehalt: Wikipedia läuft nach (≥80 % Abdeckung erst ~28 Wo ins Jahr),
+#                        Belag oft fehlend — der beste erlaubte Zugang, nicht der beste überhaupt.
+#   4. geocode         → Nominatim, NUR Orte ohne Koordinaten — ITF, WTA UND Challenger in EINEM
+#                        Durchlauf. Nominatim ≥1 Anfrage/Sekunde, Cache greift → NICHT mehrfach
 #                        geocoden. Mehrdeutige Orte bleiben bewusst offen (kein Raten).
-#   4. geocode-overrides → kuratierte manuelle Koordinaten erneut anwenden
-#   5. resolve         → Claims → Stammfelder (jüngeres observed_at gewinnt → ein verlegtes
+#   5. geocode-overrides → kuratierte manuelle Koordinaten erneut anwenden
+#   6. resolve         → Claims → Stammfelder (jüngeres observed_at gewinnt → ein verlegtes
 #                        Turnier bekommt das neue Datum)
 #
-# Beide Importe haben denselben exit-1-Wächter: 0 verwertbare Turniere → roter Lauf (kein
-# stiller Nulllauf). resolve läuft NUR, wenn beide Importe erfolgreich waren (Step-Abhängigkeit).
+# Alle drei Importe haben denselben exit-1-Wächter: 0 verwertbare Turniere → roter Lauf (kein
+# stiller Nulllauf). Ein Fehlschlag stoppt die Kette VOR dem Geocoding (Step-Abhängigkeit).
 #
 # WICHTIG: `schedule` feuert nur auf dem DEFAULT-Branch (main). Diese Datei muss auf
 # `main` liegen, damit der Tageslauf startet. `workflow_dispatch` erlaubt manuelles
@@ -84,14 +89,19 @@ jobs:
       - name: 2 · WTA-Import (scharf)
         run: node scripts/wta-import.mjs --write
 
-      # 3. EIN Geocoding für ALLE neuen Orte (ITF + WTA) — der Cache verhindert Doppelabrufe.
-      - name: 3 · Geokodierung (neue Orte, ITF + WTA)
+      # 3. Challenger aus Wikipedia (nur --series=challenger; ITF holt der Endpunkt oben).
+      #    Eigener Wächter (kept===0 → exit 1). Jahre dynamisch → läuft nicht ab Januar ins Leere.
+      - name: 3 · Challenger-Import (Wikipedia, scharf)
+        run: node scripts/wikipedia-import.mjs --series=challenger --write
+
+      # 4. EIN Geocoding für ALLE neuen Orte (ITF + WTA + Challenger) — Cache verhindert Doppelabrufe.
+      - name: 4 · Geokodierung (neue Orte, alle Serien)
         run: node scripts/geocode-tournaments.mjs
 
-      - name: 4 · Manuelle Overrides
+      - name: 5 · Manuelle Overrides
         run: node scripts/geocode-overrides.mjs --write
 
-      - name: 5 · Claims auflösen
+      - name: 6 · Claims auflösen
         run: node scripts/resolve-tournaments.mjs --write
 
       # Kennzahlen in die Job-Zusammenfassung — damit man ohne Log-Wühlen sieht, was lief.
@@ -111,6 +121,11 @@ jobs:
               sed -n '1,8p' scripts/wta-import-report.md
               echo ""
             fi
+            if [ -f scripts/wikipedia-import-report.md ]; then
+              echo "### Challenger-Import (Wikipedia)"
+              sed -n '1,8p' scripts/wikipedia-import-report.md
+              echo ""
+            fi
             if [ -f scripts/geocoding-report.md ]; then
               echo "### Geokodierung (noch ohne Koordinaten = Kuratierung nötig)"
               grep -iE "ohne Koordinaten|mehrdeutig|nicht gefunden|ambiguous|not_found" scripts/geocoding-report.md | head -20 || true
@@ -127,6 +142,7 @@ jobs:
           path: |
             scripts/itf-import-report.md
             scripts/wta-import-report.md
+            scripts/wikipedia-import-report.md
             scripts/geocoding-report.md
             scripts/resolve-report.md
           if-no-files-found: ignore

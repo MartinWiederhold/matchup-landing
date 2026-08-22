@@ -12,6 +12,11 @@
 
 ## Priorität 1 — vor Launch
 
+### MU-053 · Challenger-Katalog friert ein — Wikipedia-Refresh in den Tageslauf · M · **erledigt**
+**Problem:** Die 482 Challenger stammen aus einem **Einmal-Import vom 1. August** und laufen NICHT im Tageslauf mit (der holt nur ITF + WTA). Der Vorlauf endet am **30.11.2026** — danach ist der Katalog leer. Nur **73 der 482** sind in den nächsten drei Monaten relevant, in einem Monat **27**. Challenger ist die Stufe direkt über der ITF World Tennis Tour — der nächste Schritt der Zielgruppe.
+**Erledigt:** `wikipedia-import.mjs --series=challenger --write` in die tägliche Kette aufgenommen (nach ITF/WTA, vor dem gemeinsamen Geocoding), mit demselben **exit-1-Wächter** (0 importierbar → roter Lauf). **Jahreswechsel-Logik korrigiert:** die Jahre waren hart auf `[2025, 2026]` verdrahtet → ab Januar ins Leere. Jetzt **dynamisch `[nowYear, nowYear+1]`** (rollierendes Fenster); eine noch nicht existierende Folgejahr-Seite (z. B. „2027 …" vor ~Sep 2026) liefert 0 Zeilen und wird toleriert, ohne den Lauf zu stoppen. Trockenlauf bestätigt: 2026-Seite 262 importierbar, 2027 fehlt → toleriert.
+**Vorbehalt belegt (Wikipedia als Quelle):** läuft nach — ≥80 % Abdeckung erst ~28 Wochen ins Jahr; nächste Jahresseite entsteht 3–4 Monate vor Jahresbeginn; ~37 % der 2026-Zeilen ohne Belag (`wikipedia-lead-time-report.md` / `-coverage-report.md`). Der **beste erlaubte** Zugang, nicht der beste überhaupt: `atptour.com` sperrt KI-Nutzung (robots) — ein besserer Zugang nur über eine **ATP-Datenfreigabe**, dieselbe Lage wie MU-049 (Tennis Europe) und MU-052 (ATP/USTA).
+
 ### MU-047 · Herren-Zählgrenze falsch (best 6/7 statt 18/19) — Rangprognose zu niedrig · M · **erledigt** · ✅ **Sperre aufgehoben**
 **Problem:** `scorePoints` nutzte für Herren die Zählgrenze best 6 (2026) bzw. best 7 (2024/25). Regel **9.03 B** sagt aber best 6/7 **PLUS eins je Pflichtturnier, in dem der Spieler nicht im Hauptfeld steht**. Für die Zielgruppe außerhalb der Top 30 sind das alle zwölf (4 Grand Slams + 8 Masters 1000) — die tatsächliche Grenze ist **18 (2026)** bzw. **19 (2024/25)**.
 **Ursache:** Das Beleg-Zitat in `scripts/punkte-tabellen-report.md` war **vor der Umwandlungsklausel abgeschnitten** („… and …"). Der Kommentar in `points.ts:29` schloss daraus „für die Zielgruppe schlicht best n" — das ist der Fehlschluss.

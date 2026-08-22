@@ -23,6 +23,8 @@ const WRITE = process.argv.includes("--write");
 // Optionaler Teilmengen-Filter, um den scharfen Lauf in kürzere Vordergrund-Läufe
 // zu teilen: --only=itf2025 | itf2026 | ch2025 | ch2026
 const ONLY = (process.argv.find((a) => a.startsWith("--only=")) || "").split("=")[1] || null;
+// Serienfilter für die Tageskette: --series=challenger (nur Challenger; ITF holt der Endpunkt).
+const SERIES = (process.argv.find((a) => a.startsWith("--series=")) || "").split("=")[1]?.toLowerCase() || null;
 const sourceKey = (s) => (s.series === "ITF" ? "itf" : "ch") + s.year;
 
 const API = "https://en.wikipedia.org/w/api.php";
@@ -274,8 +276,15 @@ function mapCell(rawCell, week, src) {
 // Quellen
 // ---------------------------------------------------------------------------
 const Q = { "January–March": 1, "April–June": 2, "July–September": 3, "October–December": 4 };
+// JAHRE DYNAMISCH — laufendes Jahr + Folgejahr (rollierendes Fenster). NICHT verdrahten:
+// ein festes Jahr liefe ab Januar ins Leere (die neue Jahresseite würde nie gelesen), und
+// das fiele erst auf, wenn der Katalog schon leer ist. Die nächste Jahresseite entsteht ~3–4
+// Monate vor Jahresbeginn und füllt sich nachlaufend (s. wikipedia-lead-time-report.md); eine
+// noch nicht existierende Seite liefert 0 Zeilen und wird toleriert (kein Abbruch je Quelle).
+// `new Date()` ist hier zulässig (Import-Skript, keine Domain-Schicht).
+const nowYear = new Date().getUTCFullYear();
 const SOURCES = [];
-for (const year of [2025, 2026]) {
+for (const year of [nowYear, nowYear + 1]) {
   for (const span of Object.keys(Q))
     SOURCES.push({ series: "ITF", year, span, page: `${year} ITF Men's World Tennis Tour (${span})`,
       source: `wikipedia_itf_${year}_q${Q[span]}` });
@@ -295,7 +304,10 @@ const pageStats = [];
 
 function dropReasonBump(reason) { dropReasons.set(reason, (dropReasons.get(reason) || 0) + 1); }
 
-const RUN_SOURCES = ONLY ? SOURCES.filter((s) => sourceKey(s) === ONLY) : SOURCES;
+const RUN_SOURCES = SOURCES.filter((s) =>
+  (!ONLY || sourceKey(s) === ONLY) &&
+  (!SERIES || s.series.toLowerCase() === SERIES),
+);
 for (const src of RUN_SOURCES) {
   process.stdout.write(`${src.page}: `);
   const st = { ...src, rows: 0, keep: 0, drop: 0, error: null };
@@ -504,3 +516,12 @@ writeFileSync(join(homedir(), "Downloads", "wikipedia-import-report.md"), out, "
 const distinctRefs = new Set(kept.map((k) => k.record.source_ref)).size;
 console.log(`\n${WRITE ? "SCHARF" : "TROCKENLAUF"} · importierbar=${kept.length} (distinkt=${distinctRefs}) verworfen=${dropped.length}`);
 console.log(`Bericht: scripts/wikipedia-import-report.md (+ ~/Downloads)`);
+
+// Wächter gegen den STILLEN NULLLAUF (wie itf-/wta-import): 0 importierbare Turniere heißt
+// fast sicher Wikipedia nicht erreichbar oder Seitenstruktur/Parser gebrochen — NICHT ein
+// leerer Kalender (die laufende Jahresseite hat immer Turniere). Sonst friert der Katalog
+// unbemerkt ein. Harter Fehler → roter CI-Lauf → Mail.
+if (kept.length === 0) {
+  console.error("ABBRUCH: 0 importierbare Turniere — Wikipedia nicht erreichbar oder Parser gebrochen. Kein stiller Nulllauf.");
+  process.exit(1);
+}
