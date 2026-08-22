@@ -36,6 +36,7 @@ import { DeadlineCountdown } from "../EntryDeadline";
 import type { TourTournament, TourCostRates, TourSeasonPlanEntry, TourEntryEvent } from "@/lib/types";
 import PlannerMap, { type PlanStop, type CandPoint, type MapStart } from "./PlannerMap";
 import TournamentDetail from "./TournamentDetail";
+import CalendarView from "../../calendar/components/CalendarView";
 import InfoHint from "./InfoHint";
 import { geocodeCity, type GeoHit } from "@/lib/geocode";
 import { HOME_BASES } from "@/lib/tournaments";
@@ -53,6 +54,9 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
 // Beim Umschalten auf Punkte ist die Zielrunde nie leer — Vorgabe R16 (2. Runde).
 const OBJECTIVE_KEY = "mu_tour_objective";
 const EXP_ROUND_KEY = "mu_tour_exp_round";
+// Umschalter „Meine Saison": Liste (Standard) vs. Kalender (dieselben Turniere als
+// Wochenraster). Auswahl SSR-stabil, danach aus localStorage — wie das Objektiv.
+const SEASON_VIEW_KEY = "mu_tour_season_view";
 const EXP_ROUND_DEFAULT: PointsRound = "R16";
 const ROUND_OPTS: PointsRound[] = ["W", "F", "SF", "QF", "R16", "R32"];
 
@@ -152,15 +156,20 @@ export default function SeasonWorkspace() {
   // stiller Objektiv-Rückfall — die Vorgabe verhindert, dass expectedRound leer ankommt).
   const [objective, setObjective] = useState<SeasonObjective>("most_tournaments");
   const [expRound, setExpRound] = useState<PointsRound>(EXP_ROUND_DEFAULT);
+  // Ansicht von „Meine Saison": Liste (Standard) oder Kalender. SSR-stabil, dann localStorage.
+  const [seasonView, setSeasonView] = useState<"list" | "calendar">("list");
   useEffect(() => {
     try {
       const o = localStorage.getItem(OBJECTIVE_KEY);
       if (o === "most_points" || o === "most_tournaments") setObjective(o);
       const r = localStorage.getItem(EXP_ROUND_KEY);
       if (r && (ROUND_OPTS as string[]).includes(r)) setExpRound(r as PointsRound);
+      const v = localStorage.getItem(SEASON_VIEW_KEY);
+      if (v === "list" || v === "calendar") setSeasonView(v);
     } catch { /* egal */ }
   }, []);
   const chooseObjective = useCallback((o: SeasonObjective) => { setObjective(o); try { localStorage.setItem(OBJECTIVE_KEY, o); } catch { /* egal */ } }, []);
+  const chooseSeasonView = useCallback((v: "list" | "calendar") => { setSeasonView(v); try { localStorage.setItem(SEASON_VIEW_KEY, v); } catch { /* egal */ } }, []);
   const chooseRound = useCallback((r: PointsRound) => { setExpRound(r); try { localStorage.setItem(EXP_ROUND_KEY, r); } catch { /* egal */ } }, []);
   // Katalogspalten-Breite (Desktop): SSR-stabiler Default, danach aus localStorage übernehmen
   // (vermeidet Hydration-Mismatch am inline width). Der Zieh-Griff sitzt zwischen Katalog
@@ -1191,13 +1200,15 @@ export default function SeasonWorkspace() {
           <section className="space-y-2">
             <button type="button" onClick={smartFill} disabled={filling || !ratesDone}
               className="w-full rounded-full bg-neutral-900 px-5 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-40">
-              {filling ? t("tour.wsFilling") : t("tour.wsFill")}
+              {filling ? t("tour.wsPlanning") : t("tour.wsFill")}
             </button>
             {!ratesDone && (
               <button type="button" onClick={openRates} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
             )}
             <p className="text-[11px] leading-relaxed text-neutral-400">
-              {t("tour.wsFillShort")}
+              {/* Erklärzeile richtet sich nach dem gewählten Objektiv — bei „Punkte" plant
+                  der Optimierer etwas anderes als bei „Turniere". Der Knopf bleibt neutral. */}
+              {objective === "most_points" ? t("tour.wsFillShortPoints") : t("tour.wsFillShortTournaments")}
               <InfoHint label={t("tour.wsFillInfo")}>{t("tour.wsFillLong")}</InfoHint>
             </p>
             {fillReport && (
@@ -1216,10 +1227,21 @@ export default function SeasonWorkspace() {
             <section className="border-t border-neutral-100 pt-4">{overviewSection}</section>
           )}
 
-          {/* Meine Saison */}
+          {/* Meine Saison — mit Umschalter Liste ↔ Kalender (dieselben Turniere, anders
+              angeordnet; der Kalender ist die vorhandene CalendarView inline, kein zweiter Ort). */}
           <section>
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
-            {seasonOrdered.length === 0 ? (
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
+              <div className="flex items-center gap-0.5 rounded-full bg-black/[0.05] p-0.5">
+                {([["list", "wsViewList"], ["calendar", "wsViewCalendar"]] as const).map(([v, key]) => (
+                  <button key={v} type="button" onClick={() => chooseSeasonView(v)} className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${seasonView === v ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>{t(`tour.${key}`)}</button>
+                ))}
+              </div>
+            </div>
+            {seasonView === "calendar" ? (
+              // Kalender inline — dieselbe Komponente wie /tour/calendar (Adresse bleibt bestehen).
+              <CalendarView />
+            ) : seasonOrdered.length === 0 ? (
               <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
             ) : (
               <ul className="mt-2 space-y-1.5">
@@ -1256,9 +1278,8 @@ export default function SeasonWorkspace() {
             <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.toolsTitle")}</h2>
             <div className="mt-2 space-y-1">
               {[
-                // Kalender ZUERST — er ist die Planungsansicht (Woche + geplante Turniere
-                // als Termine), näher an der Planung als Wildcards/Siegquoten, daher oben.
-                { href: "/tour/calendar", label: t("tour.calendarOpen"), desc: t("tour.calendarOpenDesc") },
+                // Kalender ist jetzt der Umschalter über der Saisonliste (prominenter),
+                // daher hier NICHT mehr als Zeile. /tour/calendar bleibt als eigene Adresse.
                 { href: "/tour/pipeline", label: t("tour.pipelineOpen"), desc: t("tour.pipelineOpenDesc") },
                 { href: "/tour/finance", label: t("tour.financeOpen"), desc: t("tour.financeOpenDesc") },
                 { href: "/tour/wildcards", label: t("tour.wildcardsOpen"), desc: t("tour.wildcardsOpenDesc") },
