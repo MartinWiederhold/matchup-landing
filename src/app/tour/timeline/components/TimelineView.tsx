@@ -21,7 +21,7 @@ import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 import { loadEvents, type TourEvent, EVENT_KINDS, type EventKind } from "@/lib/tourEvents";
-import { placeKey } from "@/lib/tourPlanner";
+import { placeKey, loadPlannerProfile, type PlannerProfile } from "@/lib/tourPlanner";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { tightArrivals } from "@/domain/tour/travelBuffer";
 import { DAY, mondayOfMs, seasonBounds, xForMs, weekBar, totalWidth, initialFocusMs, classifyDeadline, type DeadlineKind } from "@/domain/tour/timeline";
@@ -46,6 +46,49 @@ const SERIES_STYLE: Record<string, { bar: string; text: string; dot: string }> =
 };
 const styleFor = (s: string) => SERIES_STYLE[s] ?? SERIES_STYLE.itf_wtt;
 
+// Serie → getönte Icon-Kachel (Turnier-Logo links auf dem Balken).
+const SERIES_BADGE: Record<string, string> = {
+  itf_wtt: "text-matchup bg-matchup/10",
+  itf_juniors: "text-emerald-600 bg-emerald-500/10",
+  challenger: "text-amber-600 bg-amber-500/10",
+  wta: "text-rose-600 bg-rose-500/10",
+};
+// Termin-Art → getönte Icon-Kachel.
+const KIND_BADGE: Record<string, string> = {
+  training: "text-emerald-600 bg-emerald-500/10",
+  match: "text-violet-600 bg-violet-500/10",
+  physio: "text-rose-600 bg-rose-500/10",
+  travel: "text-sky-600 bg-sky-500/10",
+  gym: "text-amber-600 bg-amber-500/10",
+  other: "text-neutral-500 bg-black/[0.05]",
+};
+
+// Eigene, generische Glyphen (keine Fremdlogos): Turnier = Tennisball, sonst je Art.
+function Glyph({ k }: { k: string }) {
+  const c = "h-[13px] w-[13px]";
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (k) {
+    case "tournaments": return <svg viewBox="0 0 24 24" className={c} {...p}><circle cx="12" cy="12" r="9" /><path d="M4.5 7.5a11 11 0 0 1 0 9M19.5 7.5a11 11 0 0 0 0 9" /></svg>; // Tennisball
+    case "training": return <svg viewBox="0 0 24 24" className={c} {...p}><ellipse cx="9.5" cy="8.5" rx="5.5" ry="6" /><path d="M13 13l6 8" /></svg>; // Schläger
+    case "match": return <svg viewBox="0 0 24 24" className={c} {...p}><path d="M8 21h8M12 17v4M6 4h12v3a6 6 0 0 1-12 0zM6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3" /></svg>; // Pokal
+    case "physio": return <svg viewBox="0 0 24 24" className={c} {...p}><path d="M12 20s-6.5-4.3-6.5-9A3.5 3.5 0 0 1 12 8a3.5 3.5 0 0 1 6.5 3c0 4.7-6.5 9-6.5 9z" /><path d="M12 11v3M10.5 12.5h3" /></svg>; // Herz+
+    case "travel": return <svg viewBox="0 0 24 24" className={c} {...p}><path d="M10 13L3 15l1.5-3L3 9l7 1 4-6 2 1-2 6 6 2-1 2-6-1-3 5-1-5z" /></svg>; // Flieger
+    case "gym": return <svg viewBox="0 0 24 24" className={c} {...p}><path d="M6 8v8M4 10v4M18 8v8M20 10v4M6 12h12" /></svg>; // Hantel
+    default: return <svg viewBox="0 0 24 24" className={c} {...p}><path d="M12 4l1.5 4.5L18 10l-4.5 1.5L12 16l-1.5-4.5L6 10l4.5-1.5z" /></svg>; // Funke
+  }
+}
+function IconBadge({ k, tone }: { k: string; tone: string }) {
+  return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${tone}`}><Glyph k={k} /></span>;
+}
+// Avatar = EIGENES Profilbild (echt/zugestimmt), sonst Initiale. Keine fremden/erfundenen Gesichter.
+function Face({ src, name }: { src: string | null; name: string | null }) {
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-full object-cover ring-2 ring-white" />;
+  }
+  return <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup/15 text-[10px] font-bold text-matchup ring-2 ring-white">{(name?.[0] ?? "·").toUpperCase()}</span>;
+}
+
 // Spuren: Turniere zuerst, dann je Termin-Art eine Spur.
 const LANE_TOUR_H = 60, LANE_EV_H = 40, AXIS_H = 56, LEFT_W = 172;
 const LANES: { key: "tournaments" | EventKind; h: number }[] = [
@@ -67,6 +110,7 @@ export default function TimelineView() {
 
   const [season, setSeason] = useState<SeasonEntry[]>([]);
   const [events, setEvents] = useState<TourEvent[]>([]);
+  const [profile, setProfile] = useState<PlannerProfile | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [zoom, setZoom] = useState<Zoom>("season");
   const [selected, setSelected] = useState<string | null>(null);
@@ -83,8 +127,8 @@ export default function TimelineView() {
     if (authLoading || !user) return;
     let cancel = false;
     setState("loading");
-    Promise.all([loadSeason(), loadEvents(user.id)])
-      .then(([s, ev]) => { if (!cancel) { setSeason(s); setEvents(ev.rows); setState("done"); } })
+    Promise.all([loadSeason(), loadEvents(user.id), loadPlannerProfile(user.id)])
+      .then(([s, ev, p]) => { if (!cancel) { setSeason(s); setEvents(ev.rows); setProfile(p); setState("done"); } })
       .catch(() => { if (!cancel) setState("error"); });
     return () => { cancel = true; };
   }, [authLoading, user]);
@@ -201,14 +245,13 @@ export default function TimelineView() {
             const isNow = nowMs >= wk && nowMs < wk + 7 * DAY;
             if (!tt && evs.length === 0 && !isNow) return null;
             const dl = tt ? deadlines.find((d) => d.id === tt.id) : null;
-            const st = tt ? styleFor(tt.series) : null;
             return (
               <li key={wk} className="relative">
                 <span className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full ring-2 ring-white ${isNow ? "bg-matchup" : "bg-neutral-300"}`} />
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{isNow ? ` · ${t("tour.tlToday")}` : ""}</p>
-                {tt && st && (
-                  <button type="button" onClick={() => setSelected(tt.id)} className={`mt-1 block w-full rounded-xl px-3 py-2 text-left ring-1 ${st.bar}`}>
-                    <span className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900"><span className={`h-2 w-2 shrink-0 rounded-full ${st.dot}`} />{tt.city || tt.name || t("tour.fieldMissing")}{tt.category ? <span className="text-neutral-500"> · {tt.category}</span> : null}</span>
+                {tt && (
+                  <button type="button" onClick={() => setSelected(tt.id)} className="mt-1 block w-full rounded-xl bg-white px-3 py-2 text-left shadow-sm ring-1 ring-black/[0.08]">
+                    <span className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900"><IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />{tt.city || tt.name || t("tour.fieldMissing")}{tt.category ? <span className="text-neutral-500"> · {tt.category}</span> : null}<span className="ml-auto"><Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} /></span></span>
                     <span className="mt-1 flex flex-wrap items-center gap-2"><DeadlineChip kind={dl?.kind ?? "unknown"} entryMs={dl?.entryMs ?? null} nowMs={nowMs} t={t} />{tight.has(tt.id) && <span className="text-[11px] font-semibold text-amber-700">⚠ {t("tour.calTightArrival", { n: tight.get(tt.id)! })}</span>}</span>
                   </button>
                 )}
@@ -296,9 +339,11 @@ export default function TimelineView() {
                 {(eventsByKind.get(lane.key) ?? []).map((ev) => {
                   const x = xForMs(Date.parse(ev.event_date + "T00:00:00Z"), bounds.startMs, pxPerDay);
                   return (
-                    <button key={ev.id} type="button" onClick={(e) => { e.stopPropagation(); setForm({ event: ev }); }} className="absolute top-1.5 flex max-w-[160px] items-center gap-1 truncate rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm ring-1 ring-black/[0.08] hover:ring-matchup/40" style={{ left: x + 2 }} title={`${ev.title}${ev.event_time ? " · " + ev.event_time.slice(0, 5) : ""}`}>
-                      {ev.event_time && <span className="text-neutral-400">{ev.event_time.slice(0, 5)}</span>}
+                    <button key={ev.id} type="button" onClick={(e) => { e.stopPropagation(); setForm({ event: ev }); }} className="absolute top-1 flex max-w-[190px] items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-2 text-[11px] font-semibold text-neutral-700 shadow-sm ring-1 ring-black/[0.08] hover:ring-matchup/40" style={{ left: x + 2 }} title={`${ev.title}${ev.event_time ? " · " + ev.event_time.slice(0, 5) : ""}`}>
+                      <IconBadge k={ev.kind} tone={KIND_BADGE[ev.kind] ?? KIND_BADGE.other} />
+                      {ev.event_time && <span className="shrink-0 text-neutral-400">{ev.event_time.slice(0, 5)}</span>}
                       <span className="truncate">{ev.title || kindLabel(ev.kind)}</span>
+                      <Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} />
                     </button>
                   );
                 })}
@@ -314,12 +359,13 @@ export default function TimelineView() {
               const compact = b.width < 96;
               return (
                 <button key={tt.id} type="button" onClick={() => setSelected(tt.id)}
-                  className={`absolute flex items-center gap-1.5 overflow-hidden rounded-xl px-2 text-left ring-1 transition-[filter] hover:brightness-95 ${st.bar} ${selected === tt.id ? "ring-2 ring-matchup" : ""}`}
-                  style={{ left: b.left + 2, width: b.width - 4, top: laneTop(0) + 4, height: LANE_TOUR_H - 8 }}
+                  className={`absolute flex items-center gap-2 overflow-hidden rounded-full bg-white py-1 pl-1 pr-2 text-left shadow-sm ring-1 ring-black/[0.08] transition hover:ring-matchup/50 ${selected === tt.id ? "ring-2 ring-matchup" : ""}`}
+                  style={{ left: b.left + 2, width: b.width - 4, top: laneTop(0) + (LANE_TOUR_H - 40) / 2, height: 40 }}
                   title={`${tt.city ?? ""}${tt.category ? " · " + tt.category : ""}`}>
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${st.dot}`} />
-                  {!compact && <span className="min-w-0"><span className="block truncate text-[12px] font-semibold text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}</span><span className={`block truncate text-[11px] ${st.text}`}>{tt.category || "—"}</span></span>}
-                  {tight.has(tt.id) && <span className="absolute right-1 top-1 text-[11px] text-amber-700" title={t("tour.calTightArrival", { n: tight.get(tt.id)! })}>⚠</span>}
+                  <IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />
+                  {!compact && <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold leading-tight text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}</span><span className={`block truncate text-[11px] leading-tight ${st.text}`}>{tt.category || "—"}</span></span>}
+                  {!compact && <Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} />}
+                  {tight.has(tt.id) && <span className="absolute right-0.5 top-0 text-[11px] text-amber-700" title={t("tour.calTightArrival", { n: tight.get(tt.id)! })}>⚠</span>}
                 </button>
               );
             })}
