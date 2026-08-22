@@ -343,8 +343,17 @@ export default function TournamentDetail({
   const noteCls = "font-semibold text-neutral-500 underline";
   const entryHint = (
     <>
-      {/* Turnierseite (aktuell nirgends gepflegt → erscheint nie) bleibt erreichbar. */}
-      {tt.website && <p><a href={tt.website} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryWebsite")} →</a></p>}
+      {/* Turnierseite: bei ITF die öffentliche itftennis.com-Turnierseite (in `website`
+          aufgelöst). Landet beim RICHTIGEN Turnier + Fact Sheet + führt zum Portal —
+          meldet nicht selbst an. Der Portal-Link bleibt darunter. WTA/Challenger haben
+          keine `website` → erscheint dort nicht. Kein turnier-spezifischer Deep-Link
+          möglich (siehe EntryDeadline.tsx). */}
+      {tt.website && (
+        <p>
+          <a href={tt.website} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryWebsite")} →</a>
+          <span className="mt-0.5 block font-normal text-neutral-400">{t("tour.entryWebsiteNote")}</span>
+        </p>
+      )}
       {isWta ? (
         <p className={tt.website ? "mt-1" : ""}>{t("tour.entryPortalWtaNote")}</p>
       ) : !isChallenger ? (

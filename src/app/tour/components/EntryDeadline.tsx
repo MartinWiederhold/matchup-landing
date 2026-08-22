@@ -28,6 +28,18 @@ const DAY = 86_400_000;
 //        nicht zur Meldung selbst (siehe Hinweis-Text in der UI).
 // Exportiert (additiv), damit die kompakte Meldeweg-Zeile im Turnierdetail dieselben
 // belegten Adressen nutzt, OHNE die geteilte EntryPath-Komponente (auch in SeasonCard) zu ändern.
+//
+// KEIN turnier-spezifischer Deep-Link möglich — geprüft (Adressstruktur, ohne Anmeldung):
+//   * Kein Portal trägt eine Turnier-Kennung in der Adresse. Die öffentliche ITF-
+//     Turnierseite verlinkt nur die blanke `tourzone.world.tennis/` (kein Turnier-Param).
+//   * Kein Portal leitet nach dem Login an das ursprüngliche Turnier zurück (kein
+//     returnUrl): Tour Zone ist eine SPA ohne Auth-Redirect; WTA PlayerZone leitet zu
+//     Microsoft-OAuth mit `redirect_uri` = blanker App-Root (nicht das Turnier).
+//   * ATP PlayerZone (atptour.com) sperrt KI-Nutzung → nicht prüfbar; die Meldung läuft
+//     ohnehin in der ATP-App.
+// Das Beste, was existiert, ist deshalb: bei ITF die öffentliche Turnierseite (unten in
+// `tournament.website`, landet beim richtigen Turnier) PLUS der generische Portal-Link.
+// Wer später einen Deep-Link sucht: es gibt keinen — hier nicht weiter suchen.
 export const ITF_PORTAL = "https://tourzone.world.tennis";
 export const ATP_PORTAL = "https://www.atptour.com/en/players";
 // WTA-Haupttour meldet über die WTA PlayerZone (belegt: WTA Rulebook „enter online via
@@ -81,15 +93,22 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
     <div className="mt-2 text-[12px]">
       <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.entryPathTitle")}</p>
 
-      {/* Turnierseite — nur wenn eine website vorhanden ist, ehrlich als „Turnierseite"
-          (NICHT „Jetzt anmelden"). ACHTUNG / TOTER CODE: Aktuell hat KEINE der 1489
-          Zeilen in web.tour_tournaments eine website (Stand der Umsetzung) — dieser
-          Zweig erscheint also NIE, bis das Feld gepflegt wird. Wer später sucht, warum
-          der Link fehlt: das ist der Grund, kein Bug. */}
+      {/* Turnierseite — bei ITF-Turnieren die öffentliche itftennis.com-Turnierseite
+          (in `website` aufgelöst, MU: aus der claim-source_url der ITF-Endpunkt-Claims).
+          Ehrlich als „Turnierseite mit Meldeinfo" (NICHT „Jetzt anmelden") + Hinweis:
+          die Seite MELDET NICHT AN, sie zeigt das Turnier samt Fact Sheet und führt zum
+          Portal. Vorteil ggü. der blanken Tour-Zone-Startseite: der Nutzer landet beim
+          RICHTIGEN Turnier, nicht auf einer generischen Portalseite. Der Tour-Zone-Link
+          bleibt darunter, für wer direkt ins Portal will.
+          Nur ITF-Turniere haben eine `website` (WTA/Challenger: kein itftennis.com-Link
+          in den Claims → Feld bleibt NULL → dieser Zweig erscheint dort nicht). */}
       {tournament.website && (
-        <a href={tournament.website} target="_blank" rel="noopener noreferrer" className={link}>
-          {t("tour.entryWebsite")} →
-        </a>
+        <>
+          <a href={tournament.website} target="_blank" rel="noopener noreferrer" className={link}>
+            {t("tour.entryWebsite")} →
+          </a>
+          <p className={note}>{t("tour.entryWebsiteNote")}</p>
+        </>
       )}
 
       {isWta ? (

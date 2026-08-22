@@ -31,6 +31,10 @@ const RESOLVABLE = [
 ];
 const NUM_FIELDS = new Set(["prize_money", "latitude", "longitude"]);
 const BOOL_FIELDS = new Set(["indoor"]);
+// Öffentliche ITF-Turnierseite (mit Fact Sheet + „Login to Tour Zone"). Nur EXAKT dieses
+// Muster wird in `website` gehoben — nie Wikipedia/OSM/WTA-API. Kein turnier-spezifischer
+// Deep-Link ins Portal möglich (geprüft) → diese Seite ist der beste Landepunkt.
+const ITF_PAGE_RE = /^https:\/\/www\.itftennis\.com\/en\/tournament\//;
 // Textwert (aus dem Claim) in den Spaltentyp überführen.
 function coerce(field, value) {
   if (value == null) return null;
@@ -77,8 +81,8 @@ async function fetchAll(table, cols) {
 }
 
 console.log(`${WRITE ? "SCHARF" : "TROCKENLAUF"} · lese Turniere + Claims …`);
-const tournaments = await fetchAll("tour_tournaments", "id, source_ref");
-const claimsRaw = await fetchAll("tour_tournament_claims", "tournament_id, field_name, field_value, source, observed_at, confidence");
+const tournaments = await fetchAll("tour_tournaments", "id, source_ref, series");
+const claimsRaw = await fetchAll("tour_tournament_claims", "tournament_id, field_name, field_value, source, source_url, observed_at, confidence");
 console.log(`  ${tournaments.length} Turniere, ${claimsRaw.length} Claims`);
 
 // Claims gruppieren: tid → field → claim[]
@@ -93,7 +97,7 @@ for (const c of claimsRaw) {
 // ---------------------------------------------------------------------------
 // Auflösen
 // ---------------------------------------------------------------------------
-let resolvedCount = 0, fieldWrites = 0;
+let resolvedCount = 0, fieldWrites = 0, itfPageDerived = 0;
 const perFieldSource = {}; // field → { source: anzahl_siege }
 const sourceWins = {};     // source → anzahl_siege (feldübergreifend)
 const conflicts = [];      // { source_ref, field, chosen, values:[{value,source}] }
@@ -118,6 +122,24 @@ for (const t of tournaments) {
       const vs = [...new Set(cl.map((x) => x.field_value))].map((v) => ({ value: v, source: cl.find((x) => x.field_value === v).source }));
       conflicts.push({ source_ref: t.source_ref, field, chosen: r.value, values: vs });
     }
+  }
+  // ── ITF-Turnierseite in `website` heben ──────────────────────────────────────
+  // Die öffentliche itftennis.com-Turnierseite ist keine eigene Behauptung (kein
+  // field_name), sondern steckt als source_url in den ITF-Endpunkt-Claims. Wir heben
+  // sie für ITF-Turniere in `website`, damit der Meldeweg auf die RICHTIGE Turnierseite
+  // verlinkt (statt auf die blanke Portal-Startseite ohne Turnier-Kennung). Ein
+  // ausdrücklicher website-Claim (falls je vorhanden) hätte Vorrang — daher nur, wenn
+  // oben nichts gesetzt wurde. Aktuell tragen nur Junioren solche Claims; itf_wtt
+  // bekommt sie, sobald der Endpunkt-Import (statt Wikipedia) auf main läuft → selbstheilend.
+  if ((t.series === "itf_wtt" || t.series === "itf_juniors") && obj.website == null) {
+    let page = null;
+    for (const cl of fm.values()) {
+      for (const c of cl) {
+        if (c.source_url && ITF_PAGE_RE.test(c.source_url)) { page = c.source_url; break; }
+      }
+      if (page) break;
+    }
+    if (page) { obj.website = page; itfPageDerived++; }
   }
   if (Object.keys(obj).length) { updates.push({ id: t.id, obj }); resolvedCount++; }
 }
@@ -148,6 +170,7 @@ md.push("");
 md.push(`- Turniere gesamt: **${tournaments.length}**`);
 md.push(`- Turniere mit ≥1 aufgelöstem Feld: **${resolvedCount}**`);
 md.push(`- Feld-Auflösungen gesamt: **${fieldWrites}**`);
+md.push(`- ITF-Turnierseite in \`website\` gehoben: **${itfPageDerived}** (nur itftennis.com/en/tournament/…)`);
 md.push(`- Erkannte Konflikte: **${conflicts.length}**`);
 if (WRITE) md.push(`- Geschrieben: **${written}** Stammzeilen aktualisiert, ${errN} Fehler.`);
 else md.push(`- (Trockenlauf — keine Stammzeile geschrieben.)`);
@@ -186,12 +209,14 @@ md.push("");
 md.push(`- **Trockenlauf ist Voreinstellung.** Scharf: \`node scripts/resolve-tournaments.mjs --write\`.`);
 md.push(`- **Idempotent:** gleiche Claims ⇒ deterministisch gleiche Werte; ein zweiter Lauf setzt dieselben Werte.`);
 md.push(`- **Quellen-Rangfolge** (in der Domain-Regel): verband → wikipedia → abgeleitet.`);
-md.push(`- status/website/latitude/longitude haben aktuell keine Claims → bleiben unverändert (Default/NULL).`);
+md.push(`- \`website\` hat keine eigenen Claims; für ITF-Turniere wird die öffentliche`);
+md.push(`  itftennis.com-Turnierseite aus der claim-source_url gehoben (nur itftennis.com/en/tournament/…).`);
+md.push(`- status/latitude/longitude haben aktuell keine Claims → bleiben unverändert (Default/NULL).`);
 md.push("");
 
 const out = md.join("\n");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 writeFileSync(join(__dirname, "resolve-report.md"), out, "utf8");
 writeFileSync(join(homedir(), "Downloads", "resolve-report.md"), out, "utf8");
-console.log(`${WRITE ? "SCHARF" : "TROCKENLAUF"} · aufgelöst=${resolvedCount} felder=${fieldWrites} konflikte=${conflicts.length}${WRITE ? ` geschrieben=${written}` : ""}`);
+console.log(`${WRITE ? "SCHARF" : "TROCKENLAUF"} · aufgelöst=${resolvedCount} felder=${fieldWrites} itf-seite=${itfPageDerived} konflikte=${conflicts.length}${WRITE ? ` geschrieben=${written}` : ""}`);
 console.log(`Bericht: scripts/resolve-report.md (+ ~/Downloads)`);
