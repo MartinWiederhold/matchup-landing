@@ -1253,6 +1253,8 @@ export default function SeasonWorkspace() {
                 {([["list", "wsViewList"], ["calendar", "wsViewCalendar"]] as const).map(([v, key]) => (
                   <button key={v} type="button" onClick={() => chooseSeasonView(v)} className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${seasonView === v ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>{t(`tour.${key}`)}</button>
                 ))}
+                {/* Zeitstrahl braucht die volle Breite → eigene Vollbild-Route, hier als dritter Umschalter-Eintrag. */}
+                <Link href="/tour/timeline" className="rounded-full px-3 py-1 text-[12px] font-semibold text-neutral-500 transition-colors hover:text-neutral-800">{t("tour.wsViewTimeline")}</Link>
               </div>
             </div>
             {seasonView === "calendar" ? (
