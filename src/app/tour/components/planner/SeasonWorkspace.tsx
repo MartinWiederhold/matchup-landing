@@ -1256,6 +1256,9 @@ export default function SeasonWorkspace() {
             <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.toolsTitle")}</h2>
             <div className="mt-2 space-y-1">
               {[
+                // Kalender ZUERST — er ist die Planungsansicht (Woche + geplante Turniere
+                // als Termine), näher an der Planung als Wildcards/Siegquoten, daher oben.
+                { href: "/tour/calendar", label: t("tour.calendarOpen"), desc: t("tour.calendarOpenDesc") },
                 { href: "/tour/pipeline", label: t("tour.pipelineOpen"), desc: t("tour.pipelineOpenDesc") },
                 { href: "/tour/finance", label: t("tour.financeOpen"), desc: t("tour.financeOpenDesc") },
                 { href: "/tour/wildcards", label: t("tour.wildcardsOpen"), desc: t("tour.wildcardsOpenDesc") },

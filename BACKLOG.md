@@ -12,6 +12,12 @@
 
 ## Priorität 1 — vor Launch
 
+### MU-056 · Kalender im Planer fehlt — geplante Turniere nirgends als Termin · M · **Schritt 1 erledigt, Schritt 2 + ICS offen**
+**Problem:** `/tour/calendar` zeigte nur handeingetragene `tour_events`; geplante Saison-Turniere erschienen **nirgends als Termin**, und die Seite war **nicht verlinkt**.
+**Schritt 1 (erledigt, deployt):** Saison-Turniere read-only im Kalender — aus der Saison gelesen (nie nach `tour_events` kopiert), mehrtägiger Mo–So-Block oben in der Woche, „Turnier"-Badge, verlinkt in den Planer. Meldefrist über `DeadlineCountdown`. Leer-Zustand korrigiert (Woche mit nur Turnier ≠ „keine Termine", Regressionstest in `domain/tour/calendarWeek`). Vorwärts-Zeiger „Nächstes Turnier" springt zur richtigen Woche, falls die Saison weiter hinten beginnt.
+**Schritt 2 (offen):** `/tour/calendar` als fünftes Werkzeug im Block unter der Saisonliste verlinken (mit Erklärzeile wie die anderen vier), Platzierung/Prominenz prüfen.
+**ICS-Abo (offen, eigener Schritt):** Voraussetzung **MU-020** (Feed-Token widerrufbar machen) **und** den ICS-Feed um die Saison-Turniere erweitern (heute exportiert er nur `tour_events`). Erst danach das Abo in `/tour` bewerben.
+
 ### MU-055 · Saison-Werkzeuge unverständlich und falsch platziert · S · **erledigt**
 **Problem:** Die vier Einstiege (Wochen-Pipeline/Bilanz/Wildcards/Auswertung) saßen als winzige 11px-Textzeile im Überschriften-Kopf von „Meine Saison" — Ein-Wort-Label ohne Erklärung, leicht zu übersehen, niemand verstand sie.
 **Erledigt:** Eigener beschrifteter Block „Werkzeuge zu deiner Saison" **direkt unter der Saisonliste** (`SeasonWorkspace.tsx`), Zeilen-Muster wie der Stammdaten-Block, jede Zeile mit klarem Namen + sichtbarer Erklärung. Labels entjargonisiert (DE+EN): Wochen-Pipeline→**Wochenplan**, Bilanz→**Kosten & Einnahmen**, Wildcards→**Wildcard-Kontakte**, Auswertung→**Siegquoten**. Der prominente „Wochenplan"-Pill im Spaltenkopf bleibt als zweiter schneller Weg in die Kommandozentrale. Nur UI + i18n, kein Domain-/DB-Code.
