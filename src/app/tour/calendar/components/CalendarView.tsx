@@ -7,6 +7,8 @@ import { useT, useLocale } from "@/lib/i18n";
 import { loadEvents, removeEvent, type TourEvent } from "@/lib/tourEvents";
 import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 import { isTourTournamentId } from "@/lib/tourExpenses";
+import { DeadlineCountdown } from "../../components/EntryDeadline";
+import { tournamentsForWeek, isWeekEmpty, nextTournamentAfter } from "@/domain/tour/calendarWeek";
 import EventForm from "./EventForm";
 
 type LoadState = "loading" | "error" | "done";
@@ -82,6 +84,19 @@ export default function CalendarView() {
   const weekEnd = addDaysISO(weekStart, 6);
   const weekEvents = events.filter((e) => e.event_date >= weekStart && e.event_date <= weekEnd);
 
+  // Saison-Turniere read-only in den Kalender: aus der Saison GELESEN, nie nach
+  // tour_events kopiert. tournament_monday ist ein Montag → Woche == weekStart
+  // (reine Logik + Leer-Prüfung in domain/tour/calendarWeek, dort getestet).
+  const nowMs = Date.now();
+  const seasonWeeks = season.map((s) => ({ monday: s.tournament.tournament_monday, inactive: s.tournamentInactive, entry: s }));
+  const weekTournaments = tournamentsForWeek(seasonWeeks, weekStart).map((x) => x.entry);
+  // Vorwärts-Zeiger: nächstes Turnier NACH der sichtbaren Woche, damit eine weiter
+  // hinten beginnende Saison nicht unentdeckt bleibt (Spieler im August, Saison Oktober).
+  const nextTour = nextTournamentAfter(seasonWeeks, weekEnd);
+  const jumpOffset = nextTour
+    ? Math.round((Date.parse(nextTour.monday + "T00:00:00Z") - Date.parse(mondayOfWeek(todayISO) + "T00:00:00Z")) / (7 * DAY))
+    : 0;
+
   // Nach Tag gruppieren (chronologisch; Events sind bereits sortiert geladen).
   const byDay = new Map<string, TourEvent[]>();
   for (const e of weekEvents) {
@@ -100,6 +115,8 @@ export default function CalendarView() {
   };
   const wonLabel = (w: boolean | null) => (w === true ? t("tour.calWon") : w === false ? t("tour.calLost") : "");
   const tournName = (id: string | null) => (isTourTournamentId(id) ? names.get(id!) : null);
+  // Ländername wie im Planer (i18n-Katalog); Fallback auf den ISO-Code.
+  const countryName = (c: string | null) => (c && !t(`tour.country.${c}`).startsWith("tour.country.") ? t(`tour.country.${c}`) : (c ?? ""));
 
   return (
     <div className="mt-8 space-y-5">
@@ -126,11 +143,43 @@ export default function CalendarView() {
 
       {actionError && <p className="text-[12px] text-neutral-500">{t("tour.calSaveError")}</p>}
 
-      {/* Wochenansicht: Termine nach Tag; leere Woche → freundlicher Hinweis */}
-      {weekEvents.length === 0 ? (
+      {/* Nächstes Turnier — Vorwärts-Zeiger auf eine weiter hinten beginnende Saison,
+          mit Meldefrist-Countdown (planungsrelevanter als der Status). Sprung zur Woche. */}
+      {nextTour && (
+        <button type="button" onClick={() => setWeekOffset(jumpOffset)} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-matchup/[0.06] px-4 py-3 text-left ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.1]">
+          <span className="min-w-0">
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-matchup">{t("tour.calNextTournament")}</span>
+            <span className="block truncate text-[13px] font-semibold text-neutral-900">
+              {nextTour.entry.tournament.city || nextTour.entry.tournament.name || t("tour.fieldMissing")}{nextTour.entry.tournament.country ? `, ${countryName(nextTour.entry.tournament.country)}` : ""} · {fmtShort(nextTour.monday, locale)}
+            </span>
+            <span className="mt-0.5 block"><DeadlineCountdown tournament={nextTour.entry.tournament} now={nowMs} /></span>
+          </span>
+          <span className="shrink-0 text-matchup">→</span>
+        </button>
+      )}
+
+      {/* Wochenansicht: Turnier(e) oben (mehrtägig, read-only), dann Termine nach Tag.
+          Leer NUR wenn WEDER Turnier NOCH manueller Termin in der Woche liegt. */}
+      {isWeekEmpty(weekEvents.length, weekTournaments.length) ? (
         <p className="rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.calEmpty")}</p>
       ) : (
         <div className="space-y-4">
+          {/* Turnier dieser Woche — als Turnier gekennzeichnet, mehrtägig (Mo–So),
+              read-only, verlinkt in den Planer. Steht oben, weil es die ganze Woche umspannt. */}
+          {weekTournaments.map(({ tournament: tt }) => (
+            <Link key={tt.id} href="/tour" className="flex items-center justify-between gap-3 rounded-2xl bg-matchup/[0.06] px-4 py-3 ring-1 ring-matchup/25 transition-colors hover:bg-matchup/[0.1]">
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2 text-[14px] font-semibold text-neutral-900">
+                  <span className="rounded bg-matchup px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{t("tour.calTournamentBadge")}</span>
+                  {tt.city || tt.name || t("tour.fieldMissing")}{tt.country ? `, ${countryName(tt.country)}` : ""}
+                  {tt.category ? <span className="text-neutral-500">· {tt.category}</span> : null}
+                </p>
+                <p className="mt-0.5 text-[12px] text-neutral-500">{fmtShort(weekStart, locale)} – {fmtShort(weekEnd, locale)}</p>
+                <div className="mt-1"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
+              </div>
+              <span className="shrink-0 text-neutral-300">→</span>
+            </Link>
+          ))}
           {days.map((date) => (
             <div key={date}>
               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{fmtDay(date, locale)}</p>
