@@ -1218,16 +1218,7 @@ export default function SeasonWorkspace() {
 
           {/* Meine Saison */}
           <section>
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
-              {/* Zweiter Weg in Pipeline + Bilanz — direkt im Saison-Kontext. */}
-              <span className="flex shrink-0 items-center gap-2.5">
-                <Link href="/tour/pipeline" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.pipelineOpen")} →</Link>
-                <Link href="/tour/finance" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.financeOpen")} →</Link>
-                <Link href="/tour/wildcards" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.wildcardsOpen")} →</Link>
-                <Link href="/tour/form" className="text-[11px] font-semibold text-matchup hover:underline">{t("tour.formOpen")} →</Link>
-              </span>
-            </div>
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
             {seasonOrdered.length === 0 ? (
               <p className="mt-2 rounded-xl border border-dashed border-neutral-300 px-4 py-4 text-center text-[13px] text-neutral-500">{t("tour.wsSeasonEmpty")}</p>
             ) : (
@@ -1254,6 +1245,31 @@ export default function SeasonWorkspace() {
                 ))}
               </ul>
             )}
+          </section>
+
+          {/* Werkzeuge zu deiner Saison — eigener beschrifteter Block DIREKT UNTER der
+              Saisonliste (statt der früheren gequetschten Mini-Link-Zeile im Überschriften-
+              Kopf, die niemand verstand). Jede Zeile trägt eine sichtbare Erklärung, damit
+              sofort klar ist, was sie tut. Zeilen-Muster wie der Stammdaten-Block. Immer
+              sichtbar, damit die vier Werkzeuge auch bei leerer Saison erreichbar bleiben. */}
+          <section>
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.toolsTitle")}</h2>
+            <div className="mt-2 space-y-1">
+              {[
+                { href: "/tour/pipeline", label: t("tour.pipelineOpen"), desc: t("tour.pipelineOpenDesc") },
+                { href: "/tour/finance", label: t("tour.financeOpen"), desc: t("tour.financeOpenDesc") },
+                { href: "/tour/wildcards", label: t("tour.wildcardsOpen"), desc: t("tour.wildcardsOpenDesc") },
+                { href: "/tour/form", label: t("tour.formOpen"), desc: t("tour.formOpenDesc") },
+              ].map((r) => (
+                <Link key={r.href} href={r.href} className="flex items-center justify-between gap-3 rounded-xl px-3 py-2 ring-1 ring-black/[0.06] transition-colors hover:bg-black/[0.02]">
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-neutral-900">{r.label}</span>
+                    <span className="block text-[12px] leading-snug text-neutral-500">{r.desc}</span>
+                  </span>
+                  <span className="shrink-0 text-neutral-300">→</span>
+                </Link>
+              ))}
+            </div>
           </section>
 
           {/* Turnierkatalog */}
