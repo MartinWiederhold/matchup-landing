@@ -33,6 +33,7 @@ function baseInput(candidates: SeasonCandidate[], o: Partial<OptimizeInput> = {}
     params: o.params ?? PARAMS,
     homePlace: o.homePlace ?? "CH|Zurich",
     nightsPerWeek: o.nightsPerWeek !== undefined ? o.nightsPerWeek : 1,
+    bufferDays: o.bufferDays,
     now: o.now ?? NOW,
     schengen: o.schengen ?? null,
     entryBanned: o.entryBanned,
@@ -277,8 +278,8 @@ describe("Mehrwährung & Begründung", () => {
 });
 
 describe("Objektiv C — meiste erwartete Punkte im Budget (v3)", () => {
-  it("v3) OPTIMIZE_RULES_VERSION ist v3 (Regeländerung: zweites Objektiv)", () => {
-    expect(OPTIMIZE_RULES_VERSION).toBe("v3");
+  it("v4) OPTIMIZE_RULES_VERSION ist v4 (Regeländerung: Reise-Puffer)", () => {
+    expect(OPTIMIZE_RULES_VERSION).toBe("v4");
   });
 
   it("27) bei Budget für nur EINES gewinnt das punktstärkere Turnier (gleiche Kosten)", () => {
@@ -353,5 +354,54 @@ describe("Objektiv C — meiste erwartete Punkte im Budget (v3)", () => {
     const cs = [cand("a", WK[0], "TN|Monastir", { category: "M25" }), cand("b", WK[1], "ES|Barcelona", { category: "Challenger 75", series: "challenger" })];
     const inp = baseInput(cs, { budget: EUR(500), objective: "most_points", expectedRound: "SF" });
     expect(optimizeSeason(inp)).toEqual(optimizeSeason(inp));
+  });
+});
+
+describe("Reise-Puffer (v4)", () => {
+  // Rücken-an-Rücken an VERSCHIEDENEN Orten (Monastir → Antalya, konsekutive Wochen).
+  const backToBack = [
+    cand("mon", WK[0], "TN|Monastir"),
+    cand("ant", WK[1], "TR|Antalya"),
+  ];
+
+  it("32) enger Übergang wird MARKIERT, nicht entfernt (beide bleiben)", () => {
+    const r = optimizeSeason(baseInput(backToBack, { bufferDays: 2 }));
+    expect(r.value).toBe(2); // kein Turnier fällt wegen des Puffers raus
+    const ant = r.picks.find((p) => p.id === "ant")!;
+    expect(codes(ant.reasons).some((c) => c.startsWith("enge_anreise:"))).toBe(true);
+    expect(r.notes).toContain("enge_anreise_vorhanden");
+  });
+
+  it("33) Puffer 1 ⇒ konsekutiv reicht, kein enger Übergang", () => {
+    const r = optimizeSeason(baseInput(backToBack, { bufferDays: 1 }));
+    const ant = r.picks.find((p) => p.id === "ant")!;
+    expect(codes(ant.reasons).some((c) => c.startsWith("enge_anreise:"))).toBe(false);
+    expect(r.notes).not.toContain("enge_anreise_vorhanden");
+  });
+
+  it("34) gleicher Ort (Cluster) ⇒ nie eng, auch bei großem Puffer", () => {
+    const cluster = [cand("a", WK[0], "TN|Monastir"), cand("b", WK[1], "TN|Monastir")];
+    const r = optimizeSeason(baseInput(cluster, { bufferDays: 5 }));
+    expect(r.value).toBe(2);
+    expect(r.notes).not.toContain("enge_anreise_vorhanden");
+  });
+
+  it("35) bufferDays null ⇒ Vorgabe 2 + Note puffer_annahme", () => {
+    const r = optimizeSeason(baseInput(backToBack, { bufferDays: null }));
+    expect(r.notes).toContain("puffer_annahme");
+    expect(r.notes).toContain("enge_anreise_vorhanden"); // Vorgabe 2 ⇒ konsekutiv ist eng
+  });
+
+  it("36) gleiche Zahl & Kosten: der Optimierer meidet den engen Übergang (weicher Tiebreaker)", () => {
+    // Alle Orte verschieden → jede 2er-Auswahl kostet gleich (2 Anreisen + 2 Nächte = 220).
+    // Nur {A,B} (konsekutiv) ist eng; {A,C}/{B,C} nicht → der Puffer-Tiebreaker meidet {A,B}.
+    const cs = [
+      cand("A", WK[0], "P0|A"),
+      cand("B", WK[1], "P1|B"), // konsekutiv zu A → eng bei Puffer 2
+      cand("C", WK[3], "P2|C"), // genug Abstand zu A und B
+    ];
+    const r = optimizeSeason(baseInput(cs, { budget: EUR(220), bufferDays: 2 }));
+    expect(r.value).toBe(2); // kein Turnier fällt weg — es wird nur die pufferfreie Kombination gewählt
+    expect(r.notes).not.toContain("enge_anreise_vorhanden");
   });
 });

@@ -29,6 +29,7 @@ import { computeSeasonCost, type CostParams, type Money, type Station, type Seas
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "./schengen";
 import { decideTournament, type DecideReason } from "./decide";
 import { expectedPoints, type PointsRound } from "./points";
+import { isTightLeg, restDaysBetween } from "./travelBuffer";
 import type { TourSeries } from "./deadlines";
 
 // v3: zweites Objektiv C „most_points" — maximiere ERWARTETE ATP-Punkte im Budget unter
@@ -37,10 +38,15 @@ import type { TourSeries } from "./deadlines";
 //     (Code erwartungspunkte_annahme:<Runde>), kein Versprechen.
 // v2: Einreisesperren (entryBanned) — Länder mit „admission refused" für die
 //     Nationalität werden NICHT vorgeschlagen (Reject-Grund einreise_gesperrt).
-export const OPTIMIZE_RULES_VERSION = "v3";
+// v4: Reise-Puffer zwischen Turnieren an VERSCHIEDENEN Orten (bufferDays, Nutzerangabe wie
+//     die Nächte). WEICH: bei gleicher Turnierzahl UND gleichen Kosten wird die Variante mit
+//     weniger engen Übergängen bevorzugt (Tiebreaker NACH den Kosten → ändert value/Kosten
+//     nicht). Ein enger Übergang wirft NIE ein Turnier raus — der Pick trägt `enge_anreise:<Tage>`.
+export const OPTIMIZE_RULES_VERSION = "v4";
 
 const DAY = 86_400_000;
 const DEFAULT_NIGHTS = 7;      // Fallback, wenn nightsPerWeek nicht gesetzt ist → Code `naechte_annahme`
+const DEFAULT_BUFFER = 2;      // Fallback-Puffer (Tage), wenn bufferDays nicht gesetzt → Code `puffer_annahme`
 const DEFAULT_BEAM = 64;       // Strahlbreite K
 const SCHENGEN_NEAR = 80;      // used ≥ 80 von 90 → Code `schengen_nah`
 
@@ -69,6 +75,7 @@ export type OptimizeInput = {
   params: CostParams;           // Kostensätze
   homePlace: string;            // Startpunkt-Ortsschlüssel (Wohnort)
   nightsPerWeek: number | null; // aus /tour/costs (localStorage "mu_tour_nights"); null → 7 + naechte_annahme
+  bufferDays?: number | null;   // Anreisepuffer zwischen verschiedenen Orten (Tage); null → 2 + puffer_annahme
   now: Date;                    // für Fristen (decide)
   schengen: SchengenContext | null; // null = nicht betroffen
   /** Ziel-Länder (ISO-3166-1 alpha-2), für die die Nationalität eine Einreisesperre
@@ -138,7 +145,7 @@ function costScalar(cost: SeasonCost, primaryCurrency: string | null): number {
   return c ? cost.total[c] : 0;
 }
 
-type State = { chosen: SeasonCandidate[]; cost: SeasonCost; scalar: number; points: number };
+type State = { chosen: SeasonCandidate[]; cost: SeasonCost; scalar: number; points: number; tightLegs: number };
 
 /**
  * Objektiv D: maximiere Anzahl Turniere unter Budget; bei gleicher Anzahl minimiere
@@ -150,6 +157,8 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const K = input.beamWidth ?? DEFAULT_BEAM;
   const nightsGiven = input.nightsPerWeek;
   const nights = nightsGiven != null && nightsGiven >= 0 ? Math.round(nightsGiven) : DEFAULT_NIGHTS;
+  const bufferGiven = input.bufferDays;
+  const buffer = bufferGiven != null && bufferGiven >= 0 ? Math.round(bufferGiven) : DEFAULT_BUFFER;
   const primaryCurrency = budget?.currency ?? params.arrival?.currency ?? params.perNight?.currency ?? null;
 
   // Objektiv auflösen. Absicherung (greift regulär NIE, weil die UI beim Umschalten eine
@@ -215,7 +224,7 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   }
 
   const emptyCost = computeSeasonCost([], params);
-  let beam: State[] = [{ chosen: [], cost: emptyCost, scalar: 0, points: 0 }];
+  let beam: State[] = [{ chosen: [], cost: emptyCost, scalar: 0, points: 0, tightLegs: 0 }];
 
   const better = (a: State, b: State): number => {
     if (objective === "most_points") {
@@ -224,6 +233,7 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
       return b.chosen.length - a.chosen.length;                                          // mehr Turniere zuerst
     }
     if (a.scalar !== b.scalar) return a.scalar - b.scalar;                              // dann günstiger (Tiebreaker)
+    if (a.tightLegs !== b.tightLegs) return a.tightLegs - b.tightLegs;                  // dann weniger enge Übergänge (Puffer, weich)
     // stabiler Schlüssel (deterministisch)
     const ka = a.chosen.map((c) => c.id).join(","), kb = b.chosen.map((c) => c.id).join(",");
     return ka < kb ? -1 : ka > kb ? 1 : 0;
@@ -239,14 +249,17 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
         const cost = computeSeasonCost(buildStations(chosen, nights), params);
         if (!budgetOk(cost)) continue;      // Budget-Grenze
         if (!schengenOk(chosen)) continue;  // Schengen 90/180
-        next.push({ chosen, cost, scalar: costScalar(cost, primaryCurrency), points: st.points + (pointsOf.get(c.id) ?? 0) });
+        // Enger Übergang vom zuletzt gewählten Turnier (Reise-Reihenfolge) → zählen (weich, kein Ausschluss).
+        const last = st.chosen[st.chosen.length - 1];
+        const tight = last ? isTightLeg(last.place, mondayMs(last.tournamentMonday), c.place, mondayMs(c.tournamentMonday), buffer) : false;
+        next.push({ chosen, cost, scalar: costScalar(cost, primaryCurrency), points: st.points + (pointsOf.get(c.id) ?? 0), tightLegs: st.tightLegs + (tight ? 1 : 0) });
       }
     }
     next.sort(better);
     beam = next.slice(0, K);
   }
 
-  const best = beam[0] ?? { chosen: [], cost: emptyCost, scalar: 0, points: 0 };
+  const best = beam[0] ?? { chosen: [], cost: emptyCost, scalar: 0, points: 0, tightLegs: 0 };
   const chosenIds = new Set(best.chosen.map((c) => c.id));
   const stations = buildStations(best.chosen, nights);
   const cost = computeSeasonCost(stations, params); // Re-Bewertung = die ausgewiesene Autorität
@@ -254,17 +267,25 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   // ── Picks + Begründungen ────────────────────────────────────────────────────
   const picks: SeasonPick[] = [];
   let prevPlace: string | null = null;
+  let prevMondayMs: number | null = null;
   for (const c of best.chosen) {
+    const cMondayMs = mondayMs(c.tournamentMonday);
     const reasons: DecideReason[] = [reason("passt_ins_budget", "dafuer")];
     if (c.place === prevPlace) reasons.push(reason("keine_anreise_cluster", "dafuer"));
     else if (c.place === homePlace) reasons.push(reason("heimatnah", "dafuer"));
     else reasons.push(reason("guenstige_anreise", "neutral"));
+    // Enger Übergang vom Vorgänger (nur verschiedene Orte) — wertführender Code (UI trennt am ":"),
+    // markiert, NICHT ausgeschlossen: „nur X Tage Anreise".
+    if (prevMondayMs != null && isTightLeg(prevPlace, prevMondayMs, c.place, cMondayMs, buffer)) {
+      reasons.push(reason(`enge_anreise:${restDaysBetween(prevMondayMs, cMondayMs)}`, "dagegen"));
+    }
     reasons.push(classOf.get(c.id) === "fristen_unbekannt" ? reason("frist_unbekannt_challenger", "neutral") : reason("frist_offen", "dafuer"));
     // Objektiv C: erwartete Punkte je Pick (wertführender Code — UI trennt am ":").
     if (objective === "most_points") reasons.push(reason(`erwartungspunkte:${pointsOf.get(c.id) ?? 0}`, "dafuer"));
     if (!c.hasMapCoords) reasons.push(reason("ohne_kartenpunkt", "neutral"));
-    picks.push({ id: c.id, weekMonday: isoDay(mondayMs(c.tournamentMonday)), place: c.place as string, onMap: c.hasMapCoords, reasons });
+    picks.push({ id: c.id, weekMonday: isoDay(cMondayMs), place: c.place as string, onMap: c.hasMapCoords, reasons });
     prevPlace = c.place;
+    prevMondayMs = cMondayMs;
   }
 
   // ── Verworfene (nichts still): Grund je nicht gewähltem Kandidaten ──────────
@@ -299,6 +320,8 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   // ── Notes (Saison-weit) ─────────────────────────────────────────────────────
   const notes: string[] = ["naeherung"]; // Näherung — immer
   if (nightsGiven == null) notes.push("naechte_annahme");
+  if (bufferGiven == null) notes.push("puffer_annahme"); // Puffer nicht gesetzt → mit 2 Tagen gerechnet
+  if (best.tightLegs > 0) notes.push("enge_anreise_vorhanden"); // ≥1 enger Übergang im Plan (markiert, nicht entfernt)
   if (cost.multiCurrency) notes.push("mehrwaehrung");
   notes.push(`arrivals_gespart:${cost.arrivalsSaved}`); // wertführender Code — UI trennt am ":"
   if (budget) {

@@ -9,7 +9,15 @@ import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 import { isTourTournamentId } from "@/lib/tourExpenses";
 import { DeadlineCountdown } from "../../components/EntryDeadline";
 import { tournamentsForWeek, isWeekEmpty, nextTournamentAfter } from "@/domain/tour/calendarWeek";
+import { tightArrivals } from "@/domain/tour/travelBuffer";
+import { placeKey } from "@/lib/tourPlanner";
 import EventForm from "./EventForm";
+
+// Anreisepuffer (Tage) — dieselbe Nutzerangabe wie im Planer (localStorage). Vorgabe 2.
+const BUFFER_KEY = "mu_tour_buffer_days";
+function readBufferDays(): number {
+  try { const n = parseInt(localStorage.getItem(BUFFER_KEY) ?? "", 10); return Number.isFinite(n) && n >= 0 ? n : 2; } catch { return 2; }
+}
 
 type LoadState = "loading" | "error" | "done";
 const DAY = 86_400_000;
@@ -90,6 +98,12 @@ export default function CalendarView() {
   const nowMs = Date.now();
   const seasonWeeks = season.map((s) => ({ monday: s.tournament.tournament_monday, inactive: s.tournamentInactive, entry: s }));
   const weekTournaments = tournamentsForWeek(seasonWeeks, weekStart).map((x) => x.entry);
+  // „Knappe Anreise": enge Übergänge über die ganze Saison (verschiedene Orte, zu wenig
+  // Ruhetage vor dem Puffer) — markiert das ankommende Turnier, nur Hinweis.
+  const tightMap = tightArrivals(
+    season.map((s) => ({ id: s.tournament.id, place: placeKey(s.tournament.country, s.tournament.city), mondayMs: Date.parse(s.tournament.tournament_monday + "T00:00:00Z") })),
+    readBufferDays(),
+  );
   // Vorwärts-Zeiger: nächstes Turnier NACH der sichtbaren Woche, damit eine weiter
   // hinten beginnende Saison nicht unentdeckt bleibt (Spieler im August, Saison Oktober).
   const nextTour = nextTournamentAfter(seasonWeeks, weekEnd);
@@ -176,6 +190,10 @@ export default function CalendarView() {
                 </p>
                 <p className="mt-0.5 text-[12px] text-neutral-500">{fmtShort(weekStart, locale)} – {fmtShort(weekEnd, locale)}</p>
                 <div className="mt-1"><DeadlineCountdown tournament={tt} now={nowMs} /></div>
+                {/* Knappe Anreise vom vorigen Turnier (anderer Ort, zu wenig Ruhetage) — Hinweis. */}
+                {tightMap.has(tt.id) && (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-amber-700"><span aria-hidden>⚠</span>{t("tour.calTightArrival", { n: tightMap.get(tt.id)! })}</p>
+                )}
               </div>
               <span className="shrink-0 text-neutral-300">→</span>
             </Link>

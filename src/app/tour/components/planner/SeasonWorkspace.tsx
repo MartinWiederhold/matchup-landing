@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -29,6 +29,7 @@ import MorningBoard from "./MorningBoard";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { optimizeSeason, type SeasonObjective } from "@/domain/tour/optimizeSeason";
+import { tightArrivals } from "@/domain/tour/travelBuffer";
 import { expectedPoints, type PointsRound } from "@/domain/tour/points";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
 import CostRatesForm from "@/app/tour/costs/components/CostRatesForm";
@@ -43,6 +44,7 @@ import { HOME_BASES } from "@/lib/tournaments";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
+const BUFFER_KEY = "mu_tour_buffer_days"; // Anreisepuffer zwischen Orten (Tage), Nutzerangabe wie die Nächte
 
 /** Beobachtungen nach plan_id gruppieren (für den Trend je Saisoneintrag). */
 function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]> {
@@ -151,6 +153,9 @@ export default function SeasonWorkspace() {
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
   const [nights, setNights] = useState<string>(() => { try { return localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { return ""; } });
+  const [buffer, setBuffer] = useState<string>(() => { try { return localStorage.getItem(BUFFER_KEY) ?? ""; } catch { return ""; } });
+  // Anreisepuffer (Tage): leer → Vorgabe 2 (wie im Optimierer). Steuert Optimierer + „Knappe Anreise"-Marker.
+  const bufferNum = useMemo(() => { const n = parseInt(buffer.trim(), 10); return Number.isFinite(n) && n >= 0 ? n : 2; }, [buffer]);
   // Optimierer-Objektiv + angenommene Zielrunde (Erwartungspunkte). SSR-stabile Defaults,
   // danach aus localStorage. Die Runde ist nie leer → Vorgabe R16 (Entscheidung 3: kein
   // stiller Objektiv-Rückfall — die Vorgabe verhindert, dass expectedRound leer ankommt).
@@ -322,6 +327,16 @@ export default function SeasonWorkspace() {
     const list = [...seasonIds].map((id) => byId.get(id)).filter((x): x is TourTournament => !!x).sort(byMonday);
     return list.map((tt, i) => ({ tt, order: i + 1 }));
   }, [seasonIds, byId]);
+  // „Knappe Anreise": enge Übergänge zwischen benachbarten Saison-Turnieren an
+  // VERSCHIEDENEN Orten (weniger Ruhetage als der Puffer). Markiert das ankommende
+  // Turnier — nur Hinweis, nichts wird entfernt (reine, getestete Logik in travelBuffer).
+  const tightMap = useMemo(
+    () => tightArrivals(
+      seasonOrdered.map(({ tt }) => ({ id: tt.id, place: placeKey(tt.country, tt.city), mondayMs: Date.parse(tt.tournament_monday + "T00:00:00Z") })),
+      bufferNum,
+    ),
+    [seasonOrdered, bufferNum],
+  );
   const planStops: PlanStop[] = useMemo(
     () => seasonOrdered.filter((s) => hasCoords(s.tt)).map((s) => ({ id: s.tt.id, lat: s.tt.latitude as number, lng: s.tt.longitude as number, order: s.order })),
     [seasonOrdered],
@@ -391,6 +406,7 @@ export default function SeasonWorkspace() {
   // Nächte-Annahme (localStorage): leer → 7 (Domain-Default), sonst die Eingabe.
   const nightsNum = useMemo(() => { const n = parseInt(nights.trim(), 10); return Number.isFinite(n) && n >= 0 ? n : 7; }, [nights]);
   useEffect(() => { try { if (nights.trim() === "") localStorage.removeItem(NIGHTS_KEY); else localStorage.setItem(NIGHTS_KEY, nights.trim()); } catch { /* egal */ } }, [nights]);
+  useEffect(() => { try { if (buffer.trim() === "") localStorage.removeItem(BUFFER_KEY); else localStorage.setItem(BUFFER_KEY, buffer.trim()); } catch { /* egal */ } }, [buffer]);
 
   // Unterliegt die Nationalität der Schengen-90/180-Regel? (kein Schengen-Pass → ja)
   const schengenApplies = useMemo(() => !!profile && profile.passports.length > 0 && !hasSchengenPassport(profile.passports), [profile]);
@@ -534,6 +550,7 @@ export default function SeasonWorkspace() {
         params,
         homePlace,
         nightsPerWeek: nights.trim() === "" ? null : nightsNum,
+        bufferDays: buffer.trim() === "" ? null : bufferNum,
         now: new Date(),
         schengen: schengenApplies ? { applies: true, existingStays: stays } : null,
         entryBanned: banned,
@@ -563,7 +580,7 @@ export default function SeasonWorkspace() {
     } finally {
       setFilling(false);
     }
-  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound, reloadEntries]);
+  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, buffer, bufferNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound, reloadEntries]);
 
   const money = useCallback((minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [locale]);
 
@@ -1030,7 +1047,7 @@ export default function SeasonWorkspace() {
           {ratesDone && !costOpen && (
             <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsEditRates")}</button>
           )}
-          {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} />}
+          {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} buffer={buffer} onBufferChange={setBuffer} />}
         </div>
       </div>
     </div>
@@ -1251,8 +1268,16 @@ export default function SeasonWorkspace() {
                     {t("tour.wsStart")}{startName ? ` · ${startName}` : ""}
                   </li>
                 )}
-                {seasonOrdered.map(({ tt, order }) => (
-                  <li key={tt.id} className={`flex items-start gap-2 rounded-xl px-1.5 py-1 ${selectedId === tt.id ? "bg-matchup/[0.06] ring-1 ring-matchup/40" : ""}`}>
+                {seasonOrdered.map(({ tt, order }, idx) => (
+                  <Fragment key={tt.id}>
+                  {tightMap.has(tt.id) && (
+                    // Knappe Anreise: zu wenige Ruhetage vom Vorgänger (anderer Ort) — Hinweis, kein Ausschluss.
+                    <li className="flex items-start gap-1.5 rounded-lg bg-amber-500/[0.08] px-2 py-1 text-[11px] font-semibold leading-snug text-amber-700">
+                      <span aria-hidden>⚠</span>
+                      <span>{t("tour.wsTightArrival", { n: tightMap.get(tt.id)!, from: seasonOrdered[idx - 1]?.tt.city || t("tour.fieldMissing"), to: tt.city || t("tour.fieldMissing") })}</span>
+                    </li>
+                  )}
+                  <li className={`flex items-start gap-2 rounded-xl px-1.5 py-1 ${selectedId === tt.id ? "bg-matchup/[0.06] ring-1 ring-matchup/40" : ""}`}>
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-[11px] font-bold text-white">{order}</span>
                     <div className="min-w-0 flex-1">
                       <button type="button" onClick={() => setSelectedId(tt.id)} className="block w-full text-left">
@@ -1264,6 +1289,7 @@ export default function SeasonWorkspace() {
                     </div>
                     <button type="button" onClick={() => toggle(tt.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-800">{t("tour.seasonRemove")}</button>
                   </li>
+                  </Fragment>
                 ))}
               </ul>
             )}

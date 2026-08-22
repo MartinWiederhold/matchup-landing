@@ -32,12 +32,17 @@ export default function CostRatesForm({
   onSaved,
   nights,
   onNightsChange,
+  buffer,
+  onBufferChange,
 }: {
   rates: TourCostRates | null;
   userId: string;
   onSaved: (patch: CostRatesPatch) => void;
   nights: string;
   onNightsChange: (v: string) => void;
+  // Anreisepuffer optional — nur der Planer reicht ihn herein; andere Aufrufer (Onboarding) nicht.
+  buffer?: string;
+  onBufferChange?: (v: string) => void;
 }) {
   const t = useT();
 
@@ -137,9 +142,26 @@ export default function CostRatesForm({
             className={inputCls}
           />
         </label>
+
+        {/* Anreisepuffer zwischen Turnieren an verschiedenen Orten — Nutzerangabe wie die Nächte.
+            Nur wenn der Aufrufer ihn reicht (Planer); im Onboarding weggelassen. */}
+        {onBufferChange && (
+          <label className="block">
+            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsBuffer")}</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={buffer ?? ""}
+              onChange={(e) => onBufferChange(e.target.value)}
+              placeholder="2"
+              className={inputCls}
+            />
+          </label>
+        )}
       </div>
 
       <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsNightsHint")}</p>
+      {onBufferChange && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsBufferHint")}</p>}
       <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsEstimateHint")}</p>
 
       <div className="mt-4 flex items-center gap-3">
