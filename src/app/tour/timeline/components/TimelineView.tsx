@@ -25,7 +25,7 @@ import { placeKey } from "@/lib/tourPlanner";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { tightArrivals } from "@/domain/tour/travelBuffer";
 import { DAY, mondayOfMs, seasonBounds, xForMs, weekBar, totalWidth, initialFocusMs, classifyDeadline, type DeadlineKind } from "@/domain/tour/timeline";
-import EventForm from "@/app/tour/calendar/components/EventForm";
+import EventForm from "./EventForm";
 
 type LoadState = "loading" | "error" | "done";
 type Zoom = "season" | "month" | "week";

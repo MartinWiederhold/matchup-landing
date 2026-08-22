@@ -1,7 +1,7 @@
-# Wikipedia-Import — TROCKENLAUF (nichts geschrieben)
+# Wikipedia-Import — SCHARFER LAUF
 
-> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-22T08:04:06.818Z
-> Ziel: web.tour_tournaments + web.tour_tournament_claims. **Kein DB-Zugriff** in diesem Lauf.
+> Erzeugt von `scripts/wikipedia-import.mjs` · Lauf: 2026-08-22T08:07:56.339Z
+> Ziel: web.tour_tournaments + web.tour_tournament_claims. 
 
 ## 1. Je Seite
 
@@ -11,6 +11,8 @@
 | Challenger | 2027 | 2027 Challenger | 0 | 0 | 0 | Seite fehlt (missing) |
 
 **Summe:** 262 importierbar, 3 verworfen. Claims gesamt: 2620.
+
+**Geschrieben:** 262 Turniere, 2620 Claims, 0 Fehler.
 
 ## 2. Verworfene Zeilen nach Grund
 

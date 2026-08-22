@@ -5,7 +5,7 @@
  *
  * EIGENE DATEI, nur Anon-Client — nie Service-Client (RLS wirkt). Explizite Spaltenlisten,
  * kein select *. Diese Datei fasst NUR Lesen an; sie ändert nichts an web.tour_events
- * (das gehört /tour/calendar bzw. /app).
+ * (das gehört /tour/timeline bzw. /app).
  *
  * BELAG-LÜCKE (bewusst, benannt): Der Belag steht in tour_tournaments und ist nur über
  * eine uuid-tournament_id (/tour) verknüpfbar. /app speichert Slugs — dort gibt es keinen

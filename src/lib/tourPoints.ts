@@ -4,7 +4,7 @@
  *
  * EIGENE DATEI, nur Anon-Client — nie Service-Client (RLS wirkt). Explizite
  * Spaltenlisten, kein select *. Diese Datei fasst NUR Lesen an; sie ändert nichts
- * an web.tour_events (das gehört /tour/calendar bzw. /app).
+ * an web.tour_events (das gehört /tour/timeline bzw. /app).
  *
  * Kernproblem: `tour_events.round` ist FREIER TEXT (in /app ein Freitext-Feld).
  * „QF", „Viertelfinale", „quarterfinal", „1/4" meinen dasselbe, der Rechner kennt

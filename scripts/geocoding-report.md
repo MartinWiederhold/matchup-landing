@@ -8,35 +8,25 @@
 
 | | Anzahl |
 |---|---:|
-| Turniere ohne Koordinaten | 361 |
-| Distinkte Orte (Stadt+Land) | 187 |
-| **abgefragt (fertig)** | 187 |
+| Turniere ohne Koordinaten | 295 |
+| Distinkte Orte (Stadt+Land) | 143 |
+| **abgefragt (fertig)** | 143 |
 | noch offen (--limit) | 0 |
-| aufgeloest | 30 |
-| mehrdeutig | 145 |
-| nicht gefunden | 12 |
+| aufgeloest | 0 |
+| mehrdeutig | 132 |
+| nicht gefunden | 11 |
 | falsches Land | 0 |
 | Fehler/keine Antwort | 0 |
-| Netz-Abfragen in diesem Lauf | 0 (Cache: 187) |
+| Netz-Abfragen in diesem Lauf | 0 (Cache: 143) |
 
-**Wuerde geschrieben:** 60 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 30 Orte / 30 Turniere.
+**Wuerde geschrieben:** 0 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 0 Orte / 0 Turniere.
 
-**Geschrieben:** 60 Claims ok, 0 Fehler (von 60).
+**Geschrieben:** 0 Claims ok, 0 Fehler (von 0).
 
 ## Stichprobe: 10 aufgeloeste Orte (zur Pruefung)
 
 | Ort | Land | lat | lon | Turniere | OSM |
 |---|---|---:|---:|---:|---|
-| MALLORCA | ES | 39.61343 | 2.88292 | 1 | https://www.openstreetmap.org/relation/6803636 |
-| GUANGZHOU | CN | 23.12884 | 113.25896 | 1 | https://www.openstreetmap.org/relation/3287346 |
-| CHENNAI | IN | 13.08369 | 80.27019 | 1 | https://www.openstreetmap.org/relation/1766358 |
-| WUHAN | CN | 30.57889 | 114.29212 | 1 | https://www.openstreetmap.org/relation/3076268 |
-| MONTREUX | CH | 46.43108 | 6.91299 | 1 | https://www.openstreetmap.org/relation/1685062 |
-| ANGERS | FR | 47.47399 | -0.55156 | 1 | https://www.openstreetmap.org/relation/178351 |
-| LJUBLJANA | SI | 46.05003 | 14.50693 | 1 | https://www.openstreetmap.org/node/6968827 |
-| BEIJING | CN | 39.90571 | 116.39130 | 1 | https://www.openstreetmap.org/relation/912940 |
-| LIMOGES | FR | 45.83542 | 1.26448 | 1 | https://www.openstreetmap.org/relation/114172 |
-| SAMSUN | TR | 41.23036 | 35.96833 | 1 | https://www.openstreetmap.org/relation/223451 |
 
 ## Mehrdeutige Orte (NICHT uebernommen — bitte pruefen)
 
@@ -183,13 +173,6 @@
 - **Minneapolis, US** (1 Turniere) — 2 verschiedene Orte:
   - 44.9773, -93.2655 · Minneapolis, Hennepin County, Minnesota, United States
   - 39.1224, -97.7087 · Minneapolis, Ottawa County, Kansas, United States
-- **QUERETARO, MX** (2 Turniere) — 2 verschiedene Orte:
-  - 20.8052, -99.8837 · Querétaro, Mexico
-  - 20.5923, -100.3917 · Santiago de Querétaro, Municipio de Querétaro, Querétaro, 76000, Mexico
-- **SUZHOU, CN** (2 Turniere) — 3 verschiedene Orte:
-  - 31.3111, 120.6213 · Suzhou City, Jiangsu, China
-  - 33.6482, 116.9588 · Suzhou, Anhui, China
-  - 39.5785, 98.8123 · Suzhou District, Jiuquan Prefecture, Gansu, 735000, China
 - **Serra Negra, BR** (1 Turniere) — 4 verschiedene Orte:
   - -22.6126, -46.7000 · Serra Negra, São Paulo, Southeast Region, Brazil
   - -19.8807, -44.2432 · Serra Negra, Esmeraldas, Minas Gerais, Southeast Region, 32618-488, Brazil
@@ -223,11 +206,6 @@
   - 28.5298, 105.5383 · Luzhou, Sichuan, China
   - 36.2622, 113.0848 · Luzhou District, Changzhi City, Shanxi, China
   - 23.3688, 114.5196 · Luzhou, Huicheng District, Huizhou, Guangdong, China
-- **Jingshan, CN** (3 Turniere) — 4 verschiedene Orte:
-  - 31.0161, 113.1281 · Jingshan City, Jingmen, Jingshan, Hubei, 431800, China
-  - 30.3775, 119.8606 · Jingshan, Yuhang District, Hangzhou City, Zhejiang, 311116, China
-  - 31.3150, 118.4469 · Jingshan Subdistrict, Jinghu District, Wuhu, Anhui, China
-  - 39.9254, 116.4043 · Jingshan Subdistrict, 首都功能核心区, Dongcheng District, Beijing, 100010, China
 - **JAIPUR, IN** (1 Turniere) — 2 verschiedene Orte:
   - 26.9155, 75.8190 · Jaipur, Jaipur Municipal Corporation, Jaipur Tehsil, Jaipur, Rajasthan, 302001, India
   - 23.4732, 86.1364 · Jaipur, Purulia, West Bengal, India
@@ -249,9 +227,6 @@
   - 44.8113, -91.4985 · Eau Claire, Eau Claire County, Wisconsin, United States
   - 41.1362, -79.7981 · Eau Claire, Butler County, Pennsylvania, 16030, United States
   - 41.9850, -86.2997 · Eau Claire, Berrien County, Michigan, United States
-- **Rio de Janeiro, BR** (4 Turniere) — 2 verschiedene Orte:
-  - -22.9110, -43.2094 · Rio de Janeiro, Southeast Region, Brazil
-  - -22.2753, -42.4194 · Rio de Janeiro, Southeast Region, Brazil
 - **Lincoln, US** (3 Turniere) — 5 verschiedene Orte:
   - 40.8089, -96.7078 · Lincoln, Lancaster County, Nebraska, United States
   - 33.7877, -82.4508 · Lincoln County, Georgia, 30817, United States
@@ -261,9 +236,6 @@
 - **San Luis Potosí, MX** (2 Turniere) — 2 verschiedene Orte:
   - 22.5000, -100.4949 · San Luis Potosí, Mexico
   - 22.1516, -100.9764 · San Luis Potosí City, Municipio de San Luis Potosí, San Luis Potosí, 78000, Mexico
-- **Curitiba, BR** (3 Turniere) — 2 verschiedene Orte:
-  - -25.4296, -49.2713 · Curitiba, Paraná, South Region, Brazil
-  - -9.6604, -37.7896 · Canindé de São Francisco, Sergipe, Northeast Region, 49820-000, Brazil
 - **Irvine, US** (1 Turniere) — 4 verschiedene Orte:
   - 33.6857, -117.8260 · Irvine, Orange County, California, United States
   - 37.7006, -83.9738 · Irvine, Estill County, Kentucky, United States
@@ -321,9 +293,6 @@
   - 34.2814, -78.6666 · Columbus County, North Carolina, United States
   - 39.2014, -85.9214 · Columbus, Bartholomew County, Indiana, United States
   - 33.4957, -88.4273 · Columbus, Lowndes County, Mississippi, 39703, United States
-- **COLINA, CL** (1 Turniere) — 2 verschiedene Orte:
-  - -33.2025, -70.6749 · Colina, Provincia de Chacabuco, Santiago Metropolitan Region, Chile
-  - -34.2421, -71.2847 · Colina, Las Cabras, Provincia de Cachapoal, O'Higgins Region, Chile
 - **Sherbrooke, CA** (2 Turniere) — 4 verschiedene Orte:
   - 45.4033, -71.8890 · Sherbrooke, Estrie, Quebec, Canada
   - 53.5761, -113.5476 · Sherbrooke, Western Mature Area, Edmonton, Alberta, T5L 2L4, Canada
@@ -352,28 +321,15 @@
 - **MIKI, JP** (1 Turniere) — 2 verschiedene Orte:
   - 34.7969, 134.9902 · Miki, Hyogo Prefecture, Japan
   - 34.2688, 134.1345 · Miki, Kita County, Kagawa Prefecture, Japan
-- **Luanda, AO** (6 Turniere) — 2 verschiedene Orte:
-  - -8.8273, 13.2440 · Luanda, Municipality of Luanda, Luanda Province, Angola
-  - -9.5180, 13.5357 · Luanda Province, Angola
 - **Salta, AR** (2 Turniere) — 2 verschiedene Orte:
   - -25.2270, -64.5912 · Salta, Argentina
   - -24.7893, -65.4103 · Salta, Capital, Salta, Argentina
-- **BUENOS AIRES, AR** (4 Turniere) — 2 verschiedene Orte:
-  - -34.6096, -58.3888 · Buenos Aires, Comuna 1, Autonomous City of Buenos Aires, Argentina
-  - -36.3790, -60.3856 · Buenos Aires, Argentina
 - **Cary, US** (2 Turniere) — 5 verschiedene Orte:
   - 35.7883, -78.7812 · Cary, Wake County, North Carolina, United States
   - 42.2091, -88.2400 · Cary, McHenry County, Illinois, 60013, United States
   - 32.8060, -90.9268 · Cary, Sharkey County, Mississippi, 39054, United States
   - 44.4772, -90.2568 · Town of Cary, Wood County, Wisconsin, 54466, United States
   - 39.7070, -86.8231 · Cary, Putnam County, Indiana, United States
-- **ROVERETO, IT** (1 Turniere) — 3 verschiedene Orte:
-  - 45.8865, 11.0452 · Rovereto, Comunità della Vallagarina, Provincia di Trento, Trentino – Alto Adige/Südtirol, 38060, Italy
-  - 45.2965, 9.6659 · Rovereto, Credera Rubbiano, Cremona, Lombardy, Italy
-  - 44.7655, 11.8720 · Rovereto, Ostellato, Unione dei comuni Valli e Delizie, Ferrara, Emilia-Romagna, 44020, Italy
-- **CINCINNATI, US** (1 Turniere) — 2 verschiedene Orte:
-  - 39.1013, -84.5127 · Cincinnati, Hamilton County, Ohio, United States
-  - 40.6309, -92.9246 · Cincinnati, Appanoose County, Iowa, United States
 - **Lajeado, BR** (1 Turniere) — 3 verschiedene Orte:
   - -29.4672, -51.9624 · Lajeado, Rio Grande do Sul, South Region, Brazil
   - -9.7549, -48.3564 · Lajeado, Tocantins, North Region, 77645-000, Brazil
@@ -420,10 +376,6 @@
   - 51.0314, -114.1155 · Richmond, Calgary, Alberta, Canada
   - 45.1943, -75.8386 · Richmond, Ottawa, Eastern Ontario, Ontario, K0A 2Z0, Canada
   - 46.5080, -63.9915 · Richmond, Prince County, Prince Edward Island, C0B 1Y0, Canada
-- **SAO PAULO, BR** (1 Turniere) — 3 verschiedene Orte:
-  - -23.5507, -46.6334 · São Paulo, Southeast Region, Brazil
-  - -22.0703, -48.4334 · São Paulo, Southeast Region, Brazil
-  - -1.2043, -47.1584 · São Paulo, Capanema, Pará, North Region, 68700-540, Brazil
 - **New York, US** (1 Turniere) — 2 verschiedene Orte:
   - 40.7127, -74.0060 · New York, United States
   - 43.1562, -75.8450 · New York, United States
@@ -437,10 +389,6 @@
   - 43.3051, -70.9754 · Rochester, Strafford County, New Hampshire, United States
   - 42.6806, -83.1338 · Rochester, Oakland County, Michigan, 48307, United States
   - 41.0649, -86.2160 · Rochester, Fulton County, Indiana, 46975, United States
-- **PHILADELPHIA, US** (1 Turniere) — 3 verschiedene Orte:
-  - 39.9527, -75.1635 · Philadelphia, Philadelphia County, Pennsylvania, United States
-  - 32.7704, -89.1153 · Philadelphia, Neshoba County, Mississippi, 39350, United States
-  - 44.1546, -75.7088 · Village of Philadelphia, Town of Philadelphia, Jefferson County, New York, 13673, United States
 - **Harlingen, US** (2 Turniere) — 2 verschiedene Orte:
   - 26.1908, -97.6961 · Harlingen, Cameron County, Texas, 78550, United States
   - 40.4476, -74.6624 · Harlingen, Montgomery Township, Somerset County, New Jersey, 08502, United States
@@ -589,12 +537,6 @@
 - **Nanjing, CN** (1 Turniere) — 2 verschiedene Orte:
   - 32.0438, 118.7789 · Nanjing City, Jiangsu, China
   - 24.6729, 117.2737 · Nanjing County, Zhangzhou City, Fujian, China
-- **MIAMI, US** (1 Turniere) — 5 verschiedene Orte:
-  - 25.7742, -80.1936 · Miami, Miami-Dade County, Florida, United States
-  - 40.0580, -84.2237 · Miami County, Ohio, United States
-  - 38.5621, -94.8557 · Miami County, Kansas, United States
-  - 40.7455, -86.0639 · Miami County, Indiana, United States
-  - 35.6915, -100.6384 · Miami, Roberts County, Texas, 79059, United States
 - **Winnipeg, CA** (2 Turniere) — 2 verschiedene Orte:
   - 49.8955, -97.1385 · Winnipeg, Manitoba, Canada
   - 52.1190, -97.9692 · Lake Winnipeg, Manitoba, Canada
@@ -646,7 +588,6 @@
 
 - Tsaghkadzor (Cancelled), AM (2 Turniere)
 - Nouméa, NC (2 Turniere)
-- Hong Kong, HK (6 Turniere)
 - Berlin (Cancelled), DE (1 Turniere)
 - Qian Daohu, CN (2 Turniere)
 - Macau, MO (2 Turniere)
@@ -669,36 +610,6 @@ Keine.
 
 | Ort | Land | lat | lon | Turniere |
 |---|---|---:|---:|---:|
-| MALLORCA | ES | 39.61343 | 2.88292 | 1 |
-| GUANGZHOU | CN | 23.12884 | 113.25896 | 1 |
-| CHENNAI | IN | 13.08369 | 80.27019 | 1 |
-| WUHAN | CN | 30.57889 | 114.29212 | 1 |
-| MONTREUX | CH | 46.43108 | 6.91299 | 1 |
-| ANGERS | FR | 47.47399 | -0.55156 | 1 |
-| LJUBLJANA | SI | 46.05003 | 14.50693 | 1 |
-| BEIJING | CN | 39.90571 | 116.39130 | 1 |
-| LIMOGES | FR | 45.83542 | 1.26448 | 1 |
-| SAMSUN | TR | 41.23036 | 35.96833 | 1 |
-| CALI | CO | 3.41084 | -76.58121 | 1 |
-| PORTO | PT | 41.15022 | -8.61035 | 1 |
-| TOKYO | JP | 35.67686 | 139.76389 | 1 |
-| SINGAPORE | SG | 1.35711 | 103.81950 | 1 |
-| LISBON | PT | 38.70775 | -9.13659 | 1 |
-| MONTERREY | MX | 25.68020 | -100.31526 | 1 |
-| TOLENTINO | IT | 43.20875 | 13.28441 | 1 |
-| ANTALYA | TR | 36.88657 | 30.70302 | 1 |
-| OSAKA | JP | 34.69376 | 135.50145 | 1 |
-| BARRANQUILLA | CO | 11.01019 | -74.82318 | 1 |
-| NINGBO | CN | 29.87196 | 121.54996 | 1 |
-| ANKARA | TR | 39.92078 | 32.85405 | 1 |
-| CALDAS DA RAINHA | PT | 39.40719 | -9.13460 | 1 |
-| GUADALAJARA | MX | 20.67204 | -103.33840 | 1 |
-| SEOUL | KR | 37.56668 | 126.97829 | 1 |
-| VALENCIA | ES | 39.46971 | -0.37634 | 1 |
-| SOPO | CO | 4.90792 | -73.94023 | 1 |
-| COURMAYEUR | IT | 45.83165 | 6.94616 | 1 |
-| ADANA | TR | 36.98636 | 35.32529 | 1 |
-| QUITO | EC | -0.22016 | -78.51233 | 1 |
 
 ## Hinweise
 

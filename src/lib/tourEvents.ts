@@ -1,5 +1,5 @@
 /**
- * Datenschicht für den Kalender der Route /tour/calendar (web.tour_events).
+ * Datenschicht für Termine (web.tour_events) — genutzt vom Zeitstrahl /tour/timeline.
  *
  * EIGENE DATEI, nur Anon-Client — nie Service-Client (RLS wirkt). Explizite
  * Spaltenlisten, kein select *. web.tour_events wird von /app (ScheduleView)
