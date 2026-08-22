@@ -1235,19 +1235,16 @@ export default function SeasonWorkspace() {
             <section className="border-t border-neutral-100 pt-4">{overviewSection}</section>
           )}
 
-          {/* Meine Saison — Liste bleibt ohne Umschaltung. Kalender & Zeitstrahl brauchen
-              Breite (in der ~440-px-Spalte unbrauchbar) und öffnen deshalb als eigene
-              Vollbild-Routen — zwei beschriftete Symbol-Knöpfe, gut sichtbar oben. */}
+          {/* Meine Saison — Liste bleibt ohne Umschaltung. EIN Knopf „Kalender" führt auf
+              den Vollbild-Gantt (/tour/timeline): der Nutzer sagt „Kalender" und meint die
+              Assemble-artige Vollbild-Ansicht. Die alte Wochenansicht (/tour/calendar)
+              bleibt als Route, ist aber nicht mehr verlinkt. */}
           <section>
             <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
-            <div className="mt-2 flex gap-2">
-              <Link href="/tour/calendar" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-matchup/[0.08] px-3 py-2 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.14]">
+            <div className="mt-2">
+              <Link href="/tour/timeline" className="inline-flex items-center gap-1.5 rounded-xl bg-matchup/[0.08] px-4 py-2 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.14]">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /></svg>
                 {t("tour.wsViewCalendar")}
-              </Link>
-              <Link href="/tour/timeline" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-matchup/[0.08] px-3 py-2 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.14]">
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h9M4 12h14M4 17h6M17 5v4M13 10v4M9 15v4" /></svg>
-                {t("tour.wsViewTimeline")}
               </Link>
             </div>
             {seasonOrdered.length === 0 ? (
