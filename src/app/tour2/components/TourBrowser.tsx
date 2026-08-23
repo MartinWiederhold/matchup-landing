@@ -1,0 +1,299 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { useT, useLocale } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
+import { fetchAllPaged } from "@/lib/supabasePaginate";
+import { isTargetRegion } from "@/domain/tour/region";
+import { loadSeasonTournamentIds } from "@/lib/tourSeason";
+import type { TourTournament } from "@/lib/types";
+import TournamentCard from "./TournamentCard";
+
+// Explizite Spaltenliste (kein select *).
+const COLUMNS =
+  "id, source_ref, tournament_monday, series, category, category_recognized, name, city, country, latitude, longitude, surface, indoor, prize_money, prize_currency, website, status, valid_from, valid_to, created_at, updated_at";
+
+type LoadState = "loading" | "error" | "done";
+
+// Basis-Stil der Filter-Chips (unverändertes Muster).
+const chipClass = (active: boolean) =>
+  `rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+    active ? "border-matchup bg-matchup text-white" : "border-black/15 text-neutral-600 hover:border-black/30"
+  }`;
+
+/**
+ * Ein Filter-Chip mit dezenter Trefferzahl. Bei 0 Treffern (kann nur bei einer
+ * ausgewählten Option auftreten) steht statt der Zahl ein „leer"-Hinweis, damit
+ * die Option abwählbar bleibt und als tot erkennbar ist.
+ */
+function FilterChip({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
+  const t = useT();
+  return (
+    <button type="button" className={chipClass(active)} onClick={onClick}>
+      {label}
+      <span className={`ml-1 font-normal ${active ? "text-white/70" : "text-neutral-400"}`}>
+        {count > 0 ? count : t("tour.filterEmpty")}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * `preset` (optional, aus dem Setup-Trichter): Voreinstellung der Filter aus dem Profil.
+ * Wird EINMAL beim Laden angewandt und bei 0 Treffern automatisch geweitet (sichtbar).
+ * Ohne Prop verhält sich der Browser unverändert.
+ */
+export default function TourBrowser({ preset = null }: { preset?: { category: string[]; country: string[] } | null }) {
+  const { user, loading: authLoading } = useAuth();
+  const t = useT();
+  const { locale } = useLocale();
+
+  const [rows, setRows] = useState<TourTournament[]>([]);
+  const [state, setState] = useState<LoadState>("loading");
+  const [countryFilter, setCountryFilter] = useState<Set<string>>(new Set());
+  const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
+  const [showRest, setShowRest] = useState(false); // Aufklapper „Weitere Länder"
+  const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set()); // aufgenommene Turniere
+  const [widened, setWidened] = useState<"country" | "all" | null>(null); // Auto-Weitung des Vorfilters
+  const [presetApplied, setPresetApplied] = useState(false); // Vorfilter nur einmal anwenden
+
+  // Turniere laden, sobald ein eingeloggter Nutzer feststeht (RLS: nur authenticated).
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancel = false;
+    setState("loading");
+    const today = new Date().toISOString().slice(0, 10);
+    // Paginiert (gemeinsame Hilfe): sonst stille 1000-Zeilen-Kappung — heute nur 94
+    // zukünftige Turniere (Kalender ab September leer), aber die Zahl wächst mit
+    // vollständigeren Turnierdaten Richtung Grenze. `.order("id")` = totaler Tiebreaker.
+    fetchAllPaged<TourTournament>((from, to) =>
+      supabase
+        .from("tour_tournaments")
+        .select(COLUMNS)
+        .is("valid_to", null)
+        .gte("tournament_monday", today)
+        .order("tournament_monday", { ascending: true })
+        .order("country", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    )
+      .then((data) => {
+        if (cancel) return;
+        setRows(data);
+        setState("done");
+      })
+      .catch(() => { if (!cancel) setState("error"); });
+    return () => { cancel = true; };
+  }, [authLoading, user]);
+
+  // Bereits aufgenommene Turniere laden (für den Zustand des Aufnehmen-Knopfs).
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancel = false;
+    loadSeasonTournamentIds()
+      .then((ids) => { if (!cancel) setSeasonIds(ids); })
+      .catch(() => { /* Knopf startet dann als „nicht aufgenommen"; kein harter Fehler der Liste */ });
+    return () => { cancel = true; };
+  }, [authLoading, user]);
+
+  // Vorfilter aus dem Profil EINMAL anwenden, sobald die Turniere geladen sind. Ergibt der
+  // Filter 0 Treffer, wird er schrittweise geweitet (erst Land fallen lassen, dann Kategorie)
+  // und das über `widened` sichtbar gemacht — eine leere Liste wirkt wie ein Defekt.
+  useEffect(() => {
+    if (state !== "done" || !preset || presetApplied) return;
+    const cnt = (cat: Set<string>, ctry: Set<string>) =>
+      rows.filter(
+        (r) =>
+          (ctry.size === 0 || (r.country != null && ctry.has(r.country))) &&
+          (cat.size === 0 || (r.category != null && cat.has(r.category))),
+      ).length;
+    const cat = new Set(preset.category);
+    const ctry = new Set(preset.country);
+    if (cnt(cat, ctry) > 0) { setCategoryFilter(cat); setCountryFilter(ctry); setWidened(null); }
+    else if (cnt(cat, new Set()) > 0) { setCategoryFilter(cat); setCountryFilter(new Set()); setWidened("country"); }
+    else { setCategoryFilter(new Set()); setCountryFilter(new Set()); setWidened("all"); }
+    setPresetApplied(true);
+  }, [state, preset, presetApplied, rows]);
+
+  // Optimistisches Umschalten aus der Karte übernehmen (kein Neuladen der Liste).
+  const handleSeasonChange = useCallback((id: string, next: boolean) => {
+    setSeasonIds((prev) => {
+      const s = new Set(prev);
+      if (next) s.add(id); else s.delete(id);
+      return s;
+    });
+  }, []);
+
+  // Länder-Klartext (für Sortierung der Filter-Chips).
+  const countryName = (code: string) => {
+    const n = t(`tour.country.${code}`);
+    return n.startsWith("tour.country.") ? code : n;
+  };
+
+  // Verfügbare Filterwerte aus den geladenen Daten.
+  const countries = useMemo(
+    () => [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
+      .sort((a, b) => countryName(a).localeCompare(countryName(b), locale)),
+    [rows, locale],
+  );
+  const categories = useMemo(
+    () => [...new Set(rows.map((r) => r.category).filter((c): c is string => !!c))]
+      .sort((a, b) => a.localeCompare(b)),
+    [rows],
+  );
+
+  const filtered = useMemo(
+    () => rows.filter(
+      (r) =>
+        (countryFilter.size === 0 || (r.country != null && countryFilter.has(r.country))) &&
+        (categoryFilter.size === 0 || (r.category != null && categoryFilter.has(r.category))),
+    ),
+    [rows, countryFilter, categoryFilter],
+  );
+
+  // Trefferzahl je Land: berücksichtigt die KATEGORIE-Auswahl (leer = alle), aber NICHT
+  // die Länder-Auswahl — sonst zählt der Chip etwas anderes als das, was der Klick bewirkt.
+  const countByCountry = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) {
+      if (r.country == null) continue;
+      if (categoryFilter.size > 0 && !(r.category != null && categoryFilter.has(r.category))) continue;
+      m.set(r.country, (m.get(r.country) ?? 0) + 1);
+    }
+    return m;
+  }, [rows, categoryFilter]);
+
+  // Spiegelbildlich: Trefferzahl je Kategorie berücksichtigt die LÄNDER-Auswahl, nicht die eigene.
+  const countByCategory = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) {
+      if (r.category == null) continue;
+      if (countryFilter.size > 0 && !(r.country != null && countryFilter.has(r.country))) continue;
+      m.set(r.category, (m.get(r.category) ?? 0) + 1);
+    }
+    return m;
+  }, [rows, countryFilter]);
+
+  // Sichtbar ist eine Option mit Treffern ODER wenn sie aktuell ausgewählt ist
+  // (dann bleibt sie trotz 0 Treffern sichtbar, damit sie abwählbar ist).
+  const visibleCategories = useMemo(
+    () => categories.filter((c) => (countByCategory.get(c) ?? 0) > 0 || categoryFilter.has(c)),
+    [categories, countByCategory, categoryFilter],
+  );
+  const visibleCountries = useMemo(
+    () => countries.filter((c) => (countByCountry.get(c) ?? 0) > 0 || countryFilter.has(c)),
+    [countries, countByCountry, countryFilter],
+  );
+
+  // Länder der Zielregion zuerst; der Rest liegt hinter dem Aufklapper.
+  // Ausgewählte Rest-Länder bleiben immer sichtbar (sonst nicht abwählbar).
+  const regionCountries = useMemo(() => visibleCountries.filter((c) => isTargetRegion(c)), [visibleCountries]);
+  const restAll = useMemo(() => visibleCountries.filter((c) => !isTargetRegion(c)), [visibleCountries]);
+  const restSelected = useMemo(() => restAll.filter((c) => countryFilter.has(c)), [restAll, countryFilter]);
+  const restCollapsible = useMemo(() => restAll.filter((c) => !countryFilter.has(c)), [restAll, countryFilter]);
+
+  function toggle(set: Set<string>, value: string, setter: (s: Set<string>) => void) {
+    const next = new Set(set);
+    if (next.has(value)) next.delete(value); else next.add(value);
+    setter(next);
+    setWidened(null); // sobald der Nutzer selbst filtert, ist der „geweitet"-Hinweis überholt
+  }
+
+  // ── Auth-Gate ──────────────────────────────────────────────────────────
+  if (authLoading) {
+    return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  }
+  if (!user) {
+    return (
+      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
+        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
+        <Link
+          href="/app"
+          className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
+        >
+          {t("tour.loginCta")}
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Daten ──────────────────────────────────────────────────────────────
+  return (
+    <div className="mt-8">
+      {/* Filter */}
+      <div className="space-y-3 rounded-2xl bg-black/[0.035] p-4">
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.filterCategory")}</p>
+          <div className="flex flex-wrap gap-2">
+            {visibleCategories.map((c) => (
+              <FilterChip key={c} label={c} count={countByCategory.get(c) ?? 0} active={categoryFilter.has(c)} onClick={() => toggle(categoryFilter, c, setCategoryFilter)} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.filterCountry")}</p>
+          {/* Höhe durch max-h-40-Scrollbox gedeckelt: der Aufklapper fügt nur scrollbaren
+              Inhalt hinzu, die Filterleiste springt dadurch nicht in der Höhe. */}
+          <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+            {/* Zielregion zuerst, danach bereits ausgewählte Rest-Länder (immer sichtbar) */}
+            {regionCountries.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active={countryFilter.has(c)} onClick={() => toggle(countryFilter, c, setCountryFilter)} />
+            ))}
+            {restSelected.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active onClick={() => toggle(countryFilter, c, setCountryFilter)} />
+            ))}
+            {showRest && restCollapsible.map((c) => (
+              <FilterChip key={c} label={countryName(c)} count={countByCountry.get(c) ?? 0} active={countryFilter.has(c)} onClick={() => toggle(countryFilter, c, setCountryFilter)} />
+            ))}
+          </div>
+          {restCollapsible.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowRest((v) => !v)}
+              className="mt-2 text-[12px] font-semibold text-matchup hover:underline"
+            >
+              {showRest ? t("tour.filterCountriesFewer") : t("tour.filterCountriesMore", { n: restCollapsible.length })}
+            </button>
+          )}
+        </div>
+        {(countryFilter.size > 0 || categoryFilter.size > 0) && (
+          <button
+            type="button"
+            onClick={() => { setCountryFilter(new Set()); setCategoryFilter(new Set()); setWidened(null); }}
+            className="text-[12px] font-semibold text-matchup hover:underline"
+          >
+            {t("tour.filterReset")}
+          </button>
+        )}
+      </div>
+
+      {/* Ergebnis */}
+      {state === "loading" && <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>}
+      {state === "error" && <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>}
+      {state === "done" && (
+        <>
+          <p className="mt-6 text-[13px] font-medium text-neutral-500">{t("tour.resultCount", { n: filtered.length })}</p>
+          {widened && <p className="mt-1 text-[12px] font-semibold text-amber-700">{t("tour.setupFilterWidened")}</p>}
+          {filtered.length === 0 ? (
+            <p className="mt-6 rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
+          ) : (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {filtered.map((x) => (
+                <TournamentCard
+                  key={x.id}
+                  tournament={x}
+                  userId={user?.id ?? null}
+                  inSeason={seasonIds.has(x.id)}
+                  onSeasonChange={handleSeasonChange}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
