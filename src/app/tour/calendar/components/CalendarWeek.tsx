@@ -247,14 +247,33 @@ export default function CalendarWeek() {
                     const lay = layout.get(e.id) ?? { col: 0, cols: 1 };
                     const ks = kindStyle(e.kind);
                     const short = g.height < 34;
+                    const img = KIND_IMG[e.kind];
+                    const timeStr = `${e.event_time?.slice(0, 5) ?? ""}${e.end_time ? `–${e.end_time.slice(0, 5)}` : ""}`;
+                    const style = { top: g.top + 1, height: g.height - 2, left: `calc(${(lay.col / lay.cols) * 100}% + 2px)`, width: `calc(${(1 / lay.cols) * 100}% - 4px)` };
+                    // Foto-Cover, wenn Bild vorhanden UND der Block hoch genug ist (sonst kompakt).
+                    if (img && g.height >= 56) {
+                      return (
+                        <button key={e.id} type="button" onClick={() => setForm({ event: e })}
+                          className="absolute z-10 overflow-hidden rounded-lg text-left shadow-sm ring-1 ring-black/10 hover:z-30 hover:ring-2 hover:ring-white"
+                          style={style} title={`${e.title} · ${timeStr}`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img} alt="" loading="lazy" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />
+                          <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/5" />
+                          <span className="absolute inset-x-0 bottom-0 p-1.5">
+                            <span className="block truncate text-[11px] font-bold leading-tight text-white drop-shadow">{e.title || t(`tour.calKind_${e.kind}`)}</span>
+                            {!short && <span className="block truncate text-[10px] font-medium text-white/85">{timeStr}</span>}
+                          </span>
+                        </button>
+                      );
+                    }
                     return (
                       <button key={e.id} type="button" onClick={() => setForm({ event: e })}
                         className={`absolute z-10 overflow-hidden rounded-lg px-1.5 py-1 text-left ring-1 shadow-sm ${ks.bg} ${ks.text} hover:z-30 hover:ring-2`}
-                        style={{ top: g.top + 1, height: g.height - 2, left: `calc(${(lay.col / lay.cols) * 100}% + 2px)`, width: `calc(${(1 / lay.cols) * 100}% - 4px)` }}
-                        title={`${e.title} · ${e.event_time?.slice(0, 5)}${e.end_time ? "–" + e.end_time.slice(0, 5) : ""}`}>
+                        style={style}
+                        title={`${e.title} · ${timeStr}`}>
                         <span className={`absolute inset-y-1 left-0 w-1 rounded-full ${ks.bar}`} />
                         <span className="ml-1.5 flex items-center gap-1 truncate text-[11px] font-bold leading-tight"><KindThumb kind={e.kind} size={15} /><span className="truncate">{e.title || t(`tour.calKind_${e.kind}`)}</span></span>
-                        {!short && <span className="ml-1.5 block truncate text-[10px] font-medium opacity-70">{e.event_time?.slice(0, 5)}{e.end_time ? `–${e.end_time.slice(0, 5)}` : ""}</span>}
+                        {!short && <span className="ml-1.5 block truncate text-[10px] font-medium opacity-70">{timeStr}</span>}
                       </button>
                     );
                   })}
