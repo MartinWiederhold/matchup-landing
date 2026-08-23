@@ -134,6 +134,16 @@ export async function removeFromSeason(tournamentId: string): Promise<void> {
 }
 
 /**
+ * GANZE Saison leeren — alle Planzeilen des Nutzers löschen (Reset nach „Saison planen").
+ * Explizit auf user_id gefiltert (zusätzlich zur RLS); die UI ruft dies NUR nach einer
+ * Sicherheitsabfrage auf (Datenverlust-Lehre MU-037: ein Klick löschte kuratierte Einträge).
+ */
+export async function clearSeason(userId: string): Promise<void> {
+  const { error } = await supabase.from("tour_season_plan").delete().eq("user_id", userId);
+  if (error) throw error;
+}
+
+/**
  * Status eines Eintrags ändern (schlicht, für das ältere /tour/season-Dropdown).
  * Die Alternate-Position ist NUR bei status='alternate' zulässig (DB-Cross-Check) →
  * bei jedem anderen Status wird sie auf null gesetzt, damit das Update nie am Check scheitert.

@@ -7,7 +7,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour/components/TourLoginCard";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, loadActiveTournaments, tournamentsInFrame, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
-import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
+import { loadSeasonTournamentIds, addToSeason, removeFromSeason, clearSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
 import { alternateTrend } from "@/domain/tour/entryTrend";
 import { loadReminderSettings, saveReminderSettings } from "@/lib/tourReminders";
 import { saveWhoAmI, saveSeasonBudget } from "@/lib/tourSetup";
@@ -242,6 +242,9 @@ export default function SeasonWorkspace() {
   const [filling, setFilling] = useState(false);
   // MU-037: Rückmeldung nach dem Füllen. reason erklärt, WARUM nichts dazukam.
   const [fillReport, setFillReport] = useState<{ added: number; occupied: number; reason: "added" | "weeks_full" | "budget" | "no_candidates" } | null>(null);
+  // Saison leeren (Reset): NUR nach Sicherheitsabfrage (Datenverlust-Lehre MU-037).
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [costOpen, setCostOpen] = useState(false); // Kostensätze/Nächte bearbeiten (aufklappbar, wenn Sätze schon da sind)
   const [nowMs] = useState(() => Date.now()); // Stichtag für den Meldefrist-Countdown (aus der Komponente)
 
@@ -392,6 +395,24 @@ export default function SeasonWorkspace() {
         setSeasonIds((cur) => { const rb = new Set(cur); if (inSeason) rb.add(id); else rb.delete(id); return rb; });
       });
   }, [user, seasonIds, reloadEntries]);
+
+  // Reset: die GANZE Saison leeren (nach Bestätigung). Karte wird dadurch leer.
+  const resetSeason = useCallback(async () => {
+    if (!user || clearing) return;
+    setClearing(true);
+    const backup = new Set(seasonIds);
+    setSeasonIds(new Set()); // optimistisch
+    try {
+      await clearSeason(user.id);
+      setFillReport(null);
+      setConfirmReset(false);
+      await reloadEntries();
+    } catch {
+      setSeasonIds(backup); // bei Fehler zurückrollen
+    } finally {
+      setClearing(false);
+    }
+  }, [user, clearing, seasonIds, reloadEntries]);
 
   // ── Etappe 3: reaktive Kosten & Status ─────────────────────────────────────────
   // Nächte-Annahme (localStorage): leer → 7 (Domain-Default), sonst die Eingabe.
@@ -1227,6 +1248,22 @@ export default function SeasonWorkspace() {
                   : fillReport.reason === "budget" ? t("tour.wsFillBudget")
                   : t("tour.wsFillNoCandidates")}
               </p>
+            )}
+
+            {/* Reset: ganze Saison leeren — nur mit Sicherheitsabfrage (löscht alle Planzeilen,
+                Karte wird leer). Erscheint nur, wenn überhaupt Turniere geplant sind. */}
+            {seasonOrdered.length > 0 && (
+              confirmReset ? (
+                <div className="rounded-xl bg-red-500/[0.06] px-3 py-2.5 ring-1 ring-red-500/20">
+                  <p className="text-[12px] font-semibold text-red-700">{t("tour.wsClearConfirm", { n: seasonOrdered.length })}</p>
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" onClick={resetSeason} disabled={clearing} className="rounded-full bg-red-600 px-3 py-1.5 text-[12px] font-bold text-white hover:bg-red-700 disabled:opacity-50">{t("tour.wsClearYes")}</button>
+                    <button type="button" onClick={() => setConfirmReset(false)} className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-neutral-600 ring-1 ring-black/10 hover:bg-black/[0.03]">{t("tour.calCancel")}</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setConfirmReset(true)} className="w-full rounded-full px-4 py-2 text-[12px] font-semibold text-neutral-500 ring-1 ring-black/10 transition-colors hover:bg-black/[0.03] hover:text-neutral-800">{t("tour.wsClear")}</button>
+              )
             )}
           </section>
 
