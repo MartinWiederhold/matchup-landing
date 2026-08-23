@@ -36,6 +36,20 @@ const KIND_STYLE: Record<string, { bg: string; bar: string; text: string }> = {
 const kindStyle = (k: string) => KIND_STYLE[k] ?? KIND_STYLE.other;
 const KIND_EMOJI: Record<string, string> = { training: "🎾", match: "🏆", physio: "💆", travel: "✈️", gym: "🏋️", other: "📌" };
 const kindEmoji = (k: string) => KIND_EMOJI[k] ?? "📌";
+// Lokale, lizenzfreie Cover-Bilder je Art (public/cal/<art>.jpg). Weitere Arten einfach
+// als gleichnamige Datei ablegen — fehlt eine, greift der Emoji-Rückfall automatisch.
+const KIND_IMG: Record<string, string> = { training: "/cal/training.jpg", physio: "/cal/physio.jpg" };
+
+/** Kleines Cover: Emoji als Untergrund, Bild darüber; bricht das Bild, bleibt das Emoji. */
+function KindThumb({ kind, size = 16 }: { kind: string; size?: number }) {
+  const src = KIND_IMG[kind];
+  return (
+    <span className="relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-white/60" style={{ width: size, height: size, fontSize: Math.round(size * 0.7) }}>
+      <span>{kindEmoji(kind)}</span>
+      {src && /* eslint-disable-next-line @next/next/no-img-element */ <img src={src} alt="" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover" />}
+    </span>
+  );
+}
 
 // ── lokale (Wanduhr-)Datumshilfen ──────────────────────────────────────────────
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -185,7 +199,7 @@ export default function CalendarWeek() {
                 <div key={iso} className="min-h-[34px] space-y-1 border-r border-black/[0.04] p-1 last:border-r-0">
                   {events.filter((e) => e.event_date === iso && !e.event_time).map((e) => (
                     <button key={e.id} type="button" onClick={() => setForm({ event: e })} className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-left text-[11px] font-semibold ring-1 ${kindStyle(e.kind).bg} ${kindStyle(e.kind).text}`}>
-                      <span>{kindEmoji(e.kind)}</span><span className="truncate">{e.title || t(`tour.calKind_${e.kind}`)}</span>
+                      <KindThumb kind={e.kind} size={14} /><span className="truncate">{e.title || t(`tour.calKind_${e.kind}`)}</span>
                     </button>
                   ))}
                 </div>
@@ -239,7 +253,7 @@ export default function CalendarWeek() {
                         style={{ top: g.top + 1, height: g.height - 2, left: `calc(${(lay.col / lay.cols) * 100}% + 2px)`, width: `calc(${(1 / lay.cols) * 100}% - 4px)` }}
                         title={`${e.title} · ${e.event_time?.slice(0, 5)}${e.end_time ? "–" + e.end_time.slice(0, 5) : ""}`}>
                         <span className={`absolute inset-y-1 left-0 w-1 rounded-full ${ks.bar}`} />
-                        <span className="ml-1.5 block truncate text-[11px] font-bold leading-tight">{kindEmoji(e.kind)} {e.title || t(`tour.calKind_${e.kind}`)}</span>
+                        <span className="ml-1.5 flex items-center gap-1 truncate text-[11px] font-bold leading-tight"><KindThumb kind={e.kind} size={15} /><span className="truncate">{e.title || t(`tour.calKind_${e.kind}`)}</span></span>
                         {!short && <span className="ml-1.5 block truncate text-[10px] font-medium opacity-70">{e.event_time?.slice(0, 5)}{e.end_time ? `–${e.end_time.slice(0, 5)}` : ""}</span>}
                       </button>
                     );

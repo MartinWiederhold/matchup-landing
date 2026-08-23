@@ -1,7 +1,7 @@
 // Service Worker — Network-First für Navigationen, damit die installierte PWA
 // immer die neueste Version lädt (wenn online). Offline-Fallback auf den Cache.
 // Bei jedem Deploy die Version erhöhen, damit der SW sicher neu aktiviert wird.
-const VERSION = "mu-2026-08-23-1";
+const VERSION = "mu-2026-08-23-2";
 
 self.addEventListener("install", () => self.skipWaiting());
 
