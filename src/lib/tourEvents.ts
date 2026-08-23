@@ -22,6 +22,7 @@ export type TourEvent = {
   title: string;
   event_date: string; // ISO date
   event_time: string | null; // "HH:MM:SS" via PostgREST; null = ganztägig. Wanduhr OHNE Zeitzone (MU-021).
+  end_time: string | null; // "HH:MM:SS"; null = keine Endzeit (UI nimmt Standarddauer).
   note: string | null;
   tournament_id: string | null;
   won: boolean | null;
@@ -30,7 +31,7 @@ export type TourEvent = {
   opponent: string | null;
 };
 
-const COLUMNS = "id, kind, title, event_date, event_time, note, tournament_id, won, score, round, opponent";
+const COLUMNS = "id, kind, title, event_date, event_time, end_time, note, tournament_id, won, score, round, opponent";
 
 /** Termine des Nutzers + Turniernamen NUR für uuid-Bezüge (Slugs aus /app bleiben ohne Namen). */
 export async function loadEvents(userId: string): Promise<{ rows: TourEvent[]; names: Map<string, string> }> {
@@ -60,6 +61,7 @@ export type EventInput = {
   title: string;
   event_date: string;
   event_time: string | null; // "HH:MM" oder null
+  end_time: string | null; // "HH:MM" oder null (Endzeit für Von–bis-Blöcke)
   note: string | null;
   tournament_id: string | null; // uuid aus der eigenen Saison oder null
   won: boolean | null;
@@ -79,6 +81,7 @@ function normalized(input: EventInput) {
     title: input.title,
     event_date: input.event_date,
     event_time: input.event_time,
+    end_time: input.event_time ? input.end_time : null, // Endzeit nur mit Startzeit sinnvoll
     note: input.note,
     tournament_id: input.tournament_id,
     round: isMatch ? input.round : null,

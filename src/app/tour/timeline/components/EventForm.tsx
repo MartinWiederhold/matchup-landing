@@ -23,6 +23,7 @@ export default function EventForm({
   userId,
   defaultDate,
   defaultKind,
+  defaultTime,
   onDone,
 }: {
   event: TourEvent | null; // null = neu
@@ -30,6 +31,7 @@ export default function EventForm({
   userId: string;
   defaultDate: string;
   defaultKind?: EventKind; // Vorwahl der Art (z. B. beim Anlegen aus einer Zeitstrahl-Spur)
+  defaultTime?: string; // Vorwahl der Startzeit "HH:MM" (Klick ins Zeitraster)
   onDone: () => void;
 }) {
   const t = useT();
@@ -39,7 +41,8 @@ export default function EventForm({
   );
   const [title, setTitle] = useState(event?.title ?? "");
   const [date, setDate] = useState(event?.event_date ?? defaultDate ?? todayISO());
-  const [time, setTime] = useState(event?.event_time ? event.event_time.slice(0, 5) : "");
+  const [time, setTime] = useState(event?.event_time ? event.event_time.slice(0, 5) : (defaultTime ?? ""));
+  const [end, setEnd] = useState(event?.end_time ? event.end_time.slice(0, 5) : "");
   const [note, setNote] = useState(event?.note ?? "");
   const [tournamentId, setTournamentId] = useState(event?.tournament_id ?? "");
   const [round, setRound] = useState(event?.round ?? "");
@@ -59,6 +62,7 @@ export default function EventForm({
       title: title.trim(),
       event_date: date,
       event_time: time.trim() === "" ? null : time,
+      end_time: end.trim() === "" ? null : end,
       note: note.trim() === "" ? null : note.trim(),
       // /tour speichert nur uuids aus der eigenen Saison (Auswahl unten), sonst null.
       tournament_id: tournamentId || null,
@@ -110,10 +114,16 @@ export default function EventForm({
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calDate")}</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTime")}</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTime")}</span>
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTimeEnd")}</span>
+            <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} disabled={time.trim() === ""} className={`${inputCls} disabled:opacity-40`} />
+          </label>
+        </div>
         <p className="text-[11px] text-neutral-400 sm:col-span-2 -mt-1">{t("tour.calTimeHint")}</p>
         <label className="block sm:col-span-2">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calNote")}</span>

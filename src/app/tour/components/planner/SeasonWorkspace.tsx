@@ -1242,9 +1242,13 @@ export default function SeasonWorkspace() {
           <section>
             <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsSeasonTitle")} · {seasonOrdered.length}</h2>
             <div className="mt-2">
-              <Link href="/tour/timeline" className="inline-flex items-center gap-1.5 rounded-xl bg-matchup/[0.08] px-4 py-2 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.14]">
+              <Link href="/tour/calendar" className="inline-flex items-center gap-1.5 rounded-xl bg-matchup/[0.08] px-4 py-2 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 transition-colors hover:bg-matchup/[0.14]">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" /></svg>
                 {t("tour.wsViewCalendar")}
+              </Link>
+              <Link href="/tour/timeline" className="ml-2 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold text-neutral-500 ring-1 ring-black/10 transition-colors hover:bg-black/[0.03]">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h9M4 12h14M4 17h6M17 5v4M13 10v4M9 15v4" /></svg>
+                {t("tour.wsViewTimeline")}
               </Link>
             </div>
             {seasonOrdered.length === 0 ? (

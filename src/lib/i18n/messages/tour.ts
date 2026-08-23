@@ -315,6 +315,15 @@ export const tour = {
 
     // Termine-Formular (EventForm) + Zeitstrahl-Marker
     calTightArrival: "Knappe Anreise · nur {n} Tag(e)",
+    calSeoTitle: "Kalender",
+    calSeoDescription: "Dein Wochenkalender: Termine als Von–bis-Zeitblöcke, Turnierwochen ganztägig.",
+    calTitle: "Kalender",
+    calSubtitle: "Deine Woche mit Uhrzeiten — Termine als Zeitblöcke, Turnierwochen ganztägig.",
+    calAllDay: "ganztägig",
+    calGoToday: "Heute",
+    calViewWeek: "Woche",
+    calViewDay: "Tag",
+    calGridHint: "Klick in eine freie Stelle legt einen Termin an · Klick auf einen Termin bearbeitet ihn.",
     // Zeitstrahl (/tour/timeline)
     tlSeoTitle: "Saison-Zeitstrahl",
     tlSeoDescription: "Deine ganze Saison auf einer Zeitachse — Turnierwochen, Termine und Meldefristen im Verlauf.",
@@ -349,7 +358,8 @@ export const tour = {
     // Formular
     calFieldTitle: "Titel",
     calDate: "Datum",
-    calTime: "Zeit",
+    calTime: "Von",
+    calTimeEnd: "bis",
     calTimeHint: "Wird ohne Zeitzone gespeichert (Wanduhrzeit).",
     calNote: "Notiz (optional)",
     calTournament: "Turnier (deine Saison)",
@@ -755,6 +765,7 @@ export const tour = {
     wsFill: "Saison planen",
     wsPlanning: "Wird geplant …",
     wsViewCalendar: "Kalender",
+    wsViewTimeline: "Zeitstrahl",
     wsTightArrival: "Knappe Anreise: nur {n} Tag(e) von {from} nach {to}.",
     wsFilling: "Wird gefüllt …",
     wsFillHint: "Setzt eine Saison als Startpunkt — danach von Hand änderbar.",
@@ -1417,6 +1428,15 @@ export const tour = {
 
     // Event form (EventForm) + timeline marker
     calTightArrival: "Tight arrival · only {n} day(s)",
+    calSeoTitle: "Calendar",
+    calSeoDescription: "Your weekly calendar: events as from–to time blocks, tournament weeks all-day.",
+    calTitle: "Calendar",
+    calSubtitle: "Your week with times — events as time blocks, tournament weeks all-day.",
+    calAllDay: "all-day",
+    calGoToday: "Today",
+    calViewWeek: "Week",
+    calViewDay: "Day",
+    calGridHint: "Click an empty slot to add an event · click an event to edit it.",
     // Timeline (/tour/timeline)
     tlSeoTitle: "Season timeline",
     tlSeoDescription: "Your whole season on one time axis — tournament weeks, events and entry deadlines across the run.",
@@ -1451,7 +1471,8 @@ export const tour = {
     // Form
     calFieldTitle: "Title",
     calDate: "Date",
-    calTime: "Time",
+    calTime: "From",
+    calTimeEnd: "to",
     calTimeHint: "Stored without a time zone (wall-clock time).",
     calNote: "Note (optional)",
     calTournament: "Tournament (your season)",
@@ -1857,6 +1878,7 @@ export const tour = {
     wsFill: "Plan my season",
     wsPlanning: "Planning …",
     wsViewCalendar: "Calendar",
+    wsViewTimeline: "Timeline",
     wsTightArrival: "Tight arrival: only {n} day(s) from {from} to {to}.",
     wsFilling: "Filling …",
     wsFillHint: "Sets a season as a starting point — editable by hand afterwards.",
