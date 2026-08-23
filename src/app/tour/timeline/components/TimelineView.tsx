@@ -351,6 +351,17 @@ export default function TimelineView() {
                     </button>
                   );
                 })}
+                {/* Beispiel-Platzhalter in leeren Spuren: gestrichelt/gedämpft, klar als Vorlage
+                    erkennbar (KEIN echter Datensatz). Klick legt einen ECHTEN Termin dieser Art an. */}
+                {(eventsByKind.get(lane.key)?.length ?? 0) === 0 && [7, 24].map((offDays) => {
+                  const gx = xForMs(mondayOfMs(focusMs) + offDays * DAY, bounds.startMs, pxPerDay);
+                  return (
+                    <span key={"ghost" + lane.key + offDays} className="pointer-events-none absolute top-1 flex select-none items-center gap-1.5 rounded-full border border-dashed border-neutral-300 bg-white/50 py-1 pl-1 pr-2.5 text-[11px] font-medium italic text-neutral-400" style={{ left: gx + 2 }}>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/[0.03] text-neutral-300"><Glyph k={lane.key} /></span>
+                      {laneLabel(lane.key)}
+                    </span>
+                  );
+                })}
               </div>
             ))}
 
@@ -361,8 +372,8 @@ export default function TimelineView() {
               const b = weekBar(wk, bounds.startMs, pxPerDay);
               const st = styleFor(tt.series);
               const w = b.width - 4;
-              const showFull = w >= 150;  // Stadt + Kategorie + Avatar
-              const showCat = w >= 62;    // Kategorie-Kurzform
+              const showFull = w >= 108;  // Stadt + Kategorie + Avatar
+              const showCity = w >= 56;   // nur Stadt (aussagekräftiger als „C75")
               return (
                 <button key={tt.id} type="button" onClick={() => setSelected(tt.id)}
                   className={`absolute flex items-center gap-1.5 overflow-hidden rounded-full bg-white py-1 pl-1 pr-2 text-left shadow-sm ring-1 ring-black/[0.08] transition hover:ring-matchup/50 ${selected === tt.id ? "ring-2 ring-matchup" : ""}`}
@@ -371,8 +382,8 @@ export default function TimelineView() {
                   <IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />
                   {showFull ? (
                     <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold leading-tight text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}</span><span className={`block truncate text-[11px] leading-tight ${st.text}`}>{tt.category || "—"}</span></span>
-                  ) : showCat ? (
-                    <span className={`min-w-0 flex-1 truncate text-[11px] font-semibold ${st.text}`}>{shortCat(tt.category)}</span>
+                  ) : showCity ? (
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-neutral-800">{tt.city || shortCat(tt.category)}</span>
                   ) : null}
                   {showFull && <Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} />}
                   {tight.has(tt.id) && <span className="absolute right-1 top-0.5 text-[10px] text-amber-600" title={t("tour.calTightArrival", { n: tight.get(tt.id)! })}>⚠</span>}
