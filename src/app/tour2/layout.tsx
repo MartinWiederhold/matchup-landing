@@ -1,9 +1,8 @@
 import { AuthProvider } from "@/lib/auth";
 import Tour2Shell from "./components/shell/Tour2Shell";
 
-// /tour2 — NEUAUFBAU IM BAU. Bewusst NICHT verlinkt (weder von /tour noch anderswo).
-// Etappe 1: Navigations-Gerüst (fünf Bereiche) + Home, dunkles Tool-Mode. Die übrigen
-// (kopierten) Ansichten sind noch hell und werden in späteren Etappen umgebaut. noindex.
+// /tour2 — Neuaufbau. Fünf Bereiche dunkel; Werkzeugseiten nutzen Tour2Subpage
+// (dunkler Kopf, Formulare in heller Fläche). /tour bleibt unverändert. noindex.
 export const metadata = {
   robots: { index: false, follow: false },
 };

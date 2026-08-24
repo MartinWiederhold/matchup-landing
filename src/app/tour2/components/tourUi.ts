@@ -25,5 +25,5 @@ export const BTN_PRIMARY =
 
 // Kopf der Seiten (Eyebrow / H1 / Untertitel) — für alle /tour-Seiten identisch.
 export const EYEBROW = "text-sm font-bold uppercase tracking-[0.18em] text-matchup";
-export const PAGE_H1 = "mt-3 text-[32px] font-extrabold leading-[1.05] tracking-tight text-neutral-900 sm:text-5xl";
-export const PAGE_SUB = "mt-4 max-w-2xl text-lg leading-relaxed text-neutral-500";
+export const PAGE_H1 = "mt-3 text-[32px] font-extrabold leading-[1.05] tracking-tight text-white sm:text-5xl";
+export const PAGE_SUB = "mt-4 max-w-2xl text-lg leading-relaxed text-neutral-400";

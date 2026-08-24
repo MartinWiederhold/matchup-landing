@@ -12,7 +12,7 @@ export default function BackToWorkspace() {
   const t = useT();
   return (
     <div className="mt-6">
-      <Link href="/tour2" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-matchup hover:underline">
+      <Link href="/tour2/planner" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-matchup hover:underline">
         ← {t("tour.backToWorkspace")}
       </Link>
     </div>
