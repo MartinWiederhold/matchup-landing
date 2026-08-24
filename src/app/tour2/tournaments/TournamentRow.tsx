@@ -33,7 +33,7 @@ export default function TournamentRow({
   return (
     <div className={`flex items-start gap-2 px-1 py-3 ${selected ? "border-l-2 border-matchup bg-[color-mix(in_srgb,var(--t2-accent)_8%,transparent)]" : "border-l-2 border-transparent"}`}>
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
-        <p className="truncate t2-display text-[1.15rem] font-medium normal-case tracking-[-0.03em]">
+        <p className="truncate text-[15px] font-semibold tracking-tight">
           {tt.city || t("tour.fieldMissing")}
           <span className="text-neutral-400">, {countryName}</span>
         </p>

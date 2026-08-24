@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
-import CalendarTape from "./components/CalendarTape";
+import CalendarWeek from "./components/CalendarWeek";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -13,5 +13,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function CalendarPage() {
-  return <CalendarTape />;
+  return <CalendarWeek />;
 }

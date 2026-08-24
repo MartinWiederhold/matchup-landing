@@ -7,8 +7,8 @@
  * nichts neu gebaut. Ehrliche Leerstellen: Akzeptanzwahrscheinlichkeit, Cut-off, Reisezeit
  * (inkl. „Departure recommended") gibt es nicht → weggelassen, nicht erfunden.
  *
- * Day One × Cadillac: Next-Hero, Telemetrie, Wochenliste. Datenbeschaffung schlank. Schwere
- * Board-Eingaben (Visa/Doku/Schengen/Wildcards/Punkte-Verfall) folgen in späteren Etappen.
+ * Home: nächstes Turnier, Kennzahlen, Handlungsbedarf, nächste acht Wochen.
+ * Datenbeschaffung schlank. Schwere Board-Eingaben folgen in späteren Etappen.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -132,7 +132,7 @@ export default function HomeView() {
     return (
       <div className="mx-auto mt-16 max-w-sm px-6 py-10 text-center">
         <p className="t2-kicker">Matchup Tour</p>
-        <h2 className="t2-display mt-3 text-[2.4rem]">{t("tour.loginRequiredTitle")}</h2>
+        <h2 className="mt-3 text-[1.75rem] font-bold tracking-tight">{t("tour.loginRequiredTitle")}</h2>
         <p className="mt-3 text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="t2-cta mt-6">{t("tour.loginCta")}</Link>
       </div>
@@ -148,15 +148,15 @@ export default function HomeView() {
       {next && nextDm ? (
         <section>
           <p className="t2-kicker">{t("tour.t2next")}</p>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-            <h1 className="t2-display min-w-0 text-[clamp(2.6rem,9vw,5.4rem)]">{nextCity}</h1>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+            <h1 className="min-w-0 text-[1.75rem] font-bold tracking-tight sm:text-[2.15rem]">{nextCity}</h1>
             <p className="t2-date shrink-0" aria-hidden>
               <span>{nextDm.dd}</span>
               <span className="t2-date-dot">.</span>
               <span>{nextDm.mm}</span>
             </p>
           </div>
-          <p className="mt-3 text-[14px] text-[var(--t2-muted)]">
+          <p className="mt-2 text-[14px] text-[var(--t2-muted)]">
             {next.tournament.country ? `${countryName(next.tournament.country)} · ` : ""}
             {next.tournament.category || "—"}
             {profile?.firstName ? ` · ${profile.firstName}` : ""}
@@ -174,7 +174,7 @@ export default function HomeView() {
       ) : (
         <section>
           <p className="t2-kicker">{t("tour.t2next")}</p>
-          <h1 className="t2-display mt-3 text-[clamp(2.2rem,7vw,4rem)]">{t("tour.t2noNext")}</h1>
+          <h1 className="mt-2 text-[1.75rem] font-bold tracking-tight sm:text-[2.15rem]">{t("tour.t2noNext")}</h1>
           <Link href="/tour2/planner" className="t2-cta mt-6">{t("tour.wsFill")}</Link>
         </section>
       )}
@@ -230,7 +230,7 @@ export default function HomeView() {
                     <span className="w-14 shrink-0 font-semibold tabular-nums text-[var(--t2-muted)]">{d.dd}.{d.mm}</span>
                     {it ? (
                       <span className="min-w-0">
-                        <span className="t2-row-city t2-display block truncate text-[1.35rem] normal-case tracking-[-0.03em]">{it.city || t("tour.fieldMissing")}</span>
+                        <span className="t2-row-city block truncate text-[15px] font-semibold">{it.city || t("tour.fieldMissing")}</span>
                         <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-matchup">{it.category || "—"}</span>
                       </span>
                     ) : (

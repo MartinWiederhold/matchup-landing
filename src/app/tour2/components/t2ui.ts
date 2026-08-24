@@ -1,5 +1,5 @@
 /**
- * /tour2 Tokens: Day One (Creme, Stadt/Datum) × Cadillac (Next, Telemetrie) × Matchup.
+ * /tour2 Tokens: Day One (Creme, Luft) × Matchup-Akzent.
  */
 
 export const T2_CANVAS = "bg-[var(--t2-paper)] text-[var(--t2-ink)]";

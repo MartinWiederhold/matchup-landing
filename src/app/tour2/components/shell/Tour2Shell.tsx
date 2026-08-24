@@ -1,8 +1,7 @@
 "use client";
 
 /**
- * /tour2 Shell: horizontale Leiste wie Cadillac/Day One, kein Icon-Rail.
- * Aktiver Punkt: Matchup-Unterstrich.
+ * /tour2 Shell: schmale horizontale Leiste, Matchup-Unterstrich am aktiven Punkt.
  */
 
 import Link from "next/link";
@@ -52,14 +51,13 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
   const initial = (profile?.firstName?.[0] ?? "?").toUpperCase();
   const seasonDesk = pathname.startsWith("/tour2/planner");
   const tournDesk = pathname.startsWith("/tour2/browse");
-  const calDesk = pathname.startsWith("/tour2/calendar");
 
   return (
     <div className={`t2-root min-h-[100dvh] ${T2_CANVAS}`}>
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-6 border-b border-[var(--t2-line)] bg-[var(--t2-paper)] px-4 sm:px-6">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-6 border-b border-[var(--t2-line)] bg-[var(--t2-paper)]/90 px-4 backdrop-blur-sm sm:px-6">
         <Link href="/tour2" className="flex shrink-0 items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center bg-matchup text-[13px] font-black text-white">M</span>
-          <span className="hidden text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--t2-ink)] sm:inline">Matchup Tour</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-matchup text-[13px] font-black text-white">M</span>
+          <span className="hidden text-[13px] font-semibold tracking-tight text-[var(--t2-ink)] sm:inline">Matchup Tour</span>
         </Link>
         <nav className="hidden min-w-0 flex-1 items-center gap-5 md:flex">
           {AREA.map((a) => {
@@ -68,7 +66,7 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
               <Link
                 key={a.key}
                 href={a.href}
-                className={`relative py-4 text-[12px] font-semibold lowercase tracking-[0.04em] ${active ? "text-[var(--t2-ink)]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
+                className={`relative py-4 text-[13px] font-medium ${active ? "text-[var(--t2-ink)]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
               >
                 {t(LABELS[a.label])}
                 {active && <span className="absolute inset-x-0 bottom-0 h-[2px] bg-matchup" />}
@@ -78,20 +76,20 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {profile?.ranking != null && (
-            <span className="hidden border border-[var(--t2-line)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] tabular-nums text-[var(--t2-ink)] sm:inline" title={t("tour.t2rank")}>#{profile.ranking}</span>
+            <span className="hidden rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold tabular-nums text-[var(--t2-ink)] ring-1 ring-black/[0.08] sm:inline" title={t("tour.t2rank")}>#{profile.ranking}</span>
           )}
           <Link href="/tour2/setup" aria-label={t("tour.t2navProfile")}>
             {profile?.profileImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.profileImage} alt="" className="h-8 w-8 object-cover" />
+              <img src={profile.profileImage} alt="" className="h-8 w-8 rounded-full object-cover" />
             ) : (
-              <span className="flex h-8 w-8 items-center justify-center border border-[var(--t2-line)] text-[12px] font-semibold">{initial}</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[12px] font-semibold ring-1 ring-black/10">{initial}</span>
             )}
           </Link>
         </div>
       </header>
 
-      <main className={seasonDesk || tournDesk || calDesk ? "" : "pb-24 md:pb-0"}>{children}</main>
+      <main className={seasonDesk || tournDesk ? "" : "pb-24 md:pb-0"}>{children}</main>
 
       <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-[var(--t2-line)] bg-[var(--t2-paper)] pb-[env(safe-area-inset-bottom)] md:hidden">
         {AREA.map((a) => {

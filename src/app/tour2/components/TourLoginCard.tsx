@@ -27,7 +27,7 @@ export default function TourLoginCard() {
     <div className="flex h-[100dvh] flex-col items-center justify-center bg-[var(--t2-paper)] px-6 text-[var(--t2-ink)]">
       <div className="w-full max-w-sm">
         <p className="t2-kicker">Matchup Tour</p>
-        <h2 className="t2-display mt-3 text-[2.2rem]">{t("tour.loginRequiredTitle")}</h2>
+        <h2 className="mt-3 text-[1.75rem] font-bold tracking-tight">{t("tour.loginRequiredTitle")}</h2>
         <p className="mt-2 text-sm text-[var(--t2-muted)]">{t("tour.loginFormLead")}</p>
         <form onSubmit={submit} className="mt-6 space-y-2.5">
           <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("tour.loginEmail")} className="t2-input" />

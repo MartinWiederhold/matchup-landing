@@ -99,15 +99,15 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
         <div className="relative flex items-center gap-4">
           {setup.profileImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={setup.profileImage} alt="" className="h-16 w-16 object-cover sm:h-20 sm:w-20" />
+            <img src={setup.profileImage} alt="" className="h-16 w-16 rounded-2xl object-cover sm:h-20 sm:w-20" />
           ) : (
-            <span className="flex h-16 w-16 items-center justify-center border border-[var(--t2-line)] text-[22px] font-semibold sm:h-20 sm:w-20 sm:text-[26px]">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[22px] font-semibold ring-1 ring-black/10 sm:h-20 sm:w-20 sm:text-[26px]">
               {(name?.[0] ?? "?").toUpperCase()}
             </span>
           )}
           <div className="min-w-0">
             <p className="t2-kicker">{t("tour.t2navProfile")}</p>
-            <h1 className="t2-display mt-1 truncate text-[clamp(1.8rem,5vw,3rem)]">{name || t("tour.fieldMissing")}</h1>
+            <h1 className="mt-1 truncate text-[1.6rem] font-bold tracking-tight sm:text-[1.9rem]">{name || t("tour.fieldMissing")}</h1>
             <p className="mt-1 text-[13px] text-neutral-400">
               {[
                 setup.ranking != null ? `#${setup.ranking}` : null,
