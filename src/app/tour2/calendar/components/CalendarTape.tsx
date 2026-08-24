@@ -46,10 +46,10 @@ const KIND_DOT: Record<string, string> = {
 };
 
 function statusTone(status: string): string {
-  if (status === "confirmed" || status === "main_draw" || status === "entered" || status === "qualifying") return "bg-emerald-500/20 text-emerald-300";
-  if (status === "alternate") return "bg-amber-500/20 text-amber-200";
-  if (status === "withdrawn" || status === "cancelled") return "bg-white/10 text-neutral-500 line-through";
-  return "bg-sky-500/15 text-sky-300";
+  if (status === "confirmed" || status === "main_draw" || status === "entered" || status === "qualifying") return "bg-emerald-50 text-emerald-800";
+  if (status === "alternate") return "bg-amber-50 text-amber-800";
+  if (status === "withdrawn" || status === "cancelled") return "bg-neutral-100 text-neutral-500 line-through";
+  return "bg-sky-50 text-sky-800";
 }
 
 function DayStrip({
@@ -77,14 +77,14 @@ function DayStrip({
         return (
           <div
             key={key}
-            className={`border px-0.5 py-1.5 text-center ${tourFill ? "border-white/20" : "border-white/10"} ${on ? "border-matchup" : ""}`}
+            className={`border px-0.5 py-1.5 text-center ${tourFill ? "border-black/20" : "border-black/10"} ${on ? "border-matchup" : ""}`}
           >
-            <p className={`text-[9px] font-bold uppercase tracking-wide ${on ? "text-white" : "text-neutral-500"}`}>{t(`tour.${key}`)}</p>
+            <p className={`text-[9px] font-bold uppercase tracking-wide ${on ? "text-neutral-900" : "text-neutral-500"}`}>{t(`tour.${key}`)}</p>
             <div className="mt-1.5 flex h-1.5 items-center justify-center gap-0.5">
               {hits.length > 0 ? hits.slice(0, 3).map((e, idx) => (
                 <span key={idx} className={`h-1.5 w-1.5 rounded-full ${KIND_DOT[e.kind] ?? KIND_DOT.other}`} />
               )) : (
-                <span className={`h-1 w-1 rounded-full ${tourFill ? "bg-white/25" : "bg-white/10"}`} />
+                <span className={`h-1 w-1 rounded-full ${tourFill ? "bg-black/20" : "bg-black/10"}`} />
               )}
             </div>
           </div>
@@ -205,14 +205,14 @@ export default function CalendarTape() {
 
   const weekActions = (w: SeasonWeek) => (
     <div className="mt-2 flex flex-wrap gap-2 px-1">
-      <button type="button" onClick={() => setOpenForm({ event: null, date: w.monday, kind: "training" })} className="rounded-full bg-white px-3.5 py-1.5 text-[12px] font-bold text-neutral-900">
+      <button type="button" onClick={() => setOpenForm({ event: null, date: w.monday, kind: "training" })} className="rounded-full border border-black/15 bg-white px-3.5 py-1.5 text-[12px] font-bold text-neutral-900">
         + {t("tour.t2calAdd")}
       </button>
       {w.events.map((e) => {
         const full = events.find((x) => x.id === e.id);
         if (!full) return null;
         return (
-          <button key={e.id} type="button" onClick={() => setOpenForm({ event: full, date: e.date })} className="rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-neutral-200">
+          <button key={e.id} type="button" onClick={() => setOpenForm({ event: full, date: e.date })} className="rounded-full border border-black/10 bg-neutral-50 px-3 py-1.5 text-[12px] font-semibold text-neutral-800">
             {e.title}
           </button>
         );
@@ -231,7 +231,7 @@ export default function CalendarTape() {
     return (
       <li key={w.monday} data-monday={w.monday} data-current={w.isCurrent ? "1" : undefined} data-has-tour={tour ? "1" : undefined}>
         {w.inbound && (
-          <div className={`ml-6 border-l-2 py-3 pl-5 text-[11px] leading-snug ${w.inbound.tight ? "border-amber-500/50 text-amber-200" : "border-white/15 text-neutral-500"}`}>
+          <div className={`ml-6 border-l-2 py-3 pl-5 text-[11px] leading-snug ${w.inbound.tight ? "border-amber-600 text-amber-800" : "border-black/15 text-neutral-500"}`}>
             {w.inbound.cluster ? t("tour.t2legCluster") : (
               <>
                 {km != null && km > 0 ? `${t("tour.t2legKm", { n: Math.round(km) })} · ` : ""}
@@ -244,7 +244,7 @@ export default function CalendarTape() {
           type="button"
           onClick={() => setExpanded((x) => x === w.monday ? null : w.monday)}
           className={`w-full border p-4 text-left transition-colors ${
-            w.isCurrent ? "border-white bg-white/[0.04]" : open ? "border-white/10 bg-black" : "border-matchup bg-black"
+            w.isCurrent ? "border-neutral-900 bg-neutral-50" : open ? "border-black/10 bg-white" : "border-matchup bg-white"
           }`}
         >
           <div className="flex items-start justify-between gap-3">
@@ -255,18 +255,18 @@ export default function CalendarTape() {
               </p>
               {tour ? (
                 <>
-                  <p className="mt-1 truncate text-[22px] font-extrabold tracking-tight text-white">{tour.city || t("tour.fieldMissing")}</p>
-                  <p className="text-[12px] text-neutral-400">{fmtRange(w.monday)} · {catName(tour.country)} · {tour.category || "—"}</p>
+                  <p className="mt-1 truncate text-[22px] font-extrabold tracking-tight text-neutral-900">{tour.city || t("tour.fieldMissing")}</p>
+                  <p className="text-[12px] text-neutral-500">{fmtRange(w.monday)} · {catName(tour.country)} · {tour.category || "—"}</p>
                   {tours.slice(1).map((x) => (
-                    <p key={x.id} className="text-[12px] text-neutral-400">{x.city || t("tour.fieldMissing")} · {x.category || "—"}</p>
+                    <p key={x.id} className="text-[12px] text-neutral-500">{x.city || t("tour.fieldMissing")} · {x.category || "—"}</p>
                   ))}
-                  <p className={`mt-2 text-[12px] font-semibold ${tour.deadlineKind === "upcoming" ? "text-amber-200" : "text-neutral-500"}`}>
+                  <p className={`mt-2 text-[12px] font-semibold ${tour.deadlineKind === "upcoming" ? "text-amber-800" : "text-neutral-500"}`}>
                     {deadlineText(tour.deadlineKind, tour.deadlineMs)}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="mt-1 text-[16px] font-bold text-neutral-300">{t("tour.t2calOpen")}</p>
+                  <p className="mt-1 text-[16px] font-bold text-neutral-500">{t("tour.t2calOpen")}</p>
                   <p className="text-[12px] text-neutral-500">{fmtRange(w.monday)} · {t("tour.t2calRecovery")}</p>
                 </>
               )}
@@ -281,7 +281,7 @@ export default function CalendarTape() {
           {w.events.length > 0 && (
             <ul className="mt-3 space-y-1">
               {w.events.slice(0, expanded === w.monday ? 99 : 3).map((e) => (
-                <li key={e.id} className="flex items-center gap-2 text-[12px] text-neutral-300">
+                <li key={e.id} className="flex items-center gap-2 text-[12px] text-neutral-600">
                   <span className={`h-1.5 w-1.5 rounded-full ${KIND_DOT[e.kind] ?? KIND_DOT.other}`} />
                   <span className="truncate">{e.time ? `${String(e.time).slice(0, 5)} · ` : ""}{e.title}</span>
                 </li>
@@ -297,9 +297,9 @@ export default function CalendarTape() {
   let lastMonth = "";
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black text-white">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-white text-neutral-900">
       {hero && (
-        <header className="relative shrink-0 border-b border-white/10 px-4 py-5 sm:px-6">
+        <header className="relative shrink-0 border-b border-black/10 px-4 py-5 sm:px-6">
           <div className="relative flex items-end justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
@@ -307,7 +307,7 @@ export default function CalendarTape() {
               </p>
               {heroTour ? (
                 <>
-                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[42px]">
+                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[42px]">
                     {heroTour.city || t("tour.fieldMissing")}
                   </h1>
                   <p className="text-[14px] text-neutral-400">
@@ -317,14 +317,14 @@ export default function CalendarTape() {
                 </>
               ) : (
                 <>
-                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[42px]">{t("tour.t2calOpen")}</h1>
+                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[42px]">{t("tour.t2calOpen")}</h1>
                   <p className="text-[14px] text-neutral-400">{fmtRange(hero.monday)} · {t("tour.t2calRecovery")}</p>
                 </>
               )}
             </div>
             {dlDays != null && dlDays > 0 && (
               <div className="shrink-0 text-right">
-                <p className="text-[40px] font-black leading-none tabular-nums text-white sm:text-[52px]">{dlDays}</p>
+                <p className="text-[40px] font-black leading-none tabular-nums text-neutral-900 sm:text-[52px]">{dlDays}</p>
                 <p className="mt-1 max-w-[7rem] text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-matchup">
                   {dlDays === 1 ? t("tour.t2calDlDay") : t("tour.t2calDlDays")}
                 </p>
@@ -337,7 +337,7 @@ export default function CalendarTape() {
         </header>
       )}
 
-      <div className="no-scrollbar shrink-0 overflow-x-auto border-b border-white/10 px-3 py-2">
+      <div className="no-scrollbar shrink-0 overflow-x-auto border-b border-black/10 px-3 py-2">
         <div className="flex gap-1">
           {weeks.map((w) => {
             const on = w.isCurrent;
@@ -348,11 +348,11 @@ export default function CalendarTape() {
                 key={w.monday}
                 type="button"
                 onClick={() => document.querySelector(`[data-monday="${w.monday}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" })}
-                className={`flex min-w-[3.4rem] flex-col items-center border px-2 py-1.5 ${on ? "border-white bg-white text-black" : filled ? "border-matchup text-white" : "border-white/10 text-neutral-500"}`}
+                className={`flex min-w-[3.4rem] flex-col items-center border px-2 py-1.5 ${on ? "border-neutral-900 bg-neutral-900 text-white" : filled ? "border-matchup text-neutral-900" : "border-black/10 text-neutral-400"}`}
               >
                 <span className="text-[10px] font-bold">{t("tour.t2calWeek", { n: isoWeekNumber(w.monday) })}</span>
                 {filled && city ? (
-                  <span className={`mt-0.5 max-w-[3rem] truncate text-[8px] font-semibold ${on ? "text-neutral-500" : "text-matchup"}`}>{city}</span>
+                  <span className={`mt-0.5 max-w-[3rem] truncate text-[8px] font-semibold ${on ? "text-white/80" : "text-matchup"}`}>{city}</span>
                 ) : filled ? (
                   <span className="mt-0.5 h-1 w-1 rounded-full bg-matchup" />
                 ) : null}
@@ -364,7 +364,7 @@ export default function CalendarTape() {
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-28 sm:px-6">
         {weeks.length === 1 && weeks[0].tournaments.length === 0 && weeks[0].events.length === 0 && (
-          <p className="mb-6 border border-white/10 px-4 py-5 text-[13px] leading-relaxed text-neutral-400">{t("tour.t2calEmpty")}</p>
+          <p className="mb-6 border border-black/10 px-4 py-5 text-[13px] leading-relaxed text-neutral-500">{t("tour.t2calEmpty")}</p>
         )}
 
         <ol className="space-y-0">
@@ -386,7 +386,7 @@ export default function CalendarTape() {
                   <button
                     type="button"
                     onClick={() => setOpenedRest((x) => x === first.monday ? null : first.monday)}
-                    className="flex w-full items-center justify-between border border-white/10 bg-black px-4 py-3 text-left"
+                    className="flex w-full items-center justify-between border border-black/10 bg-white px-4 py-3 text-left"
                   >
                     <span className="text-[13px] font-semibold text-neutral-400">{label}</span>
                     <span className="text-[11px] text-neutral-500">{fmtRange(first.monday, last.monday)}</span>

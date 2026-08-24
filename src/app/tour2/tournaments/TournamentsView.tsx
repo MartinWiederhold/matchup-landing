@@ -31,7 +31,7 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
 }
 
 const chip = (on: boolean) =>
-  `px-3 py-1.5 text-[12px] font-semibold border ${on ? "border-matchup bg-matchup text-white" : "border-white/10 text-neutral-300 hover:border-white/40"}`;
+  `px-3 py-1.5 text-[12px] font-semibold border ${on ? "border-matchup bg-matchup text-white" : "border-black/10 text-neutral-600 hover:border-neutral-900"}`;
 
 export default function TournamentsView() {
   const { user, loading: authLoading } = useAuth();
@@ -181,11 +181,11 @@ export default function TournamentsView() {
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black text-white">
-      <div className="shrink-0 space-y-2 border-b border-white/10 px-4 py-3">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-white text-neutral-900">
+      <div className="shrink-0 space-y-2 border-b border-black/10 px-4 py-3">
         <div className="flex items-center gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="min-w-0 flex-1 border border-white/10 bg-black px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white focus:outline-none" />
-          <button type="button" onClick={() => setMapOpen((o) => !o)} className="rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold md:hidden">{mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}</button>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="min-w-0 flex-1 border border-black/10 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none" />
+          <button type="button" onClick={() => setMapOpen((o) => !o)} className="rounded-full border border-black/10 bg-white px-3 py-2 text-[12px] font-bold text-neutral-900 md:hidden">{mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}</button>
         </div>
         <div className="no-scrollbar flex flex-wrap gap-1.5 overflow-x-auto">
           <button type="button" onClick={() => setThisMonth((v) => !v)} className={chip(thisMonth)}>{t("tour.t2thisMonth")}</button>
@@ -212,7 +212,7 @@ export default function TournamentsView() {
             <>
               <p className="mb-2 px-1 text-[12px] font-medium text-neutral-500">{t("tour.resultCount", { n: filtered.length })}</p>
               {filtered.length === 0 ? (
-                <p className="border border-white/10 px-4 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
+                <p className="border border-black/10 px-4 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
               ) : (
                 <ul className="space-y-0.5">
                   {filtered.map((tt) => (

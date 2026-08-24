@@ -125,21 +125,21 @@ export default function HomeView() {
   if (authLoading || state === "loading") return <p className="p-6 text-sm text-neutral-400">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mx-auto mt-16 max-w-sm border border-white/10 bg-black px-6 py-10 text-center">
-        <h2 className="text-lg font-bold text-white">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mt-2 text-sm text-neutral-400">{t("tour.loginRequiredText")}</p>
+      <div className="mx-auto mt-16 max-w-sm border border-black/10 bg-white px-6 py-10 text-center">
+        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mt-2 text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white">{t("tour.loginCta")}</Link>
       </div>
     );
   }
   if (state === "error") return <p className="p-6 text-sm text-neutral-400">{t("tour.loadError")}</p>;
 
-  const card = "border border-white/10 bg-black p-4";
-  const cardHead = "text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500";
+  const card = "border border-black/10 bg-white p-4";
+  const cardHead = "text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-400";
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
-      <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[40px]">{t("tour.t2navHome")}{profile?.firstName ? <span className="text-neutral-500">, {profile.firstName}</span> : null}</h1>
+      <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[40px]">{t("tour.t2navHome")}{profile?.firstName ? <span className="text-neutral-400">, {profile.firstName}</span> : null}</h1>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* NÄCHSTES */}
@@ -147,12 +147,12 @@ export default function HomeView() {
           <h2 className={cardHead}>{t("tour.t2next")}</h2>
           {next ? (
             <div className="mt-2">
-              <p className="text-[17px] font-bold text-white">{next.tournament.city || next.tournament.name || t("tour.fieldMissing")}<span className="text-neutral-500">{next.tournament.country ? `, ${countryName(next.tournament.country)}` : ""}</span></p>
-              <p className="mt-0.5 text-[13px] text-neutral-400">{fmtDate(next.tournament.tournament_monday)} · {next.tournament.category || "—"}</p>
+              <p className="text-[17px] font-bold text-neutral-900">{next.tournament.city || next.tournament.name || t("tour.fieldMissing")}<span className="text-neutral-400">{next.tournament.country ? `, ${countryName(next.tournament.country)}` : ""}</span></p>
+              <p className="mt-0.5 text-[13px] text-neutral-500">{fmtDate(next.tournament.tournament_monday)} · {next.tournament.category || "—"}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="border border-matchup px-2.5 py-1 text-[12px] font-bold text-matchup">{daysBadge(next.tournament.tournament_monday)}</span>
-                <span className="border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-neutral-200">{t(`tour.status_${next.status}`)}</span>
-                {(() => { const d = deadlineText(next); return <span className={`px-2.5 py-1 text-[12px] font-bold ${d.urgent ? "border border-white text-white" : "border border-white/10 text-neutral-400"}`}>{d.text}</span>; })()}
+                <span className="border border-black/10 px-2.5 py-1 text-[12px] font-semibold text-neutral-700">{t(`tour.status_${next.status}`)}</span>
+                {(() => { const d = deadlineText(next); return <span className={`px-2.5 py-1 text-[12px] font-bold ${d.urgent ? "border border-neutral-900 text-neutral-900" : "border border-black/10 text-neutral-500"}`}>{d.text}</span>; })()}
               </div>
             </div>
           ) : (
@@ -164,11 +164,11 @@ export default function HomeView() {
         <section className={card}>
           <h2 className={cardHead}>{t("tour.t2action")}</h2>
           {board.actions.length === 0 ? (
-            <p className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-emerald-400"><span aria-hidden>✓</span> {t("tour.boardClear")}</p>
+            <p className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-neutral-900"><span aria-hidden>✓</span> {t("tour.boardClear")}</p>
           ) : (
             <ul className="mt-2 space-y-1.5">
               {board.actions.slice(0, 5).map((a, i) => (
-                <li key={i} className={`flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-[12.5px] leading-snug ${a.severity === "red" ? "bg-red-500/10 text-red-300" : "bg-amber-500/10 text-amber-200"}`}>
+                <li key={i} className={`flex items-start gap-2 px-2.5 py-1.5 text-[12.5px] leading-snug ${a.severity === "red" ? "border border-black/10 text-neutral-900" : "text-neutral-600"}`}>
                   <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${a.severity === "red" ? "bg-red-400" : "bg-amber-400"}`} />
                   <span>{actionText(a)}</span>
                 </li>
@@ -187,13 +187,13 @@ export default function HomeView() {
             <dl className="mt-2 space-y-2.5">
               <div>
                 <dt className="text-[11px] text-neutral-500">{t("tour.t2budget")}</dt>
-                <dd className={`text-[15px] font-bold ${overMinor != null && overMinor > 0 ? "text-red-300" : "text-white"}`}>
+                <dd className={`text-[15px] font-bold ${overMinor != null && overMinor > 0 ? "text-red-600" : "text-neutral-900"}`}>
                   {usedMinor != null && budget ? t("tour.t2budgetOf", { used: money(usedMinor), total: money(budget.amount) }) : <span className="text-neutral-500">{t("tour.t2budgetNoData")}</span>}
                 </dd>
               </div>
               <div className="flex items-end justify-between gap-3">
-                <div><dt className="text-[11px] text-neutral-500">{t("tour.t2expPoints")}</dt><dd className="text-[15px] font-bold tabular-nums text-white">{expPointsSum}</dd></div>
-                <div className="text-right"><dt className="text-[11px] text-neutral-500">{t("tour.t2count")}</dt><dd className="text-[15px] font-bold tabular-nums text-white">{active.length}</dd></div>
+                <div><dt className="text-[11px] text-neutral-500">{t("tour.t2expPoints")}</dt><dd className="text-[15px] font-bold tabular-nums text-neutral-900">{expPointsSum}</dd></div>
+                <div className="text-right"><dt className="text-[11px] text-neutral-500">{t("tour.t2count")}</dt><dd className="text-[15px] font-bold tabular-nums text-neutral-900">{active.length}</dd></div>
               </div>
             </dl>
           )}
@@ -210,11 +210,11 @@ export default function HomeView() {
             {weeks.map((w) => {
               const it = w.items[0];
               return (
-                <Link key={w.monday} href="/tour2/planner" className={`border p-2.5 transition-colors ${it ? "border-white/20 hover:border-matchup" : "border-white/10 hover:border-white/30"}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">{fmtDate(w.monday)}</p>
+                <Link key={w.monday} href="/tour2/planner" className={`border p-2.5 transition-colors ${it ? "border-black/20 hover:border-matchup" : "border-black/10 hover:border-black/30"}`}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{fmtDate(w.monday)}</p>
                   {it ? (
                     <>
-                      <p className="mt-1 truncate text-[12px] font-bold text-white">{it.city || t("tour.fieldMissing")}</p>
+                      <p className="mt-1 truncate text-[12px] font-bold text-neutral-900">{it.city || t("tour.fieldMissing")}</p>
                       <p className="truncate text-[10px] text-matchup">{it.category || "—"}</p>
                     </>
                   ) : (

@@ -31,13 +31,13 @@ export default function TournamentRow({
   const series = tt.series === "itf_wtt" ? t("tour.seriesItf") : tt.series === "itf_juniors" ? t("tour.seriesJuniors") : tt.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger");
 
   return (
-    <div className={`flex items-start gap-2 px-2 py-2 ${selected ? "border-l-2 border-matchup bg-white/[0.04]" : "border-l-2 border-transparent hover:bg-white/[0.03]"}`}>
+    <div className={`flex items-start gap-2 px-2 py-2 ${selected ? "border-l-2 border-matchup bg-neutral-50" : "border-l-2 border-transparent hover:bg-neutral-50"}`}>
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-[13px] font-semibold text-white">
+        <p className="truncate text-[13px] font-semibold text-neutral-900">
           {tt.city || t("tour.fieldMissing")}
-          <span className="text-neutral-500">, {countryName}</span>
+          <span className="text-neutral-400">, {countryName}</span>
         </p>
-        <p className="text-[11px] text-neutral-400">{fmtDay(tt.tournament_monday, locale)} · {tt.category || "—"} · {series}</p>
+        <p className="text-[11px] text-neutral-500">{fmtDay(tt.tournament_monday, locale)} · {tt.category || "—"} · {series}</p>
         {pts > 0 && (
           <p className="mt-0.5 text-[11px] font-semibold text-neutral-500">
             {t("tour.t2ptsAssume", { n: pts })} · {t("tour.t2pointsAssume", { round: t("tour.round_R16") })}
@@ -48,7 +48,7 @@ export default function TournamentRow({
         type="button"
         onClick={onToggle}
         aria-label={inSeason ? t("tour.seasonRemove") : t("tour.addToSeason")}
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[14px] font-bold ${inSeason ? "bg-white text-black" : "border border-white/20 text-white"}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[14px] font-bold ${inSeason ? "bg-neutral-900 text-white" : "border border-black/20 text-neutral-900"}`}
       >
         {inSeason ? "✓" : "+"}
       </button>

@@ -1,8 +1,7 @@
 "use client";
 
 /**
- * /tour2 Shell: Schwarz, Haarlinien, Matchup nur als Markenzeichen (M) und aktiver
- * Nav-Strich — kein Slate-Tool-Look.
+ * /tour2 Shell: helles Editorial. Matchup nur als M-Marke und aktiver Nav-Strich.
  */
 
 import Link from "next/link";
@@ -56,7 +55,7 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className={`t2-root min-h-[100dvh] ${T2_CANVAS}`}>
-      <nav className="fixed left-0 top-0 z-40 hidden h-[100dvh] w-[76px] flex-col items-center border-r border-white/10 bg-black py-3 md:flex">
+      <nav className="fixed left-0 top-0 z-40 hidden h-[100dvh] w-[76px] flex-col items-center border-r border-black/10 bg-white py-3 md:flex">
         <Link href="/app" aria-label="Matchup" className="mb-3 flex h-9 w-9 items-center justify-center bg-matchup text-[15px] font-black text-white">M</Link>
         <div className="mt-1 flex flex-1 flex-col gap-0.5">
           {AREA.map((a) => {
@@ -65,7 +64,7 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
               <Link
                 key={a.key}
                 href={a.href}
-                className={`relative flex w-[60px] flex-col items-center gap-1 py-2 text-[10px] font-semibold tracking-wide ${active ? "text-white" : "text-neutral-500 hover:text-white"}`}
+                className={`relative flex w-[60px] flex-col items-center gap-1 py-2 text-[10px] font-semibold tracking-wide ${active ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-900"}`}
               >
                 {active && <span className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 bg-matchup" />}
                 <Icon k={a.key} />
@@ -77,19 +76,19 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
       </nav>
 
       <div className="md:pl-[76px]">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b border-white/10 bg-black px-4">
-          <button type="button" aria-label="Benachrichtigungen" className="flex h-9 w-9 items-center justify-center text-neutral-400 hover:text-white">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b border-black/10 bg-white px-4">
+          <button type="button" aria-label="Benachrichtigungen" className="flex h-9 w-9 items-center justify-center text-neutral-400 hover:text-neutral-900">
             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></svg>
           </button>
           {profile?.ranking != null && (
-            <span className="border border-white/10 px-2.5 py-1 text-[12px] font-semibold tabular-nums text-white" title={t("tour.t2rank")}>#{profile.ranking}</span>
+            <span className="border border-black/10 px-2.5 py-1 text-[12px] font-semibold tabular-nums text-neutral-900" title={t("tour.t2rank")}>#{profile.ranking}</span>
           )}
           <Link href="/tour2/setup" aria-label={t("tour.t2navProfile")} className="ml-1">
             {profile?.profileImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={profile.profileImage} alt="" className="h-9 w-9 object-cover" />
             ) : (
-              <span className="flex h-9 w-9 items-center justify-center border border-white/20 text-[13px] font-semibold text-white">{initial}</span>
+              <span className="flex h-9 w-9 items-center justify-center border border-black/15 text-[13px] font-semibold text-neutral-900">{initial}</span>
             )}
           </Link>
         </header>
@@ -97,11 +96,11 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
         <main className={seasonDesk || tournDesk || calDesk ? "" : "pb-24 md:pb-0"}>{children}</main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-white/10 bg-black pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-black/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         {AREA.map((a) => {
           const active = a.key === activeKey;
           return (
-            <Link key={a.key} href={a.href} className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${active ? "text-white" : "text-neutral-500"}`}>
+            <Link key={a.key} href={a.href} className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${active ? "text-neutral-900" : "text-neutral-400"}`}>
               {active && <span className="absolute top-0 h-0.5 w-8 bg-matchup" />}
               <Icon k={a.key} className="h-5 w-5" />
               {t(LABELS[a.label])}

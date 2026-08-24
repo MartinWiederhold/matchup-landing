@@ -601,7 +601,7 @@ export default function SeasonWorkspace() {
   const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center bg-black text-sm text-neutral-400">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center bg-white text-sm text-neutral-400">{t("tour.loading")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -801,7 +801,7 @@ export default function SeasonWorkspace() {
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {HOME_BASES.map((b) => (
-              <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-500/15 text-emerald-300 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>{b.name}</button>
+              <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>{b.name}</button>
             ))}
           </div>
         </section>
@@ -966,7 +966,7 @@ export default function SeasonWorkspace() {
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black text-white max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-white text-neutral-900 max-md:h-[calc(100dvh-3.5rem)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -983,7 +983,7 @@ export default function SeasonWorkspace() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col md:w-[60%] md:flex-none">
           <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-2 md:hidden">
-            <button type="button" onClick={() => setMapOpen((o) => !o)} className="rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-white">
+            <button type="button" onClick={() => setMapOpen((o) => !o)} className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-[12px] font-bold text-neutral-900">
               {mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}
             </button>
             <Link href="/tour2/browse" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
@@ -995,7 +995,7 @@ export default function SeasonWorkspace() {
             {status === "ready" && profile && (
               <>
                 {fillReport && (
-                  <p className="mb-3 border border-white/10 px-3 py-2 text-[12px] leading-relaxed text-neutral-200">
+                  <p className="mb-3 border border-black/10 px-3 py-2 text-[12px] leading-relaxed text-neutral-700">
                     {fillReport.added > 0
                       ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
                       : fillReport.reason === "weeks_full" ? t("tour.wsFillWeeksFull")
@@ -1011,9 +1011,9 @@ export default function SeasonWorkspace() {
                   onSelect={setSelectedId}
                   onRemove={toggle}
                   empty={
-                    <div className="border border-white/10 px-4 py-8 text-center">
-                      <p className="text-[15px] font-bold text-white">{t("tour.t2noSeason")}</p>
-                      <p className="mt-2 text-[13px] leading-relaxed text-neutral-400">{t("tour.t2seasonEmptyLead")}</p>
+                    <div className="border border-black/10 px-4 py-8 text-center">
+                      <p className="text-[15px] font-bold text-neutral-900">{t("tour.t2noSeason")}</p>
+                      <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{t("tour.t2seasonEmptyLead")}</p>
                       <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="mt-4 rounded-full bg-matchup px-5 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsFill")}</button>
                       <Link href="/tour2/browse" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                     </div>
@@ -1021,19 +1021,19 @@ export default function SeasonWorkspace() {
                 />
                 <div className="mt-6 hidden items-center gap-3 md:flex">
                   <Link href="/tour2/browse" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
-                  <Link href="/tour2/calendar" className="text-[12px] font-semibold text-neutral-400 hover:text-white">{t("tour.wsViewCalendar")}</Link>
+                  <Link href="/tour2/calendar" className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900">{t("tour.wsViewCalendar")}</Link>
                 </div>
                 {seasonOrdered.length > 0 && (
                   confirmReset ? (
                     <div className="mt-6 rounded-xl bg-red-500/10 px-3 py-2.5 ring-1 ring-red-500/20">
-                      <p className="text-[12px] font-semibold text-red-300">{t("tour.wsClearConfirm", { n: seasonOrdered.length })}</p>
+                      <p className="text-[12px] font-semibold text-red-700">{t("tour.wsClearConfirm", { n: seasonOrdered.length })}</p>
                       <div className="mt-2 flex gap-2">
                         <button type="button" onClick={resetSeason} disabled={clearing} className="rounded-full bg-red-600 px-3 py-1.5 text-[12px] font-bold text-white">{t("tour.wsClearYes")}</button>
-                        <button type="button" onClick={() => setConfirmReset(false)} className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-neutral-300 ring-1 ring-white/15">{t("tour.calCancel")}</button>
+                        <button type="button" onClick={() => setConfirmReset(false)} className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-neutral-700 ring-1 ring-black/15">{t("tour.calCancel")}</button>
                       </div>
                     </div>
                   ) : (
-                    <button type="button" onClick={() => setConfirmReset(true)} className="mt-6 text-[12px] font-semibold text-neutral-500 hover:text-neutral-300">{t("tour.wsClear")}</button>
+                    <button type="button" onClick={() => setConfirmReset(true)} className="mt-6 text-[12px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.wsClear")}</button>
                   )
                 )}
               </>
