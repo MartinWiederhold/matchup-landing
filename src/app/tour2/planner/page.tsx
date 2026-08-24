@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
 import SeasonWorkspace from "../components/planner/SeasonWorkspace";
 
-// Der Planer (Karte + 4 Spalten) — in /tour2 aus dem Index nach /tour2/planner verschoben,
-// weil der Index jetzt Home ist. „Saison" in der Navigation führt hierher. Die Karte ist
-// damit eine Ansicht INNERHALB von Saison, kein eigener Bereich mehr.
+// /tour2 Saison: Verlauf + Karte. Die Navigation „Saison" führt hierher.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {

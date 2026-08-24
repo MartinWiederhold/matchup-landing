@@ -10,9 +10,12 @@ import {
 } from "@/lib/tourTravelDocuments";
 import type { TourTravelDocument, TravelDocKind, TravelDocStatus } from "@/lib/types";
 
-const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
-const lbl = "mb-1 block text-[12px] font-semibold text-neutral-600";
-const card = "rounded-2xl ring-1 ring-black/[0.06] p-4";
+const inpL = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
+const lblL = "mb-1 block text-[12px] font-semibold text-neutral-600";
+const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
+const cardL = "rounded-2xl ring-1 ring-black/[0.06] p-4";
+const cardD = "rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-4";
 const btn = "mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50";
 
 const KINDS: TravelDocKind[] = ["esta", "eta", "schengen_visa", "national_visa", "other"];
@@ -28,7 +31,7 @@ const emptyDraft: TravelDocInput = { kind: "esta", scope: "US", valid_until: nul
  * KEINE Dokumentnummer — dieselbe Regel wie beim Pass. Kein Vorlaufzeit-Feld, solange es
  * dazu keine Warnung gibt (ein Eingabefeld ohne Wirkung wäre irreführend).
  */
-export default function TravelDocsCard() {
+export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "dark" }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const { locale } = useLocale();
@@ -68,31 +71,41 @@ export default function TravelDocsCard() {
     setDraft(emptyDraft);
   });
 
+  const dark = tone === "dark";
+  const inp = dark ? inpD : inpL;
+  const lbl = dark ? lblD : lblL;
+  const card = dark ? cardD : cardL;
+  const title = dark ? "text-white" : "text-neutral-900";
+  const muted = dark ? "text-neutral-400" : "text-neutral-500";
+  const row = dark ? "rounded-xl border border-white/10 px-3 py-2" : "rounded-xl border border-black/10 px-3 py-2";
+  const pill = dark ? "rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-neutral-300" : "rounded-full bg-black/[0.05] px-2 py-0.5 text-[11px] font-semibold text-neutral-600";
+  const mini = dark ? "rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-[12px] text-white [color-scheme:dark]" : "rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]";
+
   if (authLoading || status === "loading") return null; // Auth/Laden zeigt bereits PlayerMasterForm
   if (!user) return null;
-  if (status === "error") return <p className="mt-4 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (status === "error") return <p className={`mt-4 text-sm ${muted}`}>{t("tour.loadError")}</p>;
 
   return (
     <div className={`${card} mt-4`}>
-      <h3 className="text-[13px] font-bold text-neutral-900">{t("tour.tdTitle")}</h3>
-      <p className="mt-1 text-[12px] text-neutral-500">{t("tour.tdIntro")}</p>
+      <h3 className={`text-[13px] font-bold ${title}`}>{t("tour.tdTitle")}</h3>
+      <p className={`mt-1 text-[12px] ${muted}`}>{t("tour.tdIntro")}</p>
 
       {/* Bestehende Dokumente */}
       {docs.length === 0 ? (
-        <p className="mt-3 text-[12px] text-neutral-400">{t("tour.tdEmpty")}</p>
+        <p className={`mt-3 text-[12px] ${dark ? "text-neutral-500" : "text-neutral-400"}`}>{t("tour.tdEmpty")}</p>
       ) : (
         <div className="mt-3 space-y-2">
           {docs.map((d) => (
-            <div key={d.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-black/10 px-3 py-2">
-              <span className="text-[13px] font-semibold text-neutral-900">{kindLabel(d.kind)}</span>
-              {d.scope && <span className="rounded-full bg-black/[0.05] px-2 py-0.5 text-[11px] font-semibold text-neutral-600">{scopeLabel(d.scope)}</span>}
-              <select value={d.status} onChange={(e) => run(() => updateTravelDocument(d.id, { status: e.target.value as TravelDocStatus }))} disabled={busy} className="rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]">
+            <div key={d.id} className={`flex flex-wrap items-center gap-2 ${row}`}>
+              <span className={`text-[13px] font-semibold ${title}`}>{kindLabel(d.kind)}</span>
+              {d.scope && <span className={pill}>{scopeLabel(d.scope)}</span>}
+              <select value={d.status} onChange={(e) => run(() => updateTravelDocument(d.id, { status: e.target.value as TravelDocStatus }))} disabled={busy} className={mini}>
                 {STATUSES.map((s) => <option key={s} value={s}>{t(`tour.tdStatus_${s}`)}</option>)}
               </select>
-              <input type="date" value={d.valid_until ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { valid_until: nn(e.target.value) }))} disabled={busy} className="rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]" />
+              <input type="date" value={d.valid_until ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { valid_until: nn(e.target.value) }))} disabled={busy} className={mini} />
               {d.valid_until && <span className="text-[11px] text-neutral-400">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
               <label className="flex items-center gap-1 text-[11px] text-neutral-500">
-                <input type="number" min={0} max={104} value={d.lead_weeks ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { lead_weeks: intOrNull(e.target.value) }))} disabled={busy} placeholder="—" className="w-14 rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]" />
+                <input type="number" min={0} max={104} value={d.lead_weeks ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { lead_weeks: intOrNull(e.target.value) }))} disabled={busy} placeholder="—" className={`w-14 ${mini}`} />
                 {t("tour.tdLeadUnit")}
               </label>
               <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto text-[12px] font-semibold text-neutral-400 hover:text-red-500">{t("tour.tdRemove")}</button>
@@ -110,7 +123,7 @@ export default function TravelDocsCard() {
         </label>
         <label className="block"><span className={lbl}>{t("tour.tdScope")}</span>
           {draftIsSchengen
-            ? <input value={t("tour.tdSchengen")} disabled className={`${inp} bg-black/[0.03] text-neutral-500`} />
+            ? <input value={t("tour.tdSchengen")} disabled className={`${inp} opacity-60`} />
             : <input value={draft.scope ?? ""} onChange={(e) => setDraft({ ...draft, scope: nn(e.target.value.toUpperCase().slice(0, 2)) })} placeholder="US" className={inp} />}
         </label>
         <label className="block"><span className={lbl}>{t("tour.tdValidUntil")}</span>

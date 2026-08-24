@@ -53,6 +53,9 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
 
   const activeKey = (AREA.find((a) => a.match(pathname)) ?? AREA[0]).key;
   const initial = (profile?.firstName?.[0] ?? "?").toUpperCase();
+  const seasonDesk = pathname.startsWith("/tour2/planner");
+  const tournDesk = pathname.startsWith("/tour2/browse");
+  const calDesk = pathname.startsWith("/tour2/calendar");
 
   return (
     <div className="min-h-[100dvh] bg-[#0b0e14] text-neutral-100">
@@ -92,7 +95,7 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
           </Link>
         </header>
 
-        <main className="pb-24 md:pb-0">{children}</main>
+        <main className={seasonDesk || tournDesk || calDesk ? "" : "pb-24 md:pb-0"}>{children}</main>
       </div>
 
       {/* Handy: untere Leiste */}
