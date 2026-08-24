@@ -601,7 +601,7 @@ export default function SeasonWorkspace() {
   const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center bg-[#0b0e14] text-sm text-neutral-400">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center bg-black text-sm text-neutral-400">{t("tour.loading")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -966,7 +966,7 @@ export default function SeasonWorkspace() {
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[#0b0e14] text-neutral-100 max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black text-white max-md:h-[calc(100dvh-3.5rem)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -995,7 +995,7 @@ export default function SeasonWorkspace() {
             {status === "ready" && profile && (
               <>
                 {fillReport && (
-                  <p className="mb-3 rounded-xl bg-matchup/15 px-3 py-2 text-[12px] leading-relaxed text-neutral-200">
+                  <p className="mb-3 border border-white/10 px-3 py-2 text-[12px] leading-relaxed text-neutral-200">
                     {fillReport.added > 0
                       ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
                       : fillReport.reason === "weeks_full" ? t("tour.wsFillWeeksFull")
@@ -1011,10 +1011,10 @@ export default function SeasonWorkspace() {
                   onSelect={setSelectedId}
                   onRemove={toggle}
                   empty={
-                    <div className="rounded-2xl bg-white/[0.03] px-4 py-8 text-center ring-1 ring-white/10">
+                    <div className="border border-white/10 px-4 py-8 text-center">
                       <p className="text-[15px] font-bold text-white">{t("tour.t2noSeason")}</p>
                       <p className="mt-2 text-[13px] leading-relaxed text-neutral-400">{t("tour.t2seasonEmptyLead")}</p>
-                      <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="mt-4 rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-neutral-900">{t("tour.wsFill")}</button>
+                      <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="mt-4 rounded-full bg-matchup px-5 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsFill")}</button>
                       <Link href="/tour2/browse" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                     </div>
                   }

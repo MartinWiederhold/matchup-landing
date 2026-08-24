@@ -1,12 +1,8 @@
 "use client";
 
 /**
- * /tour2 Navigations-Gerüst (Etappe 1). Fünf Bereiche als schmale linke Rail (Desktop) und
- * untere Leiste (Handy); oben rechts der Konto-Cluster (Benachrichtigungen · Ranking · Avatar).
- * Dunkles Tool-Mode (tiefes Slate, nicht reinschwarz) — /tour ist ohnehin ein eigener
- * Vollbild-Modus, der Bruch sitzt sauber an der /tour2-Grenze. Karte ist KEIN Bereich mehr;
- * die Ziele sind für Etappe 1 auf die vorhandenen (kopierten) Routen gelegt und werden in
- * späteren Etappen zusammengeführt.
+ * /tour2 Shell: Schwarz, Haarlinien, Matchup nur als Markenzeichen (M) und aktiver
+ * Nav-Strich — kein Slate-Tool-Look.
  */
 
 import Link from "next/link";
@@ -15,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { loadPlannerProfile, type PlannerProfile } from "@/lib/tourPlanner";
+import { T2_CANVAS } from "../t2ui";
 
 type AreaKey = "home" | "tournaments" | "season" | "calendar" | "profile";
 
@@ -29,7 +26,7 @@ const AREA: { key: AreaKey; href: string; label: keyof typeof LABELS; match: (p:
 const LABELS = { home: "tour.t2navHome", tournaments: "tour.t2navTournaments", season: "tour.t2navSeason", calendar: "tour.t2navCalendar", profile: "tour.t2navProfile" } as const;
 
 function Icon({ k, className }: { k: AreaKey; className?: string }) {
-  const p = { className: className ?? "h-5 w-5", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24" };
+  const p = { className: className ?? "h-5 w-5", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24" };
   switch (k) {
     case "home": return <svg {...p}><path d="M3 11l9-7 9 7M5 10v10h14V10" /></svg>;
     case "tournaments": return <svg {...p}><path d="M8 21h8M12 17v4M6 4h12v3a6 6 0 0 1-12 0zM6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3" /></svg>;
@@ -58,15 +55,19 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
   const calDesk = pathname.startsWith("/tour2/calendar");
 
   return (
-    <div className="min-h-[100dvh] bg-[#0b0e14] text-neutral-100">
-      {/* Desktop: schmale linke Rail */}
-      <nav className="fixed left-0 top-0 z-40 hidden h-[100dvh] w-[76px] flex-col items-center border-r border-white/10 bg-[#0d1117] py-3 md:flex">
-        <Link href="/app" aria-label="Matchup" className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-matchup text-[15px] font-black text-white">M</Link>
-        <div className="mt-1 flex flex-1 flex-col gap-1">
+    <div className={`t2-root min-h-[100dvh] ${T2_CANVAS}`}>
+      <nav className="fixed left-0 top-0 z-40 hidden h-[100dvh] w-[76px] flex-col items-center border-r border-white/10 bg-black py-3 md:flex">
+        <Link href="/app" aria-label="Matchup" className="mb-3 flex h-9 w-9 items-center justify-center bg-matchup text-[15px] font-black text-white">M</Link>
+        <div className="mt-1 flex flex-1 flex-col gap-0.5">
           {AREA.map((a) => {
             const active = a.key === activeKey;
             return (
-              <Link key={a.key} href={a.href} className={`flex w-[60px] flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-colors ${active ? "bg-white/10 text-white" : "text-neutral-400 hover:bg-white/[0.05] hover:text-neutral-200"}`}>
+              <Link
+                key={a.key}
+                href={a.href}
+                className={`relative flex w-[60px] flex-col items-center gap-1 py-2 text-[10px] font-semibold tracking-wide ${active ? "text-white" : "text-neutral-500 hover:text-white"}`}
+              >
+                {active && <span className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 bg-matchup" />}
                 <Icon k={a.key} />
                 {t(LABELS[a.label])}
               </Link>
@@ -75,22 +76,20 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
         </div>
       </nav>
 
-      {/* Inhaltsspalte */}
       <div className="md:pl-[76px]">
-        {/* Kopf: Konto-Cluster rechts */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b border-white/10 bg-[#0b0e14]/85 px-4 backdrop-blur">
-          <button type="button" aria-label="Benachrichtigungen" className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 ring-1 ring-white/10 hover:text-neutral-200">
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-2 border-b border-white/10 bg-black px-4">
+          <button type="button" aria-label="Benachrichtigungen" className="flex h-9 w-9 items-center justify-center text-neutral-400 hover:text-white">
+            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></svg>
           </button>
           {profile?.ranking != null && (
-            <span className="rounded-full bg-white/5 px-2.5 py-1 text-[12px] font-bold text-neutral-200 ring-1 ring-white/10" title={t("tour.t2rank")}>#{profile.ranking}</span>
+            <span className="border border-white/10 px-2.5 py-1 text-[12px] font-semibold tabular-nums text-white" title={t("tour.t2rank")}>#{profile.ranking}</span>
           )}
           <Link href="/tour2/setup" aria-label={t("tour.t2navProfile")} className="ml-1">
             {profile?.profileImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.profileImage} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-white/15" />
+              <img src={profile.profileImage} alt="" className="h-9 w-9 object-cover" />
             ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-matchup/20 text-[13px] font-bold text-matchup ring-2 ring-white/15">{initial}</span>
+              <span className="flex h-9 w-9 items-center justify-center border border-white/20 text-[13px] font-semibold text-white">{initial}</span>
             )}
           </Link>
         </header>
@@ -98,12 +97,12 @@ export default function Tour2Shell({ children }: { children: React.ReactNode }) 
         <main className={seasonDesk || tournDesk || calDesk ? "" : "pb-24 md:pb-0"}>{children}</main>
       </div>
 
-      {/* Handy: untere Leiste */}
-      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-white/10 bg-[#0d1117] pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 grid w-full grid-cols-5 border-t border-white/10 bg-black pb-[env(safe-area-inset-bottom)] md:hidden">
         {AREA.map((a) => {
           const active = a.key === activeKey;
           return (
-            <Link key={a.key} href={a.href} className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${active ? "text-white" : "text-neutral-500"}`}>
+            <Link key={a.key} href={a.href} className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold ${active ? "text-white" : "text-neutral-500"}`}>
+              {active && <span className="absolute top-0 h-0.5 w-8 bg-matchup" />}
               <Icon k={a.key} className="h-5 w-5" />
               {t(LABELS[a.label])}
             </Link>

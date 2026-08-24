@@ -59,8 +59,8 @@ export default function SeasonJourney({
   return (
     <ul ref={listRef} className="space-y-0">
       {startLabel && (
-        <li className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-emerald-400">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[13px]">⌂</span>
+        <li className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-white">
+          <span className="flex h-6 w-6 items-center justify-center border border-white/20 text-[11px]">⌂</span>
           {t("tour.t2startHome", { name: startLabel })}
         </li>
       )}
@@ -87,8 +87,8 @@ export default function SeasonJourney({
                 )}
               </div>
             )}
-            <div className={`flex items-start gap-2 rounded-xl px-1.5 py-1.5 ${sel ? "bg-matchup/20 ring-1 ring-matchup/50" : ""}`}>
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-matchup text-[11px] font-bold text-white">{s.order}</span>
+            <div className={`flex items-start gap-2 border-l-2 px-2 py-2 ${sel ? "border-matchup bg-white/[0.04]" : "border-transparent"}`}>
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-white text-[11px] font-bold text-black">{s.order}</span>
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
                 <p className="truncate text-[13px] font-semibold text-white">{s.city}<span className="text-neutral-500">, {s.country}</span></p>
                 <p className="text-[11px] text-neutral-400">{s.date} · {s.category}</p>

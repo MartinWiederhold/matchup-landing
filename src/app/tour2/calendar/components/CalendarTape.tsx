@@ -77,7 +77,7 @@ function DayStrip({
         return (
           <div
             key={key}
-            className={`rounded-lg px-0.5 py-1.5 text-center ${tourFill ? "bg-matchup/20" : "bg-white/[0.04]"} ${on ? "ring-1 ring-white/70" : ""}`}
+            className={`border px-0.5 py-1.5 text-center ${tourFill ? "border-white/20" : "border-white/10"} ${on ? "border-matchup" : ""}`}
           >
             <p className={`text-[9px] font-bold uppercase tracking-wide ${on ? "text-white" : "text-neutral-500"}`}>{t(`tour.${key}`)}</p>
             <div className="mt-1.5 flex h-1.5 items-center justify-center gap-0.5">
@@ -243,8 +243,8 @@ export default function CalendarTape() {
         <button
           type="button"
           onClick={() => setExpanded((x) => x === w.monday ? null : w.monday)}
-          className={`w-full rounded-3xl p-4 text-left ring-1 transition-colors ${
-            w.isCurrent ? "bg-white/[0.08] ring-white/25" : open ? "bg-white/[0.02] ring-white/10" : "bg-gradient-to-br from-matchup/25 to-matchup/5 ring-matchup/35"
+          className={`w-full border p-4 text-left transition-colors ${
+            w.isCurrent ? "border-white bg-white/[0.04]" : open ? "border-white/10 bg-black" : "border-matchup bg-black"
           }`}
         >
           <div className="flex items-start justify-between gap-3">
@@ -297,10 +297,9 @@ export default function CalendarTape() {
   let lastMonth = "";
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[#0b0e14] text-neutral-100">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black text-white">
       {hero && (
-        <header className="relative shrink-0 overflow-hidden border-b border-white/10 px-4 py-5 sm:px-6">
-          <div className="pointer-events-none absolute -right-8 -top-16 h-48 w-48 rounded-full bg-matchup/20 blur-3xl" />
+        <header className="relative shrink-0 border-b border-white/10 px-4 py-5 sm:px-6">
           <div className="relative flex items-end justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
@@ -308,7 +307,7 @@ export default function CalendarTape() {
               </p>
               {heroTour ? (
                 <>
-                  <h1 className="mt-1 text-[32px] font-extrabold tracking-tight text-white sm:text-[42px]">
+                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[42px]">
                     {heroTour.city || t("tour.fieldMissing")}
                   </h1>
                   <p className="text-[14px] text-neutral-400">
@@ -318,7 +317,7 @@ export default function CalendarTape() {
                 </>
               ) : (
                 <>
-                  <h1 className="mt-1 text-[32px] font-extrabold tracking-tight text-white sm:text-[42px]">{t("tour.t2calOpen")}</h1>
+                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[42px]">{t("tour.t2calOpen")}</h1>
                   <p className="text-[14px] text-neutral-400">{fmtRange(hero.monday)} · {t("tour.t2calRecovery")}</p>
                 </>
               )}
@@ -326,7 +325,7 @@ export default function CalendarTape() {
             {dlDays != null && dlDays > 0 && (
               <div className="shrink-0 text-right">
                 <p className="text-[40px] font-black leading-none tabular-nums text-white sm:text-[52px]">{dlDays}</p>
-                <p className="mt-1 max-w-[7rem] text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-amber-200/90">
+                <p className="mt-1 max-w-[7rem] text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-matchup">
                   {dlDays === 1 ? t("tour.t2calDlDay") : t("tour.t2calDlDays")}
                 </p>
               </div>
@@ -349,7 +348,7 @@ export default function CalendarTape() {
                 key={w.monday}
                 type="button"
                 onClick={() => document.querySelector(`[data-monday="${w.monday}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" })}
-                className={`flex min-w-[3.4rem] flex-col items-center rounded-xl px-2 py-1.5 ${on ? "bg-white text-neutral-900" : filled ? "bg-matchup/25 text-white" : "bg-white/5 text-neutral-500"}`}
+                className={`flex min-w-[3.4rem] flex-col items-center border px-2 py-1.5 ${on ? "border-white bg-white text-black" : filled ? "border-matchup text-white" : "border-white/10 text-neutral-500"}`}
               >
                 <span className="text-[10px] font-bold">{t("tour.t2calWeek", { n: isoWeekNumber(w.monday) })}</span>
                 {filled && city ? (
@@ -365,7 +364,7 @@ export default function CalendarTape() {
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-28 sm:px-6">
         {weeks.length === 1 && weeks[0].tournaments.length === 0 && weeks[0].events.length === 0 && (
-          <p className="mb-6 rounded-2xl bg-white/[0.03] px-4 py-5 text-[13px] leading-relaxed text-neutral-400 ring-1 ring-white/10">{t("tour.t2calEmpty")}</p>
+          <p className="mb-6 border border-white/10 px-4 py-5 text-[13px] leading-relaxed text-neutral-400">{t("tour.t2calEmpty")}</p>
         )}
 
         <ol className="space-y-0">
@@ -387,7 +386,7 @@ export default function CalendarTape() {
                   <button
                     type="button"
                     onClick={() => setOpenedRest((x) => x === first.monday ? null : first.monday)}
-                    className="flex w-full items-center justify-between rounded-2xl bg-white/[0.03] px-4 py-3 text-left ring-1 ring-white/10"
+                    className="flex w-full items-center justify-between border border-white/10 bg-black px-4 py-3 text-left"
                   >
                     <span className="text-[13px] font-semibold text-neutral-400">{label}</span>
                     <span className="text-[11px] text-neutral-500">{fmtRange(first.monday, last.monday)}</span>

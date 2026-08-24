@@ -19,7 +19,7 @@ const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2
 const lblL = "mb-1 block text-[12px] font-semibold text-neutral-600";
 const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
 const cardL = "rounded-2xl ring-1 ring-black/[0.06] p-4";
-const cardD = "rounded-2xl bg-white/[0.03] ring-1 ring-white/10 p-4";
+const cardD = "border border-white/10 bg-black p-4";
 const btn = "mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50";
 
 const emptyDocs: PlayerDocs = {

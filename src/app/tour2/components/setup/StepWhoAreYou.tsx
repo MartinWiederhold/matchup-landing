@@ -65,8 +65,8 @@ export default function StepWhoAreYou({
   const inputCls = dark
     ? "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[14px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none"
     : "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
-  const wrap = dark ? "rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/10" : `${CARD_SOFT} p-5`;
-  const idWrap = dark ? "rounded-2xl bg-white/[0.04] p-3 ring-1 ring-white/10" : "rounded-2xl bg-white p-3 ring-1 ring-black/5";
+  const wrap = dark ? "border border-white/10 bg-black p-5" : `${CARD_SOFT} p-5`;
+  const idWrap = dark ? "border border-white/10 bg-black p-3" : "rounded-2xl bg-white p-3 ring-1 ring-black/5";
   const nameCls = dark ? "text-white" : "text-neutral-900";
   const muted = dark ? "text-neutral-400" : "text-neutral-500";
   const lbl = dark ? "text-neutral-400" : "text-neutral-600";

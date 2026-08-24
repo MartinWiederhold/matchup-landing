@@ -69,7 +69,7 @@ export default function SeasonHealthBar({
         type="button"
         onClick={onPlan}
         disabled={planning || planDisabled}
-        className="shrink-0 rounded-full bg-white px-5 py-2.5 text-[13px] font-bold text-neutral-900 hover:bg-neutral-200 disabled:opacity-40"
+        className="shrink-0 rounded-full bg-matchup px-5 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover disabled:opacity-40"
       >
         {planning ? t("tour.wsPlanning") : t("tour.wsFill")}
       </button>

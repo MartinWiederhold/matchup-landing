@@ -125,7 +125,7 @@ export default function HomeView() {
   if (authLoading || state === "loading") return <p className="p-6 text-sm text-neutral-400">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mx-auto mt-16 max-w-sm rounded-2xl bg-white/[0.03] px-6 py-10 text-center ring-1 ring-white/10">
+      <div className="mx-auto mt-16 max-w-sm border border-white/10 bg-black px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-white">{t("tour.loginRequiredTitle")}</h2>
         <p className="mt-2 text-sm text-neutral-400">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white">{t("tour.loginCta")}</Link>
@@ -134,12 +134,12 @@ export default function HomeView() {
   }
   if (state === "error") return <p className="p-6 text-sm text-neutral-400">{t("tour.loadError")}</p>;
 
-  const card = "rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10";
-  const cardHead = "text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500";
+  const card = "border border-white/10 bg-black p-4";
+  const cardHead = "text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-500";
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
-      <h1 className="text-[22px] font-extrabold tracking-tight text-white">{t("tour.t2navHome")}{profile?.firstName ? <span className="text-neutral-400">, {profile.firstName}</span> : null}</h1>
+      <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-white sm:text-[40px]">{t("tour.t2navHome")}{profile?.firstName ? <span className="text-neutral-500">, {profile.firstName}</span> : null}</h1>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* NÄCHSTES */}
@@ -150,9 +150,9 @@ export default function HomeView() {
               <p className="text-[17px] font-bold text-white">{next.tournament.city || next.tournament.name || t("tour.fieldMissing")}<span className="text-neutral-500">{next.tournament.country ? `, ${countryName(next.tournament.country)}` : ""}</span></p>
               <p className="mt-0.5 text-[13px] text-neutral-400">{fmtDate(next.tournament.tournament_monday)} · {next.tournament.category || "—"}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-matchup/15 px-2.5 py-1 text-[12px] font-bold text-matchup">{daysBadge(next.tournament.tournament_monday)}</span>
-                <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[12px] font-semibold text-neutral-200">{t(`tour.status_${next.status}`)}</span>
-                {(() => { const d = deadlineText(next); return <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${d.urgent ? "bg-amber-500/20 text-amber-300" : "bg-white/[0.06] text-neutral-300"}`}>{d.text}</span>; })()}
+                <span className="border border-matchup px-2.5 py-1 text-[12px] font-bold text-matchup">{daysBadge(next.tournament.tournament_monday)}</span>
+                <span className="border border-white/10 px-2.5 py-1 text-[12px] font-semibold text-neutral-200">{t(`tour.status_${next.status}`)}</span>
+                {(() => { const d = deadlineText(next); return <span className={`px-2.5 py-1 text-[12px] font-bold ${d.urgent ? "border border-white text-white" : "border border-white/10 text-neutral-400"}`}>{d.text}</span>; })()}
               </div>
             </div>
           ) : (
@@ -210,7 +210,7 @@ export default function HomeView() {
             {weeks.map((w) => {
               const it = w.items[0];
               return (
-                <Link key={w.monday} href="/tour2/planner" className={`rounded-xl p-2.5 ring-1 transition-colors ${it ? "bg-matchup/10 ring-matchup/25 hover:bg-matchup/[0.16]" : "bg-white/[0.02] ring-white/10 hover:bg-white/[0.05]"}`}>
+                <Link key={w.monday} href="/tour2/planner" className={`border p-2.5 transition-colors ${it ? "border-white/20 hover:border-matchup" : "border-white/10 hover:border-white/30"}`}>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">{fmtDate(w.monday)}</p>
                   {it ? (
                     <>

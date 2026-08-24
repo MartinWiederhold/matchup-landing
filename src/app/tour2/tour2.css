@@ -1,0 +1,10 @@
+/* /tour2: reines Schwarz/Weiß. Akzent nur über Tailwind text/bg-matchup. */
+.t2-root {
+  background: #000;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+.t2-root ::selection {
+  background: #4b3bf3;
+  color: #fff;
+}

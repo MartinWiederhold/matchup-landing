@@ -31,7 +31,7 @@ export default function TournamentRow({
   const series = tt.series === "itf_wtt" ? t("tour.seriesItf") : tt.series === "itf_juniors" ? t("tour.seriesJuniors") : tt.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger");
 
   return (
-    <div className={`flex items-start gap-2 rounded-xl px-2 py-2 ${selected ? "bg-matchup/20 ring-1 ring-matchup/50" : "hover:bg-white/[0.04]"}`}>
+    <div className={`flex items-start gap-2 px-2 py-2 ${selected ? "border-l-2 border-matchup bg-white/[0.04]" : "border-l-2 border-transparent hover:bg-white/[0.03]"}`}>
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <p className="truncate text-[13px] font-semibold text-white">
           {tt.city || t("tour.fieldMissing")}
@@ -48,7 +48,7 @@ export default function TournamentRow({
         type="button"
         onClick={onToggle}
         aria-label={inSeason ? t("tour.seasonRemove") : t("tour.addToSeason")}
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold ${inSeason ? "bg-emerald-500/20 text-emerald-300" : "bg-matchup/20 text-matchup"}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[14px] font-bold ${inSeason ? "bg-white text-black" : "border border-white/20 text-white"}`}
       >
         {inSeason ? "✓" : "+"}
       </button>

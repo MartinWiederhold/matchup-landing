@@ -95,20 +95,19 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-6 pb-28 sm:px-6">
-      <header className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-5 ring-1 ring-white/10 sm:p-7">
-        <div className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-matchup/20 blur-3xl" />
+      <header className="relative border border-white/10 bg-black p-5 sm:p-7">
         <div className="relative flex items-center gap-4">
           {setup.profileImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={setup.profileImage} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-white/15 sm:h-20 sm:w-20" />
           ) : (
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-matchup/20 text-[22px] font-bold text-matchup ring-2 ring-white/15 sm:h-20 sm:w-20 sm:text-[26px]">
+            <span className="flex h-16 w-16 items-center justify-center border border-white/20 text-[22px] font-semibold text-white sm:h-20 sm:w-20 sm:text-[26px]">
               {(name?.[0] ?? "?").toUpperCase()}
             </span>
           )}
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">{t("tour.t2navProfile")}</p>
-            <h1 className="truncate text-[28px] font-extrabold tracking-tight text-white sm:text-[34px]">{name || t("tour.fieldMissing")}</h1>
+            <h1 className="truncate text-[28px] font-semibold tracking-[-0.04em] text-white sm:text-[34px]">{name || t("tour.fieldMissing")}</h1>
             <p className="mt-1 text-[13px] text-neutral-400">
               {[
                 setup.ranking != null ? `#${setup.ranking}` : null,
@@ -122,7 +121,7 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
         {gaps.length > 0 && (
           <ul className="relative mt-4 flex flex-wrap gap-1.5">
             {gaps.map((g) => (
-              <li key={g.kind} className="rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-amber-200">{gapText(g)}</li>
+              <li key={g.kind} className="border border-white/20 px-2.5 py-1 text-[11px] font-semibold text-white">{gapText(g)}</li>
             ))}
           </ul>
         )}
@@ -140,7 +139,7 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <section className="rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10">
+          <section className="border border-white/10 bg-black p-4">
             <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">{t("tour.t2profTools")}</h2>
             <ul className="mt-3 space-y-1">
               {TOOLS.map((x) => (
@@ -160,13 +159,13 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
         <button
           type="button"
           onClick={() => setShowSetup((v) => !v)}
-          className="flex w-full items-center justify-between rounded-2xl bg-white/[0.03] px-4 py-3 text-left ring-1 ring-white/10"
+          className="flex w-full items-center justify-between border border-white/10 bg-black px-4 py-3 text-left"
         >
           <span className="text-[13px] font-bold text-white">{t("tour.t2profSetup")}</span>
           <span className="text-[12px] text-neutral-500">{setup.complete ? t("tour.t2profSetupDone") : t("tour.t2profSetupHint")}</span>
         </button>
         {showSetup && (
-          <div className="mt-3 overflow-hidden rounded-3xl bg-[#f4f4f5] p-4 text-neutral-900 ring-1 ring-white/10">
+          <div className="mt-3 overflow-hidden border border-white/10 bg-white p-4 text-black">
             <SetupPanel initialStep={initialStep} />
           </div>
         )}
