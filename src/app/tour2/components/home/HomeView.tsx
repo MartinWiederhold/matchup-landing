@@ -7,7 +7,7 @@
  * nichts neu gebaut. Ehrliche Leerstellen: Akzeptanzwahrscheinlichkeit, Cut-off, Reisezeit
  * (inkl. „Departure recommended") gibt es nicht → weggelassen, nicht erfunden.
  *
- * Dunkles Tool-Mode. Datenbeschaffung schlank: Saison + Profil + Kostensätze. Schwere
+ * Day One × Cadillac: Next-Hero, Telemetrie, Wochenliste. Datenbeschaffung schlank. Schwere
  * Board-Eingaben (Visa/Doku/Schengen/Wildcards/Punkte-Verfall) folgen in späteren Etappen.
  */
 
@@ -122,104 +122,122 @@ export default function HomeView() {
   };
 
   // ── Zustände ───────────────────────────────────────────────────────────────
-  if (authLoading || state === "loading") return <p className="p-6 text-sm text-neutral-400">{t("tour.loading")}</p>;
+  const dm = (iso: string) => {
+    const x = new Date(iso + "T00:00:00Z");
+    return { dd: String(x.getUTCDate()).padStart(2, "0"), mm: String(x.getUTCMonth() + 1).padStart(2, "0") };
+  };
+
+  if (authLoading || state === "loading") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mx-auto mt-16 max-w-sm border border-black/10 bg-white px-6 py-10 text-center">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mt-2 text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white">{t("tour.loginCta")}</Link>
+      <div className="mx-auto mt-16 max-w-sm px-6 py-10 text-center">
+        <p className="t2-kicker">Matchup Tour</p>
+        <h2 className="t2-display mt-3 text-[2.4rem]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mt-3 text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <Link href="/app" className="t2-cta mt-6">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "error") return <p className="p-6 text-sm text-neutral-400">{t("tour.loadError")}</p>;
+  if (state === "error") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
-  const card = "border border-black/10 bg-white p-4";
-  const cardHead = "text-[10px] font-semibold uppercase tracking-[0.22em] text-neutral-400";
+  const nextCity = next ? (next.tournament.city || next.tournament.name || t("tour.fieldMissing")) : null;
+  const nextDm = next ? dm(next.tournament.tournament_monday) : null;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6">
-      <h1 className="text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[40px]">{t("tour.t2navHome")}{profile?.firstName ? <span className="text-neutral-400">, {profile.firstName}</span> : null}</h1>
-
-      <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* NÄCHSTES */}
-        <section className={card}>
-          <h2 className={cardHead}>{t("tour.t2next")}</h2>
-          {next ? (
-            <div className="mt-2">
-              <p className="text-[17px] font-bold text-neutral-900">{next.tournament.city || next.tournament.name || t("tour.fieldMissing")}<span className="text-neutral-400">{next.tournament.country ? `, ${countryName(next.tournament.country)}` : ""}</span></p>
-              <p className="mt-0.5 text-[13px] text-neutral-500">{fmtDate(next.tournament.tournament_monday)} · {next.tournament.category || "—"}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="border border-matchup px-2.5 py-1 text-[12px] font-bold text-matchup">{daysBadge(next.tournament.tournament_monday)}</span>
-                <span className="border border-black/10 px-2.5 py-1 text-[12px] font-semibold text-neutral-700">{t(`tour.status_${next.status}`)}</span>
-                {(() => { const d = deadlineText(next); return <span className={`px-2.5 py-1 text-[12px] font-bold ${d.urgent ? "border border-neutral-900 text-neutral-900" : "border border-black/10 text-neutral-500"}`}>{d.text}</span>; })()}
-              </div>
-            </div>
-          ) : (
-            <p className="mt-3 text-[13px] text-neutral-500">{t("tour.t2noNext")}</p>
-          )}
+    <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6 sm:py-10">
+      {next && nextDm ? (
+        <section>
+          <p className="t2-kicker">{t("tour.t2next")}</p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+            <h1 className="t2-display min-w-0 text-[clamp(2.6rem,9vw,5.4rem)]">{nextCity}</h1>
+            <p className="t2-date shrink-0" aria-hidden>
+              <span>{nextDm.dd}</span>
+              <span className="t2-date-dot">.</span>
+              <span>{nextDm.mm}</span>
+            </p>
+          </div>
+          <p className="mt-3 text-[14px] text-[var(--t2-muted)]">
+            {next.tournament.country ? `${countryName(next.tournament.country)} · ` : ""}
+            {next.tournament.category || "—"}
+            {profile?.firstName ? ` · ${profile.firstName}` : ""}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <span className="t2-chip is-on">{daysBadge(next.tournament.tournament_monday)}</span>
+            <span className="t2-chip">{t(`tour.status_${next.status}`)}</span>
+            {(() => {
+              const d = deadlineText(next);
+              return <span className={`t2-chip ${d.urgent ? "is-on" : ""}`}>{d.text}</span>;
+            })()}
+            <Link href="/tour2/planner" className="t2-ghost ml-auto">{t("tour.t2navSeason")} →</Link>
+          </div>
         </section>
-
-        {/* HANDLUNGSBEDARF */}
-        <section className={card}>
-          <h2 className={cardHead}>{t("tour.t2action")}</h2>
-          {board.actions.length === 0 ? (
-            <p className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-neutral-900"><span aria-hidden>✓</span> {t("tour.boardClear")}</p>
-          ) : (
-            <ul className="mt-2 space-y-1.5">
-              {board.actions.slice(0, 5).map((a, i) => (
-                <li key={i} className={`flex items-start gap-2 px-2.5 py-1.5 text-[12.5px] leading-snug ${a.severity === "red" ? "border border-black/10 text-neutral-900" : "text-neutral-600"}`}>
-                  <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${a.severity === "red" ? "bg-red-400" : "bg-amber-400"}`} />
-                  <span>{actionText(a)}</span>
-                </li>
-              ))}
-              {board.actions.length > 5 && <li className="px-2.5 text-[11px] text-neutral-500">+{board.actions.length - 5}</li>}
-            </ul>
-          )}
+      ) : (
+        <section>
+          <p className="t2-kicker">{t("tour.t2next")}</p>
+          <h1 className="t2-display mt-3 text-[clamp(2.2rem,7vw,4rem)]">{t("tour.t2noNext")}</h1>
+          <Link href="/tour2/planner" className="t2-cta mt-6">{t("tour.wsFill")}</Link>
         </section>
+      )}
 
-        {/* SAISON */}
-        <section className={card}>
-          <h2 className={cardHead}>{t("tour.t2seasonCard")}</h2>
-          {active.length === 0 ? (
-            <p className="mt-3 text-[13px] text-neutral-500">{t("tour.t2noSeason")}</p>
-          ) : (
-            <dl className="mt-2 space-y-2.5">
-              <div>
-                <dt className="text-[11px] text-neutral-500">{t("tour.t2budget")}</dt>
-                <dd className={`text-[15px] font-bold ${overMinor != null && overMinor > 0 ? "text-red-600" : "text-neutral-900"}`}>
-                  {usedMinor != null && budget ? t("tour.t2budgetOf", { used: money(usedMinor), total: money(budget.amount) }) : <span className="text-neutral-500">{t("tour.t2budgetNoData")}</span>}
-                </dd>
-              </div>
-              <div className="flex items-end justify-between gap-3">
-                <div><dt className="text-[11px] text-neutral-500">{t("tour.t2expPoints")}</dt><dd className="text-[15px] font-bold tabular-nums text-neutral-900">{expPointsSum}</dd></div>
-                <div className="text-right"><dt className="text-[11px] text-neutral-500">{t("tour.t2count")}</dt><dd className="text-[15px] font-bold tabular-nums text-neutral-900">{active.length}</dd></div>
-              </div>
-            </dl>
-          )}
-        </section>
-      </div>
+      <dl className="t2-telem mt-10">
+        <div>
+          <dt>{t("tour.t2budget")}</dt>
+          <dd className={overMinor != null && overMinor > 0 ? "text-red-700" : ""}>
+            {usedMinor != null && budget ? t("tour.t2budgetOf", { used: money(usedMinor), total: money(budget.amount) }) : t("tour.t2budgetNoData")}
+          </dd>
+        </div>
+        <div>
+          <dt>{t("tour.t2expPoints")} · {t("tour.t2pointsAssume", { round: t("tour.round_R16") })}</dt>
+          <dd>{expPointsSum}</dd>
+        </div>
+        <div>
+          <dt>{t("tour.t2count")}</dt>
+          <dd>{active.length}</dd>
+        </div>
+      </dl>
 
-      {/* NÄCHSTE 8 WOCHEN */}
-      <section className="mt-6">
-        <h2 className={cardHead}>{t("tour.t2next8")}</h2>
-        {weeks.length === 0 ? (
-          <p className="mt-2 text-[13px] text-neutral-500">{t("tour.t2noSeason")}</p>
+      <section className="mt-10">
+        <h2 className="t2-kicker">{t("tour.t2action")}</h2>
+        {board.actions.length === 0 ? (
+          <p className="mt-3 text-[14px] font-semibold">{t("tour.boardClear")}</p>
         ) : (
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+          <ul className="mt-2">
+            {board.actions.slice(0, 5).map((a, i) => (
+              <li key={i} className="t2-row text-[13px] leading-snug">
+                <span className="flex items-start gap-2">
+                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 ${a.severity === "red" ? "bg-red-600" : "bg-matchup"}`} />
+                  {actionText(a)}
+                </span>
+              </li>
+            ))}
+            {board.actions.length > 5 && <li className="pt-2 text-[11px] text-[var(--t2-muted)]">+{board.actions.length - 5}</li>}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="t2-kicker">{t("tour.t2next8")}</h2>
+        {weeks.length === 0 ? (
+          <p className="mt-3 text-[13px] text-[var(--t2-muted)]">{t("tour.t2noSeason")}</p>
+        ) : (
+          <div className="mt-1">
             {weeks.map((w) => {
               const it = w.items[0];
+              const d = dm(w.monday);
               return (
-                <Link key={w.monday} href="/tour2/planner" className={`border p-2.5 transition-colors ${it ? "border-black/20 hover:border-matchup" : "border-black/10 hover:border-black/30"}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">{fmtDate(w.monday)}</p>
-                  {it ? (
-                    <>
-                      <p className="mt-1 truncate text-[12px] font-bold text-neutral-900">{it.city || t("tour.fieldMissing")}</p>
-                      <p className="truncate text-[10px] text-matchup">{it.category || "—"}</p>
-                    </>
-                  ) : (
-                    <p className="mt-1 text-[12px] text-neutral-600">{t("tour.t2weekGap")}</p>
-                  )}
+                <Link key={w.monday} href="/tour2/planner" className="t2-row">
+                  <span className="flex min-w-0 items-baseline gap-4">
+                    <span className="w-14 shrink-0 font-semibold tabular-nums text-[var(--t2-muted)]">{d.dd}.{d.mm}</span>
+                    {it ? (
+                      <span className="min-w-0">
+                        <span className="t2-row-city t2-display block truncate text-[1.35rem] normal-case tracking-[-0.03em]">{it.city || t("tour.fieldMissing")}</span>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-matchup">{it.category || "—"}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[14px] text-[var(--t2-muted)]">{t("tour.t2weekGap")}</span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-matchup">→</span>
                 </Link>
               );
             })}

@@ -255,7 +255,7 @@ export default function CalendarTape() {
               </p>
               {tour ? (
                 <>
-                  <p className="mt-1 truncate text-[22px] font-extrabold tracking-tight text-neutral-900">{tour.city || t("tour.fieldMissing")}</p>
+                  <p className="mt-1 truncate t2-display text-[1.4rem] normal-case tracking-[-0.03em]">{tour.city || t("tour.fieldMissing")}</p>
                   <p className="text-[12px] text-neutral-500">{fmtRange(w.monday)} · {catName(tour.country)} · {tour.category || "—"}</p>
                   {tours.slice(1).map((x) => (
                     <p key={x.id} className="text-[12px] text-neutral-500">{x.city || t("tour.fieldMissing")} · {x.category || "—"}</p>
@@ -297,35 +297,35 @@ export default function CalendarTape() {
   let lastMonth = "";
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-white text-neutral-900">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
       {hero && (
-        <header className="relative shrink-0 border-b border-black/10 px-4 py-5 sm:px-6">
+        <header className="relative shrink-0 border-b border-[var(--t2-line)] px-4 py-5 sm:px-6">
           <div className="relative flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
+              <p className="t2-kicker">
                 {heroTour && !hero.isCurrent ? t("tour.t2calHeroNext") : hero.isCurrent ? t("tour.t2thisWeek") : t("tour.t2calWeek", { n: isoWeekNumber(hero.monday) })}
               </p>
               {heroTour ? (
                 <>
-                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[42px]">
+                  <h1 className="t2-display mt-2 truncate text-[clamp(2.2rem,6vw,4.2rem)]">
                     {heroTour.city || t("tour.fieldMissing")}
                   </h1>
-                  <p className="text-[14px] text-neutral-400">
+                  <p className="mt-2 text-[14px] text-[var(--t2-muted)]">
                     {catName(heroTour.country)} · {fmtRange(hero.monday)} · {heroTour.category || "—"}
                     {heroPts > 0 ? ` · ${t("tour.t2ptsAssume", { n: heroPts })}` : ""}
                   </p>
                 </>
               ) : (
                 <>
-                  <h1 className="mt-1 text-[32px] font-semibold tracking-[-0.04em] text-neutral-900 sm:text-[42px]">{t("tour.t2calOpen")}</h1>
-                  <p className="text-[14px] text-neutral-400">{fmtRange(hero.monday)} · {t("tour.t2calRecovery")}</p>
+                  <h1 className="t2-display mt-2 text-[clamp(2.2rem,6vw,4.2rem)]">{t("tour.t2calOpen")}</h1>
+                  <p className="mt-2 text-[14px] text-[var(--t2-muted)]">{fmtRange(hero.monday)} · {t("tour.t2calRecovery")}</p>
                 </>
               )}
             </div>
             {dlDays != null && dlDays > 0 && (
               <div className="shrink-0 text-right">
-                <p className="text-[40px] font-black leading-none tabular-nums text-neutral-900 sm:text-[52px]">{dlDays}</p>
-                <p className="mt-1 max-w-[7rem] text-[10px] font-semibold uppercase leading-tight tracking-[0.14em] text-matchup">
+                <p className="t2-display text-[2.6rem] leading-none sm:text-[3.2rem]">{dlDays}</p>
+                <p className="t2-kicker mt-2 max-w-[7rem] leading-tight">
                   {dlDays === 1 ? t("tour.t2calDlDay") : t("tour.t2calDlDays")}
                 </p>
               </div>
@@ -348,7 +348,7 @@ export default function CalendarTape() {
                 key={w.monday}
                 type="button"
                 onClick={() => document.querySelector(`[data-monday="${w.monday}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" })}
-                className={`flex min-w-[3.4rem] flex-col items-center border px-2 py-1.5 ${on ? "border-neutral-900 bg-neutral-900 text-white" : filled ? "border-matchup text-neutral-900" : "border-black/10 text-neutral-400"}`}
+                className={`flex min-w-[3.4rem] flex-col items-center border px-2 py-1.5 ${on ? "border-matchup bg-matchup text-white" : filled ? "border-matchup text-[var(--t2-ink)]" : "border-[var(--t2-line)] text-[var(--t2-muted)]"}`}
               >
                 <span className="text-[10px] font-bold">{t("tour.t2calWeek", { n: isoWeekNumber(w.monday) })}</span>
                 {filled && city ? (

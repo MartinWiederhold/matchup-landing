@@ -31,9 +31,9 @@ export default function TournamentRow({
   const series = tt.series === "itf_wtt" ? t("tour.seriesItf") : tt.series === "itf_juniors" ? t("tour.seriesJuniors") : tt.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger");
 
   return (
-    <div className={`flex items-start gap-2 px-2 py-2 ${selected ? "border-l-2 border-matchup bg-neutral-50" : "border-l-2 border-transparent hover:bg-neutral-50"}`}>
+    <div className={`flex items-start gap-2 px-1 py-3 ${selected ? "border-l-2 border-matchup bg-[color-mix(in_srgb,var(--t2-accent)_8%,transparent)]" : "border-l-2 border-transparent"}`}>
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-[13px] font-semibold text-neutral-900">
+        <p className="truncate t2-display text-[1.15rem] font-medium normal-case tracking-[-0.03em]">
           {tt.city || t("tour.fieldMissing")}
           <span className="text-neutral-400">, {countryName}</span>
         </p>

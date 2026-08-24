@@ -601,7 +601,7 @@ export default function SeasonWorkspace() {
   const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center bg-white text-sm text-neutral-400">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.loading")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -619,10 +619,10 @@ export default function SeasonWorkspace() {
     const status = plan?.status ?? "planned";
     if (status === "planned") return null;
     const pos = plan?.alternate_position ?? null;
-    const cls = status === "main_draw" || status === "entered" || status === "qualifying" || status === "confirmed" ? "bg-emerald-500/15 text-emerald-300"
-      : status === "alternate" ? "bg-amber-500/15 text-amber-200"
-      : status === "withdrawn" || status === "cancelled" ? "bg-white/10 text-neutral-400 line-through"
-      : "bg-white/10 text-neutral-300";
+    const cls = status === "main_draw" || status === "entered" || status === "qualifying" || status === "confirmed" ? "bg-emerald-50 text-emerald-800"
+      : status === "alternate" ? "bg-amber-50 text-amber-800"
+      : status === "withdrawn" || status === "cancelled" ? "text-[var(--t2-muted)] line-through"
+      : "text-[var(--t2-muted)]";
     const word = `${t(`tour.status_${status}`)}${status === "alternate" && pos != null ? ` #${pos}` : ""}`;
     // Trend nur bei Alternate.
     const events = plan ? (eventsByPlan.get(plan.id) ?? []) : [];
@@ -772,7 +772,7 @@ export default function SeasonWorkspace() {
   }));
 
   const fillPanel = (
-    <div className="flex h-full flex-col bg-white text-neutral-900">
+    <div className="flex h-full flex-col bg-[var(--t2-paper)] text-[var(--t2-ink)]">
       <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3">
         <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t("tour.t2fillSheetTitle")}{activeFilters > 0 ? ` · ${activeFilters}` : ""}</h2>
         <div className="flex items-center gap-1">
@@ -907,7 +907,7 @@ export default function SeasonWorkspace() {
       </div>
       <div className="shrink-0 space-y-2 border-t border-neutral-200 p-4">
         {!ratesDone && <p className="text-[12px] font-semibold text-amber-700">{t("tour.wsCostNeedRates")}</p>}
-        <button type="button" onClick={() => void smartFill()} disabled={filling || !ratesDone} className="w-full rounded-full bg-neutral-900 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-neutral-700 disabled:opacity-40">
+        <button type="button" onClick={() => void smartFill()} disabled={filling || !ratesDone} className="t2-cta w-full disabled:opacity-40">
           {filling ? t("tour.wsPlanning") : t("tour.wsFill")}
         </button>
         {fillReport && (
@@ -966,7 +966,7 @@ export default function SeasonWorkspace() {
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-white text-neutral-900 max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -983,7 +983,7 @@ export default function SeasonWorkspace() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col md:w-[60%] md:flex-none">
           <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-2 md:hidden">
-            <button type="button" onClick={() => setMapOpen((o) => !o)} className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-[12px] font-bold text-neutral-900">
+            <button type="button" onClick={() => setMapOpen((o) => !o)} className="t2-ghost">
               {mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}
             </button>
             <Link href="/tour2/browse" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
@@ -1014,7 +1014,7 @@ export default function SeasonWorkspace() {
                     <div className="border border-black/10 px-4 py-8 text-center">
                       <p className="text-[15px] font-bold text-neutral-900">{t("tour.t2noSeason")}</p>
                       <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{t("tour.t2seasonEmptyLead")}</p>
-                      <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="mt-4 rounded-full bg-matchup px-5 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsFill")}</button>
+                      <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="t2-cta mt-4">{t("tour.wsFill")}</button>
                       <Link href="/tour2/browse" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                     </div>
                   }

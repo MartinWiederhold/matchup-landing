@@ -14,8 +14,6 @@ export default function TourLoginCard() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const inp = "w-full border border-black/15 bg-white px-3.5 py-2.5 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none";
-
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (busy || !email.trim() || !password) return;
@@ -26,16 +24,16 @@ export default function TourLoginCard() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col items-center justify-center bg-white px-6 text-neutral-900">
+    <div className="flex h-[100dvh] flex-col items-center justify-center bg-[var(--t2-paper)] px-6 text-[var(--t2-ink)]">
       <div className="w-full max-w-sm">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-matchup">Matchup Tour</p>
-        <h2 className="mt-2 text-[28px] font-semibold tracking-[-0.04em]">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mt-2 text-sm text-neutral-500">{t("tour.loginFormLead")}</p>
+        <p className="t2-kicker">Matchup Tour</p>
+        <h2 className="t2-display mt-3 text-[2.2rem]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mt-2 text-sm text-[var(--t2-muted)]">{t("tour.loginFormLead")}</p>
         <form onSubmit={submit} className="mt-6 space-y-2.5">
-          <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("tour.loginEmail")} className={inp} />
-          <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("tour.loginPassword")} className={inp} />
-          {error && <p className="text-[12px] font-semibold text-neutral-900">{error}</p>}
-          <button type="submit" disabled={busy || !email.trim() || !password} className="w-full rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover disabled:opacity-50">
+          <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("tour.loginEmail")} className="t2-input" />
+          <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("tour.loginPassword")} className="t2-input" />
+          {error && <p className="text-[12px] font-semibold">{error}</p>}
+          <button type="submit" disabled={busy || !email.trim() || !password} className="t2-cta mt-2 w-full disabled:opacity-50">
             {busy ? t("tour.loginBusy") : t("tour.loginSubmit")}
           </button>
         </form>

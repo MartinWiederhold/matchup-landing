@@ -88,9 +88,9 @@ export default function SeasonJourney({
               </div>
             )}
             <div className={`flex items-start gap-2 border-l-2 px-2 py-2 ${sel ? "border-matchup bg-neutral-50" : "border-transparent"}`}>
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-neutral-900 text-[11px] font-bold text-white">{s.order}</span>
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-matchup text-[11px] font-bold text-white">{s.order}</span>
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
-                <p className="truncate text-[13px] font-semibold text-neutral-900">{s.city}<span className="text-neutral-400">, {s.country}</span></p>
+                <p className="truncate t2-display text-[1.15rem] font-medium normal-case tracking-[-0.03em]">{s.city}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
                 <p className="text-[11px] text-neutral-500">{s.date} · {s.category}</p>
                 {s.pill}
               </button>
