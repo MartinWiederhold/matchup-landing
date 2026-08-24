@@ -88,7 +88,7 @@ export default function CalendarWeek() {
   useEffect(() => {
     if (state !== "done" || scrolled.current || view === "month") return;
     scrolled.current = true;
-    if (gridRef.current) gridRef.current.scrollTop = 7 * HOUR_H;
+    if (gridRef.current) gridRef.current.scrollTop = 8 * HOUR_H;
   }, [state, view]);
 
   const todayISO = dateToISO(new Date());
@@ -106,6 +106,12 @@ export default function CalendarWeek() {
   const fmtDayHead = (iso: string) => {
     const dt = isoToDate(iso);
     return { wd: new Intl.DateTimeFormat(loc, { weekday: "short" }).format(dt), d: dt.getDate() };
+  };
+  const hourLabel = (h: number) => {
+    if (h === 0) return "";
+    if (locale === "de") return `${pad(h)}:00`;
+    const n = h % 12 === 0 ? 12 : h % 12;
+    return `${n} ${h < 12 ? "AM" : "PM"}`;
   };
   const shiftBy = view === "day" ? 1 : view === "month" ? 0 : 7;
   const nowMin = (() => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); })();
@@ -177,44 +183,44 @@ export default function CalendarWeek() {
   );
 
   return (
-    <div className="mx-auto max-w-[1180px] px-4 py-6 pb-28 sm:px-6 md:pb-10">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <div className="mx-auto max-w-[1280px] px-4 py-6 pb-28 sm:px-8 md:pb-10">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[1.75rem] font-bold tracking-tight text-[var(--t2-ink)] sm:text-[2rem]">{t("tour.calTitle")}</h1>
-          <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.calSubtitle")}</p>
+          <h1 className="text-[1.85rem] font-semibold tracking-tight text-[var(--t2-ink)] sm:text-[2.15rem]">{t("tour.calTitle")}</h1>
+          <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.calSubtitle")}</p>
         </div>
         <button
           type="button"
           onClick={() => setForm({ event: null, date: view === "day" ? anchor : weekStart })}
-          className="rounded-lg bg-[var(--t2-ink)] px-4 py-2 text-[13px] font-semibold text-white hover:bg-black"
+          className="rounded-xl bg-[var(--t2-ink)] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-black"
         >
           + {t("tour.calAdd")}
         </button>
       </header>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--t2-line)]">
+        <div className="flex gap-1">
           {(["all", "tournaments", "events"] as const).map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors ${
-                filter === f ? "bg-white text-[var(--t2-ink)] shadow-sm ring-1 ring-black/[0.08]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
+              className={`-mb-px border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors ${
+                filter === f ? "border-matchup text-[var(--t2-ink)]" : "border-transparent text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
               }`}
             >
               {t(f === "all" ? "tour.calFilterAll" : f === "tournaments" ? "tour.calFilterTournaments" : "tour.calFilterEvents")}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-0.5 rounded-full bg-black/[0.05] p-0.5">
+        <div className="flex items-center gap-1 pb-2">
           {(["day", "week", "month"] as const).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => { setView(v); scrolled.current = false; }}
-              className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${
-                view === v ? "bg-white text-[var(--t2-ink)] shadow-sm" : "text-neutral-500 hover:text-neutral-800"
+              className={`rounded-lg px-3 py-1.5 text-[12px] font-semibold ${
+                view === v ? "bg-white text-[var(--t2-ink)] shadow-sm ring-1 ring-black/[0.08]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
               }`}
             >
               {t(v === "week" ? "tour.calViewWeek" : v === "day" ? "tour.calViewDay" : "tour.calViewMonth")}
@@ -223,14 +229,20 @@ export default function CalendarWeek() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-1.5">
-        <button type="button" onClick={goPrev} aria-label={t("tour.calPrev")} className="flex h-8 w-8 items-center justify-center rounded-full text-[16px] text-[var(--t2-ink)] ring-1 ring-black/10 hover:bg-white">‹</button>
-        <button type="button" onClick={goToday} className="rounded-full px-3 py-1.5 text-[13px] font-semibold ring-1 ring-black/10 hover:bg-white">{t("tour.calGoToday")}</button>
-        <button type="button" onClick={goNext} aria-label={t("tour.calNext")} className="flex h-8 w-8 items-center justify-center rounded-full text-[16px] text-[var(--t2-ink)] ring-1 ring-black/10 hover:bg-white">›</button>
-        <div className="ml-2">
-          <p className="text-[15px] font-bold capitalize text-[var(--t2-ink)]">{monthTitle}</p>
-          {view !== "month" && <p className="text-[12px] text-[var(--t2-muted)]">{rangeLabel}{view === "week" ? ` · ${t("tour.t2calWeek", { n: isoWeekNumber(weekStart) })}` : ""}</p>}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[15px] font-semibold capitalize text-[var(--t2-ink)]">{monthTitle}</p>
+          <button type="button" onClick={goToday} className="rounded-lg bg-white px-3 py-1.5 text-[13px] font-semibold ring-1 ring-black/[0.08] hover:bg-neutral-50">{t("tour.calGoToday")}</button>
+          <div className="flex overflow-hidden rounded-lg ring-1 ring-black/[0.08]">
+            <button type="button" onClick={goPrev} aria-label={t("tour.calPrev")} className="flex h-8 w-8 items-center justify-center bg-white text-[16px] hover:bg-neutral-50">‹</button>
+            <button type="button" onClick={goNext} aria-label={t("tour.calNext")} className="flex h-8 w-8 items-center justify-center border-l border-black/[0.08] bg-white text-[16px] hover:bg-neutral-50">›</button>
+          </div>
         </div>
+        {view !== "month" && (
+          <p className="text-[13px] font-medium text-[var(--t2-muted)]">
+            {rangeLabel}{view === "week" ? ` · ${t("tour.t2calWeek", { n: isoWeekNumber(weekStart) })}` : ""}
+          </p>
+        )}
       </div>
 
       {view === "month" ? (
@@ -246,20 +258,17 @@ export default function CalendarWeek() {
           onEvent={(e) => setForm({ event: e })}
         />
       ) : (
-        <div className="mt-4 overflow-x-auto rounded-2xl bg-white shadow-[0_1px_2px_rgba(20,17,14,0.04)] ring-1 ring-black/[0.06]">
-          <div className={view === "week" ? "min-w-[640px]" : ""}>
-            <div className="flex border-b border-black/[0.06]">
+        <div className="mt-4 overflow-x-auto rounded-2xl bg-white shadow-[0_8px_24px_rgba(20,17,14,0.06)] ring-1 ring-black/[0.06]">
+          <div className={view === "week" ? "min-w-[720px]" : ""}>
+            <div className="flex border-b border-black/[0.06] bg-[#f4f3f1]">
               <div className="shrink-0 border-r border-black/[0.05]" style={{ width: GUTTER }} />
               {days.map((iso) => {
                 const h = fmtDayHead(iso);
                 const isToday = iso === todayISO;
                 return (
                   <div key={iso} className="flex-1 border-r border-black/[0.04] px-2 py-3 text-center last:border-r-0">
-                    <div className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${isToday ? "text-[var(--t2-ink)]" : "text-neutral-400"}`}>{h.wd}</div>
-                    <div className="relative mx-auto mt-1 w-fit">
-                      <span className={`text-[18px] font-semibold tabular-nums ${isToday ? "text-[var(--t2-ink)]" : "text-neutral-700"}`}>{h.d}</span>
-                      {isToday && <span className="absolute -bottom-1 left-1/2 h-[2px] w-5 -translate-x-1/2 rounded-full bg-matchup" />}
-                    </div>
+                    <div className={`text-[11px] font-semibold uppercase tracking-[0.1em] ${isToday ? "text-matchup" : "text-neutral-400"}`}>{h.wd}</div>
+                    <div className={`mt-0.5 text-[17px] font-semibold tabular-nums ${isToday ? "text-[var(--t2-ink)]" : "text-neutral-700"}`}>{h.d}</div>
                   </div>
                 );
               })}
@@ -300,12 +309,12 @@ export default function CalendarWeek() {
               </div>
             </div>
 
-            <div ref={gridRef} className="max-h-[min(68vh,720px)] overflow-y-auto">
+            <div ref={gridRef} className="max-h-[min(70vh,760px)] overflow-y-auto">
               <div className="flex" style={{ height: 24 * HOUR_H }}>
                 <div className="relative shrink-0 border-r border-black/[0.05]" style={{ width: GUTTER }}>
                   {Array.from({ length: 24 }, (_, h) => (
                     <div key={h} className="absolute right-2 -translate-y-1/2 text-[10px] font-medium tabular-nums text-neutral-400" style={{ top: h * HOUR_H }}>
-                      {h > 0 ? `${pad(h)}:00` : ""}
+                      {hourLabel(h)}
                     </div>
                   ))}
                 </div>
@@ -338,7 +347,7 @@ export default function CalendarWeek() {
                             key={e.id}
                             type="button"
                             onClick={() => setForm({ event: e })}
-                            className={`absolute z-10 overflow-hidden rounded-xl text-left ${ks.wrap} hover:z-30`}
+                            className={`absolute z-10 overflow-hidden rounded-lg text-left ring-1 ring-black/[0.04] ${ks.wrap} hover:z-30`}
                             style={style}
                             title={`${e.title} · ${timeStr}`}
                           >
