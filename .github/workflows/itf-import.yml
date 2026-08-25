@@ -1,0 +1,138 @@
+# Tour-Import — täglicher Lauf (GitHub Actions, nicht Vercel-Cron)
+#
+# ── WARUM DIESE DATEI AUF main LIEGT, DIE SKRIPTE ABER NICHT ──────────────
+# GitHub startet `on.schedule` NUR vom DEFAULT-BRANCH. Der Default-Branch
+# dieses Repos ist `main`. Auf `main` liegt die ALTE Vite-/Netlify-Landing
+# (Stand Mai 2026, index.html / APK). Die Next.js-App inkl. scripts/itf-import.mjs
+# liegt auf `feature/matchup-webapp`. Die Histories sind unverwandt — ein Merge
+# der App nach main wäre eine eigene Produktentscheidung, kein CI-Schritt.
+#
+# Deshalb: diese YAML liegt allein auf main (damit der Zeitplan überhaupt
+# startet). Der Job checkt DANN `feature/matchup-webapp` aus und führt die
+# Importe dort aus. Die Landing auf main bleibt unberührt. Default-Branch
+# bleibt main.
+#
+# ── WARUM NICHT Vercel-Cron ───────────────────────────────────────────────
+# Der ITF-Endpunkt sitzt hinter Incapsula und braucht Playwright/Chromium.
+# Das läuft in einer Vercel-Funktion nicht zuverlässig (Bundle, 60-s-Grenze,
+# Rechenzentrums-IPs). Auf einem GitHub-Runner läuft scripts/itf-import.mjs
+# unverändert.
+#
+# Pipeline (Reihenfolge wichtig — Importe ZUERST, dann EIN Geocoding, resolve ZULETZT):
+#   1. itf-import      → ITF (MT/WT/JT) über Playwright/Chromium (Incapsula)
+#   2. wta-import      → WTA-Haupttour (offene JSON-API)
+#   3. wikipedia-import (--series=challenger) → ATP Challenger (MU-053)
+#   4. geocode         → Nominatim, nur Orte ohne Koordinaten
+#   5. geocode-overrides → kuratierte manuelle Koordinaten
+#   6. resolve         → Claims → Stammfelder
+#
+# Alle drei Importe: 0 verwertbare Turniere → exit 1 (kein stiller Nulllauf).
+#
+# Secrets (Repo → Settings → Secrets and variables → Actions):
+#   SUPABASE_SERVICE_ROLE_KEY   (service_role, NICHT NEXT_PUBLIC)
+#   NEXT_PUBLIC_SUPABASE_URL
+
+name: Tour-Import ITF + WTA (täglich)
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # 04:00 UTC — vor den App-Crons (05:30 / 06:00)
+  workflow_dispatch: {} # manuell auslösbar
+
+concurrency:
+  group: itf-import
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+    steps:
+      # Absicht: nicht den Default-Branch (alte Landing) auschecken.
+      - name: Checkout App-Branch (feature/matchup-webapp)
+        uses: actions/checkout@v4
+        with:
+          ref: feature/matchup-webapp
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Chromium für Playwright installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Secrets vorhanden?
+        run: |
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::SUPABASE_SERVICE_ROLE_KEY fehlt"; exit 1; }
+          test -n "$NEXT_PUBLIC_SUPABASE_URL" || { echo "::error::NEXT_PUBLIC_SUPABASE_URL fehlt"; exit 1; }
+
+      - name: 1 · ITF-Import (scharf)
+        run: node scripts/itf-import.mjs --write
+
+      - name: 2 · WTA-Import (scharf)
+        run: node scripts/wta-import.mjs --write
+
+      - name: 3 · Challenger-Import (Wikipedia, scharf)
+        run: node scripts/wikipedia-import.mjs --series=challenger --write
+
+      - name: 4 · Geokodierung (neue Orte, alle Serien)
+        run: node scripts/geocode-tournaments.mjs
+
+      - name: 5 · Manuelle Overrides
+        run: node scripts/geocode-overrides.mjs --write
+
+      - name: 6 · Claims auflösen
+        run: node scripts/resolve-tournaments.mjs --write
+
+      - name: Zusammenfassung
+        if: always()
+        run: |
+          {
+            echo "## Tour-Import ITF + WTA — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            if [ -f scripts/itf-import-report.md ]; then
+              echo "### ITF-Import"
+              sed -n '1,12p' scripts/itf-import-report.md
+              echo ""
+            fi
+            if [ -f scripts/wta-import-report.md ]; then
+              echo "### WTA-Import"
+              sed -n '1,8p' scripts/wta-import-report.md
+              echo ""
+            fi
+            if [ -f scripts/wikipedia-import-report.md ]; then
+              echo "### Challenger-Import (Wikipedia)"
+              sed -n '1,8p' scripts/wikipedia-import-report.md
+              echo ""
+            fi
+            if [ -f scripts/geocoding-report.md ]; then
+              echo "### Geokodierung (noch ohne Koordinaten = Kuratierung nötig)"
+              grep -iE "ohne Koordinaten|mehrdeutig|nicht gefunden|ambiguous|not_found" scripts/geocoding-report.md | head -20 || true
+              echo ""
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Berichte hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tour-import-reports
+          path: |
+            scripts/itf-import-report.md
+            scripts/wta-import-report.md
+            scripts/wikipedia-import-report.md
+            scripts/geocoding-report.md
+            scripts/resolve-report.md
+          if-no-files-found: ignore
+          retention-days: 14
