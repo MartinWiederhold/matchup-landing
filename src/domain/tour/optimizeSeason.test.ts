@@ -40,6 +40,9 @@ function baseInput(candidates: SeasonCandidate[], o: Partial<OptimizeInput> = {}
     objective: o.objective,
     expectedRound: o.expectedRound,
     beamWidth: o.beamWidth,
+    maxPicks: o.maxPicks,
+    blockedRanges: o.blockedRanges,
+    maxConsecutiveWeeks: o.maxConsecutiveWeeks,
   };
 }
 const codes = (rs: { code: string }[]) => rs.map((r) => r.code);
@@ -278,8 +281,8 @@ describe("Mehrwährung & Begründung", () => {
 });
 
 describe("Objektiv C — meiste erwartete Punkte im Budget (v3)", () => {
-  it("v4) OPTIMIZE_RULES_VERSION ist v4 (Regeländerung: Reise-Puffer)", () => {
-    expect(OPTIMIZE_RULES_VERSION).toBe("v4");
+  it("v5) OPTIMIZE_RULES_VERSION ist v5 (Caps: Höchstzahl, Sperre, Wochen am Stück)", () => {
+    expect(OPTIMIZE_RULES_VERSION).toBe("v5");
   });
 
   it("27) bei Budget für nur EINES gewinnt das punktstärkere Turnier (gleiche Kosten)", () => {
@@ -403,5 +406,39 @@ describe("Reise-Puffer (v4)", () => {
     const r = optimizeSeason(baseInput(cs, { budget: EUR(220), bufferDays: 2 }));
     expect(r.value).toBe(2); // kein Turnier fällt weg — es wird nur die pufferfreie Kombination gewählt
     expect(r.notes).not.toContain("enge_anreise_vorhanden");
+  });
+});
+
+describe("v5 — Höchstzahl, Sperre, Wochen am Stück", () => {
+  it("maxPicks 1 von 2 Wochen ⇒ ein Pick, Rest hoechstzahl", () => {
+    const cs = [cand("a", WK[0], "TN|Monastir"), cand("b", WK[1], "ES|Barcelona")];
+    const r = optimizeSeason(baseInput(cs, { maxPicks: 1 }));
+    expect(r.value).toBe(1);
+    expect(r.picks).toHaveLength(1);
+    const leftover = r.rejected.find((x) => x.id !== r.picks[0].id);
+    expect(leftover && codes(leftover.reasons)).toContain("hoechstzahl");
+  });
+
+  it("blockedRanges auf WK[1] ⇒ Turnier fällt mit zeitraum_gesperrt raus", () => {
+    const cs = [cand("a", WK[0], "TN|Monastir"), cand("b", WK[1], "ES|Barcelona")];
+    const r = optimizeSeason(baseInput(cs, { blockedRanges: [{ from: WK[1], to: WK[1] }] }));
+    expect(r.picks.map((p) => p.id)).toEqual(["a"]);
+    const rej = r.rejected.find((x) => x.id === "b");
+    expect(rej && codes(rej.reasons)).toContain("zeitraum_gesperrt");
+  });
+
+  it("maxConsecutiveWeeks 2 bei 4 Folgewochen ⇒ 3 Picks, nie mehr als 2 am Stück", () => {
+    const cs = [0, 1, 2, 3].map((i) => cand(`w${i}`, WK[i], "TN|Monastir"));
+    const r = optimizeSeason(baseInput(cs, { maxConsecutiveWeeks: 2 }));
+    expect(r.value).toBe(3);
+    const mondays = r.picks.map((p) => p.weekMonday).sort();
+    let maxStreak = 1;
+    let cur = 1;
+    for (let i = 1; i < mondays.length; i++) {
+      const gap = (Date.parse(mondays[i] + "T00:00:00Z") - Date.parse(mondays[i - 1] + "T00:00:00Z")) / 86_400_000;
+      if (gap === 7) { cur += 1; maxStreak = Math.max(maxStreak, cur); }
+      else cur = 1;
+    }
+    expect(maxStreak).toBeLessThanOrEqual(2);
   });
 });

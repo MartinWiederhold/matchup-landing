@@ -7,35 +7,30 @@ import { useT } from "@/lib/i18n";
 import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import StepWhoAreYou from "./StepWhoAreYou";
 import StepFrame from "./StepFrame";
-import StepPickTournaments from "./StepPickTournaments";
+import StepLimits from "./StepLimits";
+import StepWow from "./StepWow";
 import { BTN_PRIMARY } from "../tourUi";
+import { SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 
-type Step = 1 | 2 | 3;
-const SKIP_KEY = "mu_tour_setup_skipped";
+export type SetupStep = 1 | 2 | 3 | 4;
 
 /**
- * Der geführte Einstieg in drei Schritten. Ersetzt die Arbeitsfläche, solange die
- * Einrichtung nicht abgeschlossen ist (inline via `onExit`) — und ist über die Route
- * /tour/setup jederzeit wieder aufrufbar (dann ohne `onExit`, Ausstieg per Link).
- *
- * Überspringen ist IMMER möglich: ein unauffälliger Weg zur Arbeitsfläche steht auf
- * jedem Schritt. Inline merkt sich das Überspringen in localStorage — siehe TourWorkspace.
+ * Geführter Einstieg in vier Schritten. Wow am Ende zeigt belegte Zählung
+ * (Rahmen + Optimierer-Picks), ohne die Saison zu schreiben.
  */
-export default function SetupPanel({ initialStep, onExit }: { initialStep?: Step; onExit?: () => void }) {
+export default function SetupPanel({ initialStep, onExit }: { initialStep?: SetupStep; onExit?: () => void }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
 
   const [state, setState] = useState<SetupState | null>(null);
   const [load, setLoad] = useState<"loading" | "error" | "ready">("loading");
-  const [step, setStep] = useState<Step>(initialStep ?? 1);
+  const [step, setStep] = useState<SetupStep>(initialStep ?? 1);
 
-  // Aktualisiert nur den Stand (für die Häkchen), OHNE den Schritt zu wechseln.
   const refresh = useCallback(() => {
     if (!user) return;
-    loadSetupState(user.id).then(setState).catch(() => { /* Stand bleibt, kein harter Fehler */ });
+    loadSetupState(user.id).then(setState).catch(() => { /* Stand bleibt */ });
   }, [user]);
 
-  // Erstladen: Stand holen und — falls kein Schritt fixiert ist — zum ersten offenen springen.
   useEffect(() => {
     if (authLoading || !user) return;
     let cancel = false;
@@ -51,15 +46,15 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Step
     return () => { cancel = true; };
   }, [authLoading, user, initialStep]);
 
-  const markSkipped = () => { try { localStorage.setItem(SKIP_KEY, "1"); } catch { /* egal */ } };
+  const markSkipped = () => { try { localStorage.setItem(SETUP_SKIP_KEY, "1"); } catch { /* egal */ } };
 
-  // Ausstieg zur Arbeitsfläche: inline über onExit (+ Skip-Merker), auf der Route per Link.
   const ExitAction = ({ label, primary }: { label: string; primary: boolean }) => {
     const cls = primary
       ? BTN_PRIMARY
       : "rounded-full px-4 py-2 text-[13px] font-semibold text-neutral-500 transition-colors hover:text-neutral-800";
-    if (onExit) return <button type="button" onClick={() => { markSkipped(); onExit(); }} className={cls}>{label}</button>;
-    return <Link href="/tour2" className={cls}>{label}</Link>;
+    const go = () => { markSkipped(); onExit?.(); };
+    if (onExit) return <button type="button" onClick={go} className={cls}>{label}</button>;
+    return <Link href="/tour2" onClick={markSkipped} className={cls}>{label}</Link>;
   };
 
   if (authLoading || load === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
@@ -74,15 +69,14 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Step
   }
   if (load === "error" || !state) return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
 
-  const done = (n: Step) => (n === 1 ? state.step1Done : n === 2 ? state.step2Done : state.step3Done);
+  const done = (n: SetupStep) => (n === 1 ? state.step1Done : n === 2 ? state.step2Done : n < step);
 
   return (
     <div className="mt-6">
-      <p className="text-sm text-neutral-500">{t("tour.setupSubtitle")}</p>
+      <p className="text-sm text-neutral-500">{t("tour.t2onbSubtitle")}</p>
 
-      {/* Fortschritt — Schritte sind einzeln anklickbar (später editierbar). */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {([1, 2, 3] as Step[]).map((n) => {
+        {([1, 2, 3, 4] as SetupStep[]).map((n) => {
           const active = step === n;
           return (
             <button
@@ -93,35 +87,34 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Step
                 active ? "bg-matchup text-white" : done(n) ? "bg-matchup/10 text-matchup" : "bg-black/[0.04] text-neutral-500"
               }`}
             >
-              <span>{done(n) && !active ? "✓" : n}</span> {t(`tour.setupStep${n}`)}
+              <span>{done(n) && !active ? "✓" : n}</span> {t(`tour.t2onbStep${n}`)}
             </button>
           );
         })}
       </div>
 
-      {/* Aktueller Schritt */}
       <div className="mt-5">
         {step === 1 && <StepWhoAreYou state={state} userId={user.id} onSaved={refresh} />}
         {step === 2 && <StepFrame state={state} userId={user.id} onSaved={refresh} />}
-        {step === 3 && <StepPickTournaments state={state} />}
+        {step === 3 && <StepLimits />}
+        {step === 4 && <StepWow state={state} />}
       </div>
 
-      {/* Fußzeile: zurück / weiter bzw. fertig — und IMMER ein Weg zur Arbeitsfläche. */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {step > 1 && (
-            <button type="button" onClick={() => setStep((step - 1) as Step)} className="rounded-full px-4 py-2 text-[13px] font-semibold text-neutral-600 transition-colors hover:text-neutral-900">
+            <button type="button" onClick={() => setStep((step - 1) as SetupStep)} className="rounded-full px-4 py-2 text-[13px] font-semibold text-neutral-600 transition-colors hover:text-neutral-900">
               ← {t("tour.setupBack")}
             </button>
           )}
-          {step < 3 && (
-            <button type="button" onClick={() => setStep((step + 1) as Step)} className={BTN_PRIMARY}>
+          {step < 4 && (
+            <button type="button" onClick={() => setStep((step + 1) as SetupStep)} className={BTN_PRIMARY}>
               {t("tour.setupNext")}
             </button>
           )}
-          {step === 3 && <ExitAction label={t("tour.setupFinish")} primary />}
+          {step === 4 && <ExitAction label={t("tour.setupFinish")} primary />}
         </div>
-        {step < 3 && <ExitAction label={t("tour.setupSkip")} primary={false} />}
+        {step < 4 && <ExitAction label={t("tour.setupSkip")} primary={false} />}
       </div>
     </div>
   );

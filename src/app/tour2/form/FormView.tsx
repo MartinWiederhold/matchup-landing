@@ -76,7 +76,7 @@ export default function FormView() {
     return (
       <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
         <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function FormView() {
 
   const r = rates!;
   const hasUnknownSurface = r.bySurface.some((b) => b.key === "unknown");
-  const tile = "rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/[0.05]";
+  const tile = "border-t border-[var(--t2-line)] py-4";
   const label = "text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400";
   const sectionH = "text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400";
 

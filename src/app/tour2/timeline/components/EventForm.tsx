@@ -84,7 +84,7 @@ export default function EventForm({
   }
 
   return (
-    <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
+    <section className="t2-panel">
       <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
         {event ? t("tour.calEditTitle") : t("tour.calAddTitle")}
       </h2>
@@ -179,7 +179,7 @@ export default function EventForm({
       )}
 
       <div className="mt-4 flex items-center gap-3">
-        <button type="button" onClick={save} disabled={busy} className="rounded-full bg-neutral-900 px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-50">
+        <button type="button" onClick={save} disabled={busy} className="t2-cta disabled:opacity-50">
           {t("tour.calSave")}
         </button>
         <button type="button" onClick={onDone} className="text-[13px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.calCancel")}</button>

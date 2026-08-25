@@ -193,7 +193,7 @@ export default function TimelineView() {
       <div className="mt-10 rounded-2xl bg-black/[0.02] px-6 py-10 text-center ring-1 ring-black/5">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }

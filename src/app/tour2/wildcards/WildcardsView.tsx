@@ -79,7 +79,7 @@ export default function WildcardsView() {
     return (
       <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
         <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -138,7 +138,7 @@ function WildcardCard({
   const [evDetail, setEvDetail] = useState("");
 
   const nn = (s: string) => (s.trim() === "" ? null : s.trim());
-  const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+  const inp = "t2-input";
   const lbl = "mb-1 block text-[12px] font-semibold text-neutral-600";
 
   const requested = contact != null && (contact.requested_on != null || contact.outcome != null);
@@ -172,7 +172,7 @@ function WildcardCard({
   const delEvent = async (id: string) => { await deleteWildcardEvent(id); await onChange(); };
 
   return (
-    <div className="rounded-2xl ring-1 ring-black/[0.06]">
+    <div className="t2-panel">
       {/* Kopf: Turniername + Anfragestand + Auf-/Zuklappen. */}
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
         <span className="min-w-0 truncate text-[14px] font-bold text-neutral-900">{tour.name}</span>
@@ -219,7 +219,7 @@ function WildcardCard({
               </select>
             </label>
           </div>
-          <button type="button" onClick={save} disabled={saving} className="mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">
+          <button type="button" onClick={save} disabled={saving} className="t2-cta mt-3 disabled:opacity-50">
             {t("tour.wcSaveContact")}
           </button>
 

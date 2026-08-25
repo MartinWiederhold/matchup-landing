@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { saveSeasonBudget, type SetupState } from "@/lib/tourSetup";
 import CostRatesForm from "../../costs/components/CostRatesForm";
 import { CARD_SOFT } from "../tourUi";
-
-// Gleicher localStorage-Schlüssel wie /tour/costs und die Arbeitsfläche — geteilte Annahme.
-const NIGHTS_KEY = "mu_tour_nights";
+import { loadTourOptPrefs, saveTourOptPrefs } from "@/lib/tourOptPrefs";
 const inputCls =
   "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
 
@@ -20,16 +18,18 @@ const inputCls =
 export default function StepFrame({ state, userId, onSaved }: { state: SetupState; userId: string; onSaved: () => void }) {
   const t = useT();
   const [budget, setBudget] = useState(state.seasonBudget != null ? String(state.seasonBudget) : "");
-  const [nights, setNights] = useState("");
+  const [nights, setNights] = useState(() => loadTourOptPrefs().nights);
+  const [buffer, setBuffer] = useState(() => loadTourOptPrefs().buffer);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
 
-  useEffect(() => {
-    try { const v = localStorage.getItem(NIGHTS_KEY); if (v != null) setNights(v); } catch { /* egal */ }
-  }, []);
   const onNightsChange = useCallback((v: string) => {
     setNights(v);
-    try { localStorage.setItem(NIGHTS_KEY, v); } catch { /* egal */ }
+    saveTourOptPrefs({ nights: v });
+  }, []);
+  const onBufferChange = useCallback((v: string) => {
+    setBuffer(v);
+    saveTourOptPrefs({ buffer: v });
   }, []);
 
   async function saveBudget() {
@@ -66,7 +66,7 @@ export default function StepFrame({ state, userId, onSaved }: { state: SetupStat
       </section>
 
       {/* Kostensätze: bestehendes Formular (schreibt tour_cost_rates); onSaved zieht den Fortschritt nach. */}
-      <CostRatesForm rates={state.rates} userId={userId} onSaved={() => onSaved()} nights={nights} onNightsChange={onNightsChange} />
+      <CostRatesForm rates={state.rates} userId={userId} onSaved={() => onSaved()} nights={nights} onNightsChange={onNightsChange} buffer={buffer} onBufferChange={onBufferChange} />
     </div>
   );
 }

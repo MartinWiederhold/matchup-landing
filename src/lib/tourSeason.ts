@@ -25,6 +25,7 @@ export type SeasonStatus = TourSeasonPlanEntry["status"]; // = TourEntryStatus (
 export type SeasonEntry = {
   planId: string;
   status: SeasonStatus;
+  decision: TourSeasonPlanEntry["decision"];
   alternatePosition: number | null; // aktuelle Nachrücker-Position (nur bei status='alternate')
   feePaid: boolean;
   note: string | null;
@@ -62,6 +63,7 @@ export async function loadSeason(): Promise<SeasonEntry[]> {
     entries.push({
       planId: r.id,
       status: r.status,
+      decision: r.decision,
       alternatePosition: r.alternate_position,
       feePaid: r.fee_paid,
       note: r.note,

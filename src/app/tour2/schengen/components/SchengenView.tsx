@@ -105,7 +105,7 @@ export default function SchengenView() {
       <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -115,8 +115,8 @@ export default function SchengenView() {
   return (
     <div className="mt-8 space-y-6">
       {/* Auslastung — nur bestätigt, sachlich ohne Alarmfarben */}
-      <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.schengenUsageTitle")}</h2>
+      <section className="t2-panel">
+        <h2 className="t2-kicker">{t("tour.schengenUsageTitle")}</h2>
         {confirmed.length === 0 ? (
           <p className="mt-2 text-[13px] text-neutral-500">{t("tour.schengenNoConfirmed")}</p>
         ) : (
@@ -165,7 +165,7 @@ export default function SchengenView() {
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.schengenSuggestionsTitle")}</h2>
-          <button type="button" onClick={handleGenerate} disabled={generating} className="rounded-full border border-black/15 px-3.5 py-1.5 text-[12px] font-semibold text-neutral-700 transition-colors hover:border-black/30 disabled:opacity-50">
+          <button type="button" onClick={handleGenerate} disabled={generating} className="t2-ghost disabled:opacity-50">
             {generating ? t("tour.schengenGenerating") : t("tour.schengenGenerate")}
           </button>
         </div>

@@ -99,21 +99,21 @@ export default function PointsView() {
   };
   const del = async (id: string) => { await deleteResult(id); await reload(); };
 
-  if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+      <div className="t2-panel mt-6 text-center">
+        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <Link href="/app" className="t2-cta mt-6">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
-  const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
-  const lbl = "mb-1 block text-[12px] font-semibold text-neutral-600";
+  const inp = "t2-input";
+  const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
   const view = rows.map((row, i) => ({ row, s: scored.results[i] }));
   const withPoints = view.filter((v) => v.s && v.s.points > 0 && !v.s.notes.includes("verfallen")).sort((a, b) => b.s.points - a.s.points);
   const noPoints = view.filter((v) => v.s && (v.s.points === 0 || v.s.notes.includes("verfallen")));
@@ -121,32 +121,32 @@ export default function PointsView() {
   return (
     <div className="mt-8 space-y-8">
       {/* Punktestand + Zählgrenze + „keine Ränge" */}
-      <div className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-6">
-        <p className="text-[13px] font-medium text-neutral-500">{t("tour.pointsTotalLabel")}</p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-neutral-900">{forecast.currentTotal}</p>
-        <p className="mt-1 text-[13px] text-neutral-500">{t("tour.pointsLimitLabel", { n: forecast.countingLimit })}</p>
-        <p className="mt-3 text-[12px] leading-relaxed text-neutral-400">{t("tour.pointsNoRanksNote")}</p>
+      <div className="t2-panel">
+        <p className="t2-kicker">{t("tour.pointsTotalLabel")}</p>
+        <p className="mt-2 text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.04em] tabular-nums">{forecast.currentTotal}</p>
+        <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsLimitLabel", { n: forecast.countingLimit })}</p>
+        <p className="mt-3 text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsNoRanksNote")}</p>
       </div>
 
       {/* Ausblick: heute + 4/8/12 Wochen */}
       {rows.length > 0 && (
         <section>
-          <h2 className="text-[15px] font-bold text-neutral-900">{t("tour.pointsForecastTitle")}</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/[0.05]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.pointsForecastToday")}</p>
-              <p className="mt-1 text-[22px] font-extrabold tabular-nums text-neutral-900">{forecast.currentTotal}</p>
+          <h2 className="t2-kicker">{t("tour.pointsForecastTitle")}</h2>
+          <dl className="t2-telem mt-3">
+            <div>
+              <dt>{t("tour.pointsForecastToday")}</dt>
+              <dd>{forecast.currentTotal}</dd>
             </div>
             {forecast.steps.map((s) => (
-              <div key={s.weeks} className="rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/[0.05]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.pointsForecastWeeks", { n: s.weeks })}</p>
-                <p className="mt-1 text-[22px] font-extrabold tabular-nums text-neutral-900">{s.total}</p>
-                <p className={`mt-1 text-[11px] tabular-nums ${s.delta < 0 ? "text-amber-700" : "text-neutral-400"}`}>
+              <div key={s.weeks}>
+                <dt>{t("tour.pointsForecastWeeks", { n: s.weeks })}</dt>
+                <dd>{s.total}</dd>
+                <p className={`mt-1 text-[11px] tabular-nums ${s.delta < 0 ? "text-red-700" : "text-[var(--t2-muted)]"}`}>
                   {s.delta < 0 ? t("tour.pointsForecastFalls", { n: -s.delta }) : t("tour.pointsForecastStable")}
                 </p>
               </div>
             ))}
-          </div>
+          </dl>
         </section>
       )}
 
@@ -157,7 +157,7 @@ export default function PointsView() {
           <p className="mt-1 text-[13px] text-neutral-500">{t("tour.pointsDefendHint")}</p>
           <div className="mt-3 space-y-2">
             {forecast.schedule.map((e) => (
-              <div key={`def-${e.index}`} className="flex items-center justify-between rounded-xl bg-amber-500/[0.08] px-4 py-3">
+              <div key={`def-${e.index}`} className="flex items-center justify-between border-b border-[var(--t2-line)] py-3">
                 <span className="min-w-0 truncate text-sm font-semibold text-neutral-900">{rows[e.index]?.tournament_name ?? "—"}</span>
                 <span className="shrink-0 text-[13px] text-neutral-600">{t("tour.pointsExpiresOn", { points: e.points, date: fmt(e.expiresOn) })}</span>
               </div>
@@ -167,8 +167,8 @@ export default function PointsView() {
       )}
 
       {/* Ergebnis erfassen */}
-      <section className="rounded-2xl ring-1 ring-black/[0.06] p-4">
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.pointsCaptureTitle")}</h2>
+      <section className="t2-panel">
+        <h2 className="t2-kicker">{t("tour.pointsCaptureTitle")}</h2>
         <p className="mt-1 text-[12px] text-neutral-500">{t("tour.pointsCaptureHint")}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block sm:col-span-2 lg:col-span-1"><span className={lbl}>{t("tour.pointsFieldTournament")}</span><input value={fName} onChange={(e) => setFName(e.target.value)} className={inp} /></label>
@@ -180,7 +180,7 @@ export default function PointsView() {
           </label>
           <label className="block"><span className={lbl}>{t("tour.pointsFieldDate")}</span><input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={inp} /></label>
         </div>
-        <button type="button" onClick={submit} disabled={saving || fName.trim() === ""} className="mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{t("tour.pointsAdd")}</button>
+        <button type="button" onClick={submit} disabled={saving || fName.trim() === ""} className="t2-cta mt-3 disabled:opacity-50">{t("tour.pointsAdd")}</button>
       </section>
 
       {/* Erfasste Ergebnisse (wertend) */}
@@ -191,7 +191,7 @@ export default function PointsView() {
             {withPoints.map(({ row, s }) => {
               const tag = tagFor(s);
               return (
-                <div key={`res-${row.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.03] px-4 py-3">
+                <div key={`res-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-neutral-900">{row.tournament_name} <span className="font-normal text-neutral-400">· {catLabel(row.category)}</span></p>
                     <p className="text-[12px] text-neutral-500">
@@ -216,7 +216,7 @@ export default function PointsView() {
           <h2 className="text-[15px] font-bold text-neutral-900">{t("tour.pointsNoPointsTitle")}</h2>
           <div className="mt-3 space-y-2">
             {noPoints.map(({ row, s }) => (
-              <div key={`np-${row.id}`} className="flex items-center justify-between gap-3 rounded-xl bg-black/[0.02] px-4 py-3">
+              <div key={`np-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-neutral-700">{row.tournament_name} <span className="text-neutral-400">· {catLabel(row.category)} · {roundLabel(s.round, row.round)}</span></p>
                   <p className="text-[12px] text-neutral-500">{reasonFor(s)}</p>
@@ -229,7 +229,7 @@ export default function PointsView() {
       )}
 
       {/* Ehrlicher Hinweis auf die Unvollständigkeit */}
-      <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[12px] leading-relaxed text-neutral-500">{t("tour.pointsIncompleteHint")}</p>
+      <p className="t2-panel text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsIncompleteHint")}</p>
     </div>
   );
 }

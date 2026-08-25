@@ -63,7 +63,7 @@ export default function SeasonView() {
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
         <Link
           href="/app"
-          className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
+          className="mt-6 t2-cta"
         >
           {t("tour.loginCta")}
         </Link>
@@ -81,8 +81,8 @@ export default function SeasonView() {
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.seasonEmptyTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.seasonEmptyText")}</p>
         <Link
-          href="/tour2/browse"
-          className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover"
+          href="/tour2/tournaments"
+          className="mt-6 t2-cta"
         >
           {t("tour.seasonEmptyCta")}
         </Link>

@@ -38,11 +38,12 @@ import type { TourSeries } from "./deadlines";
 //     (Code erwartungspunkte_annahme:<Runde>), kein Versprechen.
 // v2: Einreisesperren (entryBanned) — Länder mit „admission refused" für die
 //     Nationalität werden NICHT vorgeschlagen (Reject-Grund einreise_gesperrt).
+// v5: Caps (maxPicks, blockedRanges, maxConsecutiveWeeks) — Nutzerangaben, keine erfundenen Limits.
 // v4: Reise-Puffer zwischen Turnieren an VERSCHIEDENEN Orten (bufferDays, Nutzerangabe wie
 //     die Nächte). WEICH: bei gleicher Turnierzahl UND gleichen Kosten wird die Variante mit
 //     weniger engen Übergängen bevorzugt (Tiebreaker NACH den Kosten → ändert value/Kosten
 //     nicht). Ein enger Übergang wirft NIE ein Turnier raus — der Pick trägt `enge_anreise:<Tage>`.
-export const OPTIMIZE_RULES_VERSION = "v4";
+export const OPTIMIZE_RULES_VERSION = "v5";
 
 const DAY = 86_400_000;
 const DEFAULT_NIGHTS = 7;      // Fallback, wenn nightsPerWeek nicht gesetzt ist → Code `naechte_annahme`
@@ -90,6 +91,12 @@ export type OptimizeInput = {
    *  (Absicherung, greift regulär nie). */
   expectedRound?: PointsRound | null;
   beamWidth?: number;           // Default 64
+  /** Höchstzahl Turniere in diesem Vorschlag (Nutzerangabe). null/fehlend = kein Cap. */
+  maxPicks?: number | null;
+  /** Gesperrte Zeiträume (ISO-Tage, inklusiv) — Turniermontag darin fällt raus. */
+  blockedRanges?: { from: string; to: string }[];
+  /** Höchstens N aufeinanderfolgende Turnierwochen (Nutzerangabe). null = kein Cap. */
+  maxConsecutiveWeeks?: number | null;
 };
 
 export type SeasonPick = {
@@ -159,6 +166,20 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const nights = nightsGiven != null && nightsGiven >= 0 ? Math.round(nightsGiven) : DEFAULT_NIGHTS;
   const bufferGiven = input.bufferDays;
   const buffer = bufferGiven != null && bufferGiven >= 0 ? Math.round(bufferGiven) : DEFAULT_BUFFER;
+  const maxPicks = input.maxPicks != null && input.maxPicks > 0 ? Math.round(input.maxPicks) : null;
+  const maxStreak = input.maxConsecutiveWeeks != null && input.maxConsecutiveWeeks > 0 ? Math.round(input.maxConsecutiveWeeks) : null;
+  const blockedRanges = (input.blockedRanges ?? []).filter((r) => r.from && r.to && r.from <= r.to);
+  const weekBlocked = (iso: string) => blockedRanges.some((r) => iso >= r.from && iso <= r.to);
+  const streakIfAdd = (chosen: SeasonCandidate[], nextMs: number): number => {
+    let streak = 1;
+    let expect = nextMs - 7 * DAY;
+    for (let i = chosen.length - 1; i >= 0; i--) {
+      const ms = mondayMs(chosen[i].tournamentMonday);
+      if (ms === expect) { streak++; expect -= 7 * DAY; }
+      else break;
+    }
+    return streak;
+  };
   const primaryCurrency = budget?.currency ?? params.arrival?.currency ?? params.perNight?.currency ?? null;
 
   // Objektiv auflösen. Absicherung (greift regulär NIE, weil die UI beim Umschalten eine
@@ -182,6 +203,7 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   // ── Kandidaten einteilen: einreisegesperrt (raus), unbewertbar (kein Ort), fristverstrichen (raus), sonst eignungsfähig ──
   const entryBanned = input.entryBanned ?? new Set<string>();
   const bannedEntry: SeasonCandidate[] = [];
+  const blockedPeriod: SeasonCandidate[] = [];
   const unassessable: { id: string; code: "kein_ortsschluessel" }[] = [];
   const excludedFrist: SeasonCandidate[] = [];
   const eligible: SeasonCandidate[] = [];
@@ -190,6 +212,7 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
     // Einreisesperre zuerst: dominanter Grund, unabhängig von Ort/Frist. Ein betroffenes
     // Turnier kommt gar nicht in Betracht — nie vorschlagen, aber Grund ausweisen.
     if (c.country && entryBanned.has(c.country)) { bannedEntry.push(c); continue; }
+    if (weekBlocked(isoDay(mondayMs(c.tournamentMonday)))) { blockedPeriod.push(c); continue; }
     if (!c.place) { unassessable.push({ id: c.id, code: "kein_ortsschluessel" }); continue; }
     const cls = decideTournament({
       tournament: { tournamentMonday: c.tournamentMonday, series: c.series, category: c.category ?? null, place: c.place },
@@ -245,6 +268,9 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
     for (const st of beam) {
       next.push(st); // Woche überspringen
       for (const c of weekCands) {
+        if (maxPicks != null && st.chosen.length >= maxPicks) continue;
+        const cMondayMs = mondayMs(c.tournamentMonday);
+        if (maxStreak != null && streakIfAdd(st.chosen, cMondayMs) > maxStreak) continue;
         const chosen = [...st.chosen, c];
         const cost = computeSeasonCost(buildStations(chosen, nights), params);
         if (!budgetOk(cost)) continue;      // Budget-Grenze
@@ -292,12 +318,18 @@ export function optimizeSeason(input: OptimizeInput): SeasonProposal {
   const weekHasPick = new Set(best.chosen.map((c) => isoDay(mondayMs(c.tournamentMonday))));
   const rejected: RejectedCandidate[] = [
     ...bannedEntry.map((c) => ({ id: c.id, reasons: [reason("einreise_gesperrt", "dagegen")] })),
+    ...blockedPeriod.map((c) => ({ id: c.id, reasons: [reason("zeitraum_gesperrt", "dagegen")] })),
     ...excludedFrist.map((c) => ({ id: c.id, reasons: [reason("frist_verstrichen", "dagegen")] })),
   ];
   for (const c of eligible) {
     if (chosenIds.has(c.id)) continue;
     const wk = isoDay(mondayMs(c.tournamentMonday));
     if (weekHasPick.has(wk)) { rejected.push({ id: c.id, reasons: [reason("woche_belegt", "dagegen")] }); continue; }
+    if (maxPicks != null && best.chosen.length >= maxPicks) { rejected.push({ id: c.id, reasons: [reason("hoechstzahl", "dagegen")] }); continue; }
+    if (maxStreak != null && streakIfAdd(best.chosen, mondayMs(c.tournamentMonday)) > maxStreak) {
+      rejected.push({ id: c.id, reasons: [reason("wochen_am_stueck", "dagegen")] });
+      continue;
+    }
     const test = [...best.chosen, c];
     const tc = computeSeasonCost(buildStations(test, nights), params);
     if (!budgetOk(tc)) rejected.push({ id: c.id, reasons: [reason("budget_erschoepft", "dagegen")] });

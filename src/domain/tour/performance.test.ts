@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { winRates, seasonBalances, tournamentBalances, pointsBySurface, type PerfMatch } from "./performance";
+import { winRates, seasonBalances, tournamentBalances, pointsBySurface, isBestRecordedSurface, type PerfMatch } from "./performance";
 
 // Kurzform für ein Match. Synthetische Daten — heute steht nichts in tour_events (0 Zeilen),
 // die Rechnung wird hier bewiesen.
@@ -106,5 +106,23 @@ describe("pointsBySurface – zählende Punkte je Belag", () => {
     expect(clay).toEqual({ surface: "clay", points: 41, n: 2 });
     expect(p.find((x) => x.surface === "hard")).toEqual({ surface: "hard", points: 8, n: 1 });
     expect(p.find((x) => x.surface === "unknown")).toEqual({ surface: "unknown", points: 15, n: 1 });
+  });
+});
+
+describe("isBestRecordedSurface", () => {
+  it("Sand vor Hart bei klar besserer Quote", () => {
+    const matches: PerfMatch[] = [
+      m(true, "clay", "M25", 2026),
+      m(true, "clay", "M25", 2026),
+      m(true, "hard", "M25", 2026),
+      m(false, "hard", "M25", 2026),
+    ];
+    expect(isBestRecordedSurface(matches, "clay")).toBe(true);
+    expect(isBestRecordedSurface(matches, "hard")).toBe(false);
+  });
+  it("ohne zweiten Belag oder ohne Matches ⇒ false (keine Erfindung)", () => {
+    expect(isBestRecordedSurface([m(true, "clay", "M25", 2026)], "clay")).toBe(false);
+    expect(isBestRecordedSurface([], "clay")).toBe(false);
+    expect(isBestRecordedSurface([m(true, "clay", "M25", 2026), m(false, "hard", "M25", 2026)], null)).toBe(false);
   });
 });

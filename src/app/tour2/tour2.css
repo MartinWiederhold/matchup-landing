@@ -6,7 +6,8 @@
   --t2-line: rgba(23, 20, 18, 0.1);
   --t2-accent: #4b3bf3;
   --t2-accent-hover: #3b2cd9;
-  --t2-chrome: 3.5rem;
+  --t2-chrome: 3.5rem; /* untere Handy-Leiste */
+  --t2-rail: 76px;
   background: var(--t2-paper);
   color: var(--t2-ink);
   color-scheme: light;
@@ -91,26 +92,36 @@
 .t2-telem {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: 0;
+  border-top: 1px solid var(--t2-line);
+  border-bottom: 1px solid var(--t2-line);
 }
 @media (min-width: 768px) {
-  .t2-telem { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .t2-telem { grid-template-columns: repeat(3, 1fr); }
 }
 .t2-telem > div {
-  padding: 0.9rem 1rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(23, 20, 18, 0.04);
+  padding: 0.85rem 0;
+  background: transparent;
+  border-bottom: 1px solid var(--t2-line);
+}
+.t2-telem > div:last-child { border-bottom: 0; }
+@media (min-width: 768px) {
+  .t2-telem > div {
+    padding: 0.9rem 1.25rem 0.9rem 0;
+    border-bottom: 0;
+    border-right: 1px solid var(--t2-line);
+  }
+  .t2-telem > div:last-child { border-right: 0; padding-right: 0; }
 }
 .t2-telem dt {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--t2-muted);
 }
 .t2-telem dd {
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -142,15 +153,23 @@
 .t2-input:focus { border-color: var(--t2-accent); }
 .t2-input::placeholder { color: var(--t2-muted); }
 
+.t2-panel {
+  border-top: 1px solid var(--t2-line);
+  padding: 1.15rem 0;
+}
+
 .t2-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--t2-line);
-  padding: 0.35rem 0.75rem;
-  font-size: 11px;
+  padding: 0.4rem 0.75rem;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--t2-muted);
-  background: #fff;
-  border-radius: 999px;
+  color: var(--t2-ink);
+  background: transparent;
+  border-radius: 8px;
 }
 .t2-chip.is-on {
   border-color: color-mix(in srgb, var(--t2-accent) 35%, transparent);

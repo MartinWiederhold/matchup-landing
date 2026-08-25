@@ -134,6 +134,12 @@ export default function TournamentsView() {
   }, [selectedId]);
 
   const nightsNum = useMemo(() => { try { const n = parseInt(localStorage.getItem(NIGHTS_KEY) ?? "", 10); return Number.isFinite(n) && n >= 0 ? n : 7; } catch { return 7; } }, []);
+  const bufferDays = useMemo(() => { try { const n = parseInt(localStorage.getItem("mu_tour_buffer_days") ?? "", 10); return Number.isFinite(n) && n >= 0 ? n : 2; } catch { return 2; } }, []);
+  const seasonStops = useMemo(
+    () => tours.filter((x) => seasonIds.has(x.id)).sort((a, b) => a.tournament_monday.localeCompare(b.tournament_monday))
+      .map((x) => ({ id: x.id, city: x.city || "", monday: x.tournament_monday, country: x.country })),
+    [tours, seasonIds],
+  );
   const startName = profile?.city ?? null;
 
   const toggleSet = (set: Set<string>, v: string, setter: (s: Set<string>) => void) => {
@@ -142,7 +148,7 @@ export default function TournamentsView() {
     setter(n);
   };
 
-  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center text-sm text-neutral-400">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.loading")}</div>;
   if (!user) return <TourLoginCard />;
 
   const selectedTt = selectedId ? byId.get(selectedId) : undefined;
@@ -170,17 +176,19 @@ export default function TournamentsView() {
       feePaid={planByTour.get(selectedTt.id)?.fee_paid ?? false}
       entryEvents={eventsByPlan.get(planByTour.get(selectedTt.id)?.id ?? "") ?? []}
       onEntryChanged={reloadEntries}
+      seasonStops={seasonStops}
+      bufferDays={bufferDays}
     />
   ) : null;
 
   const mapPane = (
-    <div className="relative h-full min-h-[220px] w-full bg-[#12161e]">
+    <div className="relative h-full min-h-[220px] w-full bg-[var(--t2-paper)]">
       <PlannerMap start={null} plan={[]} candidates={candidateStops} selectedId={selectedId} onSelect={handleSelect} />
     </div>
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
       <div className="shrink-0 space-y-3 border-b border-[var(--t2-line)] px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-0 flex-1" />
@@ -205,13 +213,13 @@ export default function TournamentsView() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {mapOpen && <div className="h-[40vh] shrink-0 md:hidden">{mapPane}</div>}
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-3 py-3 pb-24 md:w-[60%] md:flex-none md:pb-4">
-          {status === "loading" && <p className="text-sm text-neutral-400">{t("tour.loading")}</p>}
-          {status === "error" && <p className="text-sm text-neutral-400">{t("tour.loadError")}</p>}
+          {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>}
+          {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
           {status === "ready" && (
             <>
-              <p className="mb-2 px-1 text-[12px] font-medium text-neutral-500">{t("tour.resultCount", { n: filtered.length })}</p>
+              <p className="mb-2 px-1 text-[12px] font-medium text-[var(--t2-muted)]">{t("tour.resultCount", { n: filtered.length })}</p>
               {filtered.length === 0 ? (
-                <p className="border border-black/10 px-4 py-8 text-center text-sm text-neutral-500">{t("tour.empty")}</p>
+                <p className="border border-[var(--t2-line)] px-4 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.empty")}</p>
               ) : (
                 <ul className="space-y-0.5">
                   {filtered.map((tt) => (
@@ -237,7 +245,7 @@ export default function TournamentsView() {
       {detailEl && (
         <>
           <div className="absolute inset-0 z-[75] bg-black/40" onClick={() => setSelectedId(null)} />
-          <aside className="absolute right-0 top-0 z-[76] flex h-full w-full max-w-[400px] flex-col bg-white shadow-2xl">{detailEl}</aside>
+          <aside className="absolute right-0 top-0 z-[76] flex h-full w-full max-w-[720px] flex-col bg-[var(--t2-paper)] shadow-2xl">{detailEl}</aside>
         </>
       )}
     </div>

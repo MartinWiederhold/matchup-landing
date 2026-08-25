@@ -209,10 +209,10 @@ Attribution in beiden Fällen sicherstellen.
 
 ## Priorität 2 — Produktwert (Tour ist der Burggraben)
 
-### MU-050 · WTA-Haupttour importierbar (offene JSON-API) · M · offen
-**Befund:** `api.wtatennis.com/tennis/tournaments/` ist **offen** — robots.txt ohne Sperre (`Disallow:` leer), **keine Bot-Abwehr** (curl direkt genügt, HTTP 200 application/json). Params `page/pageSize/from/to/levels/excludeLevels`. **89 Turniere** Aug–Dez 2026 (Haupttour, ITF ausgeschlossen). Felder: **Titel, Stadt, Land, Datum (start/end), Level (WTA 125–1000), Belag, inOutdoor, Feldgröße (Einzel/Doppel), Preisgeld + Währung, Status, Sieger**. **Keine Meldefrist** im Endpunkt.
-**Nötig:** (a) `tour_tournaments_series_check` um `wta` erweitern (analog `itf_juniors`, MU-043). (b) **Punktetabelle WTA 125–1000** aus dem WTA-Regelwerk belegen (eigene Werte, nicht aus ITF/ATP ableiten — Lehre MU-045/047). (c) **Fristenregel belegen** (nicht im Endpunkt; aus dem WTA-Regelwerk, VIII o. ä.).
-**Priorität 2, nicht 1:** Betrifft die **Weltspitze**, nicht die Kernzielgruppe (aufstrebende ITF/Challenger-Spieler). Sauberster offener Zugang nach der ITF, aber nachrangig im Produktwert.
+### MU-050 · WTA-Haupttour importierbar (offene JSON-API) · M · **erledigt**
+**Befund (Zugang):** `api.wtatennis.com/tennis/tournaments/` ist offen (robots ohne Sperre, kein Bot-Schutz). Felder inkl. Level WTA 125–1000; **keine Meldefrist** im Endpunkt.
+**Erledigt:** (a) `tour_tournaments_series_check` um `wta` erweitert (`supabase/web_tour_tournaments_series_wta.sql`). (b) Punkttabelle WTA 1000/500/250/125 in `points.ts` v6, belegt aus WTA Rulebook VIII.A.5 — eigene Werte, nicht aus ITF/ATP abgeleitet. (c) Meldeschluss in `deadlines.ts`: vier Wochen vor dem Turniermontag aus III.A.2.a.i (nur Datum, keine erfundene Uhrzeit; Vorbehalt `entry_kann_abweichen_wta`; Withdrawal/Freeze unbelegt). Import `scripts/wta-import.mjs` steht in der GitHub-Importkette. Bestand 25.08.2026: **44 aktive** `wta`-Zeilen in `web.tour_tournaments`.
+**Nicht Teil davon:** Der GitHub-Zeitplan feuert nur auf dem Default-Branch — der Tageslauf selbst ist ein eigener Punkt (Import-Workflow auf `main`).
 
 ### MU-051 · Deutsche Turniere über nuLiga · M · **ZURÜCKGESTELLT** (Probe gelaufen)
 **Probe für Baden gebaut und gelaufen** (`scripts/nuliga-import.mjs`, Trockenlauf, Bericht in `scripts/nuliga-import-report.md`). **Ergebnis: zurückgestellt.** Drei Gründe:

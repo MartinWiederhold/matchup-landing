@@ -1,19 +1,12 @@
-import type { Metadata } from "next";
-import { getT } from "@/lib/i18n/server";
-import ProfileView from "./ProfileView";
+import { redirect } from "next/navigation";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getT();
-  return {
-    title: t("tour.t2navProfile"),
-    description: t("tour.setupSubtitle"),
-    alternates: { canonical: "/tour2/setup" },
-    robots: { index: false, follow: false },
-  };
-}
-
-export default async function TourSetupPage({ searchParams }: { searchParams: Promise<{ step?: string }> }) {
+/** Alias — kanonische Fläche ist /tour2/profile (Wizard-Schritt bleibt per ?step=). */
+export default async function Tour2SetupRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ step?: string }>;
+}) {
   const sp = await searchParams;
-  const initialStep = sp.step === "1" ? 1 : sp.step === "2" ? 2 : sp.step === "3" ? 3 : undefined;
-  return <ProfileView initialStep={initialStep} />;
+  const q = sp.step ? `?step=${encodeURIComponent(sp.step)}` : "";
+  redirect(`/tour2/profile${q}`);
 }

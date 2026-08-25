@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { DeadlineCountdown, ITF_PORTAL, ATP_PORTAL, WTA_PORTAL, ATP_APP_IOS, ATP_APP_ANDROID } from "../EntryDeadline";
 import InfoHint from "./InfoHint";
 import { hotelUrl, flightUrl, carUrl, flightPriceQuery, type LivePrice } from "@/lib/travelpayouts";
 import { loadTourPresence, joinTourPresence, leaveTourPresence, contactHref, type TourPresence } from "@/lib/tourPresence";
-import { demoPresenceFor, TOUR_PRESENCE_DEMO_ON, type DemoPlayer } from "@/lib/tourPresenceDemo";
+import { demoPresenceFor, type DemoPlayer } from "@/lib/tourPresenceDemo";
 import DemoPlayerSheet from "./DemoPlayerSheet";
 import TrainingSlots from "./TrainingSlots";
 import TournamentDocuments from "./TournamentDocuments";
@@ -27,11 +27,20 @@ import type { TourTravelDocument } from "@/lib/types";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
 import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
+import { restDaysBetween } from "@/domain/tour/travelBuffer";
+import { schengenUsage, isSchengenCode, type Stay } from "@/domain/tour/schengen";
+import { isBestRecordedSurface, type PerfMatch } from "@/domain/tour/performance";
+import { loadPerformance } from "@/lib/tourPerformance";
+import { loadStays } from "@/lib/tourStays";
+import { hasSchengenPassport } from "@/lib/visa";
 import { tourDeadlines } from "@/domain/tour/deadlines";
 import { loadTournamentNote, saveTournamentNote } from "@/lib/tourTournamentNote";
 import { loadWildcardContacts } from "@/lib/tourWildcards";
 import TourChatPanel from "./TourChatPanel";
 import type { TourTournament, TourCostRates, TourEntryStatus, TourEntryEvent } from "@/lib/types";
+
+/** MU-041: /tour2 ohne Beispiel-Spieler. /tour bleibt am Env-Flag (Vorgabe AN). */
+const SHOW_PRESENCE_DEMO = false;
 
 // Entry-Status-Auswahl im Editor: der Lebenszyklus ohne die Legacy-Codes.
 const ENTRY_STATUS_OPTS: TourEntryStatus[] = ["planned", "entered", "main_draw", "qualifying", "alternate", "withdrawn"];
@@ -81,16 +90,17 @@ function useFlightPrice(city: string, country: string, start: string, end: strin
   return state;
 }
 
+export type DetailSeasonStop = { id: string; city: string; monday: string; country: string | null };
+
 /**
- * Turnier-Detail des Saisonplaners: Kopf, PROMINENTE Hauptaktion (zur Saison hinzufügen/
- * entfernen), Meldefrist + Weg zur Meldung, Wochenkosten-Richtwert und Live-Flugpreis mit
- * EHRLICHEM Fallback („Keine Live-Preise für diesen Ort" statt leerem Kasten/Endlos-Spinner).
- * Buchungs-Deep-Links funktionieren immer, auch ohne Live-Preis.
+ * Turnier-Detail: Kopf, „Passt das zu mir?" (nur belegte Zeilen), PROMINENTE Hauptaktion,
+ * Reiter. Merken fehlt bewusst — Status vs. Liste ist noch offen.
  */
 export default function TournamentDetail({
   tt, countryName, inSeason, onToggle, onClose, originCity, originLabel, nights, rates, nowMs,
   viewerId, viewerName, viewerRank, viewerNationality, viewerPassports,
   planId, entryStatus, alternatePosition, feePaid, entryEvents, onEntryChanged,
+  seasonStops = [], bufferDays = 2,
 }: {
   tt: TourTournament;
   countryName: string;
@@ -107,13 +117,14 @@ export default function TournamentDetail({
   viewerRank: string | null;
   viewerNationality: string | null;
   viewerPassports: string[];
-  // Entry-Status des Saisoneintrags (null = nicht in der Saison → keine Status-Zeile).
   planId: string | null;
   entryStatus: TourEntryStatus;
   alternatePosition: number | null;
   feePaid: boolean;
-  entryEvents: TourEntryEvent[]; // Beobachtungs-Verlauf dieser Planzeile (chronologisch)
-  onEntryChanged: () => void; // nach dem Speichern/Löschen: Parent lädt Plan + Verlauf neu
+  entryEvents: TourEntryEvent[];
+  onEntryChanged: () => void;
+  seasonStops?: DetailSeasonStop[];
+  bufferDays?: number;
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -313,6 +324,25 @@ export default function TournamentDetail({
   const destIsSchengen = isSchengen(countryName);
   const myDoc = tt.country && visaInfo ? bestDocumentFor(travelDocs, tt.country, destIsSchengen) : null;
 
+  const [perfMatches, setPerfMatches] = useState<PerfMatch[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadPerformance(viewerId).then((d) => { if (alive) setPerfMatches(d.matches); }).catch(() => { if (alive) setPerfMatches([]); });
+    return () => { alive = false; };
+  }, [viewerId]);
+
+  const schengenApplies = viewerPassports.length > 0 && !hasSchengenPassport(viewerPassports);
+  const [loggedStays, setLoggedStays] = useState<Stay[]>([]);
+  useEffect(() => {
+    if (!schengenApplies) { setLoggedStays([]); return; }
+    let alive = true;
+    loadStays(viewerId).then((rows) => {
+      if (!alive) return;
+      setLoggedStays(rows.filter((s) => s.confirmed).map((s) => ({ country: s.country, entry: s.entry_date, exit: s.exit_date })));
+    }).catch(() => { if (alive) setLoggedStays([]); });
+    return () => { alive = false; };
+  }, [viewerId, schengenApplies]);
+
   const start = tt.tournament_monday;
   const end = addDaysISO(start, nights > 0 ? nights : 7);
   const stop = { city: tt.city ?? "", country: countryName, start, end };
@@ -473,7 +503,7 @@ export default function TournamentDetail({
   // Filter der Liste (Alle/Partner/Mitbewohner) — getrennt vom eigenen Opt-in.
   const filterMatch = (looking: boolean, room: boolean) => hereFilter === "all" || (hereFilter === "partner" && looking) || (hereFilter === "room" && room);
   const othersShown = others.filter((r) => filterMatch(r.looking, r.looking_room));
-  const demoAll = TOUR_PRESENCE_DEMO_ON ? demoPresenceFor(tt.id, tt.category, tt.tournament_monday) : [];
+  const demoAll = SHOW_PRESENCE_DEMO ? demoPresenceFor(tt.id, tt.category, tt.tournament_monday) : [];
   const demoShown = demoAll.filter((d) => filterMatch(d.looking, d.lookingRoom));
   const selCls = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
 
@@ -491,62 +521,159 @@ export default function TournamentDetail({
   const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series, tt.category);
   const hasCountdown = dl.known && !!dl.entry && dl.entry.getTime() > nowMs;
 
+  const startDm = (() => {
+    const x = new Date(start + "T00:00:00Z");
+    return `${String(x.getUTCDate()).padStart(2, "0")}.${String(x.getUTCMonth() + 1).padStart(2, "0")}`;
+  })();
+  const endIso = addDaysISO(start, 6);
+  const fmtRange = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" });
+  const rangeLabel = `${fmtRange.format(new Date(start + "T00:00:00Z"))} – ${fmtRange.format(new Date(endIso + "T00:00:00Z"))}`;
+  const indoorLabel = tt.indoor === true ? t("tour.ovIndoor") : tt.indoor === false ? t("tour.ovOutdoor") : null;
+  const surfaceLabel = tt.surface ? t(`tour.surface_${tt.surface}`) : null;
+  const metaBits = [tt.category, surfaceLabel, indoorLabel].filter(Boolean);
+  const dlDays = hasCountdown && dl.entry ? Math.ceil((dl.entry.getTime() - nowMs) / DAY) : null;
+
+  const ptsCat = toPointsCategory(tt.category);
+  const expPts = ptsCat ? expectedPoints(tt.category, "R16", start).points : null;
+  const prevStop = useMemo(() => {
+    const before = seasonStops.filter((s) => s.id !== tt.id && s.monday < start).sort((a, b) => a.monday.localeCompare(b.monday));
+    return before[before.length - 1] ?? null;
+  }, [seasonStops, tt.id, start]);
+  const restDays = prevStop ? restDaysBetween(Date.parse(prevStop.monday + "T00:00:00Z"), Date.parse(start + "T00:00:00Z")) : null;
+  const restTight = restDays != null && restDays < bufferDays;
+  const surfaceBetter = perfMatches != null && isBestRecordedSurface(perfMatches, tt.surface);
+  const asOf = new Date(nowMs).toISOString().slice(0, 10);
+  const thisStay: Stay | null = tt.country && isSchengenCode(tt.country)
+    ? { country: tt.country, entry: start, exit: addDaysISO(start, nights > 0 ? nights : 7) }
+    : null;
+  const schengenPreview = useMemo(() => {
+    if (!schengenApplies || !thisStay) return null;
+    const others = seasonStops
+      .filter((s) => s.id !== tt.id && isSchengenCode(s.country))
+      .map((s) => ({
+        country: s.country as string,
+        entry: s.monday,
+        exit: addDaysISO(s.monday, nights > 0 ? nights : 7),
+      }));
+    const usage = schengenUsage([...loggedStays, ...others, thisStay], asOf);
+    const extra = Math.round((Date.parse(thisStay.exit + "T00:00:00Z") - Date.parse(thisStay.entry + "T00:00:00Z")) / DAY);
+    return { extra, used: usage.used, exceeds: usage.exceeds };
+  }, [schengenApplies, thisStay, seasonStops, tt.id, nights, loggedStays, asOf]);
+
+  const fitRow = "flex items-baseline justify-between gap-3 border-b border-[var(--t2-line)] py-2.5 text-[13px] last:border-b-0";
+  const hasFit = (expPts != null) || ratesDone || (restDays != null && prevStop) || !!visaInfo || !!schengenPreview || surfaceBetter;
+
   return (
-    <div className="flex h-full flex-col bg-white">
-      {/* Kopf mit Zurück */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-neutral-200 px-4 py-3">
-        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.04]" aria-label={t("tour.wsDetailBack")}>←</button>
-        <span className="text-[13px] font-bold text-neutral-500">{t("tour.wsDetailBack")}</span>
+    <div className="flex h-full flex-col bg-[var(--t2-paper)]">
+      <div className="flex shrink-0 items-center gap-2 border-b border-[var(--t2-line)] px-4 py-3">
+        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center text-[18px] text-[var(--t2-muted)] hover:text-[var(--t2-ink)]" aria-label={t("tour.wsDetailBack")}>←</button>
+        <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--t2-muted)]">{t("tour.wsDetailBack")}</span>
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        {/* Titel */}
         <div>
-          <h2 className="text-xl font-extrabold tracking-tight text-neutral-900">{tt.city || t("tour.fieldMissing")}</h2>
-          <p className="text-[13px] text-neutral-500">{countryName} · {fmtDay(start)}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {/* Belag NICHT mehr als Chip hier — er steht jetzt als eigene Zeile im Übersicht-
-                Reiter (mit drinnen/draußen), dort ist er nicht doppelt. */}
-            {tt.category && <span className="rounded-full bg-matchup/10 px-2.5 py-0.5 text-[11px] font-bold text-matchup">{tt.category}</span>}
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="min-w-0 text-[clamp(1.6rem,5vw,2.2rem)] font-black uppercase leading-[0.9] tracking-[-0.04em]">{tt.city || t("tour.fieldMissing")}</h2>
+            <p className="shrink-0 text-[1.6rem] font-black tabular-nums tracking-[-0.04em]" aria-hidden>
+              {startDm.slice(0, 2)}<span className="text-matchup">.</span>{startDm.slice(3)}
+            </p>
           </div>
+          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{[rangeLabel, ...metaBits].filter(Boolean).join(" · ")}</p>
+          <p className="mt-0.5 text-[13px] text-[var(--t2-muted)]">{[tt.city, countryName].filter(Boolean).join(", ")}</p>
+          {dlDays != null && (
+            <p className={`mt-2 text-[13px] font-semibold ${dlDays <= 2 ? "text-amber-800" : "text-[var(--t2-ink)]"}`}>
+              {dlDays <= 0 ? t("tour.t2calDeadlineToday") : t("tour.t2calDeadlineIn", { n: dlDays })}
+            </p>
+          )}
         </div>
+
+        {hasFit && (
+          <section>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-matchup">{t("tour.t2fitTitle")}</h3>
+            <div className="mt-2">
+              {expPts != null && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.t2expPoints")}</span>
+                  <span className="text-right font-semibold tabular-nums text-[var(--t2-ink)]">{t("tour.t2fitPts", { n: expPts })} <span className="font-normal text-[var(--t2-muted)]">· {t("tour.t2pointsAssume", { round: t("tour.round_R16") })}</span></span>
+                </div>
+              )}
+              {ratesDone && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.t2fitCost")}</span>
+                  <span className="font-semibold tabular-nums">{fmtCur(weekMinor, rates!.currency as string)}</span>
+                </div>
+              )}
+              {prevStop && restDays != null && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.t2fitRestLabel")}</span>
+                  <span className={`text-right font-semibold ${restTight ? "text-amber-800" : "text-[var(--t2-ink)]"}`}>
+                    {restDays === 1 ? t("tour.t2fitRestOne", { city: prevStop.city || "—" }) : t("tour.t2fitRest", { n: restDays, city: prevStop.city || "—" })}
+                  </span>
+                </div>
+              )}
+              {visaInfo && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.t2fitEntry")}</span>
+                  <span className={`font-semibold ${visaInfo.requirementClass === "admission_refused" ? "text-red-700" : "text-[var(--t2-ink)]"}`}>{visaWord}</span>
+                </div>
+              )}
+              {schengenPreview && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.t2fitSchengenLabel")}</span>
+                  <span className={`font-semibold tabular-nums ${schengenPreview.exceeds ? "text-amber-800" : "text-[var(--t2-ink)]"}`}>
+                    {t("tour.t2fitSchengen", { n: schengenPreview.extra })}
+                    {schengenPreview.exceeds ? ` · ${t("tour.t2healthSchengenOver", { n: Math.max(0, schengenPreview.used - 90) })}` : ""}
+                  </span>
+                </div>
+              )}
+              {surfaceBetter && surfaceLabel && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.ovSurfaceTitle")}</span>
+                  <span className="text-right font-semibold">{t("tour.t2fitSurfaceBetter", { surface: surfaceLabel })}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* HAUPTAKTION direkt unter dem Titel. Nicht in der Saison → aufnehmen. In der Saison →
             der MELDE-Knopf: geplant → prominenter „Melden" (ein Klick = Status 'entered'), danach
-            grün „Gemeldet"; andere Stände öffnen den Editor. Darunter eine schlanke „Entfernen"-Zeile. */}
+            gemeldet; andere Stände öffnen den Editor. Darunter eine schlanke „Entfernen"-Zeile. */}
         {!inSeason ? (
-          <button type="button" onClick={onToggle} className="w-full rounded-2xl bg-matchup px-5 py-3.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-matchup-hover">
+          <button type="button" onClick={onToggle} className="t2-cta w-full">
             {t("tour.wsDetailAdd")}
           </button>
         ) : (
           <div className="space-y-2">
             {planId && entryStatus === "planned" ? (
-              <button type="button" onClick={quickEnter} disabled={quickBusy} className="w-full rounded-2xl bg-matchup px-5 py-3.5 text-[15px] font-bold text-white shadow-sm transition-colors hover:bg-matchup-hover disabled:opacity-60">
+              <button type="button" onClick={quickEnter} disabled={quickBusy} className="t2-cta w-full disabled:opacity-60">
                 {quickBusy ? t("tour.wsFilling") : t("tour.wsReportCta")}
               </button>
             ) : planId && isEnteredLike(entryStatus) ? (
-              <button type="button" onClick={openEntryEditor} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500/10 px-5 py-3.5 text-[15px] font-bold text-emerald-700 ring-1 ring-emerald-500/20 transition-colors hover:bg-emerald-500/15">
-                <span aria-hidden>✓</span>{t("tour.wsReportedCta")}{entryStatus !== "entered" ? ` · ${t(`tour.status_${entryStatus}`)}` : ""}
+              <button type="button" onClick={openEntryEditor} className="t2-ghost w-full">
+                <span aria-hidden className="mr-1.5">✓</span>{t("tour.wsReportedCta")}{entryStatus !== "entered" ? ` · ${t(`tour.status_${entryStatus}`)}` : ""}
               </button>
             ) : planId ? (
-              // alternate / withdrawn / cancelled → aktuellen Stand zeigen; Klick öffnet den Editor.
-              <button type="button" onClick={openEntryEditor} className={`flex w-full items-center justify-center rounded-2xl px-5 py-3 text-[14px] font-bold ring-1 ${entryStatus === "alternate" ? "bg-amber-500/10 text-amber-700 ring-amber-500/20" : "bg-black/[0.04] text-neutral-500 ring-black/10"}`}>
+              <button type="button" onClick={openEntryEditor} className="t2-ghost w-full">
                 {entryWord}
               </button>
             ) : null}
             <div className="flex items-center justify-between gap-3 px-1 text-[12px]">
-              <span className="flex items-center gap-1.5 text-neutral-400"><span aria-hidden>✓</span>{t("tour.wsDetailInSeason")}</span>
-              <button type="button" onClick={onToggle} className="shrink-0 font-semibold text-neutral-400 hover:text-neutral-700">{t("tour.wsDetailRemove")}</button>
+              <span className="flex items-center gap-1.5 text-[var(--t2-muted)]"><span aria-hidden>✓</span>{t("tour.wsDetailInSeason")}</span>
+              <button type="button" onClick={onToggle} className="shrink-0 font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsDetailRemove")}</button>
             </div>
           </div>
         )}
 
-        {/* Reiter — fünf Pills: auf Desktop füllen sie gleichmäßig (flex-1), auf schmalem
-            Schirm (≈390 px) verhindert min-w-fit das Abschneiden und die Leiste scrollt
-            horizontal statt umzubrechen (bewusst: scrollen, nicht zusammenlegen). */}
-        <div className="flex gap-1 overflow-x-auto rounded-full bg-black/[0.04] p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* Reiter: Haarlinie, horizontales Scrollen auf schmalem Schirm statt Umbruch. */}
+        <div className="flex gap-0 overflow-x-auto border-b border-[var(--t2-line)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {DETAIL_TABS.map((tab) => (
-            <button key={tab.k} type="button" onClick={() => setActiveTab(tab.k)} className={`min-w-fit flex-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[12px] font-bold transition-colors ${activeTab === tab.k ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>
+            <button
+              key={tab.k}
+              type="button"
+              onClick={() => setActiveTab(tab.k)}
+              className={`min-w-fit flex-1 whitespace-nowrap px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] ${activeTab === tab.k ? "border-b-2 border-matchup text-[var(--t2-ink)]" : "border-b-2 border-transparent text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
+            >
               {t(tab.label)}
             </button>
           ))}
@@ -879,8 +1006,9 @@ export default function TournamentDetail({
 
           {/* BEISPIEL-Block — reine Anzeige (nie in player_presence). Hinweis über der Liste,
               „Beispiel"-Merkmal je Eintrag, KEIN Anschreiben/Kontakt. Abschaltbar über
-              NEXT_PUBLIC_TOUR_PRESENCE_DEMO. Siehe src/lib/tourPresenceDemo.ts (Herkunft/Lizenz). */}
-          {TOUR_PRESENCE_DEMO_ON && demoShown.length > 0 && (
+              NEXT_PUBLIC_TOUR_PRESENCE_DEMO. Siehe src/lib/tourPresenceDemo.ts (Herkunft/Lizenz).
+              /tour2: SHOW_PRESENCE_DEMO (MU-041), nicht das globale Flag. */}
+          {SHOW_PRESENCE_DEMO && demoShown.length > 0 && (
             <div className="mt-4">
               <p className="flex items-center gap-1.5 rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] font-semibold text-neutral-500">
                 <span aria-hidden>ⓘ</span>{t("tour.wsHereDemoBanner")}

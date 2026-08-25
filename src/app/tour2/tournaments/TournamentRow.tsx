@@ -35,11 +35,11 @@ export default function TournamentRow({
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <p className="truncate text-[15px] font-semibold tracking-tight">
           {tt.city || t("tour.fieldMissing")}
-          <span className="text-neutral-400">, {countryName}</span>
+          <span className="text-[var(--t2-muted)]">, {countryName}</span>
         </p>
-        <p className="text-[11px] text-neutral-500">{fmtDay(tt.tournament_monday, locale)} · {tt.category || "—"} · {series}</p>
+        <p className="text-[11px] text-[var(--t2-muted)]">{fmtDay(tt.tournament_monday, locale)} · {tt.category || "—"} · {series}</p>
         {pts > 0 && (
-          <p className="mt-0.5 text-[11px] font-semibold text-neutral-500">
+          <p className="mt-0.5 text-[11px] font-semibold text-[var(--t2-muted)]">
             {t("tour.t2ptsAssume", { n: pts })} · {t("tour.t2pointsAssume", { round: t("tour.round_R16") })}
           </p>
         )}
@@ -48,7 +48,7 @@ export default function TournamentRow({
         type="button"
         onClick={onToggle}
         aria-label={inSeason ? t("tour.seasonRemove") : t("tour.addToSeason")}
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[14px] font-bold ${inSeason ? "bg-neutral-900 text-white" : "border border-black/20 text-neutral-900"}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[14px] font-bold ${inSeason ? "bg-[var(--t2-ink)] text-white" : "border border-[var(--t2-line)] text-[var(--t2-ink)]"}`}
       >
         {inSeason ? "✓" : "+"}
       </button>

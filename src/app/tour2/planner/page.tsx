@@ -13,6 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function Tour2PlannerPage() {
-  return <SeasonWorkspace />;
+export default async function Tour2PlannerPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+  const sp = await searchParams;
+  const id = typeof sp.id === "string" && sp.id.length > 0 ? sp.id : null;
+  return <SeasonWorkspace initialSelectedId={id} />;
 }

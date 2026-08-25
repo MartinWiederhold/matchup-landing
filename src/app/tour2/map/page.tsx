@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Karte ist keine eigene Fläche mehr — Entdecken lebt unter Turniere (Liste + Karte).
+/** Karte ist keine eigene Fläche — Turniere (Liste + Karte). */
 export default function Tour2MapRedirect() {
-  redirect("/tour2/browse");
+  redirect("/tour2/tournaments");
 }

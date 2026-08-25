@@ -7,6 +7,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, loadActiveTournaments, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
+import { loadTourOptPrefs, saveTourOptPrefs, parseCap, blockedRangesFrom } from "@/lib/tourOptPrefs";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, clearSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
 import { alternateTrend } from "@/domain/tour/entryTrend";
 import { loadReminderSettings, saveReminderSettings } from "@/lib/tourReminders";
@@ -18,13 +19,19 @@ import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { loadTravelDocuments } from "@/lib/tourTravelDocuments";
 import { loadPlayerMaster, loadPlayerDocs, type PlayerDocs } from "@/lib/tourPlayerMaster";
 import type { TourTravelDocument } from "@/lib/types";
-import { loadResultHistory, type ResultHistoryRow } from "@/lib/tourResultHistory";
+import { loadResultHistory, toMatchResults, type ResultHistoryRow } from "@/lib/tourResultHistory";
 import { loadWildcardContacts, type TourWildcardContact } from "@/lib/tourWildcards";
 import { computeSeasonCost } from "@/domain/tour/costs";
-import { optimizeSeason, type SeasonObjective } from "@/domain/tour/optimizeSeason";
+import { optimizeSeason, type SeasonObjective, type SeasonProposal } from "@/domain/tour/optimizeSeason";
 import { restDaysBetween, tightArrivals } from "@/domain/tour/travelBuffer";
 import { expectedPoints, type PointsRound } from "@/domain/tour/points";
+import { tourDeadlines } from "@/domain/tour/deadlines";
+import { documentWarnings } from "@/domain/tour/documentWarnings";
+import { visaLeadWarnings } from "@/domain/tour/visaLeadWarnings";
+import { pointsForecast } from "@/domain/tour/pointsForecast";
+import { buildActionBoard, type BoardTournament } from "@/domain/tour/actionBoard";
 import { schengenUsage, isSchengenCode, type Stay, type SchengenUsage } from "@/domain/tour/schengen";
+import Tour2ActionList from "@/app/tour2/components/Tour2ActionList";
 import CostRatesForm from "@/app/tour2/costs/components/CostRatesForm";
 import type { TourTournament, TourCostRates, TourSeasonPlanEntry, TourEntryEvent } from "@/lib/types";
 import PlannerMap, { type PlanStop, type MapStart } from "./PlannerMap";
@@ -37,8 +44,7 @@ import SeasonHealthBar from "./SeasonHealthBar";
 import SeasonJourney, { type JourneyLeg, type JourneyStop } from "./SeasonJourney";
 
 const DAY = 86_400_000;
-const NIGHTS_KEY = "mu_tour_nights";
-const BUFFER_KEY = "mu_tour_buffer_days"; // Anreisepuffer zwischen Orten (Tage), Nutzerangabe wie die Nächte
+const RECENT_KEY = "mu_tour_recent_starts";
 
 /** Beobachtungen nach plan_id gruppieren (für den Trend je Saisoneintrag). */
 function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]> {
@@ -55,14 +61,12 @@ const ROUND_OPTS: PointsRound[] = ["W", "F", "SF", "QF", "R16", "R32"];
 
 /**
  * /tour2 Saison (Etappe 2): Gesundheitsleiste, Reiseverlauf, Karte ~40 %, Optimierer
- * im Sheet. Daten und smartFill (MU-037: ergänzen, nie ersetzen) bleiben; das
- * Vier-Spalten-Layout mit Katalog ist weg — Entdecken liegt unter Turniere.
+ * im Sheet. Vorschlag zuerst, Übernehmen = INSERT (MU-037, nie ersetzen). Entdecken
+ * liegt unter Turniere.
  */
 const byMonday = (a: TourTournament, b: TourTournament) => a.tournament_monday.localeCompare(b.tournament_monday);
 const hasCoords = (t: TourTournament) => t.latitude != null && t.longitude != null;
-const RECENT_KEY = "mu_tour_recent_starts";
-
-export default function SeasonWorkspace() {
+export default function SeasonWorkspace({ initialSelectedId = null }: { initialSelectedId?: string | null }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const { locale } = useLocale();
@@ -82,8 +86,9 @@ export default function SeasonWorkspace() {
   // Status-Pills + Trend in der Saisonliste und den Editor im Detail.
   const [planByTour, setPlanByTour] = useState<Map<string, TourSeasonPlanEntry>>(new Map());
   const [eventsByPlan, setEventsByPlan] = useState<Map<string, TourEntryEvent[]>>(new Map());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [mapOpen, setMapOpen] = useState(false); // Handy: Karte aufklappbar; Desktop immer sichtbar
+  useEffect(() => { if (initialSelectedId) setSelectedId(initialSelectedId); }, [initialSelectedId]);
 
   // Profil (aufklappbar) + Ranking-Bearbeitung.
   const [profileOpen, setProfileOpen] = useState(false);
@@ -114,8 +119,8 @@ export default function SeasonWorkspace() {
 
   // Etappe 3: Kostensätze, Nächte-Annahme, Schengen-Aufenthalte, Smart-Fill-Zustand.
   const [rates, setRates] = useState<TourCostRates | null>(null);
-  const [nights, setNights] = useState<string>(() => { try { return localStorage.getItem(NIGHTS_KEY) ?? ""; } catch { return ""; } });
-  const [buffer, setBuffer] = useState<string>(() => { try { return localStorage.getItem(BUFFER_KEY) ?? ""; } catch { return ""; } });
+  const [nights, setNights] = useState<string>(() => loadTourOptPrefs().nights);
+  const [buffer, setBuffer] = useState<string>(() => loadTourOptPrefs().buffer);
   // Anreisepuffer (Tage): leer → Vorgabe 2 (wie im Optimierer). Steuert Optimierer + „Knappe Anreise"-Marker.
   const bufferNum = useMemo(() => { const n = parseInt(buffer.trim(), 10); return Number.isFinite(n) && n >= 0 ? n : 2; }, [buffer]);
   // Optimierer-Objektiv + angenommene Zielrunde (Erwartungspunkte). SSR-stabile Defaults,
@@ -134,8 +139,6 @@ export default function SeasonWorkspace() {
   const chooseObjective = useCallback((o: SeasonObjective) => { setObjective(o); try { localStorage.setItem(OBJECTIVE_KEY, o); } catch { /* egal */ } }, []);
   const chooseRound = useCallback((r: PointsRound) => { setExpRound(r); try { localStorage.setItem(EXP_ROUND_KEY, r); } catch { /* egal */ } }, []);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const openFillSheet = useCallback(() => setFiltersOpen(true), []);
-  const closeFillSheet = useCallback(() => setFiltersOpen(false), []);
   // Fristen-Erinnerungen (E-Mail): Schalter im Profil. Vorgabe an; beim Umschalten wird die
   // aktuelle UI-Sprache mitgespeichert, damit die Mail sie trifft.
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -163,6 +166,26 @@ export default function SeasonWorkspace() {
 
   const [stays, setStays] = useState<Stay[]>([]);
   const [filling, setFilling] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [proposal, setProposal] = useState<SeasonProposal | null>(null);
+  const [maxPicks, setMaxPicks] = useState(() => loadTourOptPrefs().maxPicks);
+  const [maxStreak, setMaxStreak] = useState(() => loadTourOptPrefs().maxStreak);
+  const [blockedFrom, setBlockedFrom] = useState(() => loadTourOptPrefs().blockedFrom);
+  const [blockedTo, setBlockedTo] = useState(() => loadTourOptPrefs().blockedTo);
+  const openFillSheet = useCallback(() => {
+    const p = loadTourOptPrefs();
+    setNights(p.nights);
+    setBuffer(p.buffer);
+    setMaxPicks(p.maxPicks);
+    setMaxStreak(p.maxStreak);
+    setBlockedFrom(p.blockedFrom);
+    setBlockedTo(p.blockedTo);
+    setFiltersOpen(true);
+  }, []);
+  const closeFillSheet = useCallback(() => {
+    setFiltersOpen(false);
+    setProposal(null);
+  }, []);
   // MU-037: Rückmeldung nach dem Füllen. reason erklärt, WARUM nichts dazukam.
   const [fillReport, setFillReport] = useState<{ added: number; occupied: number; reason: "added" | "weeks_full" | "budget" | "no_candidates" } | null>(null);
   // Saison leeren (Reset): NUR nach Sicherheitsabfrage (Datenverlust-Lehre MU-037).
@@ -311,8 +334,12 @@ export default function SeasonWorkspace() {
   // ── Etappe 3: reaktive Kosten & Status ─────────────────────────────────────────
   // Nächte-Annahme (localStorage): leer → 7 (Domain-Default), sonst die Eingabe.
   const nightsNum = useMemo(() => { const n = parseInt(nights.trim(), 10); return Number.isFinite(n) && n >= 0 ? n : 7; }, [nights]);
-  useEffect(() => { try { if (nights.trim() === "") localStorage.removeItem(NIGHTS_KEY); else localStorage.setItem(NIGHTS_KEY, nights.trim()); } catch { /* egal */ } }, [nights]);
-  useEffect(() => { try { if (buffer.trim() === "") localStorage.removeItem(BUFFER_KEY); else localStorage.setItem(BUFFER_KEY, buffer.trim()); } catch { /* egal */ } }, [buffer]);
+  useEffect(() => { saveTourOptPrefs({ nights }); }, [nights]);
+  useEffect(() => { saveTourOptPrefs({ buffer }); }, [buffer]);
+  useEffect(() => { saveTourOptPrefs({ maxPicks }); }, [maxPicks]);
+  useEffect(() => { saveTourOptPrefs({ maxStreak }); }, [maxStreak]);
+  useEffect(() => { saveTourOptPrefs({ blockedFrom }); }, [blockedFrom]);
+  useEffect(() => { saveTourOptPrefs({ blockedTo }); }, [blockedTo]);
 
   // Unterliegt die Nationalität der Schengen-90/180-Regel? (kein Schengen-Pass → ja)
   const schengenApplies = useMemo(() => !!profile && profile.passports.length > 0 && !hasSchengenPassport(profile.passports), [profile]);
@@ -390,12 +417,11 @@ export default function SeasonWorkspace() {
     }));
   }, [user]);
 
-  // „Günstigste Saison füllen": ruft den Optimierer und SETZT die Saison (Startpunkt,
-  // danach von Hand änderbar — nicht ein Ergebnis, das man annimmt). Ersetzt die
-  // bisherige Saison (Diff-Persistenz gegen tour_season_plan).
+  // „Vorschlag erstellen": Optimierer rechnen, NICHT schreiben. Übernehmen = INSERT (MU-037).
   const smartFill = useCallback(async () => {
-    if (!user || filling || !costRatesComplete(rates)) return;
+    if (!user || filling || applying || !costRatesComplete(rates)) return;
     setFilling(true);
+    setProposal(null);
     try {
       const params = ratesToCostParams(rates!);
       const cur = rates!.currency ?? "EUR";
@@ -416,6 +442,7 @@ export default function SeasonWorkspace() {
       const spentMinor = cost ? (cost.total[cur] ?? 0) : 0;
       const remainingM = budgetM ? { amount: Math.max(0, budgetM.amount - spentMinor), currency: cur } : null;
       const candidates = buildSeasonCandidates(tours, frame, blockedWeeks, seasonIds);
+      const blockedRanges = blockedRangesFrom(blockedFrom, blockedTo);
       const result = optimizeSeason({
         candidates,
         budget: remainingM,
@@ -428,31 +455,50 @@ export default function SeasonWorkspace() {
         entryBanned: banned,
         objective,
         expectedRound: objective === "most_points" ? expRound : null,
+        maxPicks: parseCap(maxPicks),
+        maxConsecutiveWeeks: parseCap(maxStreak),
+        blockedRanges,
       });
-      const picks = result.picks.filter((p) => !seasonIds.has(p.id)); // doppelte Sicherung: nie Bestehendes
+      const picks = result.picks.filter((p) => !seasonIds.has(p.id));
       if (picks.length > 0) {
-        const next = new Set(seasonIds);
-        picks.forEach((p) => next.add(p.id));
-        setSeasonIds(next); // optimistisch — NUR hinzufügen
-        await Promise.all(picks.map((p) => addToSeason(user.id, p.id)));
-        await reloadEntries(); // Planzeilen der neu gefüllten Turniere nachladen
+        setProposal(result);
+        setFillReport(null);
+        return;
       }
-      // Grund für „nichts ergänzt" unterscheiden: alle Wochen belegt · Budget erschöpft ·
-      // keine Kandidaten im Rahmen. (Bei added>0 ist reason egal.)
       let reason: "added" | "weeks_full" | "budget" | "no_candidates" = "added";
-      if (picks.length === 0) {
-        if (candidates.length === 0) reason = blockedWeeks.size > 0 ? "weeks_full" : "no_candidates";
-        else if ((remainingM != null && remainingM.amount <= 0) || result.rejected.some((r) => r.reasons.some((x) => x.code === "budget_erschoepft"))) reason = "budget";
-        else reason = "no_candidates";
-      }
-      setFillReport({ added: picks.length, occupied: blockedWeeks.size, reason });
+      if (candidates.length === 0) reason = blockedWeeks.size > 0 ? "weeks_full" : "no_candidates";
+      else if ((remainingM != null && remainingM.amount <= 0) || result.rejected.some((r) => r.reasons.some((x) => x.code === "budget_erschoepft"))) reason = "budget";
+      else reason = "no_candidates";
+      setFillReport({ added: 0, occupied: blockedWeeks.size, reason });
     } catch {
-      // Bei Fehler den echten Stand zurückholen, damit Anzeige und DB nicht auseinanderlaufen.
       try { setSeasonIds(await loadSeasonTournamentIds()); } catch { /* egal */ }
     } finally {
       setFilling(false);
     }
-  }, [user, filling, rates, budget, profile, tours, frame, nights, nightsNum, buffer, bufferNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound, reloadEntries]);
+  }, [user, filling, applying, rates, budget, profile, tours, frame, nights, nightsNum, buffer, bufferNum, schengenApplies, stays, banned, seasonIds, cost, objective, expRound, maxPicks, maxStreak, blockedFrom, blockedTo]);
+
+  const applyProposal = useCallback(async () => {
+    if (!user || applying || filling || !proposal) return;
+    setApplying(true);
+    try {
+      const blockedWeeks = new Set<string>();
+      for (const id of seasonIds) { const tt = tours.find((x) => x.id === id); if (tt?.tournament_monday) blockedWeeks.add(tt.tournament_monday); }
+      const picks = proposal.picks.filter((p) => !seasonIds.has(p.id));
+      if (picks.length > 0) {
+        const next = new Set(seasonIds);
+        picks.forEach((p) => next.add(p.id));
+        setSeasonIds(next);
+        await Promise.all(picks.map((p) => addToSeason(user.id, p.id)));
+        await reloadEntries();
+      }
+      setFillReport({ added: picks.length, occupied: blockedWeeks.size, reason: picks.length > 0 ? "added" : "no_candidates" });
+      setProposal(null);
+    } catch {
+      try { setSeasonIds(await loadSeasonTournamentIds()); } catch { /* egal */ }
+    } finally {
+      setApplying(false);
+    }
+  }, [user, applying, filling, proposal, seasonIds, tours, reloadEntries]);
 
   const money = useCallback((minor: number, cur: string) => new Intl.NumberFormat(locale, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [locale]);
 
@@ -600,13 +646,79 @@ export default function SeasonWorkspace() {
   const activeFilters = selSeries.length + selSurface.length + selCountries.length + (frame.to ? 1 : 0) + (frame.region !== "europe" && selCountries.length === 0 ? 1 : 0);
   const resetFilters = () => setFrame((f) => ({ ...f, region: "europe", countries: [], series: [], surface: [], to: "" }));
 
+  const todayISO = new Date(nowMs).toISOString().slice(0, 10);
+  const nextDeadline = useMemo(() => {
+    let best: { monday: string; country: string | null } | null = null;
+    let bestMs = Infinity;
+    for (const { tt } of seasonOrdered) {
+      const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series, tt.category);
+      const ms = dl.entry ? dl.entry.getTime() : null;
+      if (ms == null || ms < nowMs) continue;
+      if (ms < bestMs) { bestMs = ms; best = { monday: tt.tournament_monday, country: tt.country }; }
+    }
+    return best;
+  }, [seasonOrdered, nowMs]);
+  const docWarnings = useMemo(() => {
+    if (!docs) return [];
+    return documentWarnings({
+      passports: [
+        { country: docs.passport_country, expiry: docs.passport_expiry },
+        { country: docs.passport2_country, expiry: docs.passport2_expiry },
+      ],
+      insurance: { expiry: docs.insurance_expiry, international: docs.insurance_international },
+      nextTrip: nextDeadline ? { destination: nextDeadline.country, entryDate: nextDeadline.monday } : null,
+      asOf: todayISO,
+    });
+  }, [docs, nextDeadline, todayISO]);
+  const board = useMemo(() => {
+    const tournaments: BoardTournament[] = seasonOrdered.map(({ tt }) => {
+      const plan = planByTour.get(tt.id);
+      const events = plan ? eventsByPlan.get(plan.id) ?? [] : [];
+      return {
+        id: tt.id, city: tt.city, country: tt.country, monday: tt.tournament_monday, series: tt.series,
+        status: plan?.status ?? "planned", alternatePosition: plan?.alternate_position ?? null,
+        feePaid: plan?.fee_paid ?? false, decision: plan?.decision ?? null, inactive: tt.valid_to != null,
+        alternateObs: events.map((e) => ({ observedAt: e.observed_at, alternatePosition: e.alternate_position })),
+      };
+    });
+    const f = pointsForecast(toMatchResults(resultHistory), todayISO);
+    const soon4 = f.steps.find((s) => s.weeks === 4)?.expiring[0] ?? null;
+    const points = resultHistory.length
+      ? {
+          total: f.currentTotal,
+          nextExpiry: f.schedule[0] ? { date: f.schedule[0].expiresOn, points: f.schedule[0].points } : null,
+          expiringSoon: soon4 ? { date: soon4.expiresOn, points: soon4.points } : null,
+        }
+      : null;
+    const visaLead = visaLeadWarnings({
+      asOf: todayISO,
+      tournaments: seasonOrdered.map(({ tt }) => ({ id: tt.id, city: tt.city, country: tt.country, monday: tt.tournament_monday })),
+      docs: travelDocs.map((d) => ({ scope: d.scope, status: d.status, valid_until: d.valid_until, lead_weeks: d.lead_weeks })),
+    });
+    const curc = rates?.currency ?? "EUR";
+    const spent = cost ? (cost.total[curc] ?? 0) : 0;
+    const over = budgetMinor ? spent - budgetMinor.amount : null;
+    return buildActionBoard({
+      asOf: todayISO,
+      tournaments,
+      banned: [...banned],
+      docWarnings,
+      schengen: schengen ? { exceeds: schengen.exceeds, used: schengen.used, left: schengen.left } : null,
+      points,
+      wildcards: wildcards.map((wc) => ({ tournamentName: byId.get(wc.tournament_id)?.city ?? "—", tournamentId: wc.tournament_id, requestedOn: wc.requested_on, outcome: wc.outcome })),
+      budgetOver: over != null && over > 0 ? { amountMinor: over, currency: curc } : null,
+      visaLead,
+    });
+  }, [todayISO, seasonOrdered, planByTour, eventsByPlan, resultHistory, travelDocs, banned, docWarnings, schengen, wildcards, byId, rates?.currency, cost, budgetMinor]);
+
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.loading")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
 
-  const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+  const inp = "t2-input";
+  const filt = (on: boolean) => `t2-chip ${on ? "is-on" : ""}`;
 
 
   // Status-Pill je Saisoneintrag. 'planned' (Default aus Optimierer/„Füllen") erzeugt KEIN
@@ -619,8 +731,8 @@ export default function SeasonWorkspace() {
     const status = plan?.status ?? "planned";
     if (status === "planned") return null;
     const pos = plan?.alternate_position ?? null;
-    const cls = status === "main_draw" || status === "entered" || status === "qualifying" || status === "confirmed" ? "bg-emerald-50 text-emerald-800"
-      : status === "alternate" ? "bg-amber-50 text-amber-800"
+    const cls = status === "main_draw" || status === "entered" || status === "qualifying" || status === "confirmed" ? "text-matchup"
+      : status === "alternate" ? "text-[var(--t2-ink)]"
       : status === "withdrawn" || status === "cancelled" ? "text-[var(--t2-muted)] line-through"
       : "text-[var(--t2-muted)]";
     const word = `${t(`tour.status_${status}`)}${status === "alternate" && pos != null ? ` #${pos}` : ""}`;
@@ -631,11 +743,11 @@ export default function SeasonWorkspace() {
       : { kind: "none" as const };
     return (
       <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-        <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${cls}`}>{word}</span>
-        {trend.kind === "up" && <span className="text-[11px] font-bold text-emerald-600" title={t("tour.wsTrendUp", { n: trend.delta })}>↑</span>}
-        {trend.kind === "down" && <span className="text-[11px] font-bold text-amber-600" title={t("tour.wsTrendDown", { n: -trend.delta })}>↓</span>}
-        {trend.kind === "flat" && <span className="text-[11px] font-bold text-neutral-400" title={t("tour.wsTrendFlat")}>•</span>}
-        {trend.kind === "stale" && <span className="text-[10.5px] text-neutral-400">{t("tour.wsEntryAsOf", { date: fmtDay(trend.observedAt) })}</span>}
+        <span className={`text-[11px] font-semibold ${cls}`}>{word}</span>
+        {trend.kind === "up" && <span className="text-[11px] font-bold text-matchup" title={t("tour.wsTrendUp", { n: trend.delta })}>↑</span>}
+        {trend.kind === "down" && <span className="text-[11px] font-bold" title={t("tour.wsTrendDown", { n: -trend.delta })}>↓</span>}
+        {trend.kind === "flat" && <span className="text-[11px] font-bold text-[var(--t2-muted)]" title={t("tour.wsTrendFlat")}>•</span>}
+        {trend.kind === "stale" && <span className="text-[10.5px] text-[var(--t2-muted)]">{t("tour.wsEntryAsOf", { date: fmtDay(trend.observedAt) })}</span>}
       </span>
     );
   };
@@ -719,7 +831,7 @@ export default function SeasonWorkspace() {
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-matchup/10 text-[20px]" aria-hidden>👤</div>
       <h3 className="mt-2 text-[15px] font-extrabold text-neutral-900">{t("tour.npTitle")}</h3>
       <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">{t("tour.npBody")}</p>
-      <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-2.5 text-[13px] font-bold text-white hover:bg-matchup-hover">{t("tour.npCta")}</Link>
+      <Link href="/app" className="t2-cta mt-3">{t("tour.npCta")}</Link>
     </div>
   );
 
@@ -750,6 +862,8 @@ export default function SeasonWorkspace() {
       feePaid={planByTour.get(selectedTt.id)?.fee_paid ?? false}
       entryEvents={eventsByPlan.get(planByTour.get(selectedTt.id)?.id ?? "") ?? []}
       onEntryChanged={reloadEntries}
+      seasonStops={seasonOrdered.map(({ tt }) => ({ id: tt.id, city: tt.city || "", monday: tt.tournament_monday, country: tt.country }))}
+      bufferDays={bufferNum}
     />
   ) : null;
 
@@ -771,13 +885,20 @@ export default function SeasonWorkspace() {
     pill: entryPill(tt),
   }));
 
+  const proposalPicks = proposal?.picks.filter((p) => !seasonIds.has(p.id)) ?? [];
+  const proposalPoints = proposalPicks.reduce((sum, p) => {
+    const tt = tours.find((x) => x.id === p.id);
+    return sum + expectedPoints(tt?.category ?? null, "R16", p.weekMonday).points;
+  }, 0);
+  const proposalCostMinor = proposal ? (proposal.cost.total[cur] ?? 0) : 0;
+
   const fillPanel = (
-    <div className="flex h-full flex-col bg-[var(--t2-paper)] text-[var(--t2-ink)]">
+    <div className="relative flex h-full flex-col bg-[var(--t2-paper)] text-[var(--t2-ink)]">
       <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3">
         <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t("tour.t2fillSheetTitle")}{activeFilters > 0 ? ` · ${activeFilters}` : ""}</h2>
         <div className="flex items-center gap-1">
-          {activeFilters > 0 && <button type="button" onClick={resetFilters} className="rounded-full px-2.5 py-1 text-[12px] font-semibold text-neutral-500 hover:bg-black/[0.04]">{t("tour.wsFiltersReset")}</button>}
-          <button type="button" onClick={closeFillSheet} className="flex h-7 w-7 items-center justify-center rounded-full text-[16px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
+          {activeFilters > 0 && <button type="button" onClick={resetFilters} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>}
+          <button type="button" onClick={closeFillSheet} className="flex h-7 w-7 items-center justify-center text-[16px] text-[var(--t2-muted)] hover:text-[var(--t2-ink)]" aria-label={t("common.close")}>✕</button>
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
@@ -801,7 +922,7 @@ export default function SeasonWorkspace() {
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {HOME_BASES.map((b) => (
-              <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={`rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${startName === b.name ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-white text-neutral-600 ring-black/10 hover:bg-black/[0.03]"}`}>{b.name}</button>
+              <button key={b.name} type="button" onClick={() => pickStart({ name: b.name, lat: b.lat, lng: b.lng })} className={filt(startName === b.name)}>{b.name}</button>
             ))}
           </div>
         </section>
@@ -809,7 +930,7 @@ export default function SeasonWorkspace() {
           <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsObjectiveTitle")}</span>
           <div className="flex flex-wrap gap-1.5">
             {([["most_tournaments", "wsObjTournaments"], ["most_points", "wsObjPoints"]] as const).map(([v, key]) => (
-              <button key={v} type="button" onClick={() => chooseObjective(v)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${objective === v ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.${key}`)}</button>
+              <button key={v} type="button" onClick={() => chooseObjective(v)} className={filt(objective === v)}>{t(`tour.${key}`)}</button>
             ))}
           </div>
           {objective === "most_points" && (
@@ -817,7 +938,7 @@ export default function SeasonWorkspace() {
               <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsRoundLabel")}</span>
               <div className="flex flex-wrap gap-1.5">
                 {ROUND_OPTS.map((r) => (
-                  <button key={r} type="button" onClick={() => chooseRound(r)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${expRound === r ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.round_${r}`)}</button>
+                  <button key={r} type="button" onClick={() => chooseRound(r)} className={filt(expRound === r)}>{t(`tour.round_${r}`)}</button>
                 ))}
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRoundHint")}</p>
@@ -829,7 +950,7 @@ export default function SeasonWorkspace() {
           <div className="flex flex-wrap gap-1.5">
             {SERIES_OPTS.map((o) => {
               const on = selSeries.includes(o.v);
-              return <button key={o.v} type="button" onClick={() => toggleSeries(o.v)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${on ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{o.label}</button>;
+              return <button key={o.v} type="button" onClick={() => toggleSeries(o.v)} className={filt(on)}>{o.label}</button>;
             })}
           </div>
         </div>
@@ -838,17 +959,17 @@ export default function SeasonWorkspace() {
           <div className="flex flex-wrap gap-1.5">
             {SURFACE_OPTS.map((s) => {
               const on = selSurface.includes(s);
-              return <button key={s} type="button" onClick={() => toggleSurface(s)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${on ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.surface_${s}`)}</button>;
+              return <button key={s} type="button" onClick={() => toggleSurface(s)} className={filt(on)}>{t(`tour.surface_${s}`)}</button>;
             })}
           </div>
         </div>
         <div>
           <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.plRegion")}</span>
           <div className="flex flex-wrap items-center gap-1.5">
-            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "all", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "all" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionAll")}</button>
-            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "europe", countries: [] }))} className={`rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length === 0 && frame.region === "europe" ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t("tour.plRegionEurope")}</button>
+            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "all", countries: [] }))} className={filt(selCountries.length === 0 && frame.region === "all")}>{t("tour.plRegionAll")}</button>
+            <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "europe", countries: [] }))} className={filt(selCountries.length === 0 && frame.region === "europe")}>{t("tour.plRegionEurope")}</button>
             <div className="relative" ref={countryBoxRef}>
-              <button type="button" onClick={() => setCountryOpen((o) => !o)} className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ${selCountries.length ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>
+              <button type="button" onClick={() => setCountryOpen((o) => !o)} className={`gap-1.5 ${filt(selCountries.length > 0)}`}>
                 {selCountries.length ? t("tour.wsCountriesN", { n: selCountries.length }) : t("tour.wsCountries")}
                 <span className={`transition-transform ${countryOpen ? "rotate-180" : ""}`}>▾</span>
               </button>
@@ -887,6 +1008,21 @@ export default function SeasonWorkspace() {
           <input ref={budgetRef} value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
           {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
         </label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optMaxEvents")}</span>
+            <input value={maxPicks} onChange={(e) => setMaxPicks(e.target.value)} inputMode="numeric" placeholder="—" className={inp} /></label>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optMaxStreak")}</span>
+            <input value={maxStreak} onChange={(e) => setMaxStreak(e.target.value)} inputMode="numeric" placeholder="—" className={inp} /></label>
+        </div>
+        <div>
+          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optBlocked")}</span>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block"><span className="mb-1 block text-[11px] text-neutral-500">{t("tour.t2optBlockedFrom")}</span>
+              <input type="date" value={blockedFrom} onChange={(e) => setBlockedFrom(e.target.value)} className={inp} /></label>
+            <label className="block"><span className="mb-1 block text-[11px] text-neutral-500">{t("tour.t2optBlockedTo")}</span>
+              <input type="date" value={blockedTo} onChange={(e) => setBlockedTo(e.target.value)} className={inp} /></label>
+          </div>
+        </div>
         <div>
           <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsCostTitle")}
             <InfoHint label={t("tour.wsCostInfo")}>
@@ -907,10 +1043,10 @@ export default function SeasonWorkspace() {
       </div>
       <div className="shrink-0 space-y-2 border-t border-neutral-200 p-4">
         {!ratesDone && <p className="text-[12px] font-semibold text-amber-700">{t("tour.wsCostNeedRates")}</p>}
-        <button type="button" onClick={() => void smartFill()} disabled={filling || !ratesDone} className="t2-cta w-full disabled:opacity-40">
-          {filling ? t("tour.wsPlanning") : t("tour.wsFill")}
+        <button type="button" onClick={() => void smartFill()} disabled={filling || applying || !ratesDone} className="t2-cta w-full disabled:opacity-40">
+          {filling ? t("tour.t2optProposing") : t("tour.t2optPropose")}
         </button>
-        {fillReport && (
+        {fillReport && proposalPicks.length === 0 && (
           <p className="text-[12px] leading-relaxed text-neutral-600">
             {fillReport.added > 0
               ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
@@ -920,6 +1056,24 @@ export default function SeasonWorkspace() {
           </p>
         )}
       </div>
+      {proposalPicks.length > 0 && (
+        <div className="absolute inset-0 z-20 flex flex-col justify-end bg-[var(--t2-paper)]/95 p-4">
+          <div className="border border-[var(--t2-line)] bg-[var(--t2-paper)] p-4">
+            <p className="text-[15px] font-semibold leading-snug text-[var(--t2-ink)]">
+              {t("tour.t2optSummary", { n: proposalPicks.length, points: proposalPoints, cost: money(proposalCostMinor, cur) })}
+            </p>
+            <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.t2optSummaryAssume")}</p>
+            <div className="mt-4 space-y-2">
+              <button type="button" onClick={() => void applyProposal()} disabled={applying} className="t2-cta w-full disabled:opacity-40">
+                {applying ? t("tour.t2optApplyBusy") : t("tour.t2optApply")}
+              </button>
+              <button type="button" onClick={() => setProposal(null)} disabled={applying} className="t2-ghost w-full disabled:opacity-40">
+                {t("tour.t2optRetry")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -955,7 +1109,7 @@ export default function SeasonWorkspace() {
   );
 
   const mapPane = (
-    <div className="relative h-full min-h-[220px] w-full bg-[#12161e]">
+    <div className="relative h-full min-h-[220px] w-full bg-[var(--t2-paper)]">
       <PlannerMap start={start} plan={planStops} candidates={[]} selectedId={selectedId} onSelect={handleSelect} />
       {homeCountryMsg && (
         <div className="pointer-events-none absolute left-1/2 top-3 z-[72] -translate-x-1/2">
@@ -966,7 +1120,7 @@ export default function SeasonWorkspace() {
   );
 
   return (
-    <div className="relative flex h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -976,7 +1130,7 @@ export default function SeasonWorkspace() {
         tightCount={tightMap.size}
         schengen={schengen ? { exceeds: schengen.exceeds, used: schengen.used, left: schengen.left } : null}
         onPlan={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }}
-        planning={filling}
+        planning={filling || applying}
         planDisabled={false}
       />
 
@@ -986,14 +1140,26 @@ export default function SeasonWorkspace() {
             <button type="button" onClick={() => setMapOpen((o) => !o)} className="t2-ghost">
               {mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}
             </button>
-            <Link href="/tour2/browse" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+            <Link href="/tour2/tournaments" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
           </div>
           {mapOpen && <div className="h-[36vh] shrink-0 md:hidden">{mapPane}</div>}
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-24 md:pb-4">
-            {status === "loading" && <p className="text-sm text-neutral-400">{t("tour.loading")}</p>}
-            {status === "error" && <p className="text-sm text-neutral-400">{t("tour.loadError")}</p>}
+            {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>}
+            {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
             {status === "ready" && profile && (
               <>
+                {board.actions.length > 0 && (
+                  <section className="mb-6">
+                    <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-matchup">{t("tour.t2action")}</h2>
+                    <Tour2ActionList
+                      actions={board.actions}
+                      countryName={catName}
+                      fmtDate={fmtDay}
+                      money={money}
+                      onOpenTournament={setSelectedId}
+                    />
+                  </section>
+                )}
                 {fillReport && (
                   <p className="mb-3 border border-black/10 px-3 py-2 text-[12px] leading-relaxed text-neutral-700">
                     {fillReport.added > 0
@@ -1011,29 +1177,29 @@ export default function SeasonWorkspace() {
                   onSelect={setSelectedId}
                   onRemove={toggle}
                   empty={
-                    <div className="border border-black/10 px-4 py-8 text-center">
-                      <p className="text-[15px] font-bold text-neutral-900">{t("tour.t2noSeason")}</p>
-                      <p className="mt-2 text-[13px] leading-relaxed text-neutral-500">{t("tour.t2seasonEmptyLead")}</p>
+                    <div className="border border-[var(--t2-line)] px-4 py-8 text-center">
+                      <p className="text-[15px] font-bold">{t("tour.t2noSeason")}</p>
+                      <p className="mt-2 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2seasonEmptyLead")}</p>
                       <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="t2-cta mt-4">{t("tour.wsFill")}</button>
-                      <Link href="/tour2/browse" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+                      <Link href="/tour2/tournaments" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                     </div>
                   }
                 />
                 <div className="mt-6 hidden items-center gap-3 md:flex">
-                  <Link href="/tour2/browse" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+                  <Link href="/tour2/tournaments" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                   <Link href="/tour2/calendar" className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900">{t("tour.wsViewCalendar")}</Link>
                 </div>
                 {seasonOrdered.length > 0 && (
                   confirmReset ? (
-                    <div className="mt-6 rounded-xl bg-red-500/10 px-3 py-2.5 ring-1 ring-red-500/20">
+                    <div className="mt-6 border border-red-200 px-3 py-2.5">
                       <p className="text-[12px] font-semibold text-red-700">{t("tour.wsClearConfirm", { n: seasonOrdered.length })}</p>
                       <div className="mt-2 flex gap-2">
-                        <button type="button" onClick={resetSeason} disabled={clearing} className="rounded-full bg-red-600 px-3 py-1.5 text-[12px] font-bold text-white">{t("tour.wsClearYes")}</button>
-                        <button type="button" onClick={() => setConfirmReset(false)} className="rounded-full px-3 py-1.5 text-[12px] font-semibold text-neutral-700 ring-1 ring-black/15">{t("tour.calCancel")}</button>
+                        <button type="button" onClick={resetSeason} disabled={clearing} className="bg-red-700 px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-40">{t("tour.wsClearYes")}</button>
+                        <button type="button" onClick={() => setConfirmReset(false)} className="t2-ghost">{t("tour.calCancel")}</button>
                       </div>
                     </div>
                   ) : (
-                    <button type="button" onClick={() => setConfirmReset(true)} className="mt-6 text-[12px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.wsClear")}</button>
+                    <button type="button" onClick={() => setConfirmReset(true)} className="mt-6 text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsClear")}</button>
                   )
                 )}
               </>
@@ -1059,7 +1225,7 @@ export default function SeasonWorkspace() {
       {detailEl && (
         <>
           <div className="absolute inset-0 z-[75] bg-black/40" onClick={() => setSelectedId(null)} />
-          <aside className="absolute right-0 top-0 z-[76] flex h-full w-full max-w-[400px] flex-col bg-white shadow-2xl">{detailEl}</aside>
+          <aside className="absolute right-0 top-0 z-[76] flex h-full w-full max-w-[720px] flex-col bg-[var(--t2-paper)] shadow-2xl">{detailEl}</aside>
         </>
       )}
 
@@ -1096,12 +1262,12 @@ export default function SeasonWorkspace() {
                       { key: "emergency", label: t("tour.suEmergency"), done: setupSummary?.emergency },
                       { key: "equipment", label: t("tour.suEquipment"), done: setupSummary?.equipment },
                     ].map((r) => (
-                      <Link key={r.key} href="/tour2/setup" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                      <Link key={r.key} href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
                         <span className="text-neutral-700">{r.label}</span>
                         <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : r.done ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : r.done ? t("tour.suDone") : t("tour.suMissing")}</span>
                       </Link>
                     ))}
-                    <Link href="/tour2/setup" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
+                    <Link href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
                       <span className="text-neutral-700">{t("tour.suTravelDocs")}</span>
                       <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : setupSummary.travelDocs > 0 ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : t("tour.suCount", { n: setupSummary.travelDocs })}</span>
                     </Link>

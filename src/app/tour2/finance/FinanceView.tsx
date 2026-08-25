@@ -104,23 +104,23 @@ export default function FinanceView() {
 
   const money = (minor: number, cur: string) => new Intl.NumberFormat(intl, { style: "currency", currency: cur, maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(minor / 100);
   const fmtMoney = (m: Money) => { const es = Object.entries(m); return es.length ? es.map(([c, v]) => money(v, c)).join(" · ") : "—"; };
-  const inp = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+  const inp = "t2-input";
 
-  if (authLoading) return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
-        <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+      <div className="t2-panel mt-6 text-center">
+        <p className="text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <Link href="/app" className="t2-cta mt-3">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (status === "error") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (status === "error") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const m = metrics!;
-  const tile = "rounded-2xl bg-black/[0.02] p-4 ring-1 ring-black/[0.05]";
-  const tileLabel = "text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400";
+  const tile = "border-t border-[var(--t2-line)] py-4";
+  const tileLabel = "t2-kicker";
 
   return (
     <div className="mt-8 space-y-8">
@@ -164,7 +164,7 @@ export default function FinanceView() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {balances.map((b) => (
-            <div key={b.tournamentId} className="rounded-2xl p-4 ring-1 ring-black/[0.06]">
+            <div key={b.tournamentId} className="border-t border-[var(--t2-line)] py-4">
               <p className="text-[14px] font-bold text-neutral-900">{nameById.get(b.tournamentId) ?? b.tournamentId}</p>
               {/* Ausgaben nach Posten */}
               <div className="mt-2 space-y-0.5">
@@ -186,8 +186,8 @@ export default function FinanceView() {
       )}
 
       {/* ── Einnahme erfassen + Liste ──────────────────────────────────────── */}
-      <section className="rounded-2xl ring-1 ring-black/[0.06] p-4">
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.finAddIncome")}</h2>
+      <section className="t2-panel">
+        <h2 className="t2-kicker">{t("tour.finAddIncome")}</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finKind")}</span>
             <select value={fKind} onChange={(e) => setFKind(e.target.value as IncomeKind)} className={inp}>{INCOME_KINDS.map((k) => <option key={k} value={k}>{t(`tour.income_${k}`)}</option>)}</select>
@@ -211,7 +211,7 @@ export default function FinanceView() {
             <input value={fNote} onChange={(e) => setFNote(e.target.value)} className={inp} />
           </label>
         </div>
-        <button type="button" onClick={submitIncome} disabled={saving || euroToMinor(fAmount) == null} className="mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">
+        <button type="button" onClick={submitIncome} disabled={saving || euroToMinor(fAmount) == null} className="t2-cta mt-3 disabled:opacity-50">
           {t("tour.finSave")}
         </button>
 

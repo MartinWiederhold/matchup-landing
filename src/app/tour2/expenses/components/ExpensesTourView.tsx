@@ -87,7 +87,7 @@ export default function ExpensesTourView() {
       <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
         <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 inline-flex rounded-full bg-matchup px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function ExpensesTourView() {
 
       {/* Summen je Währung */}
       {totals.size > 0 && (
-        <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
+        <section className="t2-panel">
           <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expTotals")}</h2>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[...totals.entries()].sort().map(([c, v]) => (

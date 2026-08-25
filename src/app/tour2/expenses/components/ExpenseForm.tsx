@@ -96,7 +96,7 @@ export default function ExpenseForm({
   }
 
   return (
-    <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
+    <section className="t2-panel">
       <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -182,7 +182,7 @@ export default function ExpenseForm({
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <button type="button" onClick={save} disabled={saving || uploading} className="rounded-full bg-neutral-900 px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-50">
+        <button type="button" onClick={save} disabled={saving || uploading} className="t2-cta disabled:opacity-50">
           {saving ? t("tour.expSaving") : t("tour.expSave")}
         </button>
         {error === "invalid" && <span className="text-[12px] text-neutral-500">{t("tour.expInvalidAmount")}</span>}

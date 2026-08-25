@@ -113,7 +113,7 @@ export default function PipelineView() {
     return (
       <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
         <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 inline-flex rounded-full bg-matchup px-6 py-3 text-sm font-bold text-white hover:bg-matchup-hover">{t("tour.loginCta")}</Link>
+        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }

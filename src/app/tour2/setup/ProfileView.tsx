@@ -1,9 +1,8 @@
 "use client";
 
 /**
- * /tour2 Profil (Etappe 5): Spieler-Dossier statt hellem Setup-Wizard.
- * Identität aus /app, Tour-Felder (Nationalität, Ranking), Kit (Pass/Visa/Equipment)
- * und Werkzeuge. Lücken nur mit belegten Daten (profileGaps). Kein neues Schema.
+ * /tour2 Profil (Etappe 6): Identität aus /app, Tennis, Planung (Optimierer-Regeln),
+ * Kostensätze, Reisedokumente, Ausrüstung, Notfall, Erinnerungen. Caps ohne neue Tabelle.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,6 +17,7 @@ import StepWhoAreYou from "@/app/tour2/components/setup/StepWhoAreYou";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
 import PlayerMasterForm from "./PlayerMasterForm";
 import TravelDocsCard from "./TravelDocsCard";
+import PlanRulesCard from "./PlanRulesCard";
 
 type LoadState = "loading" | "error" | "done";
 
@@ -31,7 +31,7 @@ const TOOLS: { href: string; label: "costsTitle" | "expTitle" | "schengenTitle" 
   { href: "/tour2/finance", label: "financeTitle" },
 ];
 
-export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }) {
+export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 | 4 }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const [setup, setSetup] = useState<SetupState | null>(null);
@@ -131,6 +131,7 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 }
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
         <div>
           <StepWhoAreYou state={setup} userId={user.id} tone="light" onSaved={() => { void reload(); }} />
+          <PlanRulesCard userId={user.id} seasonBudget={setup.seasonBudget} onBudgetSaved={() => { void reload(); }} />
           <div className="mt-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">{t("tour.t2profKit")}</p>
             <PlayerMasterForm tone="light" />

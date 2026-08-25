@@ -10,13 +10,13 @@ import {
 } from "@/lib/tourTravelDocuments";
 import type { TourTravelDocument, TravelDocKind, TravelDocStatus } from "@/lib/types";
 
-const inpL = "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inpL = "t2-input";
 const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
 const lblL = "mb-1 block text-[12px] font-semibold text-neutral-600";
 const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
-const cardL = "rounded-2xl ring-1 ring-black/[0.06] p-4";
+const cardL = "t2-panel";
 const cardD = "border border-white/10 bg-black p-4";
-const btn = "mt-3 rounded-full bg-matchup px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50";
+const btn = "t2-cta mt-3 disabled:opacity-50";
 
 const KINDS: TravelDocKind[] = ["esta", "eta", "schengen_visa", "national_visa", "other"];
 const STATUSES: TravelDocStatus[] = ["have", "applied", "none"];

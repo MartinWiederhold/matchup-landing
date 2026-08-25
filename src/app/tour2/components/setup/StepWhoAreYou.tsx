@@ -70,7 +70,7 @@ export default function StepWhoAreYou({
   const nameCls = dark ? "text-white" : "text-neutral-900";
   const muted = dark ? "text-neutral-400" : "text-neutral-500";
   const lbl = dark ? "text-neutral-400" : "text-neutral-600";
-  const drop = dark ? "absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-white/15 bg-[#12161e] p-1 shadow-xl" : "absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-black/10 bg-white p-1 shadow-xl";
+  const drop = dark ? "absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-[var(--t2-line)] bg-[var(--t2-paper)] p-1 shadow-xl" : "absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-black/10 bg-white p-1 shadow-xl";
   const dropBtn = dark ? "w-full rounded-lg px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-white/10" : "w-full rounded-lg px-3 py-2 text-left text-[13px] text-neutral-800 hover:bg-black/[0.04]";
 
   async function save() {

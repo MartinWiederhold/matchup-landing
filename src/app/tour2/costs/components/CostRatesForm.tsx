@@ -21,8 +21,7 @@ const SUGGEST = {
   foodPerDay: minorToEuro(SUGGESTED_RATES_MINOR.foodPerDay),
 };
 
-const inputCls =
-  "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inputCls = "t2-input";
 
 /** Kostensätze-Formular. Beträge als Euro-String (leer = unbekannt); Umrechnung in
  *  Cent passiert in tourCosts.ts. Nächte-Annahme wird vom Elter gehalten (localStorage). */
@@ -110,8 +109,8 @@ export default function CostRatesForm({
   );
 
   return (
-    <section className="rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.costsRatesTitle")}</h2>
+    <section className="t2-panel">
+      <h2 className="t2-kicker">{t("tour.costsRatesTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {field(t("tour.costsArrival"), arrival, setArrival, SUGGEST.arrival)}
@@ -169,7 +168,7 @@ export default function CostRatesForm({
           type="button"
           onClick={save}
           disabled={busy}
-          className="rounded-full bg-neutral-900 px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
+          className="t2-cta disabled:opacity-50"
         >
           {t("tour.costsSave")}
         </button>

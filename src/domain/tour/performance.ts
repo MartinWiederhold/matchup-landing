@@ -188,3 +188,20 @@ export function pointsBySurface(entries: ScoredSurfaceEntry[]): PointsBySurface[
   };
   return [...map.values()].sort((a, b) => rank(a.surface) - rank(b.surface) || a.surface.localeCompare(b.surface));
 }
+
+/**
+ * „Besserer Belag": nur wenn mind. zwei Beläge mit Basis existieren und `surface`
+ * die streng höchste Siegquote hat. Sonst false — die UI zeigt die Zeile dann nicht
+ * (keine Erfindung, kein Unentschieden als Vorteil).
+ */
+export function isBestRecordedSurface(matches: PerfMatch[], surface: string | null): boolean {
+  if (!surface) return false;
+  const key = surfaceKey(surface);
+  if (key === UNKNOWN) return false;
+  const rated = winRates(matches).bySurface.filter((b) => b.key !== UNKNOWN && b.tally.decided > 0 && b.tally.rate != null);
+  if (rated.length < 2) return false;
+  const mine = rated.find((b) => b.key === key);
+  if (!mine || mine.tally.rate == null) return false;
+  const mineRate = mine.tally.rate;
+  return rated.every((b) => b.key === key || (b.tally.rate as number) < mineRate);
+}

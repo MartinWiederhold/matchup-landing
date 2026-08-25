@@ -59,8 +59,8 @@ export default function SeasonJourney({
   return (
     <ul ref={listRef} className="space-y-0">
       {startLabel && (
-        <li className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-neutral-900">
-          <span className="flex h-6 w-6 items-center justify-center border border-black/20 text-[11px]">⌂</span>
+        <li className="mb-3 flex items-center gap-2 text-[13px] font-semibold">
+          <span className="flex h-6 w-6 items-center justify-center border border-[var(--t2-line)] text-[11px]">⌂</span>
           {t("tour.t2startHome", { name: startLabel })}
         </li>
       )}
@@ -72,10 +72,10 @@ export default function SeasonJourney({
         return (
           <li key={s.id} data-stop={s.id}>
             {showMonth && (
-              <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500 first:mt-0">{s.month}</p>
+              <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-muted)] first:mt-0">{s.month}</p>
             )}
             {leg && (
-              <div className={`my-1 ml-[11px] border-l-2 py-2 pl-5 text-[11px] leading-snug ${leg.tight ? "border-neutral-900 text-neutral-800" : "border-black/15 text-neutral-500"}`}>
+              <div className={`my-1 ml-[11px] border-l py-2 pl-5 text-[11px] leading-snug ${leg.tight ? "border-[var(--t2-ink)] text-[var(--t2-ink)]" : "border-[var(--t2-line)] text-[var(--t2-muted)]"}`}>
                 {leg.cluster ? (
                   <p>{t("tour.t2legCluster")}</p>
                 ) : (
@@ -87,14 +87,14 @@ export default function SeasonJourney({
                 )}
               </div>
             )}
-            <div className={`flex items-start gap-2 border-l-2 px-2 py-2 ${sel ? "border-matchup bg-neutral-50" : "border-transparent"}`}>
+            <div className={`flex items-start gap-2 border-l px-2 py-2 ${sel ? "border-matchup" : "border-transparent"}`}>
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-matchup text-[11px] font-bold text-white">{s.order}</span>
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
                 <p className="truncate text-[15px] font-semibold tracking-tight">{s.city}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
-                <p className="text-[11px] text-neutral-500">{s.date} · {s.category}</p>
+                <p className="text-[11px] text-[var(--t2-muted)]">{s.date} · {s.category}</p>
                 {s.pill}
               </button>
-              <button type="button" onClick={() => onRemove(s.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-900">{t("tour.seasonRemove")}</button>
+              <button type="button" onClick={() => onRemove(s.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.seasonRemove")}</button>
             </div>
           </li>
         );
