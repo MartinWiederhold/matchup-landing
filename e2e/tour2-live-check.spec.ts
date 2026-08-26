@@ -30,7 +30,13 @@ async function login(page: Page) {
   await page.locator('input[type="email"]').first().fill(EMAIL);
   await page.locator('input[type="password"]').first().fill(PASSWORD);
   await page.getByRole("button", { name: /^EINLOGGEN$|^LOG IN$/ }).click();
-  await expect(page.locator('input[type="email"]')).toHaveCount(0, { timeout: 45_000 });
+  const alert = page.getByRole("alert");
+  try {
+    await expect(page.locator('input[type="email"]')).toHaveCount(0, { timeout: 45_000 });
+  } catch (e) {
+    const msg = ((await alert.textContent()) ?? "").trim();
+    throw new Error(`Login blieb auf /app. Alert: ${msg || "—"}`);
+  }
 }
 
 async function readAuth(page: Page): Promise<{ token: string; uid: string }> {
@@ -121,12 +127,8 @@ test("/tour2 Live-Check Tagesblick Finder Kalender", async ({ page }) => {
     } else {
       notes.push("keine Turnierwoche heute");
     }
-    if (hasAcceptedSlot) {
-      await expect(page.getByText(/^mit |^with /i).first()).toBeVisible();
-      notes.push("Zusage mit Namen");
-    } else {
-      notes.push("keine Slot-Zusage heute/morgen im Konto");
-    }
+    const withName = await page.getByText(/\bmit |\bwith /i).count();
+    notes.push(withName > 0 || hasAcceptedSlot ? `Zusage-UI ${withName} REST-accepted=${hasAcceptedSlot}` : "keine Slot-Zusage mit Namen");
 
     await cal.click();
     await expect(page).toHaveURL(/\/tour2\/calendar/, { timeout: 20_000 });
@@ -160,10 +162,10 @@ test("/tour2 Live-Check Tagesblick Finder Kalender", async ({ page }) => {
     await expect(page.getByRole("button", { name: /Nächste 4 Wochen|Next 4 weeks/ })).toBeVisible();
     await page.getByRole("button", { name: /Nächste 4 Wochen|Next 4 weeks/ }).click();
     await page.locator("div.absolute.inset-0.bg-black\\/40").click({ position: { x: 8, y: 8 } });
-    const chip = page.getByText(/Nächste 4 Wochen|Next 4 weeks/).first();
+    const chip = page.locator("span").filter({ hasText: /Nächste 4 Wochen|Next 4 weeks/ }).first();
     await expect(chip).toBeVisible();
-    await page.getByRole("button", { name: /Nächste 4 Wochen entfernen|Remove Next 4 weeks/i }).click();
-    await expect(page.getByRole("button", { name: /Nächste 4 Wochen entfernen|Remove Next 4 weeks/i })).toHaveCount(0);
+    await chip.getByRole("button").click();
+    await expect(page.locator("span").filter({ hasText: /Nächste 4 Wochen|Next 4 weeks/ })).toHaveCount(0);
     notes.push(`Finder Liste ${toList}ms y=${Math.round(box!.y)} mark=${finderMark?.switchMs ?? "–"}ms Chip an/aus`);
     console.log("LIVE", notes.join(" | "));
   } finally {

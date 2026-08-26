@@ -24,10 +24,12 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } } }],
-  webServer: {
-    command: "npm run dev",
-    url: process.env.E2E_BASE_URL || "http://localhost:3000",
-    reuseExistingServer: true,
-    timeout: 180_000,
-  },
+  webServer: process.env.E2E_BASE_URL?.startsWith("http://localhost") || !process.env.E2E_BASE_URL
+    ? {
+        command: "npm run dev",
+        url: process.env.E2E_BASE_URL || "http://localhost:3000",
+        reuseExistingServer: true,
+        timeout: 180_000,
+      }
+    : undefined,
 });
