@@ -25,18 +25,23 @@ const SUPA_KEY = envVal("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 const HIT = "E2E-Glance-Hit";
 
 async function login(page: Page) {
+  expect(EMAIL.length, "E2E_EMAIL").toBeGreaterThan(3);
+  expect(PASSWORD.length, "E2E_PASSWORD").toBeGreaterThan(3);
   await page.request.post("/api/unlock", { data: { code: GATE_CODE } });
-  await page.goto("/app");
-  await page.locator('input[type="email"]').first().fill(EMAIL);
-  await page.locator('input[type="password"]').first().fill(PASSWORD);
-  await page.getByRole("button", { name: /^EINLOGGEN$|^LOG IN$/ }).click();
-  const alert = page.getByRole("alert");
-  try {
-    await expect(page.locator('input[type="email"]')).toHaveCount(0, { timeout: 45_000 });
-  } catch (e) {
-    const msg = ((await alert.textContent()) ?? "").trim();
-    throw new Error(`Login blieb auf /app. Alert: ${msg || "—"}`);
-  }
+  const auth = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: SUPA_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+  });
+  const session = await auth.json() as { access_token?: string; user?: { id: string } };
+  expect(session.access_token, "Passwort-Grant").toBeTruthy();
+  const ref = new URL(SUPA_URL).hostname.split(".")[0];
+  await page.goto("/app", { waitUntil: "domcontentloaded" });
+  await page.evaluate(({ ref, session }) => {
+    localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(session));
+  }, { ref, session });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("textbox", { name: /E-?mail/i })).toHaveCount(0, { timeout: 45_000 });
 }
 
 async function readAuth(page: Page): Promise<{ token: string; uid: string }> {
