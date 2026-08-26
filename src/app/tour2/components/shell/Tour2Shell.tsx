@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Linke Tour-Leiste (Markenblau) + Arbeitsfläche. Die sieben Bereiche
- * stehen als Zeilen, nicht als Dock unten.
+ * Desktop: linke blaue Leiste. Telefon: Kopfzeile + untere Tableiste
+ * (fünf Slots, Rest hinter Mehr) — /app bleibt unberührt.
  */
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, type UIEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +17,7 @@ import {
   T2_FINDER, T2_RANKING, T2_SEASON,
 } from "@/app/tour2/components/t2Action";
 import { t2markNavStart } from "@/app/tour2/t2mark";
+import Tour2TabBar, { type T2Tab } from "./Tour2TabBar";
 
 const AREA = [
   { key: "overview", href: "/tour2", match: (p: string) => p === "/tour2", label: "t2navOverview" as const },
@@ -51,9 +52,10 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<PlannerProfile | null>(null);
   const [docCount, setDocCount] = useState(0);
   const [netCount, setNetCount] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [navCompact, setNavCompact] = useState(false);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => { setMoreOpen(false); }, [pathname]);
 
   useEffect(() => {
     if (!user) { setProfile(null); setDocCount(0); setNetCount(0); return; }
@@ -76,6 +78,13 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
   const ranking = profile?.ranking;
   const year = new Date().getFullYear();
   const bleed = FULL_BLEED.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const current = AREA.find((a) => a.match(pathname));
+  const headerKey = pathname.startsWith("/tour2/profile") ? "t2navProfile" as const : (current?.label ?? "t2navOverview");
+  const moreActive = current?.key === "travel" || current?.key === "docs" || current?.key === "network" || pathname.startsWith("/tour2/profile");
+
+  const onMainScroll = (e: UIEvent<HTMLElement>) => {
+    setNavCompact((e.currentTarget.scrollTop || 0) > 24);
+  };
 
   const badge = (key: string): number | null => {
     if (key === "docs" && docCount > 0) return docCount;
@@ -149,19 +158,82 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
     </>
   );
 
+  const tabs: T2Tab[] = [
+    { key: "overview", href: "/tour2", label: t("tour.t2navOverview"), icon: "overview" },
+    { key: "finder", href: T2_FINDER, label: t("tour.t2navFinder"), icon: "finder" },
+    { key: "season", href: T2_SEASON, label: t("tour.t2navPlanner"), icon: "season" },
+    { key: "ranking", href: T2_RANKING, label: t("tour.t2navRanking"), icon: "ranking" },
+    { key: "more", label: t("tour.t2more"), icon: "more", badge: (badge("docs") ?? 0) + (badge("network") ?? 0) || null },
+  ];
+  const tabActive = moreActive ? "more" : (current?.key ?? "overview");
+
+  const moreLinks = [
+    { href: "/tour2/travel", label: t("tour.t2navTravel"), match: current?.key === "travel" },
+    { href: "/tour2/documents", label: t("tour.t2navDocs"), match: current?.key === "docs", n: badge("docs") },
+    { href: "/tour2/network", label: t("tour.t2navNetwork"), match: current?.key === "network", n: badge("network") },
+    { href: "/tour2/profile", label: t("tour.t2navProfile"), match: pathname.startsWith("/tour2/profile") },
+  ];
+
   return (
     <div className="t2-root t2-shell">
       <aside className="t2-rail t2-rail-desk">{rail}</aside>
-      {menuOpen && (
-        <div className="t2-rail-scrim md:hidden" onClick={() => setMenuOpen(false)}>
-          <aside className="t2-rail t2-rail-drawer" onClick={(e) => e.stopPropagation()}>{rail}</aside>
-        </div>
-      )}
       <div className="t2-workspace">
-        <button type="button" className="t2-rail-open md:hidden" aria-label={t("tour.t2ovMenu")} onClick={() => setMenuOpen(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-        </button>
-        <main className={bleed ? "t2-workspace-main is-bleed" : "t2-workspace-main"}>{children}</main>
+        <header className="t2-mhead md:hidden">
+          <span className="t2-rail-mark" aria-hidden>M</span>
+          <p className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-[-0.02em]">{t(`tour.${headerKey}`)}</p>
+          {user && (
+            <Link href="/tour2/profile" className="shrink-0" aria-label={t("tour.t2navProfile")}>
+              {profile?.profileImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.profileImage} alt="" className="t2-rail-avatar" />
+              ) : (
+                <span className="t2-rail-avatar t2-rail-avatar-fallback text-[var(--t2-ink)]">{(name || "?").slice(0, 1)}</span>
+              )}
+            </Link>
+          )}
+        </header>
+        <main
+          className={bleed ? "t2-workspace-main is-bleed" : "t2-workspace-main"}
+          onScroll={onMainScroll}
+        >
+          {children}
+        </main>
+        <Tour2TabBar tabs={tabs} active={tabActive} compact={navCompact} onMore={() => setMoreOpen((o) => !o)} />
+        {moreOpen && (
+          <div className="fixed inset-0 z-[35] md:hidden" onClick={() => setMoreOpen(false)}>
+            <div
+              className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white px-5 pt-4 pb-[max(6.5rem,calc(5.5rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="t2-kicker">{t("tour.t2more")}</p>
+              <ul className="mt-3 space-y-1">
+                {moreLinks.map((x) => (
+                  <li key={x.href}>
+                    <Link
+                      href={x.href}
+                      className={`flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-semibold ${x.match ? "bg-[var(--t2-accent-soft)] text-[var(--t2-ink)]" : "text-[var(--t2-ink)]"}`}
+                      onClick={() => t2markNavStart()}
+                    >
+                      <span>{x.label}</span>
+                      {x.n != null && <span className="text-[12px] tabular-nums text-[var(--t2-muted)]">{x.n}</span>}
+                    </Link>
+                  </li>
+                ))}
+                {user && (
+                  <li>
+                    <button
+                      type="button"
+                      className="flex w-full items-center rounded-xl px-3 py-3 text-left text-[15px] font-semibold text-[var(--t2-muted)]"
+                      onClick={() => { void signOut().then(() => router.push("/app")); }}
+                    >
+                      {t("tour.t2signOut")}
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

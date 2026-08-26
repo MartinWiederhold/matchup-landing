@@ -77,8 +77,9 @@ export default function SeasonHealthBar({
           <dd className={budgetOver ? "text-red-700" : ""}>{budgetText ?? t("tour.t2budgetNoData")}</dd>
         </div>
         <div>
-          <dt>{t("tour.t2expPoints")} · {t("tour.t2pointsAssume", { round: roundLabel })}</dt>
+          <dt>{t("tour.t2expPoints")}</dt>
           <dd>{points}</dd>
+          <p className="mt-1 text-[11px] font-medium text-[var(--t2-faint)]">{t("tour.t2pointsAssume", { round: roundLabel })}</p>
         </div>
       </dl>
       {notes.length > 0 && (

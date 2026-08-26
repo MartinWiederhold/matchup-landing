@@ -420,6 +420,7 @@ export default function TournamentsView() {
 
   return (
     <Tour2Area
+      fill
       title={t("tour.t2navFinder")}
       lead={t("tour.t2findLead")}
       kpis={
@@ -452,17 +453,17 @@ export default function TournamentsView() {
         </>
       }
     >
-    <div className="relative flex min-h-[520px] flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)]">
       <div className="shrink-0 px-4 pt-3 sm:px-6">
         <div className="flex flex-wrap items-end gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-[10rem] flex-1" />
           <label className="block">
             <span className="t2-kicker">{t("tour.t2findDateFrom")}</span>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="t2-input mt-1 block w-[9.5rem]" />
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="t2-input mt-1 block w-full max-w-[9.5rem]" />
           </label>
           <label className="block">
             <span className="t2-kicker">{t("tour.t2findDateTo")}</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="t2-input mt-1 block w-[9.5rem]" />
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="t2-input mt-1 block w-full max-w-[9.5rem]" />
           </label>
           <button
             type="button"
@@ -490,7 +491,7 @@ export default function TournamentsView() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <div className={`min-h-0 min-w-0 flex-1 overflow-hidden px-4 py-4 pb-24 sm:px-6 md:pb-4 ${mapOpen ? "md:w-[60%] md:flex-none" : ""}`}>
+        <div className={`min-h-0 min-w-0 flex-1 overflow-hidden px-4 py-4 pb-4 sm:px-6 ${mapOpen ? "md:w-[60%] md:flex-none" : ""}`}>
           {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
           {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
           {status === "ready" && (
@@ -530,7 +531,7 @@ export default function TournamentsView() {
             </div>
           )}
         </div>
-        <div className={`${mapOpen ? "order-first h-[36vh] shrink-0 md:order-none md:h-auto md:w-[40%]" : "hidden"} min-h-0`}>{mapPane}</div>
+        <div className={`${mapOpen ? "order-first h-[36vh] min-h-[180px] shrink-0 overflow-hidden md:order-none md:h-[min(52vh,420px)] md:min-h-[240px] md:w-[40%] xl:h-full xl:min-h-0" : "hidden"} min-h-0`}>{mapPane}</div>
       </div>
 
       {filtersOpen && (

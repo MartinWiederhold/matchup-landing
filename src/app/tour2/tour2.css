@@ -569,14 +569,53 @@ a.t2-card:hover, .t2-card--hover:hover {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .t2-workspace-main { padding-bottom: 0; }
 }
 .t2-workspace-main.is-bleed { overflow: hidden; display: flex; flex-direction: column; }
 .t2-workspace-main.is-bleed > * { flex: 1; min-height: 0; }
 
-.t2-overview {
-  padding: 1.15rem 1.25rem 2rem;
+.t2-mhead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+  padding: max(0.55rem, env(safe-area-inset-top)) 1rem 0.55rem;
+  border-bottom: 1px solid var(--t2-line);
+  background: var(--t2-surface);
+  z-index: 20;
 }
-@media (min-width: 640px) {
+@media (min-width: 768px) {
+  .t2-mhead { display: none; }
+}
+.t2-mhead .t2-rail-mark {
+  border-color: var(--t2-ink);
+  color: var(--t2-ink);
+  flex-shrink: 0;
+}
+.t2-mhead .t2-rail-avatar-fallback {
+  background: var(--t2-line);
+  color: var(--t2-ink);
+}
+
+@media (max-width: 767px) {
+  .t2-overview > header h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .t2-overview > header { margin-bottom: 0; }
+}
+
+.t2-telem > div { min-width: 0; }
+.t2-telem dt { overflow-wrap: anywhere; }
+
+.t2-overview {
+  padding: 0.85rem 1rem 1.5rem;
+  min-width: 0;
+}
+@media (min-width: 768px) {
   .t2-overview { padding: 1.35rem 1.75rem 2.25rem; }
 }
 .t2-dash-card {

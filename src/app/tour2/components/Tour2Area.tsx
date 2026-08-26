@@ -55,7 +55,7 @@ export default function Tour2Area({
   fill?: boolean;
 }) {
   return (
-    <div className={`t2-overview ${fill ? "flex min-h-0 flex-1 flex-col" : ""}`}>
+    <div className={`t2-overview ${fill ? "flex min-h-0 flex-1 flex-col max-xl:min-h-min max-xl:flex-none" : ""}`}>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="t2-display text-[clamp(1.7rem,3.4vw,2.15rem)]">{title}</h1>
@@ -63,8 +63,8 @@ export default function Tour2Area({
         </div>
       </header>
       {kpis && <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{kpis}</div>}
-      <div className={`mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px] ${fill ? "min-h-0 flex-1" : ""}`}>
-        <div className={`min-w-0 ${fill ? "flex min-h-0 flex-col" : ""}`}>{children}</div>
+      <div className={`mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px] ${fill ? "xl:min-h-0 xl:flex-1 xl:grid-rows-1 xl:items-stretch" : ""}`}>
+        <div className={`min-w-0 ${fill ? "max-xl:min-h-[520px] xl:flex xl:min-h-0 xl:flex-col" : ""}`}>{children}</div>
         {aside && <aside className="space-y-3 xl:w-[260px]">{aside}</aside>}
       </div>
     </div>

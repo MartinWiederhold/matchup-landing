@@ -1140,6 +1140,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
 
   return (
     <Tour2Area
+      fill
       title={t("tour.t2navPlanner")}
       lead={t("tour.plSubtitle")}
       kpis={
@@ -1165,7 +1166,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         </>
       }
     >
-    <div className="relative flex min-h-[560px] flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)] text-[var(--t2-ink)]">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)] text-[var(--t2-ink)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -1198,7 +1199,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
             </button>
             <Link href="/tour2/finder" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-24 md:pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-4">
             {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
             {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
             {status === "ready" && profile && (
@@ -1261,11 +1262,11 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
             )}
           </div>
         </div>
-        <div className={`${mapOpen ? "order-first h-[36vh] shrink-0 md:order-none md:h-auto" : "hidden"} min-h-0 md:block md:w-[40%]`}>{mapPane}</div>
+        <div className={`min-h-0 overflow-hidden md:block md:w-[40%] md:h-[min(52vh,420px)] md:min-h-[240px] xl:h-full xl:min-h-0 ${mapOpen ? "order-first h-[36vh] min-h-[180px] shrink-0 md:order-none" : "hidden"}`}>{mapPane}</div>
       </div>
 
       {proposalPicks.length > 0 && (
-        <div className="absolute inset-x-0 bottom-0 z-[70] border-t border-[var(--t2-line)] bg-[var(--t2-paper)] p-4 pb-24 md:pb-4">
+        <div className="absolute inset-x-0 bottom-0 z-[70] border-t border-[var(--t2-line)] bg-[var(--t2-paper)] p-4">
           <p className="text-[15px] font-semibold leading-snug text-[var(--t2-ink)]">
             {t("tour.t2optSummary", { n: proposalPicks.length, points: proposalPoints, cost: money(proposalCostMinor, cur) })}
           </p>
