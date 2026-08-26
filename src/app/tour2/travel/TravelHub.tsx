@@ -258,7 +258,6 @@ export default function TravelHub() {
         <ul className="space-y-2 text-[13px]">
           <li><Link href="/tour2/costs" className="font-semibold text-matchup">{t("tour.costsTitle")} →</Link></li>
           <li><Link href="/tour2/expenses" className="font-semibold text-matchup">{t("tour.expTitle")} →</Link></li>
-          <li><Link href="/tour2/calendar" className="font-semibold text-matchup">{t("tour.calTitle")} →</Link></li>
         </ul>
       </section>
     </>

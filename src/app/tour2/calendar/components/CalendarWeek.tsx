@@ -194,7 +194,10 @@ export default function CalendarWeek() {
           <p className="t2-eyebrow">{t("tour.t2navCalendar")}</p>
           <h1 className="t2-display mt-2 text-[clamp(2rem,5vw,3.25rem)] leading-[0.9]">{monthTitle}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/tour2/timeline" title={t("tour.calGanttHint")} className="px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">
+            {t("tour.calGantt")}
+          </Link>
           <button type="button" onClick={goToday} className="px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">{t("tour.calGoToday")}</button>
           <button type="button" onClick={goPrev} aria-label={t("tour.calPrev")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">‹</button>
           <button type="button" onClick={goNext} aria-label={t("tour.calNext")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">›</button>

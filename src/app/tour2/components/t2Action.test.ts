@@ -11,7 +11,8 @@ describe("tour2ActionHref", () => {
     expect(tour2ActionHref("/tour/schengen")).toBe("/tour2/schengen");
     expect(tour2ActionHref("/tour/points")).toBe("/tour2/ranking");
     expect(tour2ActionHref("/tour/wildcards")).toBe("/tour2/network");
-    expect(tour2ActionHref("/tour/finance")).toBe("/tour2/travel");
+    expect(tour2ActionHref("/tour/calendar")).toBe("/tour2/calendar");
+    expect(tour2ActionHref("/tour/timeline")).toBe("/tour2/timeline");
   });
 
   it("leitet pipeline auf den Saison-Planer", () => {

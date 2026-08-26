@@ -37,7 +37,11 @@ import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
 import Tour2ActionList from "@/app/tour2/components/Tour2ActionList";
+import DayGlance from "@/app/tour2/components/home/DayGlance";
 import { t2markArea } from "@/app/tour2/t2mark";
+import { loadEvents, type TourEvent } from "@/lib/tourEvents";
+import { loadSlotsOnDates, loadSlotPeople } from "@/lib/tourTrainingSlots";
+import { acceptedMeetingsForViewer, addIsoDays, buildDayGlance, type GlanceMeeting } from "@/domain/tour/dayGlance";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
@@ -106,6 +110,8 @@ export default function HomeView() {
   });
   const [banned, setBanned] = useState<Set<string>>(new Set());
   const [stays, setStays] = useState<Stay[]>([]);
+  const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
+  const [slotMeetings, setSlotMeetings] = useState<GlanceMeeting[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [nowMs] = useState(() => Date.now());
   const [homeRise] = useState(() => {
@@ -131,8 +137,9 @@ export default function HomeView() {
       loadTravelDocuments(user.id),
       loadSetupState(user.id),
       loadExpenses(user.id),
+      loadEvents(user.id),
     ])
-      .then(([s, p, r, evs, pdocs, rhist, wcs, tdocs, st, exp]) => {
+      .then(([s, p, r, evs, pdocs, rhist, wcs, tdocs, st, exp, tev]) => {
         if (cancel) return;
         setSeason(s);
         setProfile(p);
@@ -144,6 +151,7 @@ export default function HomeView() {
         setTravelDocs(tdocs);
         setSetup(st);
         setExpenses(exp.rows);
+        setTourEvents(tev.rows);
         setState("done");
         t2markArea("home");
       })
@@ -177,6 +185,33 @@ export default function HomeView() {
   const active = useMemo(() => {
     return [...season.filter((s) => !s.tournamentInactive)].sort((a, b) => a.tournament.tournament_monday.localeCompare(b.tournament.tournament_monday));
   }, [season]);
+
+  useEffect(() => {
+    if (!user) return;
+    const ids = season.map((s) => s.tournament.id);
+    const dates = [todayISO, addIsoDays(todayISO, 1)];
+    let alive = true;
+    loadSlotsOnDates(ids, dates)
+      .then(async ({ slots, responses }) => {
+        const raw = acceptedMeetingsForViewer(user.id, slots, responses);
+        const people = await loadSlotPeople(raw.map((x) => x.partnerId));
+        if (!alive) return;
+        setSlotMeetings(raw.map((x) => {
+          const p = people.get(x.partnerId);
+          const name = (p?.display_name || p?.first_name || "").trim();
+          return { id: `${x.slotId}-${x.partnerId}`, date: x.date, block: x.block, partnerName: name || null, tournamentId: x.tournamentId };
+        }));
+      })
+      .catch(() => { if (alive) setSlotMeetings([]); });
+    return () => { alive = false; };
+  }, [user, season, todayISO]);
+
+  const glance = useMemo(() => buildDayGlance({
+    todayISO,
+    events: tourEvents,
+    tournaments: active.map((s) => ({ id: s.tournament.id, monday: s.tournament.tournament_monday, city: s.tournament.city })),
+    meetings: slotMeetings,
+  }), [todayISO, tourEvents, active, slotMeetings]);
   const cur = rates?.currency ?? "EUR";
   const money = useCallback((minor: number) => new Intl.NumberFormat(loc, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [loc, cur]);
   const countryName = useCallback((c: string | null) => (c && !t(`tour.country.${c}`).startsWith("tour.country.") ? t(`tour.country.${c}`) : (c ?? "")), [t]);
@@ -538,7 +573,8 @@ export default function HomeView() {
 
   return (
     <Tour2Area title={t("tour.t2navOverview")} lead={t("tour.t2ovLead")} kpis={kpis} aside={aside}>
-      <section>
+      <DayGlance todayISO={todayISO} groups={glance} />
+      <section className="mt-12">
         <h2 className="t2-kicker">{t("tour.t2ovRoute")}</h2>
         {active.length === 0 ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>

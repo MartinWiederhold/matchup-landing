@@ -6,11 +6,11 @@
  */
 import { supabase } from "@/lib/supabase";
 
-export type TrainingSlot = { id: string; user_id: string; slot_date: string; time_block: string };
+export type TrainingSlot = { id: string; user_id: string; slot_date: string; time_block: string; tournament_id: string };
 export type SlotResponse = { id: string; slot_id: string; responder_id: string; status: string; contact: string | null };
 export type SlotPerson = { id: string; first_name: string | null; display_name: string | null; profile_image: string | null };
 
-const SLOT_COLUMNS = "id, user_id, slot_date, time_block";
+const SLOT_COLUMNS = "id, user_id, slot_date, time_block, tournament_id";
 const RESP_COLUMNS = "id, slot_id, responder_id, status, contact";
 
 /** Alle Slots eines Turniers + die für mich sichtbaren Antworten (RLS filtert). */
@@ -24,6 +24,23 @@ export async function loadTournamentSlots(tournamentId: string): Promise<{ slots
   const slotRows = (slots as TrainingSlot[]) ?? [];
   if (slotRows.length === 0) return { slots: [], responses: [] };
 
+  const ids = slotRows.map((s) => s.id);
+  const { data: resp, error: e2 } = await supabase.from("tour_training_slot_response").select(RESP_COLUMNS).in("slot_id", ids);
+  if (e2) throw e2;
+  return { slots: slotRows, responses: (resp as SlotResponse[]) ?? [] };
+}
+
+/** Slots an konkreten Tagen über mehrere Turniere (Overview-Tagesblick). */
+export async function loadSlotsOnDates(tournamentIds: string[], dates: string[]): Promise<{ slots: TrainingSlot[]; responses: SlotResponse[] }> {
+  if (tournamentIds.length === 0 || dates.length === 0) return { slots: [], responses: [] };
+  const { data: slots, error } = await supabase
+    .from("tour_training_slot")
+    .select(SLOT_COLUMNS)
+    .in("tournament_id", tournamentIds)
+    .in("slot_date", dates);
+  if (error) throw error;
+  const slotRows = (slots as TrainingSlot[]) ?? [];
+  if (slotRows.length === 0) return { slots: [], responses: [] };
   const ids = slotRows.map((s) => s.id);
   const { data: resp, error: e2 } = await supabase.from("tour_training_slot_response").select(RESP_COLUMNS).in("slot_id", ids);
   if (e2) throw e2;

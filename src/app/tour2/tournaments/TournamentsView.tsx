@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * /tour2/finder: Liste + geparkte Karte. Filter aus Katalogfeldern,
- * Schnellchips inkl. Route/Cluster (Koordinaten), kein Match-Score, keine Eligibility.
+ * /tour2/finder: schmale Filterzeile, Blatt, Liste + Karte.
+ * Filterlogik unverändert; kein Match-Score, keine Eligibility.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,8 +39,6 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
   return m;
 }
 
-const chip = (on: boolean) => `t2-chip ${on ? "is-on" : ""}`;
-
 function visaNeed(c: VisaRequirementClass | undefined): boolean | null {
   if (!c) return null;
   if (c === "visa_free") return false;
@@ -64,6 +62,7 @@ export default function TournamentsView() {
   const [visaByDest, setVisaByDest] = useState<Map<string, NatVisaInfo>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [q, setQ] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -210,7 +209,15 @@ export default function TournamentsView() {
       .catch(() => setSeasonIds((cur) => { const rb = new Set(cur); if (inSeason) rb.add(id); else rb.delete(id); return rb; }));
   }, [user, seasonIds, reloadEntries]);
 
-  const handleSelect = useCallback((id: string) => { setSelectedId(id); setMapOpen(true); }, []);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const apply = () => setMapOpen(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  const handleSelect = useCallback((id: string) => { setSelectedId(id); }, []);
   const rowKey = useCallback((tt: { id: string }) => tt.id, []);
   const bufferDays = useMemo(() => { try { const n = parseInt(localStorage.getItem("mu_tour_buffer_days") ?? "", 10); return Number.isFinite(n) && n >= 0 ? n : 2; } catch { return 2; } }, []);
   const seasonStops = useMemo(
@@ -289,87 +296,174 @@ export default function TournamentsView() {
   );
 
   const countryChip = (code: string) => (
-    <button key={code} type="button" onClick={() => toggleSet(countries, code, setCountries)} className={chip(countries.has(code))}>
+    <button
+      key={code}
+      type="button"
+      onClick={() => toggleSet(countries, code, setCountries)}
+      className={`mr-1 mb-1 text-[13px] ${countries.has(code) ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
+    >
       {catName(code)}
-      <span className={`ml-1 font-normal ${countries.has(code) ? "opacity-70" : "text-[var(--t2-faint)]"}`}>{countByCountry.get(code) ?? 0}</span>
+      <span className="ml-1 tabular-nums text-[11px] font-normal text-[var(--t2-faint)]">{countByCountry.get(code) ?? 0}</span>
     </button>
   );
 
-  return (
-    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
-      <div className="shrink-0 space-y-3 border-b border-[var(--t2-line)] px-4 py-3 sm:px-6">
-        <p className="text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2findLead")}</p>
+  const fmtChipDate = (iso: string) => new Intl.DateTimeFormat(intl, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
+  const activeChips: { key: string; label: string; onRemove: () => void }[] = [
+    ...[...circuits].map((c) => ({ key: `c-${c}`, label: circuitLabel(c), onRemove: () => toggleSet(circuits, c, setCircuits) })),
+    ...[...surfaces].map((s) => ({ key: `s-${s}`, label: t(`tour.surface_${s}`), onRemove: () => toggleSet(surfaces, s, setSurfaces) })),
+    ...(countries.size === 1
+      ? [{ key: "land", label: catName([...countries][0]), onRemove: () => setCountries(new Set()) }]
+      : countries.size > 1
+        ? [{ key: "lands", label: t("tour.wsCountriesN", { n: countries.size }), onRemove: () => setCountries(new Set()) }]
+        : []),
+    ...[...categories].slice(0, 8).map((c) => ({ key: `lv-${c}`, label: c, onRemove: () => toggleSet(categories, c, setCategories) })),
+    ...(next4 ? [{ key: "n4", label: t("tour.t2findNext4"), onRemove: () => setNext4(false) }] : []),
+    ...(onRoute ? [{ key: "rt", label: t("tour.t2findOnRoute"), onRemove: () => setOnRoute(false) }] : []),
+    ...(cluster ? [{ key: "cl", label: t("tour.t2findCluster"), onRemove: () => setCluster(false) }] : []),
+    ...(lowCost ? [{ key: "lc", label: t("tour.t2findLowCost"), onRemove: () => setLowCost(false) }] : []),
+    ...(deadlineOpen ? [{ key: "dl", label: t("tour.t2findDeadlineOpen"), onRemove: () => setDeadlineOpen(false) }] : []),
+    ...(!europeOnly ? [{ key: "eu", label: t("tour.plRegionAll"), onRemove: () => setEuropeOnly(true) }] : []),
+    ...(visaMode === "free" ? [{ key: "vf", label: t("tour.t2findVisaFree"), onRemove: () => setVisaMode("all") }] : []),
+    ...(visaMode === "need" ? [{ key: "vn", label: t("tour.t2findVisaNeed"), onRemove: () => setVisaMode("all") }] : []),
+    ...(dateFrom ? [{ key: "from", label: t("tour.wsChipFrom", { date: fmtChipDate(dateFrom) }), onRemove: () => setDateFrom("") }] : []),
+    ...(dateTo ? [{ key: "to", label: t("tour.wsChipUntil", { date: fmtChipDate(dateTo) }), onRemove: () => setDateTo("") }] : []),
+  ];
+  const activeFilterN =
+    circuits.size + surfaces.size + countries.size + categories.size
+    + (next4 ? 1 : 0) + (onRoute ? 1 : 0) + (cluster ? 1 : 0) + (lowCost ? 1 : 0) + (deadlineOpen ? 1 : 0)
+    + (europeOnly ? 0 : 1) + (visaMode === "all" ? 0 : 1) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+
+  const resetFilters = () => {
+    setCircuits(new Set()); setSurfaces(new Set()); setCountries(new Set()); setCategories(new Set());
+    setNext4(false); setOnRoute(false); setCluster(false); setLowCost(false); setDeadlineOpen(false);
+    setEuropeOnly(true); setVisaMode("all"); setDateFrom(""); setDateTo("");
+  };
+
+  const optBtn = (on: boolean) => `text-left text-[13px] leading-snug ${on ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`;
+
+  const filterSheet = (
+    <div className="flex h-full flex-col bg-[var(--t2-paper)]">
+      <div className="flex items-center justify-between px-5 pt-5 pb-2">
+        <p className="t2-kicker">{t("tour.wsFilters")}{activeFilterN > 0 ? ` · ${activeFilterN}` : ""}</p>
         <div className="flex items-center gap-3">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-0 flex-1" />
-          <button type="button" onClick={() => setMapOpen((o) => !o)} className="t2-ghost md:hidden">{mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}</button>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="text-[11px] text-[var(--t2-muted)]">
-            {t("tour.t2findDateFrom")}
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="t2-input mt-0.5 block" />
-          </label>
-          <label className="text-[11px] text-[var(--t2-muted)]">
-            {t("tour.t2findDateTo")}
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="t2-input mt-0.5 block" />
-          </label>
-        </div>
-        <div className="no-scrollbar flex flex-wrap gap-1.5 overflow-x-auto">
-          <button type="button" onClick={() => setNext4((v) => !v)} className={chip(next4)}>{t("tour.t2findNext4")}</button>
-          <button type="button" onClick={() => setOnRoute((v) => !v)} className={chip(onRoute)}>{t("tour.t2findOnRoute")}</button>
-          <button type="button" onClick={() => setCluster((v) => !v)} className={chip(cluster)}>{t("tour.t2findCluster")}</button>
-          <button type="button" onClick={() => setLowCost((v) => !v)} className={chip(lowCost)}>{t("tour.t2findLowCost")}</button>
-          <button type="button" onClick={() => setDeadlineOpen((v) => !v)} className={chip(deadlineOpen)}>{t("tour.t2findDeadlineOpen")}</button>
-          <button type="button" onClick={() => setEuropeOnly((v) => !v)} className={chip(europeOnly)}>{t("tour.plRegionEurope")}</button>
-        </div>
-        <div className="no-scrollbar flex flex-wrap gap-1.5 overflow-x-auto">
-          {CIRCUITS.map((c) => (
-            <button key={c} type="button" onClick={() => toggleSet(circuits, c, setCircuits)} className={chip(circuits.has(c))}>{circuitLabel(c)}</button>
-          ))}
-        </div>
-        <div className="no-scrollbar flex flex-wrap gap-1.5 overflow-x-auto">
-          {SURFACES.map((s) => (
-            <button key={s} type="button" onClick={() => toggleSet(surfaces, s, setSurfaces)} className={chip(surfaces.has(s))}>{t(`tour.surface_${s}`)}</button>
-          ))}
-          {hasPassports ? (
-            <>
-              <button type="button" onClick={() => setVisaMode((v) => v === "free" ? "all" : "free")} className={chip(visaMode === "free")}>{t("tour.t2findVisaFree")}</button>
-              <button type="button" onClick={() => setVisaMode((v) => v === "need" ? "all" : "need")} className={chip(visaMode === "need")}>{t("tour.t2findVisaNeed")}</button>
-            </>
-          ) : (
-            <span className="self-center text-[11px] text-[var(--t2-faint)]">{t("tour.t2findVisaNeedPass")}</span>
+          {activeFilterN > 0 && (
+            <button type="button" onClick={resetFilters} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>
           )}
+          <button type="button" onClick={() => setFiltersOpen(false)} className="text-[18px] text-[var(--t2-faint)] hover:text-[var(--t2-ink)]" aria-label={t("common.close")}>✕</button>
         </div>
-        {categoryOpts.length > 0 && (
-          <div className="no-scrollbar flex max-h-20 flex-wrap gap-1.5 overflow-y-auto">
-            {categoryOpts.slice(0, 32).map((c) => (
-              <button key={c} type="button" onClick={() => toggleSet(categories, c, setCategories)} className={chip(categories.has(c))}>{c}</button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-10">
+        <section className="pt-6">
+          <p className="t2-kicker">{t("tour.t2findQuick")}</p>
+          <div className="mt-3 flex flex-col items-start gap-2.5">
+            <button type="button" className={optBtn(next4)} onClick={() => setNext4((v) => !v)}>{t("tour.t2findNext4")}</button>
+            <button type="button" className={optBtn(onRoute)} onClick={() => setOnRoute((v) => !v)}>{t("tour.t2findOnRoute")}</button>
+            <button type="button" className={optBtn(cluster)} onClick={() => setCluster((v) => !v)}>{t("tour.t2findCluster")}</button>
+            <button type="button" className={optBtn(lowCost)} onClick={() => setLowCost((v) => !v)}>{t("tour.t2findLowCost")}</button>
+            <button type="button" className={optBtn(deadlineOpen)} onClick={() => setDeadlineOpen((v) => !v)}>{t("tour.t2findDeadlineOpen")}</button>
+            <button type="button" className={optBtn(europeOnly)} onClick={() => setEuropeOnly(true)}>{t("tour.plRegionEurope")}</button>
+            <button type="button" className={optBtn(!europeOnly)} onClick={() => setEuropeOnly(false)}>{t("tour.plRegionAll")}</button>
+            {hasPassports ? (
+              <>
+                <button type="button" className={optBtn(visaMode === "free")} onClick={() => setVisaMode((v) => v === "free" ? "all" : "free")}>{t("tour.t2findVisaFree")}</button>
+                <button type="button" className={optBtn(visaMode === "need")} onClick={() => setVisaMode((v) => v === "need" ? "all" : "need")}>{t("tour.t2findVisaNeed")}</button>
+              </>
+            ) : (
+              <p className="text-[12px] text-[var(--t2-faint)]">{t("tour.t2findVisaNeedPass")}</p>
+            )}
+          </div>
+        </section>
+        <section className="pt-10">
+          <p className="t2-kicker">{t("tour.t2findSerie")}</p>
+          <div className="mt-3 flex flex-col items-start gap-2.5">
+            {CIRCUITS.map((c) => (
+              <button key={c} type="button" className={optBtn(circuits.has(c))} onClick={() => toggleSet(circuits, c, setCircuits)}>{circuitLabel(c)}</button>
             ))}
           </div>
-        )}
-        <div>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.filterCountry")}</p>
-          <div className="no-scrollbar flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+        </section>
+        <section className="pt-10">
+          <p className="t2-kicker">{t("tour.t2findSurface")}</p>
+          <div className="mt-3 flex flex-col items-start gap-2.5">
+            {SURFACES.map((s) => (
+              <button key={s} type="button" className={optBtn(surfaces.has(s))} onClick={() => toggleSet(surfaces, s, setSurfaces)}>{t(`tour.surface_${s}`)}</button>
+            ))}
+          </div>
+        </section>
+        <section className="pt-10">
+          <p className="t2-kicker">{t("tour.t2findLevel")}</p>
+          <div className="mt-3 flex max-h-48 flex-col items-start gap-2 overflow-y-auto">
+            {categoryOpts.map((c) => (
+              <button key={c} type="button" className={optBtn(categories.has(c))} onClick={() => toggleSet(categories, c, setCategories)}>{c}</button>
+            ))}
+          </div>
+        </section>
+        <section className="pt-10">
+          <p className="t2-kicker">{t("tour.filterCountry")}</p>
+          <div className="mt-3">
             {regionCountries.map(countryChip)}
             {restSelected.map(countryChip)}
             {showRest && restCollapsible.map(countryChip)}
           </div>
           {restCollapsible.length > 0 && (
-            <button type="button" onClick={() => setShowRest((v) => !v)} className="mt-1 text-[12px] font-semibold text-matchup">
+            <button type="button" onClick={() => setShowRest((v) => !v)} className="mt-3 text-[12px] font-semibold text-[var(--t2-ink)]">
               {showRest ? t("tour.filterCountriesFewer") : t("tour.filterCountriesMore", { n: restCollapsible.length })}
             </button>
           )}
+        </section>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
+      <div className="shrink-0 px-4 pt-3 sm:px-6">
+        <div className="flex flex-wrap items-end gap-3">
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-[10rem] flex-1" />
+          <label className="block">
+            <span className="t2-kicker">{t("tour.t2findDateFrom")}</span>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="t2-input mt-1 block w-[9.5rem]" />
+          </label>
+          <label className="block">
+            <span className="t2-kicker">{t("tour.t2findDateTo")}</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="t2-input mt-1 block w-[9.5rem]" />
+          </label>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((o) => !o)}
+            className="relative flex shrink-0 items-center gap-2 py-2 text-[13px] font-semibold"
+          >
+            {t("tour.wsFilters")}
+            {activeFilterN > 0 && <span className="tabular-nums text-[13px] font-semibold text-[var(--t2-accent)]">{activeFilterN}</span>}
+          </button>
+          <div className="flex shrink-0 items-baseline gap-3 pb-2">
+            <button type="button" onClick={() => setMapOpen(false)} className={`text-[13px] ${!mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findList")}</button>
+            <button type="button" onClick={() => setMapOpen(true)} className={`text-[13px] ${mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findMap")}</button>
+          </div>
         </div>
+        {activeChips.length > 0 && (
+          <div className="no-scrollbar mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1">
+            {activeChips.map((c) => (
+              <span key={c.key} className="inline-flex shrink-0 items-center gap-1 py-1 pl-0.5 pr-1 text-[12px] font-medium text-[var(--t2-muted)]">
+                <span className="max-w-[10rem] truncate">{c.label}</span>
+                <button type="button" onClick={c.onRemove} aria-label={t("tour.wsChipRemove", { label: c.label })} className="text-[11px] text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">✕</button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <div className="min-h-0 min-w-0 flex-1 overflow-hidden px-3 py-3 pb-24 md:w-[60%] md:flex-none md:pb-4">
+        <div className={`min-h-0 min-w-0 flex-1 overflow-hidden px-4 py-4 pb-24 sm:px-6 md:pb-4 ${mapOpen ? "md:w-[60%] md:flex-none" : ""}`}>
           {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
           {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
           {status === "ready" && (
             <div className="flex h-full min-h-0 flex-col">
-              <p className="mb-2 shrink-0 px-1 text-[12px] font-medium text-[var(--t2-muted)]">{t("tour.resultCount", { n: filtered.length })}</p>
+              <p className="mb-3 flex shrink-0 items-baseline gap-2">
+                <span className="text-[clamp(1.75rem,3vw,2.25rem)] font-semibold leading-none tracking-[-0.04em] tabular-nums">{filtered.length}</span>
+                <span className="t2-kicker">{t("tour.t2findHits")}</span>
+              </p>
               {filtered.length === 0 ? (
-                <p className="border border-[var(--t2-line)] px-4 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.empty")}</p>
+                <p className="py-8 text-sm text-[var(--t2-muted)]">{t("tour.empty")}</p>
               ) : (
                 <WindowedList
                   items={filtered}
@@ -395,12 +489,19 @@ export default function TournamentsView() {
                   )}
                 </WindowedList>
               )}
-              <p className="mt-2 shrink-0 px-1 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.t2findIpinFooter")}</p>
+              <p className="mt-2 shrink-0 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.t2findIpinFooter")}</p>
             </div>
           )}
         </div>
-        <div className={`${mapOpen ? "order-first h-[40vh] shrink-0 md:order-none md:h-auto" : "hidden"} min-h-0 md:block md:w-[40%]`}>{mapPane}</div>
+        <div className={`${mapOpen ? "order-first h-[36vh] shrink-0 md:order-none md:h-auto md:w-[40%]" : "hidden"} min-h-0`}>{mapPane}</div>
       </div>
+
+      {filtersOpen && (
+        <div className="absolute inset-0 z-[80] flex">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+          <aside className="relative z-[81] ml-auto flex h-full w-full max-w-[360px] flex-col shadow-2xl">{filterSheet}</aside>
+        </div>
+      )}
 
       {detailEl && (
         <>

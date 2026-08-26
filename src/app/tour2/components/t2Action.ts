@@ -6,6 +6,8 @@
 export const T2_FINDER = "/tour2/finder";
 export const T2_SEASON = "/tour2/season";
 export const T2_RANKING = "/tour2/ranking";
+export const T2_CALENDAR = "/tour2/calendar";
+export const T2_TIMELINE = "/tour2/timeline";
 
 export function tour2ActionHref(href: string): string {
   if (!href.startsWith("/tour/") || href.startsWith("/tour2/")) return href;

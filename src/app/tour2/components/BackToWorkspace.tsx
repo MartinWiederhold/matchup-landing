@@ -8,7 +8,7 @@ import { useT } from "@/lib/i18n";
  * 8-Tab-Navigation (TourNav): die Einzelseiten bleiben als Deep-Links erreichbar,
  * sind aber nicht mehr der Einstieg.
  */
-export default function BackToWorkspace({ href = "/tour2/travel" }: { href?: string }) {
+export default function BackToWorkspace({ href = "/tour2" }: { href?: string }) {
   const t = useT();
   return (
     <div className="mt-6">

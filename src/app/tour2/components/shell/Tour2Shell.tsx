@@ -17,13 +17,13 @@ import { t2markNavStart } from "../../t2mark";
 
 type AreaKey = "home" | "tournaments" | "season" | "ranking" | "travel" | "documents" | "network";
 
-const HOME = (p: string) => p === "/tour2";
+const HOME = (p: string) => p === "/tour2" || p.startsWith("/tour2/calendar") || p.startsWith("/tour2/timeline");
 const AREA: { key: AreaKey; href: string; label: keyof typeof LABELS; match: (p: string) => boolean }[] = [
   { key: "home", href: "/tour2", label: "home", match: HOME },
   { key: "tournaments", href: "/tour2/finder", label: "tournaments", match: (p) => ["/tour2/finder", "/tour2/browse", "/tour2/tournaments", "/tour2/map"].some((r) => p.startsWith(r)) },
   { key: "season", href: "/tour2/season", label: "season", match: (p) => ["/tour2/season", "/tour2/planner", "/tour2/pipeline"].some((r) => p.startsWith(r)) },
   { key: "ranking", href: "/tour2/ranking", label: "ranking", match: (p) => ["/tour2/ranking", "/tour2/points", "/tour2/form"].some((r) => p.startsWith(r)) },
-  { key: "travel", href: "/tour2/travel", label: "travel", match: (p) => ["/tour2/travel", "/tour2/finance", "/tour2/costs", "/tour2/expenses", "/tour2/schengen", "/tour2/calendar", "/tour2/timeline"].some((r) => p.startsWith(r)) },
+  { key: "travel", href: "/tour2/travel", label: "travel", match: (p) => ["/tour2/travel", "/tour2/finance", "/tour2/costs", "/tour2/expenses", "/tour2/schengen"].some((r) => p.startsWith(r)) },
   { key: "documents", href: "/tour2/documents", label: "documents", match: (p) => p.startsWith("/tour2/documents") },
   { key: "network", href: "/tour2/network", label: "network", match: (p) => p.startsWith("/tour2/network") || p.startsWith("/tour2/wildcards") },
 ];

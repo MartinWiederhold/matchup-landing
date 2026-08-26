@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TimelinePage() {
   const t = await getT();
   return (
-    <Tour2Subpage title={t("tour.tlTitle")} subtitle={t("tour.tlSubtitle")} wide>
+    <Tour2Subpage title={t("tour.tlTitle")} subtitle={t("tour.tlSubtitle")} wide backHref="/tour2/calendar">
       <TimelineView />
     </Tour2Subpage>
   );

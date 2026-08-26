@@ -1213,7 +1213,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                     </div>
                   }
                 />
-                <div className="mt-6 hidden items-center gap-3 md:flex">
+                <div className="mt-6 flex items-center gap-3">
                   <Link href="/tour2/finder" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                   <Link href="/tour2/calendar" className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsViewCalendar")}</Link>
                 </div>

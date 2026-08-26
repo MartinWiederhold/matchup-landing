@@ -225,8 +225,9 @@ test("/tour2 voller Nutzer-Durchlauf — REST-Restore auf B0", async ({ page }) 
       const countRe = /\d+\s+(Turniere|tournaments)/i;
       await expect(page.getByText(countRe).first()).toBeVisible({ timeout: 45_000 });
       const before = (await page.getByText(countRe).first().textContent()) ?? "";
-      const chip = page.getByRole("button", { name: /Nächste 4 Wochen|Next 4 weeks/ });
-      await chip.click();
+      await page.getByRole("button", { name: /^Filter$|^Filters$/ }).click();
+      await page.getByRole("button", { name: /Nächste 4 Wochen|Next 4 weeks/ }).click();
+      await page.locator("div.absolute.inset-0.bg-black\\/40").click({ position: { x: 8, y: 8 } });
       await page.waitForTimeout(600);
       const after = (await page.getByText(countRe).first().textContent()) ?? "";
       const add = page.getByRole("button", { name: /Zur Saison hinzufügen|Add to season/ });
