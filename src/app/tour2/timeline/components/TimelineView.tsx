@@ -187,18 +187,18 @@ export default function TimelineView() {
   }, [events]);
 
   // ── Auth-/Ladezustände ────────────────────────────────────────────────────
-  if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl bg-black/[0.02] px-6 py-10 text-center ring-1 ring-black/5">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
+      <div className="mt-10 t2-panel bg-[var(--t2-surface)] px-6 py-10 text-center">
+        <h2 className="t2-h2 text-lg text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const weeks: number[] = [];
   for (let m = bounds.startMs; m < bounds.endMs; m += 7 * DAY) weeks.push(m);
@@ -216,16 +216,16 @@ export default function TimelineView() {
   const controls = (
     <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
       {!isMobile && (
-        <div className="flex items-center gap-0.5 rounded-full bg-black/[0.05] p-0.5">
+        <div className="flex items-center gap-0.5 rounded-full bg-[var(--t2-surface)] p-0.5">
           {(["season", "month", "week"] as Zoom[]).map((z) => (
-            <button key={z} type="button" onClick={() => { setZoom(z); didInitialScroll.current = false; }} className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${zoom === z ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>
+            <button key={z} type="button" onClick={() => { setZoom(z); didInitialScroll.current = false; }} className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${zoom === z ? "bg-[var(--t2-paper)] text-[var(--t2-ink)] shadow-sm" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}>
               {t(z === "season" ? "tour.tlZoomSeason" : z === "month" ? "tour.tlZoomMonth" : "tour.tlZoomWeek")}
             </button>
           ))}
         </div>
       )}
       <div className="flex items-center gap-2">
-        {isMobile && <button type="button" onClick={() => setForm({ event: null })} className="rounded-full bg-neutral-900 px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700">+ {t("tour.calAdd")}</button>}
+        {isMobile && <button type="button" onClick={() => setForm({ event: null })} className="t2-cta">+ {t("tour.calAdd")}</button>}
         {tMondays.length > 0 && !isMobile && (
           <button type="button" onClick={scrollToFocus} className="rounded-full bg-matchup/[0.08] px-3.5 py-1.5 text-[12px] font-bold text-matchup ring-1 ring-matchup/20 hover:bg-matchup/[0.14]">{t("tour.tlJumpNext")} →</button>
         )}
@@ -235,7 +235,7 @@ export default function TimelineView() {
 
   // ── Mobil: vertikaler Verlauf ──────────────────────────────────────────────
   if (isMobile) {
-    if (activeSeason.length === 0 && events.length === 0) return <div>{controls}{eventForm}<p className="mt-6 rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.wsSeasonEmpty")}</p></div>;
+    if (activeSeason.length === 0 && events.length === 0) return <div>{controls}{eventForm}<p className="mt-6 rounded-2xl bg-[var(--t2-surface)] px-5 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.wsSeasonEmpty")}</p></div>;
     const eventsByWeek = new Map<number, TourEvent[]>();
     for (const e of events) { const wk = mondayOfMs(Date.parse(e.event_date + "T00:00:00Z")); (eventsByWeek.get(wk) ?? eventsByWeek.set(wk, []).get(wk)!).push(e); }
     return (
@@ -250,16 +250,16 @@ export default function TimelineView() {
             return (
               <li key={wk} className="relative">
                 <span className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full ring-2 ring-white ${isNow ? "bg-matchup" : "bg-neutral-300"}`} />
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{isNow ? ` · ${t("tour.tlToday")}` : ""}</p>
+                <p className="t2-kicker">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{isNow ? ` · ${t("tour.tlToday")}` : ""}</p>
                 {tt && (
-                  <button type="button" onClick={() => setSelected(tt.id)} className="mt-1 block w-full rounded-xl bg-white px-3 py-2 text-left shadow-sm ring-1 ring-black/[0.08]">
-                    <span className="flex items-center gap-2 text-[13px] font-semibold text-neutral-900"><IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />{tt.city || tt.name || t("tour.fieldMissing")}{tt.category ? <span className="text-neutral-500"> · {tt.category}</span> : null}<span className="ml-auto"><Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} /></span></span>
+                  <button type="button" onClick={() => setSelected(tt.id)} className="mt-1 block w-full rounded-xl bg-[var(--t2-paper)] px-3 py-2 text-left shadow-sm ring-1 ring-[var(--t2-line)]">
+                    <span className="flex items-center gap-2 text-[13px] font-semibold text-[var(--t2-ink)]"><IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />{tt.city || tt.name || t("tour.fieldMissing")}{tt.category ? <span className="text-[var(--t2-muted)]"> · {tt.category}</span> : null}<span className="ml-auto"><Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} /></span></span>
                     <span className="mt-1 flex flex-wrap items-center gap-2"><DeadlineChip kind={dl?.kind ?? "unknown"} entryMs={dl?.entryMs ?? null} nowMs={nowMs} t={t} />{tight.has(tt.id) && <span className="text-[11px] font-semibold text-amber-700">⚠ {t("tour.calTightArrival", { n: tight.get(tt.id)! })}</span>}</span>
                   </button>
                 )}
                 {evs.length > 0 && (
-                  <p className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-neutral-500">
-                    {evs.map((e) => <button key={e.id} type="button" onClick={() => setForm({ event: e })} className="rounded bg-black/[0.05] px-1.5 py-0.5 hover:bg-black/[0.09]">{kindLabel(e.kind)}{e.event_time ? ` ${e.event_time.slice(0, 5)}` : ""}</button>)}
+                  <p className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-[var(--t2-muted)]">
+                    {evs.map((e) => <button key={e.id} type="button" onClick={() => setForm({ event: e })} className="rounded bg-[var(--t2-surface)] px-1.5 py-0.5 hover:bg-[var(--t2-line)]">{kindLabel(e.kind)}{e.event_time ? ` ${e.event_time.slice(0, 5)}` : ""}</button>)}
                   </p>
                 )}
               </li>
@@ -276,18 +276,18 @@ export default function TimelineView() {
     <div>
       {controls}
       {eventForm}
-      <div className="mt-4 flex overflow-hidden rounded-2xl ring-1 ring-black/[0.08]">
+      <div className="mt-4 flex overflow-hidden rounded-2xl border border-[var(--t2-line)]">
         {/* Linke, feste Spurenspalte */}
-        <div className="shrink-0 border-r border-black/[0.08] bg-white" style={{ width: LEFT_W }}>
-          <div style={{ height: AXIS_H }} className="border-b border-black/[0.06]" />
+        <div className="shrink-0 border-r border-[var(--t2-line)] bg-[var(--t2-paper)]" style={{ width: LEFT_W }}>
+          <div style={{ height: AXIS_H }} className="border-b border-[var(--t2-line)]" />
           {LANES.map((lane, i) => {
             const count = lane.key === "tournaments" ? activeSeason.length : (eventsByKind.get(lane.key)?.length ?? 0);
             return (
-              <div key={lane.key} className="flex flex-col justify-center border-b border-black/[0.04] px-4" style={{ height: lane.h }}>
-                <span className="text-[13px] font-bold text-neutral-800">{laneLabel(lane.key)}</span>
+              <div key={lane.key} className="flex flex-col justify-center border-b border-[var(--t2-line)] px-4" style={{ height: lane.h }}>
+                <span className="text-[13px] font-bold text-[var(--t2-ink)]">{laneLabel(lane.key)}</span>
                 {count > 0
-                  ? <span className="text-[11px] text-neutral-400">{count}</span>
-                  : lane.key !== "tournaments" && <span className="text-[11px] text-neutral-300">＋ {t("tour.tlAddLaneHint")}</span>}
+                  ? <span className="text-[11px] text-[var(--t2-faint)]">{count}</span>
+                  : lane.key !== "tournaments" && <span className="text-[11px] text-[var(--t2-faint)]">＋ {t("tour.tlAddLaneHint")}</span>}
               </div>
             );
           })}
@@ -395,7 +395,7 @@ export default function TimelineView() {
       </div>
 
       {/* Legende */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-neutral-400">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[var(--t2-faint)]">
         {(["itf_wtt", "challenger", "wta", "itf_juniors"] as const).map((s) => (
           <span key={s} className="flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${styleFor(s).dot}`} />{t(s === "itf_wtt" ? "tour.seriesItf" : s === "challenger" ? "tour.seriesChallenger" : s === "wta" ? "tour.seriesWta" : "tour.seriesJuniors")}</span>
         ))}
@@ -425,13 +425,13 @@ function DetailCard({ tt, dl, nowMs, tightDays, onClose, t, fmtShort }: {
 }) {
   const wk = Date.parse(tt.tournament_monday + "T00:00:00Z");
   return (
-    <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.08]">
+    <div className="mt-4 t2-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-bold text-neutral-900">{tt.city || tt.name || t("tour.fieldMissing")}{tt.country ? <span className="text-neutral-400">, {tt.country}</span> : null}</h3>
-          <p className="mt-0.5 text-[12px] text-neutral-500">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{tt.category ? ` · ${tt.category}` : ""}</p>
+          <h3 className="text-[15px] font-bold text-[var(--t2-ink)]">{tt.city || tt.name || t("tour.fieldMissing")}{tt.country ? <span className="text-[var(--t2-faint)]">, {tt.country}</span> : null}</h3>
+          <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{tt.category ? ` · ${tt.category}` : ""}</p>
         </div>
-        <button type="button" onClick={onClose} className="shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-800">{t("common.close")}</button>
+        <button type="button" onClick={onClose} className="shrink-0 text-[12px] font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">{t("common.close")}</button>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <DeadlineChip kind={dl?.kind ?? "unknown"} entryMs={dl?.entryMs ?? null} nowMs={nowMs} t={t} />

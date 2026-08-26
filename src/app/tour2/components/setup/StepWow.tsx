@@ -9,7 +9,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import { CARD_SOFT } from "../tourUi";
-import { loadActiveTournaments, buildSeasonCandidates, ratesToCostParams, budgetMoney, costRatesComplete, placeKey, type Frame } from "@/lib/tourPlanner";
+import { buildSeasonCandidates, ratesToCostParams, budgetMoney, costRatesComplete, placeKey, type Frame } from "@/lib/tourPlanner";
+import { getTourCatalog } from "@/lib/tourCatalogCache";
 import { loadCostRates } from "@/lib/tourCosts";
 import { bannedDestinations } from "@/lib/tourVisaRequirements";
 import { optimizeSeason } from "@/domain/tour/optimizeSeason";
@@ -27,7 +28,7 @@ export default function StepWow({ state }: { state: SetupState }) {
     (async () => {
       try {
         const frame: Frame = { region: "europe", from: new Date().toISOString().slice(0, 10), to: "", countries: [], series: [], surface: [] };
-        const [tours, rates] = await Promise.all([loadActiveTournaments(), loadCostRates()]);
+        const [tours, rates] = await Promise.all([getTourCatalog(), loadCostRates()]);
         const candidates = buildSeasonCandidates(tours, frame, new Set(), new Set());
         if (!alive) return;
         setFound(candidates.length);
@@ -64,18 +65,18 @@ export default function StepWow({ state }: { state: SetupState }) {
   }, [state.seasonBudget, state.country, state.city, state.passports]);
 
   return (
-    <section className={`${CARD_SOFT} p-5`}>
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.t2onbWowTitle")}</h2>
+    <section className="t2-panel">
+      <h2 className="t2-kicker">{t("tour.t2onbWowTitle")}</h2>
       {phase === "run" ? (
-        <p className="mt-4 text-[18px] font-semibold text-neutral-800">{t("tour.t2onbWowWait")}</p>
+        <p className="mt-4 text-[18px] font-semibold text-[var(--t2-ink)]">{t("tour.t2onbWowWait")}</p>
       ) : (
         <>
-          <p className="mt-4 text-[clamp(1.6rem,4vw,2.2rem)] font-black leading-[1.05] tracking-[-0.03em] text-neutral-900">
+          <p className="mt-4 t2-display text-[clamp(1.6rem,4vw,2.2rem)]">
             {fit != null ? t("tour.t2onbWowSummary", { found, fit }) : t("tour.t2onbWowFoundOnly", { found })}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/tour2/tournaments" onClick={() => { try { localStorage.setItem(SETUP_SKIP_KEY, "1"); } catch { /* egal */ } }} className="t2-cta">{t("tour.t2onbBrowse")}</Link>
-            <Link href="/tour2/planner" onClick={() => { try { localStorage.setItem(SETUP_SKIP_KEY, "1"); } catch { /* egal */ } }} className="t2-ghost">{t("tour.t2onbPlan")}</Link>
+            <Link href="/tour2/finder" onClick={() => { try { localStorage.setItem(SETUP_SKIP_KEY, "1"); } catch { /* egal */ } }} className="t2-cta">{t("tour.t2onbBrowse")}</Link>
+            <Link href="/tour2/season" onClick={() => { try { localStorage.setItem(SETUP_SKIP_KEY, "1"); } catch { /* egal */ } }} className="t2-ghost">{t("tour.t2onbPlan")}</Link>
           </div>
         </>
       )}

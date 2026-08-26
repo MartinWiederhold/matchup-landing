@@ -75,7 +75,7 @@ export async function saveHome(userId: string, city: string, country: string | n
 // ── Schritt 2: Turniere im Rahmen ───────────────────────────────────────────
 // Nur die für Karte + Zählung nötigen Spalten (kein select *). Aktive Turniere.
 const TOURNAMENT_COLUMNS =
-  "id, tournament_monday, series, category, name, city, country, latitude, longitude, surface, valid_to, created_at";
+  "id, source_ref, tournament_monday, series, category, name, city, country, latitude, longitude, surface, indoor, prize_money, prize_currency, valid_to, created_at";
 
 /** Alle aktiven Turniere (valid_to null) — einmal laden, dann client-seitig filtern.
  *  PAGINIERT über die gemeinsame Hilfe (sonst stille 1000-Zeilen-Kappung, ~1489 aktiv).

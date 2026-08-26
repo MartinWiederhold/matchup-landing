@@ -155,5 +155,5 @@ export default function TourMapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, locale, focus?.lat, focus?.lng, focusZoom, showRoute]);
 
-  return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-2xl border border-black/[0.08]`} />;
+  return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-2xl border border-[var(--t2-line)]`} />;
 }

@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
+import type { TFunction } from "@/lib/i18n/core";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
-import { loadPlannerProfile, loadActiveTournaments, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
+import { loadPlannerProfile, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
+import { getTourCatalog } from "@/lib/tourCatalogCache";
 import { loadTourOptPrefs, saveTourOptPrefs, parseCap, blockedRangesFrom } from "@/lib/tourOptPrefs";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, clearSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
 import { alternateTrend } from "@/domain/tour/entryTrend";
@@ -23,6 +25,8 @@ import { loadResultHistory, toMatchResults, type ResultHistoryRow } from "@/lib/
 import { loadWildcardContacts, type TourWildcardContact } from "@/lib/tourWildcards";
 import { computeSeasonCost } from "@/domain/tour/costs";
 import { optimizeSeason, type SeasonObjective, type SeasonProposal } from "@/domain/tour/optimizeSeason";
+import { entryDeadlineMs } from "@/domain/tour/finderQuick";
+import type { DecideReason } from "@/domain/tour/decide";
 import { restDaysBetween, tightArrivals } from "@/domain/tour/travelBuffer";
 import { expectedPoints, type PointsRound } from "@/domain/tour/points";
 import { tourDeadlines } from "@/domain/tour/deadlines";
@@ -42,6 +46,7 @@ import { HOME_BASES } from "@/lib/tournaments";
 import { haversineKm } from "@/lib/utils/haversine";
 import SeasonHealthBar from "./SeasonHealthBar";
 import SeasonJourney, { type JourneyLeg, type JourneyStop } from "./SeasonJourney";
+import { t2markArea } from "../../t2mark";
 
 const DAY = 86_400_000;
 const RECENT_KEY = "mu_tour_recent_starts";
@@ -66,6 +71,14 @@ const ROUND_OPTS: PointsRound[] = ["W", "F", "SF", "QF", "R16", "R32"];
  */
 const byMonday = (a: TourTournament, b: TourTournament) => a.tournament_monday.localeCompare(b.tournament_monday);
 const hasCoords = (t: TourTournament) => t.latitude != null && t.longitude != null;
+
+function optReasonLabel(t: TFunction, code: string): string {
+  const pts = /^erwartungspunkte:(\d+)$/.exec(code);
+  if (pts) return t("tour.opt.reason.erwartungspunkte", { n: pts[1] });
+  const tight = /^enge_anreise:(\d+)$/.exec(code);
+  if (tight) return t("tour.opt.reason.enge_anreise", { n: tight[1] });
+  return t(`tour.opt.reason.${code}`);
+}
 export default function SeasonWorkspace({ initialSelectedId = null }: { initialSelectedId?: string | null }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
@@ -168,6 +181,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const [filling, setFilling] = useState(false);
   const [applying, setApplying] = useState(false);
   const [proposal, setProposal] = useState<SeasonProposal | null>(null);
+  const [whyById, setWhyById] = useState<Map<string, DecideReason[]>>(new Map());
   const [maxPicks, setMaxPicks] = useState(() => loadTourOptPrefs().maxPicks);
   const [maxStreak, setMaxStreak] = useState(() => loadTourOptPrefs().maxStreak);
   const [blockedFrom, setBlockedFrom] = useState(() => loadTourOptPrefs().blockedFrom);
@@ -184,7 +198,6 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   }, []);
   const closeFillSheet = useCallback(() => {
     setFiltersOpen(false);
-    setProposal(null);
   }, []);
   // MU-037: Rückmeldung nach dem Füllen. reason erklärt, WARUM nichts dazukam.
   const [fillReport, setFillReport] = useState<{ added: number; occupied: number; reason: "added" | "weeks_full" | "budget" | "no_candidates" } | null>(null);
@@ -200,7 +213,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
     (async () => {
       try {
         const [p, ts, ids, cr, planRows, evs, pdocs, rhist, wcs, tdocs] = await Promise.all([
-          loadPlannerProfile(user.id), loadActiveTournaments(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id), loadResultHistory(user.id), loadWildcardContacts(user.id), loadTravelDocuments(user.id),
+          loadPlannerProfile(user.id), getTourCatalog(), loadSeasonTournamentIds(), loadCostRates(), loadSeasonPlanRows(), loadAllEntryEvents(), loadPlayerDocs(user.id), loadResultHistory(user.id), loadWildcardContacts(user.id), loadTravelDocuments(user.id),
         ]);
         if (!alive) return;
         setTravelDocs(tdocs);
@@ -216,6 +229,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         setRankingInput(p.ranking != null ? String(p.ranking) : "");
         setBudget(p.seasonBudget != null ? String(p.seasonBudget) : "");
         setStatus("ready");
+        t2markArea("season");
         // Einreisesperren + Schengen-Aufenthalte hängen an den Pässen und werden REAKTIV
         // in eigenen Effekten geladen (unten) — so wirkt eine Pass-Änderung sofort.
       } catch {
@@ -462,6 +476,11 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
       const picks = result.picks.filter((p) => !seasonIds.has(p.id));
       if (picks.length > 0) {
         setProposal(result);
+        setWhyById((prev) => {
+          const next = new Map(prev);
+          for (const p of picks) next.set(p.id, p.reasons);
+          return next;
+        });
         setFillReport(null);
         return;
       }
@@ -712,7 +731,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   }, [todayISO, seasonOrdered, planByTour, eventsByPlan, resultHistory, travelDocs, banned, docWarnings, schengen, wildcards, byId, rates?.currency, cost, budgetMinor]);
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.loading")}</div>;
+  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.t2authChecking")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -769,14 +788,14 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const profileEditor = profile && (
     <div className="space-y-3">
       <label className="block">
-        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.rankLabel")}</span>
+        <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.rankLabel")}</span>
         <div className="flex gap-2">
           <input value={rankingInput} onChange={(e) => setRankingInput(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
-          <button type="button" onClick={saveRanking} className="shrink-0 rounded-xl bg-neutral-900 px-4 text-[13px] font-bold text-white hover:bg-neutral-700">{t("common.save")}</button>
+          <button type="button" onClick={saveRanking} className="t2-cta shrink-0 px-4">{t("common.save")}</button>
         </div>
       </label>
       <div>
-        <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.wsPassports")}</span>
+        <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsPassports")}</span>
         {profile.passports.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-1.5">
             {profile.passports.map((iso) => (
@@ -789,36 +808,36 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         {/* Eigenes Auswahl-Element statt nativem select (iOS-Safari-Renderfehler). */}
         <div className="relative" ref={passportBoxRef}>
           <button type="button" onClick={() => setPassportOpen((o) => !o)} className={`${inp} flex items-center justify-between`}>
-            <span className="text-neutral-500">{t("tour.wsAddPassport")}</span>
-            <span className={`text-neutral-400 transition-transform ${passportOpen ? "rotate-180" : ""}`}>▾</span>
+            <span className="text-[var(--t2-muted)]">{t("tour.wsAddPassport")}</span>
+            <span className={`text-[var(--t2-faint)] transition-transform ${passportOpen ? "rotate-180" : ""}`}>▾</span>
           </button>
           {passportOpen && (
-            <div className="absolute left-0 right-0 z-30 mt-1.5 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
+            <div className="absolute left-0 right-0 z-30 mt-1.5 rounded-2xl border border-[var(--t2-line)] bg-white p-2 shadow-xl">
               <input value={passportQuery} onChange={(e) => setPassportQuery(e.target.value)} placeholder={t("tour.wsCountrySearch")} className={`${inp} mb-2`} autoFocus />
               <div className="max-h-56 overflow-auto">
                 {passportOptions.map((iso) => (
-                  <button key={iso} type="button" onClick={() => { setPassports([...profile.passports, iso]); setPassportOpen(false); setPassportQuery(""); }} className="flex w-full items-center rounded-lg px-2 py-1.5 text-left text-[13px] text-neutral-800 hover:bg-black/[0.03]">
+                  <button key={iso} type="button" onClick={() => { setPassports([...profile.passports, iso]); setPassportOpen(false); setPassportQuery(""); }} className="flex w-full items-center rounded-lg px-2 py-1.5 text-left text-[13px] text-[var(--t2-ink)] hover:bg-[var(--t2-surface)]">
                     {catName(iso)}
                   </button>
                 ))}
-                {passportOptions.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-neutral-400">—</p>}
+                {passportOptions.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-[var(--t2-faint)]">—</p>}
               </div>
             </div>
           )}
         </div>
       </div>
-      <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsProfileNote")}</p>
+      <p className="text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsProfileNote")}</p>
 
       {/* Fristen-Erinnerungen per E-Mail — Vorgabe an, jederzeit abschaltbar. */}
-      <div className="border-t border-black/[0.06] pt-3">
+      <div className="border-t border-[var(--t2-line)] pt-3">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[12px] font-semibold text-neutral-700">{t("tour.wsRemindersLabel")}</span>
+          <span className="text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRemindersLabel")}</span>
           <button type="button" role="switch" aria-checked={reminderEnabled} onClick={() => toggleReminders(!reminderEnabled)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderEnabled ? "bg-matchup" : "bg-black/15"}`}>
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderEnabled ? "bg-matchup" : "bg-[var(--t2-line-strong)]"}`}>
             <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${reminderEnabled ? "translate-x-[22px]" : "translate-x-0.5"}`} />
           </button>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRemindersHint")}</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsRemindersHint")}</p>
       </div>
     </div>
   );
@@ -829,8 +848,8 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const noProfileHint = (
     <div className="text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-matchup/10 text-[20px]" aria-hidden>👤</div>
-      <h3 className="mt-2 text-[15px] font-extrabold text-neutral-900">{t("tour.npTitle")}</h3>
-      <p className="mt-1 text-[13px] leading-relaxed text-neutral-500">{t("tour.npBody")}</p>
+      <h3 className="mt-2 text-[15px] font-extrabold text-[var(--t2-ink)]">{t("tour.npTitle")}</h3>
+      <p className="mt-1 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.npBody")}</p>
       <Link href="/app" className="t2-cta mt-3">{t("tour.npCta")}</Link>
     </div>
   );
@@ -874,16 +893,33 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
       : null;
   const budgetOver = budgetLeftMinor != null && budgetLeftMinor < 0;
   const monthFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" });
-  const journeyStops: JourneyStop[] = seasonOrdered.map(({ tt, order }) => ({
-    id: tt.id,
-    order,
-    city: tt.city || t("tour.fieldMissing"),
-    country: catName(tt.country),
-    date: fmtDay(tt.tournament_monday),
-    month: monthFmt.format(new Date(tt.tournament_monday + "T00:00:00Z")),
-    category: tt.category || "—",
-    pill: entryPill(tt),
-  }));
+  const journeyStops: JourneyStop[] = seasonOrdered.map(({ tt, order }, i) => {
+    const ms = entryDeadlineMs(tt);
+    let deadline: string | null = null;
+    if (ms == null) deadline = t("tour.t2findDlUnknown");
+    else if (ms <= nowMs) deadline = t("tour.entryExpired");
+    else {
+      const left = ms - nowMs;
+      deadline = t("tour.t2ovCountdown", { d: Math.floor(left / DAY), h: Math.floor((left % DAY) / 3_600_000) });
+    }
+    const st = cost?.stations[i];
+    const costText = st && !st.hasUnknown && Object.keys(st.subtotal).length > 0
+      ? Object.entries(st.subtotal).map(([c, v]) => money(v, c)).join(" · ")
+      : null;
+    return {
+      id: tt.id,
+      order,
+      city: tt.city || t("tour.fieldMissing"),
+      country: catName(tt.country),
+      date: fmtDay(tt.tournament_monday),
+      month: monthFmt.format(new Date(tt.tournament_monday + "T00:00:00Z")),
+      category: tt.category || "—",
+      pill: entryPill(tt),
+      deadline,
+      cost: costText,
+      why: (whyById.get(tt.id) ?? []).map((r) => optReasonLabel(t, r.code)),
+    };
+  });
 
   const proposalPicks = proposal?.picks.filter((p) => !seasonIds.has(p.id)) ?? [];
   const proposalPoints = proposalPicks.reduce((sum, p) => {
@@ -894,26 +930,26 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
 
   const fillPanel = (
     <div className="relative flex h-full flex-col bg-[var(--t2-paper)] text-[var(--t2-ink)]">
-      <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3">
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-500">{t("tour.t2fillSheetTitle")}{activeFilters > 0 ? ` · ${activeFilters}` : ""}</h2>
+      <div className="flex shrink-0 items-center justify-between border-b border-[var(--t2-line)] px-4 py-3">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--t2-muted)]">{t("tour.t2fillSheetTitle")}{activeFilters > 0 ? ` · ${activeFilters}` : ""}</h2>
         <div className="flex items-center gap-1">
           {activeFilters > 0 && <button type="button" onClick={resetFilters} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>}
           <button type="button" onClick={closeFillSheet} className="flex h-7 w-7 items-center justify-center text-[16px] text-[var(--t2-muted)] hover:text-[var(--t2-ink)]" aria-label={t("common.close")}>✕</button>
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-        <p className="text-[12px] leading-relaxed text-neutral-500">{objective === "most_points" ? t("tour.wsFillShortPoints") : t("tour.wsFillShortTournaments")}</p>
+        <p className="text-[12px] leading-relaxed text-[var(--t2-muted)]">{objective === "most_points" ? t("tour.wsFillShortPoints") : t("tour.wsFillShortTournaments")}</p>
         <section>
-          <h3 className="text-[12px] font-semibold text-neutral-600">{t("tour.wsStartTitle")}</h3>
+          <h3 className="text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsStartTitle")}</h3>
           <div className="relative mt-2">
             <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={startName ? t("tour.wsStartCurrent", { name: startName }) : t("tour.wsStartSearch")} className={inp} />
             {geoResults.length > 0 && (
-              <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
+              <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-[var(--t2-line)] bg-white py-1 shadow-lg">
                 {geoResults.map((c, i) => (
                   <li key={`${c.country}|${c.name}|${i}`}>
-                    <button type="button" onClick={() => pickStart({ name: c.name, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
-                      <span className="truncate font-semibold text-neutral-900">{c.name}</span>
-                      <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
+                    <button type="button" onClick={() => pickStart({ name: c.name, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-[var(--t2-surface)]">
+                      <span className="truncate font-semibold text-[var(--t2-ink)]">{c.name}</span>
+                      <span className="shrink-0 text-[11px] text-[var(--t2-faint)]">{catName(c.country)}</span>
                     </button>
                   </li>
                 ))}
@@ -927,7 +963,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </div>
         </section>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsObjectiveTitle")}</span>
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsObjectiveTitle")}</span>
           <div className="flex flex-wrap gap-1.5">
             {([["most_tournaments", "wsObjTournaments"], ["most_points", "wsObjPoints"]] as const).map(([v, key]) => (
               <button key={v} type="button" onClick={() => chooseObjective(v)} className={filt(objective === v)}>{t(`tour.${key}`)}</button>
@@ -935,18 +971,18 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </div>
           {objective === "most_points" && (
             <div className="mt-2.5">
-              <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsRoundLabel")}</span>
+              <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoundLabel")}</span>
               <div className="flex flex-wrap gap-1.5">
                 {ROUND_OPTS.map((r) => (
                   <button key={r} type="button" onClick={() => chooseRound(r)} className={filt(expRound === r)}>{t(`tour.round_${r}`)}</button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsRoundHint")}</p>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsRoundHint")}</p>
             </div>
           )}
         </div>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.series")}</span>
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.series")}</span>
           <div className="flex flex-wrap gap-1.5">
             {SERIES_OPTS.map((o) => {
               const on = selSeries.includes(o.v);
@@ -955,7 +991,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </div>
         </div>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.surfaceLabel")}</span>
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.surfaceLabel")}</span>
           <div className="flex flex-wrap gap-1.5">
             {SURFACE_OPTS.map((s) => {
               const on = selSurface.includes(s);
@@ -964,7 +1000,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </div>
         </div>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.plRegion")}</span>
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.plRegion")}</span>
           <div className="flex flex-wrap items-center gap-1.5">
             <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "all", countries: [] }))} className={filt(selCountries.length === 0 && frame.region === "all")}>{t("tour.plRegionAll")}</button>
             <button type="button" onClick={() => setFrame((f) => ({ ...f, region: "europe", countries: [] }))} className={filt(selCountries.length === 0 && frame.region === "europe")}>{t("tour.plRegionEurope")}</button>
@@ -974,23 +1010,23 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                 <span className={`transition-transform ${countryOpen ? "rotate-180" : ""}`}>▾</span>
               </button>
               {countryOpen && (
-                <div className="absolute left-0 z-30 mt-1.5 w-72 rounded-2xl border border-black/10 bg-white p-2 shadow-xl">
+                <div className="absolute left-0 z-30 mt-1.5 w-72 rounded-2xl border border-[var(--t2-line)] bg-white p-2 shadow-xl">
                   <input value={countryQuery} onChange={(e) => setCountryQuery(e.target.value)} placeholder={t("tour.wsCountrySearch")} className={`${inp} mb-2`} autoFocus />
                   <div className="max-h-64 overflow-auto">
                     {countryList.map(([iso, n]) => {
                       const on = selCountries.includes(iso);
                       return (
-                        <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-black/[0.03]">
-                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${on ? "border-matchup bg-matchup text-white" : "border-neutral-300 text-transparent"}`}>✓</span>
-                          <span className="min-w-0 flex-1 truncate text-neutral-800">{catName(iso)}</span>
-                          <span className="shrink-0 tabular-nums text-[12px] font-semibold text-neutral-400">{n}</span>
+                        <button key={iso} type="button" onClick={() => toggleCountry(iso)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-[var(--t2-surface)]">
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${on ? "border-matchup bg-matchup text-white" : "border-[var(--t2-line-strong)] text-transparent"}`}>✓</span>
+                          <span className="min-w-0 flex-1 truncate text-[var(--t2-ink)]">{catName(iso)}</span>
+                          <span className="shrink-0 tabular-nums text-[12px] font-semibold text-[var(--t2-faint)]">{n}</span>
                         </button>
                       );
                     })}
-                    {countryList.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-neutral-400">{t("tour.opt.emptyNoTournaments")}</p>}
+                    {countryList.length === 0 && <p className="px-2 py-3 text-center text-[12px] text-[var(--t2-faint)]">{t("tour.opt.emptyNoTournaments")}</p>}
                   </div>
                   {selCountries.length > 0 && (
-                    <button type="button" onClick={() => setFrame((f) => ({ ...f, countries: [] }))} className="mt-2 w-full rounded-lg bg-black/[0.03] py-1.5 text-[12px] font-semibold text-neutral-600 hover:bg-black/[0.06]">{t("tour.wsCountriesClear")}</button>
+                    <button type="button" onClick={() => setFrame((f) => ({ ...f, countries: [] }))} className="mt-2 w-full rounded-lg bg-[var(--t2-surface)] py-1.5 text-[12px] font-semibold text-[var(--t2-muted)] hover:bg-[var(--t2-line)]">{t("tour.wsCountriesClear")}</button>
                   )}
                 </div>
               )}
@@ -998,33 +1034,33 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plFrom")}</span>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.plFrom")}</span>
             <input type="date" value={frame.from} onChange={(e) => setFrame((f) => ({ ...f, from: e.target.value }))} className={inp} /></label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plTo")}</span>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.plTo")}</span>
             <input type="date" value={frame.to} onChange={(e) => setFrame((f) => ({ ...f, to: e.target.value }))} className={inp} /></label>
         </div>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.plBudget")}</span>
+          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.plBudget")}</span>
           <input ref={budgetRef} value={budget} onChange={(e) => setBudget(e.target.value)} inputMode="numeric" placeholder="—" className={inp} />
-          {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBudgetHint")}</p>}
+          {budget.trim() === "" && <p className="mt-1 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsBudgetHint")}</p>}
         </label>
         <div className="grid grid-cols-2 gap-2">
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optMaxEvents")}</span>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.t2optMaxEvents")}</span>
             <input value={maxPicks} onChange={(e) => setMaxPicks(e.target.value)} inputMode="numeric" placeholder="—" className={inp} /></label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optMaxStreak")}</span>
+          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.t2optMaxStreak")}</span>
             <input value={maxStreak} onChange={(e) => setMaxStreak(e.target.value)} inputMode="numeric" placeholder="—" className={inp} /></label>
         </div>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.t2optBlocked")}</span>
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.t2optBlocked")}</span>
           <div className="grid grid-cols-2 gap-2">
-            <label className="block"><span className="mb-1 block text-[11px] text-neutral-500">{t("tour.t2optBlockedFrom")}</span>
+            <label className="block"><span className="mb-1 block text-[11px] text-[var(--t2-muted)]">{t("tour.t2optBlockedFrom")}</span>
               <input type="date" value={blockedFrom} onChange={(e) => setBlockedFrom(e.target.value)} className={inp} /></label>
-            <label className="block"><span className="mb-1 block text-[11px] text-neutral-500">{t("tour.t2optBlockedTo")}</span>
+            <label className="block"><span className="mb-1 block text-[11px] text-[var(--t2-muted)]">{t("tour.t2optBlockedTo")}</span>
               <input type="date" value={blockedTo} onChange={(e) => setBlockedTo(e.target.value)} className={inp} /></label>
           </div>
         </div>
         <div>
-          <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.wsCostTitle")}
+          <span className="mb-1.5 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsCostTitle")}
             <InfoHint label={t("tour.wsCostInfo")}>
               {ratesDone && <p>{t("tour.wsWeekCost", { amount: money(weekCostMinor, cur) })}</p>}
               {cost && cost.arrivalsSaved > 0 && <p className="mt-1 text-emerald-600">{t("tour.wsArrivalsSaved", { n: cost.arrivalsSaved })}</p>}
@@ -1033,21 +1069,21 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
             </InfoHint>
           </span>
           {!ratesDone && !costOpen && (
-            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsCostNeedRates")}</button>
+            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-[var(--t2-surface)] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-[var(--t2-line)]">{t("tour.wsCostNeedRates")}</button>
           )}
           {ratesDone && !costOpen && (
-            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-black/[0.03] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-black/[0.06]">{t("tour.wsEditRates")}</button>
+            <button type="button" onClick={() => setCostOpen(true)} className="w-full rounded-xl bg-[var(--t2-surface)] px-3 py-2 text-left text-[12px] font-semibold text-matchup hover:bg-[var(--t2-line)]">{t("tour.wsEditRates")}</button>
           )}
           {costOpen && <CostRatesForm rates={rates} userId={user.id} onSaved={onRatesSaved} nights={nights} onNightsChange={setNights} buffer={buffer} onBufferChange={setBuffer} />}
         </div>
       </div>
-      <div className="shrink-0 space-y-2 border-t border-neutral-200 p-4">
+      <div className="shrink-0 space-y-2 border-t border-[var(--t2-line)] p-4">
         {!ratesDone && <p className="text-[12px] font-semibold text-amber-700">{t("tour.wsCostNeedRates")}</p>}
         <button type="button" onClick={() => void smartFill()} disabled={filling || applying || !ratesDone} className="t2-cta w-full disabled:opacity-40">
           {filling ? t("tour.t2optProposing") : t("tour.t2optPropose")}
         </button>
         {fillReport && proposalPicks.length === 0 && (
-          <p className="text-[12px] leading-relaxed text-neutral-600">
+          <p className="text-[12px] leading-relaxed text-[var(--t2-muted)]">
             {fillReport.added > 0
               ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
               : fillReport.reason === "weeks_full" ? t("tour.wsFillWeeksFull")
@@ -1056,24 +1092,6 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
           </p>
         )}
       </div>
-      {proposalPicks.length > 0 && (
-        <div className="absolute inset-0 z-20 flex flex-col justify-end bg-[var(--t2-paper)]/95 p-4">
-          <div className="border border-[var(--t2-line)] bg-[var(--t2-paper)] p-4">
-            <p className="text-[15px] font-semibold leading-snug text-[var(--t2-ink)]">
-              {t("tour.t2optSummary", { n: proposalPicks.length, points: proposalPoints, cost: money(proposalCostMinor, cur) })}
-            </p>
-            <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.t2optSummaryAssume")}</p>
-            <div className="mt-4 space-y-2">
-              <button type="button" onClick={() => void applyProposal()} disabled={applying} className="t2-cta w-full disabled:opacity-40">
-                {applying ? t("tour.t2optApplyBusy") : t("tour.t2optApply")}
-              </button>
-              <button type="button" onClick={() => setProposal(null)} disabled={applying} className="t2-ghost w-full disabled:opacity-40">
-                {t("tour.t2optRetry")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -1084,16 +1102,16 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   ) : (
     <div className="w-[360px] max-w-full">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-matchup">Matchup Tour</p>
-      <p className="mt-1 text-[15px] font-semibold leading-snug text-neutral-900">{t("tour.wsIntroLead")}</p>
+      <p className="mt-1 text-[15px] font-semibold leading-snug text-[var(--t2-ink)]">{t("tour.wsIntroLead")}</p>
       <div className="relative mt-3">
         <input value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={t("tour.wsIntroField")} className={inp} autoFocus />
         {geoResults.length > 0 && (
-          <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white py-1 shadow-lg">
+          <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-[var(--t2-line)] bg-white py-1 shadow-lg">
             {geoResults.map((c, i) => (
               <li key={`${c.country}|${c.name}|${i}`}>
-                <button type="button" onClick={() => pickHome({ city: c.name, country: c.country, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-black/[0.03]">
-                  <span className="truncate font-semibold text-neutral-900">{c.name}</span>
-                  <span className="shrink-0 text-[11px] text-neutral-400">{catName(c.country)}</span>
+                <button type="button" onClick={() => pickHome({ city: c.name, country: c.country, lat: c.lat, lng: c.lng })} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] hover:bg-[var(--t2-surface)]">
+                  <span className="truncate font-semibold text-[var(--t2-ink)]">{c.name}</span>
+                  <span className="shrink-0 text-[11px] text-[var(--t2-faint)]">{catName(c.country)}</span>
                 </button>
               </li>
             ))}
@@ -1102,7 +1120,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {HOME_BASES.map((b) => (
-          <button key={b.name} type="button" onClick={() => pickHome({ city: b.name, country: profile?.country ?? null, lat: b.lat, lng: b.lng })} className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-neutral-600 ring-1 ring-black/10 hover:bg-black/[0.03]">{b.name}</button>
+          <button key={b.name} type="button" onClick={() => pickHome({ city: b.name, country: profile?.country ?? null, lat: b.lat, lng: b.lng })} className="t2-chip">{b.name}</button>
         ))}
       </div>
     </div>
@@ -1129,7 +1147,18 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         roundLabel={t("tour.round_R16")}
         tightCount={tightMap.size}
         schengen={schengen ? { exceeds: schengen.exceeds, used: schengen.used, left: schengen.left } : null}
-        onPlan={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }}
+        objective={objective}
+        onObjective={chooseObjective}
+        budget={budget}
+        onBudget={setBudget}
+        frame={frame}
+        onFrame={(patch) => setFrame((f) => ({ ...f, ...patch }))}
+        maxStreak={maxStreak}
+        onMaxStreak={setMaxStreak}
+        buffer={buffer}
+        onBuffer={setBuffer}
+        onPlan={() => { if (!ratesDone) { openFillSheet(); setCostOpen(true); } else void smartFill(); }}
+        onMore={openFillSheet}
         planning={filling || applying}
         planDisabled={false}
       />
@@ -1140,11 +1169,10 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
             <button type="button" onClick={() => setMapOpen((o) => !o)} className="t2-ghost">
               {mapOpen ? t("tour.t2mapHide") : t("tour.t2mapShow")}
             </button>
-            <Link href="/tour2/tournaments" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+            <Link href="/tour2/finder" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
           </div>
-          {mapOpen && <div className="h-[36vh] shrink-0 md:hidden">{mapPane}</div>}
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 pb-24 md:pb-4">
-            {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>}
+            {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
             {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
             {status === "ready" && profile && (
               <>
@@ -1161,7 +1189,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                   </section>
                 )}
                 {fillReport && (
-                  <p className="mb-3 border border-black/10 px-3 py-2 text-[12px] leading-relaxed text-neutral-700">
+                  <p className="mb-3 border border-[var(--t2-line)] px-3 py-2 text-[12px] leading-relaxed text-[var(--t2-muted)]">
                     {fillReport.added > 0
                       ? t("tour.wsFillDone", { added: fillReport.added, occupied: fillReport.occupied })
                       : fillReport.reason === "weeks_full" ? t("tour.wsFillWeeksFull")
@@ -1180,14 +1208,14 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                     <div className="border border-[var(--t2-line)] px-4 py-8 text-center">
                       <p className="text-[15px] font-bold">{t("tour.t2noSeason")}</p>
                       <p className="mt-2 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2seasonEmptyLead")}</p>
-                      <button type="button" onClick={() => { openFillSheet(); if (!ratesDone) setCostOpen(true); }} className="t2-cta mt-4">{t("tour.wsFill")}</button>
-                      <Link href="/tour2/tournaments" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+                      <button type="button" onClick={() => { if (!ratesDone) { openFillSheet(); setCostOpen(true); } else void smartFill(); }} className="t2-cta mt-4">{t("tour.wsFill")}</button>
+                      <Link href="/tour2/finder" className="mt-3 block text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
                     </div>
                   }
                 />
                 <div className="mt-6 hidden items-center gap-3 md:flex">
-                  <Link href="/tour2/tournaments" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
-                  <Link href="/tour2/calendar" className="text-[12px] font-semibold text-neutral-500 hover:text-neutral-900">{t("tour.wsViewCalendar")}</Link>
+                  <Link href="/tour2/finder" className="text-[12px] font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+                  <Link href="/tour2/calendar" className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsViewCalendar")}</Link>
                 </div>
                 {seasonOrdered.length > 0 && (
                   confirmReset ? (
@@ -1206,12 +1234,29 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
             )}
           </div>
         </div>
-        <div className="hidden min-h-0 w-[40%] md:block">{mapPane}</div>
+        <div className={`${mapOpen ? "order-first h-[36vh] shrink-0 md:order-none md:h-auto" : "hidden"} min-h-0 md:block md:w-[40%]`}>{mapPane}</div>
       </div>
+
+      {proposalPicks.length > 0 && (
+        <div className="absolute inset-x-0 bottom-0 z-[70] border-t border-[var(--t2-line)] bg-[var(--t2-paper)] p-4 pb-24 md:pb-4">
+          <p className="text-[15px] font-semibold leading-snug text-[var(--t2-ink)]">
+            {t("tour.t2optSummary", { n: proposalPicks.length, points: proposalPoints, cost: money(proposalCostMinor, cur) })}
+          </p>
+          <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.t2optSummaryAssume")}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={() => void applyProposal()} disabled={applying} className="t2-cta disabled:opacity-40">
+              {applying ? t("tour.t2optApplyBusy") : t("tour.t2optApply")}
+            </button>
+            <button type="button" onClick={() => setProposal(null)} disabled={applying} className="t2-ghost disabled:opacity-40">
+              {t("tour.t2optRetry")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showIntro && (
         <div className="absolute inset-0 z-[65] flex items-start justify-center bg-black/50 p-6">
-          <div className="rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/5">{introBody}</div>
+          <div className="rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-[var(--t2-line)]">{introBody}</div>
         </div>
       )}
 
@@ -1233,7 +1278,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onClick={() => setProfileOpen(false)}>
           <div className="max-h-[85vh] w-[420px] max-w-full overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex justify-end">
-              <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[18px] text-neutral-500 hover:bg-black/[0.05]" aria-label={t("common.close")}>✕</button>
+              <button type="button" onClick={() => setProfileOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[18px] text-[var(--t2-muted)] hover:bg-[var(--t2-line)]" aria-label={t("common.close")}>✕</button>
             </div>
             {profile.hasProfile ? (
               <>
@@ -1245,16 +1290,16 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(profile.firstName?.[0] ?? "?").toUpperCase()}</span>
                   )}
                   <div className="min-w-0">
-                    <h2 className="truncate text-[16px] font-extrabold text-neutral-900">{profile.displayName || profile.firstName || t("tour.plStep1")}</h2>
+                    <h2 className="truncate text-[16px] font-extrabold text-[var(--t2-ink)]">{profile.displayName || profile.firstName || t("tour.plStep1")}</h2>
                     {(profile.countryName || profile.country || profile.city) && (
-                      <p className="truncate text-[12px] text-neutral-500">{[profile.countryName || (profile.country ? catName(profile.country) : ""), profile.city].filter(Boolean).join(" · ")}</p>
+                      <p className="truncate text-[12px] text-[var(--t2-muted)]">{[profile.countryName || (profile.country ? catName(profile.country) : ""), profile.city].filter(Boolean).join(" · ")}</p>
                     )}
                   </div>
                 </div>
-                <p className="mb-4 text-[11px] text-neutral-400">{t("tour.wsIdentityFrom")}</p>
+                <p className="mb-4 text-[11px] text-[var(--t2-faint)]">{t("tour.wsIdentityFrom")}</p>
                 {profileEditor}
-                <div className="mt-4 border-t border-black/[0.06] pt-3">
-                  <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.suTitle")}</p>
+                <div className="mt-4 border-t border-[var(--t2-line)] pt-3">
+                  <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.suTitle")}</p>
                   <div className="space-y-0.5">
                     {[
                       { key: "passport", label: t("tour.suPassport"), done: setupSummary?.passport },
@@ -1262,18 +1307,18 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                       { key: "emergency", label: t("tour.suEmergency"), done: setupSummary?.emergency },
                       { key: "equipment", label: t("tour.suEquipment"), done: setupSummary?.equipment },
                     ].map((r) => (
-                      <Link key={r.key} href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
-                        <span className="text-neutral-700">{r.label}</span>
-                        <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : r.done ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : r.done ? t("tour.suDone") : t("tour.suMissing")}</span>
+                      <Link key={r.key} href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-[var(--t2-surface)]">
+                        <span className="text-[var(--t2-muted)]">{r.label}</span>
+                        <span className={`text-[12px] font-semibold ${!setupSummary ? "text-[var(--t2-faint)]" : r.done ? "text-emerald-700" : "text-[var(--t2-faint)]"}`}>{!setupSummary ? "…" : r.done ? t("tour.suDone") : t("tour.suMissing")}</span>
                       </Link>
                     ))}
-                    <Link href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-black/[0.03]">
-                      <span className="text-neutral-700">{t("tour.suTravelDocs")}</span>
-                      <span className={`text-[12px] font-semibold ${!setupSummary ? "text-neutral-300" : setupSummary.travelDocs > 0 ? "text-emerald-700" : "text-neutral-400"}`}>{!setupSummary ? "…" : t("tour.suCount", { n: setupSummary.travelDocs })}</span>
+                    <Link href="/tour2/profile" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px] hover:bg-[var(--t2-surface)]">
+                      <span className="text-[var(--t2-muted)]">{t("tour.suTravelDocs")}</span>
+                      <span className={`text-[12px] font-semibold ${!setupSummary ? "text-[var(--t2-faint)]" : setupSummary.travelDocs > 0 ? "text-emerald-700" : "text-[var(--t2-faint)]"}`}>{!setupSummary ? "…" : t("tour.suCount", { n: setupSummary.travelDocs })}</span>
                     </Link>
                     <div className="flex items-center justify-between rounded-lg px-2 py-1.5 text-[13px]">
-                      <span className="text-neutral-700">{t("tour.suAge")}</span>
-                      <span className="text-[12px] font-semibold text-neutral-500">{profile.age != null ? t("tour.suAgeVal", { n: profile.age }) : t("tour.suMissing")}</span>
+                      <span className="text-[var(--t2-muted)]">{t("tour.suAge")}</span>
+                      <span className="text-[12px] font-semibold text-[var(--t2-muted)]">{profile.age != null ? t("tour.suAgeVal", { n: profile.age }) : t("tour.suMissing")}</span>
                     </div>
                   </div>
                 </div>

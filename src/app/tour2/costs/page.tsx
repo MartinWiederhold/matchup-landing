@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CostsPage() {
   const t = await getT();
   return (
-    <Tour2Subpage title={t("tour.costsTitle")} subtitle={t("tour.costsSubtitle")}>
+    <Tour2Subpage title={t("tour.costsTitle")} subtitle={t("tour.costsSubtitle")} backHref="/tour2/travel">
       <CostsView />
     </Tour2Subpage>
   );

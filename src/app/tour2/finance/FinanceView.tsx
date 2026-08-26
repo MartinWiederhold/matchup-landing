@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import { loadPointsData } from "@/lib/tourPoints";
 import { euroToMinor } from "@/lib/tourCosts";
 import { scorePoints } from "@/domain/tour/points";
 import { tournamentBalances, seasonMetrics, type Money, type TournamentBalance, type SeasonMetrics } from "@/domain/tour/finance";
+import { t2markArea } from "../t2mark";
 
 const INCOME_KINDS: IncomeKind[] = ["sponsor", "federation", "club", "bonus", "other"];
 
@@ -44,6 +45,7 @@ export default function FinanceView() {
   const [fDate, setFDate] = useState(() => new Date(Date.now()).toISOString().slice(0, 10));
   const [fNote, setFNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const marked = useRef(false);
 
   const reload = useCallback(async () => {
     if (!user) return;
@@ -85,7 +87,11 @@ export default function FinanceView() {
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    reload().then(() => { if (alive) setStatus("ready"); }).catch(() => { if (alive) setStatus("error"); });
+    reload().then(() => {
+      if (!alive) return;
+      setStatus("ready");
+      if (!marked.current) { marked.current = true; t2markArea("travel"); }
+    }).catch(() => { if (alive) setStatus("error"); });
     return () => { alive = false; };
   }, [user, reload]);
 
@@ -129,23 +135,23 @@ export default function FinanceView() {
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finBalance")}</p>
           <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{fmtMoney(m.balance)}</p>
-          <p className="mt-1 text-[11px] text-neutral-400">{t("tour.finExpenses")}: {fmtMoney(m.expensesTotal)} · {t("tour.finIncome")}: {fmtMoney(m.incomeTotal)}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finExpenses")}: {fmtMoney(m.expensesTotal)} · {t("tour.finIncome")}: {fmtMoney(m.incomeTotal)}</p>
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerPoint")}</p>
           {m.costPerPoint ? (
             <>
               <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{fmtMoney(m.costPerPoint)}</p>
-              <p className="mt-1 text-[11px] text-neutral-400">{m.points} P · {t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
+              <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{m.points} P · {t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
             </>
           ) : (
-            <p className="mt-1 text-[13px] font-semibold text-neutral-500">{m.hasResults ? t("tour.finNoCountingPoints") : t("tour.finNoResults")}</p>
+            <p className="mt-1 text-[13px] font-semibold text-[var(--t2-muted)]">{m.hasResults ? t("tour.finNoCountingPoints") : t("tour.finNoResults")}</p>
           )}
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerTournament")}</p>
           <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{m.tournamentsWithExpenses > 0 ? fmtMoney(m.costPerTournament) : "—"}</p>
-          <p className="mt-1 text-[11px] text-neutral-400">{t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerWeek")}</p>
@@ -154,13 +160,13 @@ export default function FinanceView() {
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finPrizeToCost")}</p>
           <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{Object.keys(m.prizeToCost).length ? Object.entries(m.prizeToCost).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") : "—"}</p>
-          <p className="mt-1 text-[11px] text-neutral-400">{t("tour.finPrize")}: {fmtMoney(m.prizeTotal)}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finPrize")}: {fmtMoney(m.prizeTotal)}</p>
         </div>
       </div>
 
       {/* ── Bilanz je Turnier ──────────────────────────────────────────────── */}
       {balances.length === 0 ? (
-        <p className="rounded-xl bg-black/[0.02] px-4 py-4 text-[14px] text-neutral-500">{t("tour.finEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 text-[14px] text-[var(--t2-muted)]">{t("tour.finEmpty")}</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {balances.map((b) => (
@@ -169,15 +175,15 @@ export default function FinanceView() {
               {/* Ausgaben nach Posten */}
               <div className="mt-2 space-y-0.5">
                 {b.expensesByCategory.map((c) => (
-                  <p key={c.category} className="flex justify-between text-[12px] text-neutral-500"><span>{t(`tour.expCat_${c.category}`).startsWith("tour.") ? c.category : t(`tour.expCat_${c.category}`)}</span><span className="tabular-nums">{fmtMoney(c.byCurrency)}</span></p>
+                  <p key={c.category} className="flex justify-between text-[12px] text-[var(--t2-muted)]"><span>{t(`tour.expCat_${c.category}`).startsWith("tour.") ? c.category : t(`tour.expCat_${c.category}`)}</span><span className="tabular-nums">{fmtMoney(c.byCurrency)}</span></p>
                 ))}
                 {b.incomeByKind.map((k) => (
                   <p key={k.kind} className="flex justify-between text-[12px] text-emerald-600"><span>{t(`tour.income_${k.kind}`)}</span><span className="tabular-nums">+{fmtMoney(k.byCurrency)}</span></p>
                 ))}
                 {Object.keys(b.prize).length > 0 && <p className="flex justify-between text-[12px] text-emerald-600"><span>{t("tour.finPrize")}</span><span className="tabular-nums">+{fmtMoney(b.prize)}</span></p>}
               </div>
-              <div className="mt-2 flex justify-between border-t border-black/[0.06] pt-2 text-[13px] font-bold">
-                <span className="text-neutral-500">{t("tour.finBalance")}</span>
+              <div className="mt-2 flex justify-between border-t border-[var(--t2-line)] pt-2 text-[13px] font-bold">
+                <span className="text-[var(--t2-muted)]">{t("tour.finBalance")}</span>
                 <span className={`tabular-nums ${Object.values(b.balance).some((v) => v < 0) ? "text-amber-700" : "text-emerald-700"}`}>{fmtMoney(b.balance)}</span>
               </div>
             </div>
@@ -216,7 +222,7 @@ export default function FinanceView() {
         </button>
 
         {income.length > 0 && (
-          <ul className="mt-4 space-y-1.5 border-t border-black/[0.06] pt-3">
+          <ul className="mt-4 space-y-1.5 border-t border-[var(--t2-line)] pt-3">
             {income.map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-2 text-[13px]">
                 <span className="min-w-0 truncate text-neutral-700">
@@ -226,7 +232,7 @@ export default function FinanceView() {
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   <span className="tabular-nums font-semibold text-emerald-700">{i.amount != null ? money(toMinor(i.amount), (i.currency || "EUR").toUpperCase()) : "—"}</span>
-                  <button type="button" onClick={() => delIncome(i.id)} aria-label={t("tour.finDeleteIncome")} className="text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                  <button type="button" onClick={() => delIncome(i.id)} aria-label={t("tour.finDeleteIncome")} className="text-[var(--t2-faint)] transition-colors hover:text-red-500">✕</button>
                 </span>
               </li>
             ))}

@@ -62,16 +62,16 @@ export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament
   const sz = size === "lg" ? "text-[18px]" : "text-[13px]";
 
   if (!dl.known || !dl.entry) {
-    return <span className={`${sz} font-semibold text-neutral-500`}>{t("tour.entryUnknownShort")}</span>;
+    return <span className={`${sz} font-semibold text-[var(--t2-muted)]`}>{t("tour.entryUnknownShort")}</span>;
   }
   const ms = dl.entry.getTime() - now;
   if (ms <= 0) {
-    return <span className={`${sz} font-semibold text-neutral-400`}>{t("tour.entryExpired")}</span>;
+    return <span className={`${sz} font-semibold text-[var(--t2-faint)]`}>{t("tour.entryExpired")}</span>;
   }
   const days = Math.ceil(ms / DAY);
   const urgent = days <= 7; // wie NextDeadline: drängender in Bernstein, aber kein Rot/Blinken
   return (
-    <span className={`${sz} font-bold tabular-nums ${urgent ? "text-amber-700" : "text-neutral-800"}`}>
+    <span className={`${sz} font-bold tabular-nums ${urgent ? "text-amber-700" : "text-[var(--t2-ink)]"}`}>
       {t("tour.entryCountdown", { n: days })}
     </span>
   );
@@ -86,12 +86,12 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
   // Meldeweg je Serie: Challenger → ATP · WTA-Haupttour → WTA PlayerZone · sonst (WTT/Junioren) → ITF.
   const isChallenger = tournament.series === "challenger";
   const isWta = tournament.series === "wta";
-  const link = "block font-semibold text-matchup hover:underline";
-  const note = "mt-0.5 text-[11px] leading-relaxed text-neutral-400";
+  const link = "block font-semibold text-[var(--t2-accent)] hover:underline";
+  const note = "mt-0.5 text-[11px] leading-relaxed text-[var(--t2-faint)]";
 
   return (
     <div className="mt-2 text-[12px]">
-      <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.entryPathTitle")}</p>
+      <p className="mb-1 t2-kicker">{t("tour.entryPathTitle")}</p>
 
       {/* Turnierseite — bei ITF-Turnieren die öffentliche itftennis.com-Turnierseite
           (in `website` aufgelöst, MU: aus der claim-source_url der ITF-Endpunkt-Claims).
@@ -133,9 +133,9 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
           {/* Ehrlich: die Meldung läuft in der App, der Link führt nur zur ATP-Seite. */}
           <p className={note}>{t("tour.entryPortalAtpNote")}</p>
           <p className={note}>
-            <a href={ATP_APP_IOS} target="_blank" rel="noopener noreferrer" className="font-semibold text-neutral-500 hover:underline">{t("tour.entryAtpAppIos")}</a>
+            <a href={ATP_APP_IOS} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--t2-muted)] hover:underline">{t("tour.entryAtpAppIos")}</a>
             {" · "}
-            <a href={ATP_APP_ANDROID} target="_blank" rel="noopener noreferrer" className="font-semibold text-neutral-500 hover:underline">{t("tour.entryAtpAppAndroid")}</a>
+            <a href={ATP_APP_ANDROID} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--t2-muted)] hover:underline">{t("tour.entryAtpAppAndroid")}</a>
           </p>
         </>
       )}

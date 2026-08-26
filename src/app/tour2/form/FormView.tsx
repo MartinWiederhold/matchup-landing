@@ -71,30 +71,30 @@ export default function FormView() {
   // Grundlage IMMER nennen: „5 entschieden" bzw. „keine Basis".
   const basis = (tl: Tally) => (tl.decided === 0 ? t("tour.formNoBasis") : t("tour.formBasis", { n: tl.decided }));
 
-  if (authLoading) return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
-        <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
+      <div className="mt-8 t2-panel bg-[var(--t2-surface)] p-6 text-center">
+        <p className="text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (status === "error") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (status === "error") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const r = rates!;
   const hasUnknownSurface = r.bySurface.some((b) => b.key === "unknown");
   const tile = "border-t border-[var(--t2-line)] py-4";
-  const label = "text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400";
-  const sectionH = "text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400";
+  const label = "t2-kicker";
+  const sectionH = "t2-kicker";
 
   // Leerstand (heute der Live-Fall: tour_events ist leer) — mit klarem Grund + Weg.
   if (matchCount === 0) {
     return (
       <div className="mt-8 space-y-3">
-        <p className="rounded-xl bg-black/[0.02] px-4 py-4 text-[14px] text-neutral-600">{t("tour.formEmpty")}</p>
-        <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[13px] text-neutral-500">{t("tour.formOpponentUnavailable")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 text-[14px] text-[var(--t2-muted)]">{t("tour.formEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-3 text-[13px] text-[var(--t2-muted)]">{t("tour.formOpponentUnavailable")}</p>
       </div>
     );
   }
@@ -103,13 +103,13 @@ export default function FormView() {
   const rateRow = (key: string, name: string, tl: Tally) => (
     <div key={key} className="py-2">
       <div className="flex items-center justify-between gap-3 text-[13px]">
-        <span className="min-w-0 truncate font-semibold text-neutral-800">{name}</span>
+        <span className="min-w-0 truncate font-semibold text-[var(--t2-ink)]">{name}</span>
         <span className="flex shrink-0 items-center gap-2">
-          <span className="tabular-nums font-bold text-neutral-900">{pct(tl.rate)}</span>
-          <span className="tabular-nums text-[11px] text-neutral-400">{basis(tl)}{tl.open > 0 ? ` · ${t("tour.formOpenCount", { n: tl.open })}` : ""}</span>
+          <span className="tabular-nums font-bold text-[var(--t2-ink)]">{pct(tl.rate)}</span>
+          <span className="tabular-nums text-[11px] text-[var(--t2-faint)]">{basis(tl)}{tl.open > 0 ? ` · ${t("tour.formOpenCount", { n: tl.open })}` : ""}</span>
         </span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--t2-surface)]">
         <div className="h-full rounded-full bg-matchup" style={{ width: tl.rate == null ? "0%" : `${Math.round(tl.rate * 100)}%` }} />
       </div>
     </div>
@@ -121,29 +121,29 @@ export default function FormView() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <div className={tile}>
           <p className={label}>{t("tour.formOverall")}</p>
-          <p className="mt-1 text-[22px] font-extrabold tabular-nums text-neutral-900">{pct(r.overall.rate)}</p>
-          <p className="mt-1 text-[11px] text-neutral-400">{r.overall.wins}–{r.overall.losses} · {basis(r.overall)}{r.overall.open > 0 ? ` · ${t("tour.formOpenCount", { n: r.overall.open })}` : ""}</p>
+          <p className="mt-1 text-[22px] font-extrabold tabular-nums text-[var(--t2-ink)]">{pct(r.overall.rate)}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{r.overall.wins}–{r.overall.losses} · {basis(r.overall)}{r.overall.open > 0 ? ` · ${t("tour.formOpenCount", { n: r.overall.open })}` : ""}</p>
         </div>
         <div className={`${tile} col-span-1`}>
           <p className={label}>{t("tour.formMatchesLabel")}</p>
-          <p className="mt-1 text-[22px] font-extrabold tabular-nums text-neutral-900">{r.overall.total}</p>
-          <p className="mt-1 text-[11px] text-neutral-400">{t("tour.formBasis", { n: r.overall.decided })}</p>
+          <p className="mt-1 text-[22px] font-extrabold tabular-nums text-[var(--t2-ink)]">{r.overall.total}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.formBasis", { n: r.overall.decided })}</p>
         </div>
       </div>
 
       {/* ── Nach Belag ─────────────────────────────────────────────────────── */}
       <section>
         <h2 className={sectionH}>{t("tour.formBySurface")}</h2>
-        <div className="mt-2 divide-y divide-black/[0.05]">
+        <div className="mt-2 divide-y divide-[var(--t2-line)]">
           {r.bySurface.map((b) => rateRow(b.key, surfaceLabel(b.key), b.tally))}
         </div>
-        {hasUnknownSurface && <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.formSurfaceGapNote")}</p>}
+        {hasUnknownSurface && <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.formSurfaceGapNote")}</p>}
       </section>
 
       {/* ── Nach Kategorie ─────────────────────────────────────────────────── */}
       <section>
         <h2 className={sectionH}>{t("tour.formByCategory")}</h2>
-        <div className="mt-2 divide-y divide-black/[0.05]">
+        <div className="mt-2 divide-y divide-[var(--t2-line)]">
           {r.byCategory.map((b) => rateRow(b.key, b.key === "unknown" ? t("tour.formCategoryUnknown") : b.key, b.tally))}
         </div>
       </section>
@@ -156,8 +156,8 @@ export default function FormView() {
             {ptsSurface.map((p) => (
               <div key={p.surface} className={tile}>
                 <p className={label}>{surfaceLabel(p.surface)}</p>
-                <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{p.points}</p>
-                <p className="mt-1 text-[11px] text-neutral-400">{t("tour.formPointsN", { n: p.n })}</p>
+                <p className="mt-1 text-[17px] font-extrabold tabular-nums text-[var(--t2-ink)]">{p.points}</p>
+                <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.formPointsN", { n: p.n })}</p>
               </div>
             ))}
           </div>
@@ -167,11 +167,11 @@ export default function FormView() {
       {/* ── Bilanz je Saison ───────────────────────────────────────────────── */}
       <section>
         <h2 className={sectionH}>{t("tour.formSeasonBalance")}</h2>
-        <ul className="mt-2 divide-y divide-black/[0.05]">
+        <ul className="mt-2 divide-y divide-[var(--t2-line)]">
           {seasons.map((s) => (
             <li key={String(s.season)} className="flex items-center justify-between py-2 text-[13px]">
-              <span className="font-semibold text-neutral-800">{s.season ?? t("tour.formSeasonUnknown")}</span>
-              <span className="tabular-nums text-neutral-500">{s.wins}–{s.losses}{s.open > 0 ? ` · ${t("tour.formOpenCount", { n: s.open })}` : ""}</span>
+              <span className="font-semibold text-[var(--t2-ink)]">{s.season ?? t("tour.formSeasonUnknown")}</span>
+              <span className="tabular-nums text-[var(--t2-muted)]">{s.wins}–{s.losses}{s.open > 0 ? ` · ${t("tour.formOpenCount", { n: s.open })}` : ""}</span>
             </li>
           ))}
         </ul>
@@ -180,18 +180,18 @@ export default function FormView() {
       {/* ── Bilanz je Turnier ──────────────────────────────────────────────── */}
       <section>
         <h2 className={sectionH}>{t("tour.formTournamentBalance")}</h2>
-        <ul className="mt-2 divide-y divide-black/[0.05]">
+        <ul className="mt-2 divide-y divide-[var(--t2-line)]">
           {tournaments.map((tb) => (
             <li key={tb.tournamentId} className="flex items-center justify-between gap-3 py-2 text-[13px]">
-              <span className="min-w-0 truncate font-semibold text-neutral-800">{tb.tournamentName}</span>
-              <span className="shrink-0 tabular-nums text-neutral-500">{tb.wins}–{tb.losses}{tb.open > 0 ? ` · ${t("tour.formOpenCount", { n: tb.open })}` : ""}</span>
+              <span className="min-w-0 truncate font-semibold text-[var(--t2-ink)]">{tb.tournamentName}</span>
+              <span className="shrink-0 tabular-nums text-[var(--t2-muted)]">{tb.wins}–{tb.losses}{tb.open > 0 ? ` · ${t("tour.formOpenCount", { n: tb.open })}` : ""}</span>
             </li>
           ))}
         </ul>
       </section>
 
       {/* ── Was nicht geht: Gegnerstärke (kein Rang-Feld, MU-039) ──────────── */}
-      <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[12px] leading-relaxed text-neutral-500">{t("tour.formOpponentUnavailable")}</p>
+      <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-3 text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.formOpponentUnavailable")}</p>
     </div>
   );
 }

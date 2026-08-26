@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SchengenPage() {
   const t = await getT();
   return (
-    <Tour2Subpage title={t("tour.schengenTitle")} subtitle={t("tour.schengenSubtitle")}>
+    <Tour2Subpage title={t("tour.schengenTitle")} subtitle={t("tour.schengenSubtitle")} backHref="/tour2/travel">
       <SchengenView />
     </Tour2Subpage>
   );

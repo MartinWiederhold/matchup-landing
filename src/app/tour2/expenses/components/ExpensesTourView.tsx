@@ -81,18 +81,18 @@ export default function ExpensesTourView() {
   }, [user, prizeInputs]);
 
   // ── Auth-Gate (wie SeasonView) ───────────────────────────────────────────
-  if (authLoading) return <p className="mt-10 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-10 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
+      <div className="t2-panel mt-10 text-center">
+        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   // Summen je Währung über ALLE Ausgaben.
   const totals = new Map<string, number>();
@@ -111,20 +111,20 @@ export default function ExpensesTourView() {
       {/* Summen je Währung */}
       {totals.size > 0 && (
         <section className="t2-panel">
-          <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expTotals")}</h2>
+          <h2 className="t2-kicker">{t("tour.expTotals")}</h2>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[...totals.entries()].sort().map(([c, v]) => (
               <span key={c} className="text-[20px] font-extrabold tracking-tight text-neutral-900 tabular-nums">{money(v, c)}</span>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-neutral-400">{t("tour.expTotalsNote")}</p>
+          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.expTotalsNote")}</p>
         </section>
       )}
 
       {/* Preisgeld / Netto je Turnier (nur eigene Saison) */}
       {season.length > 0 && (
         <section>
-          <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expPerTournament")}</h2>
+          <h2 className="t2-kicker">{t("tour.expPerTournament")}</h2>
           <div className="mt-3 space-y-3">
             {season.map((e) => {
               const uuid = e.tournament.id;
@@ -141,15 +141,15 @@ export default function ExpensesTourView() {
               const netLines = [...curs].sort().map((c) => ({ c, net: (prizeCur === c ? prizeCents : 0) - (cost.get(c) ?? 0) }));
 
               return (
-                <article key={uuid} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4">
+                <article key={uuid} className="t2-panel">
                   <p className="truncate text-[14px] font-bold text-neutral-900">
                     {e.tournament.city || t("tour.fieldMissing")}
-                    {e.tournament.country ? <span className="text-neutral-500">, {e.tournament.country}</span> : null}
+                    {e.tournament.country ? <span className="text-[var(--t2-muted)]">, {e.tournament.country}</span> : null}
                   </p>
 
                   <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-2">
                     <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{t("tour.expPrize")}</span>
+                      <span className="mb-1 block t2-kicker">{t("tour.expPrize")}</span>
                       <div className="flex gap-1.5">
                         <input
                           type="text"
@@ -158,13 +158,13 @@ export default function ExpensesTourView() {
                           onChange={(ev) => setPrizeInputs({ ...prizeInputs, [uuid]: { ...pi, amount: ev.target.value } })}
                           onBlur={() => handlePrizeSave(uuid)}
                           placeholder="0"
-                          className="w-28 rounded-lg border border-black/15 px-2.5 py-1.5 text-[13px] outline-none focus:border-black/30"
+                          className="w-28 t2-input"
                         />
                         <select
                           value={pi.currency}
                           onChange={(ev) => { const next = { ...prizeInputs, [uuid]: { ...pi, currency: ev.target.value } }; setPrizeInputs(next); }}
                           onBlur={() => handlePrizeSave(uuid)}
-                          className="rounded-lg border border-black/15 px-2 py-1.5 text-[13px] outline-none focus:border-black/30"
+                          className="t2-input"
                         >
                           {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -172,7 +172,7 @@ export default function ExpensesTourView() {
                     </label>
 
                     <div>
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{t("tour.expExpenses")}</span>
+                      <span className="mb-1 block t2-kicker">{t("tour.expExpenses")}</span>
                       <p className="text-[14px] font-bold text-neutral-900">
                         {cost.size ? [...cost.entries()].sort().map(([c, v]) => money(v, c)).join(" · ") : "—"}
                       </p>
@@ -181,13 +181,13 @@ export default function ExpensesTourView() {
 
                   {/* Netto je Währung — nie gemischt */}
                   {netLines.length > 0 && (
-                    <div className="mt-2 border-t border-black/[0.06] pt-2">
+                    <div className="mt-2 border-t border-[var(--t2-line)] pt-2">
                       {netLines.map(({ c, net }) => (
                         <p key={c} className={`text-[13px] font-bold ${net >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                           {t("tour.expNet")}: {money(net, c)}
                         </p>
                       ))}
-                      {curs.size > 1 && <p className="mt-1 text-[11px] text-neutral-400">{t("tour.expMixedNote")}</p>}
+                      {curs.size > 1 && <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.expMixedNote")}</p>}
                     </div>
                   )}
                 </article>
@@ -199,16 +199,16 @@ export default function ExpensesTourView() {
 
       {/* Ausgabenliste */}
       <section>
-        <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expListTitle")}</h2>
+        <h2 className="t2-kicker">{t("tour.expListTitle")}</h2>
         {actionError && (
-          <p className="mt-2 text-[12px] text-neutral-500">
+          <p className="mt-2 text-[12px] text-[var(--t2-muted)]">
             {actionError === "receipt" ? t("tour.expRemoveReceiptFailed") : t("tour.expRemoveError")}
           </p>
         )}
         {rows.length === 0 ? (
-          <p className="mt-6 rounded-2xl bg-black/[0.035] px-5 py-8 text-center text-sm text-neutral-500">{t("tour.expEmpty")}</p>
+          <p className="mt-6 rounded-2xl bg-[var(--t2-surface)] px-5 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.expEmpty")}</p>
         ) : (
-          <div className="mt-3 divide-y divide-black/[0.06]">
+          <div className="mt-3 divide-y divide-[var(--t2-line)]">
             {rows.map((r) => {
               // Name nur für uuid-Turniere (Diskriminator); Slug → ohne Namen, kein Absturz.
               const tname = isTourTournamentId(r.tournament_id) ? names.get(r.tournament_id!) : null;
@@ -216,7 +216,7 @@ export default function ExpensesTourView() {
                 <div key={r.id} className="flex items-center gap-3 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[14px] font-semibold text-neutral-900">{r.merchant || t(`tour.expCat_${r.category ?? "other"}`)}</p>
-                    <p className="text-[11.5px] text-neutral-500">
+                    <p className="text-[11.5px] text-[var(--t2-muted)]">
                       {t(`tour.expCat_${r.category ?? "other"}`)} · {dateFmt(r.spent_on)}
                       {tname ? ` · ${tname}` : ""}
                     </p>
@@ -225,7 +225,7 @@ export default function ExpensesTourView() {
                   <span className="shrink-0 text-[14px] font-bold text-neutral-900 tabular-nums">
                     {r.amount != null ? money(amountToMinor(r.amount), r.currency ?? "") : "—"}
                   </span>
-                  <button type="button" onClick={() => handleRemove(r)} className="shrink-0 text-[12px] font-semibold text-neutral-400 hover:text-neutral-700">
+                  <button type="button" onClick={() => handleRemove(r)} className="shrink-0 text-[12px] font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">
                     {t("tour.expRemove")}
                   </button>
                 </div>

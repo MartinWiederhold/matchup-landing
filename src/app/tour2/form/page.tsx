@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function FormPage() {
   const t = await getT();
   return (
-    <Tour2Subpage title={t("tour.formTitle")} subtitle={t("tour.formSubtitle")}>
+    <Tour2Subpage title={t("tour.formTitle")} subtitle={t("tour.formSubtitle")} backHref="/tour2/ranking">
       <FormView />
     </Tour2Subpage>
   );

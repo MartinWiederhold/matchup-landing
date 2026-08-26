@@ -29,19 +29,21 @@ export default function CostRatesForm({
   rates,
   userId,
   onSaved,
-  nights,
+  nights = "",
   onNightsChange,
   buffer,
   onBufferChange,
+  hideTravelAssumptions = false,
 }: {
   rates: TourCostRates | null;
   userId: string;
   onSaved: (patch: CostRatesPatch) => void;
-  nights: string;
-  onNightsChange: (v: string) => void;
-  // Anreisepuffer optional — nur der Planer reicht ihn herein; andere Aufrufer (Onboarding) nicht.
+  nights?: string;
+  onNightsChange?: (v: string) => void;
   buffer?: string;
   onBufferChange?: (v: string) => void;
+  /** Nächte/Puffer liegen im Profil bei den Planungsregeln — hier nicht noch einmal. */
+  hideTravelAssumptions?: boolean;
 }) {
   const t = useT();
 
@@ -130,6 +132,7 @@ export default function CostRatesForm({
           </select>
         </label>
 
+        {!hideTravelAssumptions && onNightsChange && (
         <label className="block">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsNights")}</span>
           <input
@@ -141,10 +144,11 @@ export default function CostRatesForm({
             className={inputCls}
           />
         </label>
+        )}
 
         {/* Anreisepuffer zwischen Turnieren an verschiedenen Orten — Nutzerangabe wie die Nächte.
             Nur wenn der Aufrufer ihn reicht (Planer); im Onboarding weggelassen. */}
-        {onBufferChange && (
+        {!hideTravelAssumptions && onBufferChange && (
           <label className="block">
             <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsBuffer")}</span>
             <input
@@ -159,8 +163,8 @@ export default function CostRatesForm({
         )}
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsNightsHint")}</p>
-      {onBufferChange && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsBufferHint")}</p>}
+      {!hideTravelAssumptions && <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsNightsHint")}</p>}
+      {!hideTravelAssumptions && onBufferChange && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsBufferHint")}</p>}
       <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsEstimateHint")}</p>
 
       <div className="mt-4 flex items-center gap-3">

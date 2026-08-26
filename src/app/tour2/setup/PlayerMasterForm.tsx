@@ -16,7 +16,7 @@ import {
 
 const inpL = "t2-input";
 const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
-const lblL = "mb-1 block text-[12px] font-semibold text-neutral-600";
+const lblL = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
 const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
 const cardL = "t2-panel";
 const cardD = "border border-white/10 bg-black p-4";
@@ -41,7 +41,7 @@ const str = (v: string | number | null): string => (v == null ? "" : String(v));
  * tour_profiles (owner-only), Ausrüstung + Notfallkontakt in eigenen Tabellen. KEINE
  * Passnummer/Bankdaten/Steuerkennung/medizinischen Angaben.
  */
-export default function PlayerMasterForm({ tone = "light" }: { tone?: "light" | "dark" }) {
+export default function PlayerMasterForm({ tone = "light", hideIds = false }: { tone?: "light" | "dark"; hideIds?: boolean }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
 
@@ -76,14 +76,14 @@ export default function PlayerMasterForm({ tone = "light" }: { tone?: "light" | 
   const inp = dark ? inpD : inpL;
   const lbl = dark ? lblD : lblL;
   const card = dark ? cardD : cardL;
-  const muted = dark ? "text-neutral-400" : "text-neutral-500";
-  const title = dark ? "text-white" : "text-neutral-900";
-  const checkLbl = dark ? "text-neutral-200" : "text-neutral-700";
+  const muted = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
+  const title = dark ? "text-white" : "text-[var(--t2-ink)]";
+  const checkLbl = dark ? "text-neutral-200" : "text-[var(--t2-ink)]";
 
   if (authLoading) return <p className={`mt-6 text-sm ${muted}`}>{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className={`mt-6 rounded-2xl p-6 text-center ${dark ? "bg-white/[0.03] ring-1 ring-white/10" : "bg-black/[0.02]"}`}>
+      <div className={`mt-6 rounded-2xl p-6 text-center ${dark ? "bg-white/[0.03] ring-1 ring-white/10" : "bg-[var(--t2-surface)]"}`}>
         <p className={`text-sm ${muted}`}>{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
@@ -94,7 +94,7 @@ export default function PlayerMasterForm({ tone = "light" }: { tone?: "light" | 
 
   return (
     <section className={dark ? "mt-2" : "mt-12"}>
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.pmTitle")}</h2>
+      <h2 className="t2-kicker">{t("tour.pmTitle")}</h2>
       <p className={`mt-2 max-w-2xl text-[13px] leading-relaxed ${muted}`}>{t("tour.pmIntro")}</p>
 
       <div className="mt-4 grid gap-4">
@@ -108,11 +108,17 @@ export default function PlayerMasterForm({ tone = "light" }: { tone?: "light" | 
             <label className="block"><span className={lbl}>{t("tour.pmPassport2Country")}</span><input value={str(docs.passport2_country)} onChange={(e) => setDocs({ ...docs, passport2_country: nn(e.target.value.toUpperCase().slice(0, 2)) })} placeholder="IT" className={inp} /></label>
             <label className="block"><span className={lbl}>{t("tour.pmPassport2Expiry")}</span><input type="date" value={str(docs.passport2_expiry)} onChange={(e) => setDocs({ ...docs, passport2_expiry: nn(e.target.value) })} className={inp} /></label>
             <label className="block"><span className={lbl}>{t("tour.pmInsuranceProvider")}</span><input value={str(docs.insurance_provider)} onChange={(e) => setDocs({ ...docs, insurance_provider: nn(e.target.value) })} className={inp} /></label>
-            <label className="block"><span className={lbl}>{t("tour.pmInsurancePolicy")}</span><input value={str(docs.insurance_policy_no)} onChange={(e) => setDocs({ ...docs, insurance_policy_no: nn(e.target.value) })} className={inp} /></label>
+            {!hideIds && (
+              <label className="block"><span className={lbl}>{t("tour.pmInsurancePolicy")}</span><input value={str(docs.insurance_policy_no)} onChange={(e) => setDocs({ ...docs, insurance_policy_no: nn(e.target.value) })} className={inp} /></label>
+            )}
             <label className="block"><span className={lbl}>{t("tour.pmInsuranceExpiry")}</span><input type="date" value={str(docs.insurance_expiry)} onChange={(e) => setDocs({ ...docs, insurance_expiry: nn(e.target.value) })} className={inp} /></label>
             <label className="flex items-center gap-2 pt-6"><input type="checkbox" checked={docs.insurance_international === true} onChange={(e) => setDocs({ ...docs, insurance_international: e.target.checked })} className="h-4 w-4" /><span className={`text-[13px] ${checkLbl}`}>{t("tour.pmInsuranceInternational")}</span></label>
-            <label className="block"><span className={lbl}>{t("tour.pmIpinId")}</span><input value={str(docs.ipin_id)} onChange={(e) => setDocs({ ...docs, ipin_id: nn(e.target.value) })} className={inp} /></label>
-            <label className="block"><span className={lbl}>{t("tour.pmAtpId")}</span><input value={str(docs.atp_id)} onChange={(e) => setDocs({ ...docs, atp_id: nn(e.target.value) })} className={inp} /></label>
+            {!hideIds && (
+              <>
+                <label className="block"><span className={lbl}>{t("tour.pmIpinId")}</span><input value={str(docs.ipin_id)} onChange={(e) => setDocs({ ...docs, ipin_id: nn(e.target.value) })} className={inp} /></label>
+                <label className="block"><span className={lbl}>{t("tour.pmAtpId")}</span><input value={str(docs.atp_id)} onChange={(e) => setDocs({ ...docs, atp_id: nn(e.target.value) })} className={inp} /></label>
+              </>
+            )}
           </div>
           <button type="button" onClick={submitDocs} disabled={savingDocs} className={btn}>{t("tour.pmSave")}</button>
         </div>

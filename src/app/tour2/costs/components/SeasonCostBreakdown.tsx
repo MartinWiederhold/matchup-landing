@@ -71,14 +71,14 @@ export default function SeasonCostBreakdown({
 
   return (
     <section className="mt-8">
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.costsCalcTitle")}</h2>
+      <h2 className="t2-kicker">{t("tour.costsCalcTitle")}</h2>
 
       {/* Hinweise oben: fehlende Nächte / fehlende Sätze — sichtbar, aber unaufgeregt. */}
       {nights == null && (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">{t("tour.costsNightsMissing")}</p>
       )}
       {missing.length > 0 && (
-        <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
+        <p className="mt-2 text-[12px] leading-relaxed text-[var(--t2-muted)]">
           {t("tour.costsMissingRates", { list: missing.join(", ") })}
         </p>
       )}
@@ -89,17 +89,17 @@ export default function SeasonCostBreakdown({
           const x = entries[i].tournament;
           const countryName = x.country ? (t(`tour.country.${x.country}`).startsWith("tour.country.") ? x.country : t(`tour.country.${x.country}`)) : t("tour.fieldMissing");
           return (
-            <article key={entries[i].planId} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4">
+            <article key={entries[i].planId} className="t2-panel">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-[15px] font-bold tracking-tight text-neutral-900">
                   {x.city || t("tour.fieldMissing")}
-                  <span className="text-neutral-400">, </span>
-                  <span className="text-neutral-600">{countryName}</span>
+                  <span className="text-[var(--t2-faint)]">, </span>
+                  <span className="text-[var(--t2-muted)]">{countryName}</span>
                 </h3>
-                <span className="text-[12px] text-neutral-500">{t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}</span>
+                <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}</span>
               </div>
 
-              <p className={`mt-1 text-[12px] font-semibold ${st.arrivalCharged ? "text-neutral-700" : "text-emerald-600"}`}>
+              <p className={`mt-1 text-[12px] font-semibold ${st.arrivalCharged ? "text-[var(--t2-muted)]" : "text-emerald-600"}`}>
                 {st.arrivalCharged ? t("tour.costsStationArrival") : t("tour.costsStationNoArrival")}
               </p>
 
@@ -107,8 +107,8 @@ export default function SeasonCostBreakdown({
               <ul className="mt-2 space-y-0.5 text-[13px]">
                 {st.items.map((it, k) => (
                   <li key={k} className="flex items-baseline justify-between gap-3">
-                    <span className="text-neutral-500">{t(`tour.costsItem_${it.code}`)}</span>
-                    <span className={"unknown" in it && it.unknown ? "text-neutral-400" : "font-medium text-neutral-800 tabular-nums"}>
+                    <span className="text-[var(--t2-muted)]">{t(`tour.costsItem_${it.code}`)}</span>
+                    <span className={"unknown" in it && it.unknown ? "text-[var(--t2-faint)]" : "font-medium text-neutral-800 tabular-nums"}>
                       {"unknown" in it && it.unknown ? t("tour.costsUnknown") : money(it.amount, it.currency)}
                     </span>
                   </li>
@@ -116,8 +116,8 @@ export default function SeasonCostBreakdown({
               </ul>
 
               {Object.keys(st.subtotal).length > 0 && (
-                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-black/[0.06] pt-2 text-[13px]">
-                  <span className="font-semibold text-neutral-600">{t("tour.costsStationSubtotal")}</span>
+                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-[var(--t2-line)] pt-2 text-[13px]">
+                  <span className="font-semibold text-[var(--t2-muted)]">{t("tour.costsStationSubtotal")}</span>
                   <span className="flex flex-col items-end font-bold text-neutral-900"><BagLines bag={st.subtotal} /></span>
                 </div>
               )}
@@ -127,19 +127,19 @@ export default function SeasonCostBreakdown({
       </div>
 
       {/* Gesamt je Währung + Cluster-Effekt */}
-      <div className="mt-4 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 p-5">
+      <div className="t2-panel mt-4">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.costsTotal")}</span>
+          <span className="t2-kicker">{t("tour.costsTotal")}</span>
           <span className="flex flex-col items-end text-[18px] font-extrabold text-neutral-900">
-            {result.currencies.length > 0 ? <BagLines bag={result.total} /> : <span className="text-neutral-400">{t("tour.costsUnknown")}</span>}
+            {result.currencies.length > 0 ? <BagLines bag={result.total} /> : <span className="text-[var(--t2-faint)]">{t("tour.costsUnknown")}</span>}
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-neutral-400">{t("tour.costsPerCurrencyNote")}</p>
+        <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.costsPerCurrencyNote")}</p>
 
         {result.arrivalsSaved > 0 && (
-          <p className="mt-3 border-t border-black/[0.06] pt-3 text-[13px] text-neutral-700">
+          <p className="mt-3 border-t border-[var(--t2-line)] pt-3 text-[13px] text-[var(--t2-muted)]">
             {t("tour.costsSavedArrivals", { n: result.arrivalsSaved })}
-            {savedMoney && <span className="text-neutral-400"> · {t("tour.costsSavedArrivalsAmount", { amount: savedMoney })}</span>}
+            {savedMoney && <span className="text-[var(--t2-faint)]"> · {t("tour.costsSavedArrivalsAmount", { amount: savedMoney })}</span>}
           </p>
         )}
       </div>

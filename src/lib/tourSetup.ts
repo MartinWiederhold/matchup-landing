@@ -64,6 +64,7 @@ export type SetupState = {
   country: string | null; // profiles.country = Heimatland (ISO)
   countryName: string | null; // profiles.country_name (lesbar)
   profileImage: string | null; // profiles.profile_image (Avatar-URL)
+  age: number | null; // profiles.age — kein Geburtsdatum
   hasCoords: boolean; // Wohnort-Koordinaten vorhanden (profiles_private)
   ranking: number | null;
   passports: string[];
@@ -85,13 +86,14 @@ type ProfileBasics = {
   country: string | null;
   countryName: string | null;
   profileImage: string | null;
+  age: number | null;
 };
 
 /** Nur die benötigten Heimat-/Identitätsfelder aus profiles (benannte Spalten, kein select *). */
 export async function loadProfileBasics(userId: string): Promise<ProfileBasics> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("gender, first_name, display_name, city, country, country_name, profile_image")
+    .select("gender, first_name, display_name, city, country, country_name, profile_image, age")
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -103,6 +105,7 @@ export async function loadProfileBasics(userId: string): Promise<ProfileBasics> 
     country: data?.country ?? null,
     countryName: data?.country_name ?? null,
     profileImage: data?.profile_image ?? null,
+    age: data?.age ?? null,
   };
 }
 
@@ -137,6 +140,7 @@ export async function loadSetupState(userId: string): Promise<SetupState> {
     country: basics.country, // rohes Heimatland (profiles.country); Pass-Rückfall macht der Vorfilter
     countryName: basics.countryName,
     profileImage: basics.profileImage,
+    age: basics.age,
     hasCoords,
     ranking: profile?.ranking ?? null,
     passports: profile?.passports ?? [],

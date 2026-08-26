@@ -31,16 +31,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initiale Session
+    let cancelled = false;
+    // Wenn getSession hängt (Storage-Lock, totes Tab), darf die UI nicht ewig
+    // auf „Laden" stehen — nach 4 s zeigen wir die Anmeldemaske; eine späte
+    // Session kommt weiterhin über onAuthStateChange.
+    const AUTH_WAIT_MS = 4000;
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, AUTH_WAIT_MS);
+
     supabase.auth
       .getSession()
       .then(({ data: { session } }) => {
+        if (cancelled) return;
+        window.clearTimeout(timeout);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) loadProfile(session.user.id);
         else setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        if (cancelled) return;
+        window.clearTimeout(timeout);
+        setLoading(false);
+      });
 
     // Auth-State-Listener
     const {
@@ -63,7 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function loadProfile(userId: string) {

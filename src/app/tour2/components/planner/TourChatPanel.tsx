@@ -71,17 +71,17 @@ export default function TourChatPanel({
 
   return (
     <div className="fixed inset-0 z-[700] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex h-[70dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white ring-1 ring-black/10 sm:rounded-3xl">
-        <header className="flex shrink-0 items-center gap-2.5 border-b border-black/10 px-4 py-3">
+      <div onClick={(e) => e.stopPropagation()} className="flex h-[70dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white ring-1 ring-[var(--t2-line)] sm:rounded-3xl">
+        <header className="flex shrink-0 items-center gap-2.5 border-b border-[var(--t2-line)] px-4 py-3">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-matchup/10 text-[13px] font-bold text-matchup">
             {(otherName || "?").slice(0, 1).toUpperCase()}
           </span>
-          <span className="font-semibold text-neutral-900">{otherName || t("tour.fieldMissing")}</span>
-          <button type="button" onClick={onClose} aria-label={t("common.back")} className="ml-auto text-lg text-neutral-400 hover:text-neutral-700">✕</button>
+          <span className="font-semibold text-[var(--t2-ink)]">{otherName || t("tour.fieldMissing")}</span>
+          <button type="button" onClick={onClose} aria-label={t("common.back")} className="ml-auto text-lg text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">✕</button>
         </header>
 
         {status === "error" ? (
-          <div className="flex flex-1 items-center justify-center p-6 text-center text-[13px] leading-relaxed text-neutral-500">
+          <div className="flex flex-1 items-center justify-center p-6 text-center text-[13px] leading-relaxed text-[var(--t2-muted)]">
             {t("tour.chatUnavailable")}
           </div>
         ) : (
@@ -91,7 +91,7 @@ export default function TourChatPanel({
                 const mine = m.sender_id === meId;
                 return (
                   <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[13px] ${mine ? "rounded-tr-sm bg-matchup text-white" : "rounded-tl-sm bg-black/[0.05] text-neutral-800"}`}>
+                    <div className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[13px] ${mine ? "rounded-tr-sm bg-matchup text-white" : "rounded-tl-sm bg-[var(--t2-surface)] text-[var(--t2-ink)]"}`}>
                       {m.content}
                     </div>
                   </div>
@@ -99,14 +99,14 @@ export default function TourChatPanel({
               })}
               <div ref={bottomRef} />
             </div>
-            <div className="flex shrink-0 items-center gap-2 border-t border-black/10 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="flex shrink-0 items-center gap-2 border-t border-[var(--t2-line)] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
                 placeholder={t("tour.chatPlaceholder")}
                 disabled={status !== "ready"}
-                className="min-w-0 flex-1 rounded-full bg-neutral-100 px-4 py-2.5 text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400 disabled:opacity-50"
+                className="t2-input min-w-0 flex-1 disabled:opacity-50"
               />
               {text.trim() && (
                 <button type="button" onClick={send} aria-label={t("common.send")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-matchup text-white">➤</button>

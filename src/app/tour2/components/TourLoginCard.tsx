@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth, translateError } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
+import { t2markArea } from "@/app/tour2/t2mark";
 
 /** Anmeldemaske für /tour2. Hell, Matchup-CTA. */
 export default function TourLoginCard() {
@@ -13,6 +14,8 @@ export default function TourLoginCard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => { t2markArea("login"); }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -26,8 +29,8 @@ export default function TourLoginCard() {
   return (
     <div className="flex h-[100dvh] flex-col items-center justify-center bg-[var(--t2-paper)] px-6 text-[var(--t2-ink)]">
       <div className="w-full max-w-sm">
-        <p className="t2-kicker">Matchup Tour</p>
-        <h2 className="mt-3 text-[1.75rem] font-bold tracking-tight">{t("tour.loginRequiredTitle")}</h2>
+        <p className="t2-eyebrow">Matchup Tour</p>
+        <h2 className="t2-display mt-3 text-[clamp(1.8rem,5vw,2.4rem)]">{t("tour.loginRequiredTitle")}</h2>
         <p className="mt-2 text-sm text-[var(--t2-muted)]">{t("tour.loginFormLead")}</p>
         <form onSubmit={submit} className="mt-6 space-y-2.5">
           <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("tour.loginEmail")} className="t2-input" />

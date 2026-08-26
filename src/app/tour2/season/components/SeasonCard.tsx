@@ -48,7 +48,7 @@ export default function SeasonCard({
   const hall = x.indoor === true ? t("tour.indoor") : x.indoor === false ? t("tour.outdoor") : null;
 
   return (
-    <article className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5">
+    <article className="t2-card">
       {/* Soft-gelöscht: Planzeile bleibt, wird aber erklärt (kein stiller Verlust). */}
       {entry.tournamentInactive && (
         <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">
@@ -58,18 +58,18 @@ export default function SeasonCard({
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[17px] font-bold tracking-tight text-neutral-900">
+          <h2 className="t2-h2 text-[17px] text-[var(--t2-ink)]">
             {x.city || t("tour.fieldMissing")}
-            <span className="text-neutral-400">, </span>
-            <span className="text-neutral-600">{countryName}</span>
+            <span className="text-[var(--t2-faint)]">, </span>
+            <span className="text-[var(--t2-muted)]">{countryName}</span>
           </h2>
-          <p className="mt-0.5 text-[12px] text-neutral-500">
+          <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">
             {x.series === "itf_wtt" ? t("tour.seriesItf") : x.series === "itf_juniors" ? t("tour.seriesJuniors") : x.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger")}
             {" · "}
             {t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-matchup/10 px-3 py-1 text-[12px] font-bold text-matchup">
+        <span className="shrink-0 rounded-full bg-[var(--t2-accent-soft)] px-3 py-1 text-[12px] font-bold text-[var(--t2-accent)]">
           {x.category || t("tour.fieldMissing")}
         </span>
       </div>
@@ -79,10 +79,10 @@ export default function SeasonCard({
       <p className="mt-2"><DeadlineCountdown tournament={x} now={now} /></p>
 
       {/* Belag/Halle + Preisgeld */}
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-neutral-600">
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[var(--t2-muted)]">
         <span>
           {t("tour.surfaceLabel")}: {surfaceLabel ?? t("tour.fieldMissing")}
-          {hall && <span className="text-neutral-400"> · {hall}</span>}
+          {hall && <span className="text-[var(--t2-faint)]"> · {hall}</span>}
         </span>
         {x.prize_money && (
           <span>
@@ -99,13 +99,13 @@ export default function SeasonCard({
       <TourDecideBlock tournament={x} prevPlace={prevPlace} />
 
       {/* Status ändern + Entfernen */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.06] pt-3">
-        <label className="flex items-center gap-2 text-[12px] text-neutral-500">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--t2-line)] pt-3">
+        <label className="flex items-center gap-2 text-[12px] text-[var(--t2-muted)]">
           {t("tour.statusLabel")}
           <select
             value={entry.status}
             onChange={(e) => onStatusChange(e.target.value as SeasonStatus)}
-            className="rounded-full border border-black/15 px-3 py-1.5 text-[12px] font-semibold text-neutral-700 transition-colors hover:border-black/30"
+            className="rounded-full border border-[var(--t2-line-strong)] px-3 py-1.5 text-[12px] font-semibold text-[var(--t2-ink)] transition-colors hover:border-[var(--t2-ink)]"
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>{t(`tour.status_${s}`)}</option>
@@ -115,7 +115,7 @@ export default function SeasonCard({
         <button
           type="button"
           onClick={onRemove}
-          className="text-[12px] font-semibold text-neutral-500 transition-colors hover:text-neutral-800"
+          className="text-[12px] font-semibold text-[var(--t2-muted)] transition-colors hover:text-[var(--t2-ink)]"
         >
           {t("tour.seasonRemove")}
         </button>

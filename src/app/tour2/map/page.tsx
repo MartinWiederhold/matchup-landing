@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Karte ist keine eigene Fläche — Turniere (Liste + Karte). */
+/** Karte ist keine eigene Fläche — Finder (Liste + Karte). */
 export default function Tour2MapRedirect() {
-  redirect("/tour2/tournaments");
+  redirect("/tour2/finder");
 }

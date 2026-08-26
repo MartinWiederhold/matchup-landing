@@ -50,30 +50,30 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Setu
 
   const ExitAction = ({ label, primary }: { label: string; primary: boolean }) => {
     const cls = primary
-      ? BTN_PRIMARY
-      : "rounded-full px-4 py-2 text-[13px] font-semibold text-neutral-500 transition-colors hover:text-neutral-800";
+      ? "t2-cta"
+      : "rounded-full px-4 py-2 text-[13px] font-semibold text-[var(--t2-muted)] transition-colors hover:text-[var(--t2-ink)]";
     const go = () => { markSkipped(); onExit?.(); };
     if (onExit) return <button type="button" onClick={go} className={cls}>{label}</button>;
     return <Link href="/tour2" onClick={markSkipped} className={cls}>{label}</Link>;
   };
 
-  if (authLoading || load === "loading") return <p className="mt-8 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading || load === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className="mt-8 rounded-2xl bg-black/[0.02] ring-1 ring-black/5 px-6 py-10 text-center">
-        <h2 className="text-lg font-bold text-neutral-900">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className={`mt-6 ${BTN_PRIMARY}`}>{t("tour.loginCta")}</Link>
+      <div className="mt-8 t2-panel text-center">
+        <h2 className="text-lg font-bold text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (load === "error" || !state) return <p className="mt-8 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (load === "error" || !state) return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const done = (n: SetupStep) => (n === 1 ? state.step1Done : n === 2 ? state.step2Done : n < step);
 
   return (
     <div className="mt-6">
-      <p className="text-sm text-neutral-500">{t("tour.t2onbSubtitle")}</p>
+      <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2onbSubtitle")}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {([1, 2, 3, 4] as SetupStep[]).map((n) => {
@@ -84,7 +84,7 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Setu
               type="button"
               onClick={() => setStep(n)}
               className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${
-                active ? "bg-matchup text-white" : done(n) ? "bg-matchup/10 text-matchup" : "bg-black/[0.04] text-neutral-500"
+                active ? "bg-matchup text-white" : done(n) ? "bg-matchup/10 text-matchup" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"
               }`}
             >
               <span>{done(n) && !active ? "✓" : n}</span> {t(`tour.t2onbStep${n}`)}
@@ -103,12 +103,12 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Setu
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {step > 1 && (
-            <button type="button" onClick={() => setStep((step - 1) as SetupStep)} className="rounded-full px-4 py-2 text-[13px] font-semibold text-neutral-600 transition-colors hover:text-neutral-900">
+            <button type="button" onClick={() => setStep((step - 1) as SetupStep)} className="rounded-full px-4 py-2 text-[13px] font-semibold text-[var(--t2-muted)] transition-colors hover:text-[var(--t2-ink)]">
               ← {t("tour.setupBack")}
             </button>
           )}
           {step < 4 && (
-            <button type="button" onClick={() => setStep((step + 1) as SetupStep)} className={BTN_PRIMARY}>
+            <button type="button" onClick={() => setStep((step + 1) as SetupStep)} className="t2-cta">
               {t("tour.setupNext")}
             </button>
           )}

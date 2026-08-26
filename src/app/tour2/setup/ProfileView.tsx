@@ -1,61 +1,101 @@
 "use client";
 
 /**
- * /tour2 Profil (Etappe 6): Identität aus /app, Tennis, Planung (Optimierer-Regeln),
- * Kostensätze, Reisedokumente, Ausrüstung, Notfall, Erinnerungen. Caps ohne neue Tabelle.
+ * Fläche Profil: alles, was der Optimierer und die Warnungen brauchen, an einem Ort.
+ * Identität aus /app (gekennzeichnet). Kein Verified, kein Karrierepreisgeld,
+ * kein Rangverlauf, kein Geburtsdatum.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
 import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { loadPlayerDocs } from "@/lib/tourPlayerMaster";
+import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
+import { loadReminderSettings, saveReminderSettings } from "@/lib/tourReminders";
+import { costRatesComplete } from "@/lib/tourPlanner";
+import { loadTourOptPrefs } from "@/lib/tourOptPrefs";
 import { profileGaps, type ProfileGap } from "@/domain/tour/profileReadiness";
 import StepWhoAreYou from "@/app/tour2/components/setup/StepWhoAreYou";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
+import PlanRulesCard from "./PlanRulesCard";
+import CostRatesForm from "@/app/tour2/costs/components/CostRatesForm";
 import PlayerMasterForm from "./PlayerMasterForm";
 import TravelDocsCard from "./TravelDocsCard";
-import PlanRulesCard from "./PlanRulesCard";
+import { t2markArea } from "@/app/tour2/t2mark";
+import type { TourCostRates } from "@/lib/types";
 
-type LoadState = "loading" | "error" | "done";
-
-const TOOLS: { href: string; label: "costsTitle" | "expTitle" | "schengenTitle" | "pointsTitle" | "formTitle" | "wildcardsTitle" | "financeTitle" }[] = [
-  { href: "/tour2/costs", label: "costsTitle" },
-  { href: "/tour2/expenses", label: "expTitle" },
-  { href: "/tour2/schengen", label: "schengenTitle" },
-  { href: "/tour2/points", label: "pointsTitle" },
-  { href: "/tour2/form", label: "formTitle" },
-  { href: "/tour2/wildcards", label: "wildcardsTitle" },
-  { href: "/tour2/finance", label: "financeTitle" },
-];
+function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
+      <p className="t2-kicker">{label}</p>
+      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
+      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+    </div>
+  );
+}
 
 export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 | 4 }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
+  const { locale } = useLocale();
   const [setup, setSetup] = useState<SetupState | null>(null);
   const [docs, setDocs] = useState<Awaited<ReturnType<typeof loadPlayerDocs>>>(null);
-  const [state, setState] = useState<LoadState>("loading");
+  const [rates, setRates] = useState<TourCostRates | null>(null);
+  const [reminderOn, setReminderOn] = useState(true);
+  const [state, setState] = useState<"loading" | "error" | "done">("loading");
   const [showSetup, setShowSetup] = useState(!!initialStep);
   const todayISO = new Date().toISOString().slice(0, 10);
+  const prefs = useMemo(() => loadTourOptPrefs(), [setup]);
 
   const reload = useCallback(async () => {
     if (!user) return;
-    const [s, d] = await Promise.all([loadSetupState(user.id), loadPlayerDocs(user.id)]);
+    const [s, d, r] = await Promise.all([loadSetupState(user.id), loadPlayerDocs(user.id), loadCostRates()]);
     setSetup(s);
     setDocs(d);
+    setRates(r);
   }, [user]);
 
   useEffect(() => {
     if (authLoading || !user) return;
     let cancel = false;
-    setState("loading");
-    Promise.all([loadSetupState(user.id), loadPlayerDocs(user.id)])
-      .then(([s, d]) => { if (!cancel) { setSetup(s); setDocs(d); setState("done"); } })
+    Promise.all([loadSetupState(user.id), loadPlayerDocs(user.id), loadCostRates(), loadReminderSettings(user.id)])
+      .then(([s, d, r, rem]) => {
+        if (cancel) return;
+        setSetup(s);
+        setDocs(d);
+        setRates(r);
+        setReminderOn(rem.enabled);
+        setState("done");
+        t2markArea("profile");
+      })
       .catch(() => { if (!cancel) setState("error"); });
     return () => { cancel = true; };
   }, [authLoading, user]);
+
+  const onRatesSaved = useCallback((patch: CostRatesPatch) => {
+    if (!user) return;
+    setRates((r) => ({
+      user_id: r?.user_id ?? user.id,
+      arrival_minor: patch.arrival_minor,
+      per_night_minor: patch.per_night_minor,
+      food_per_day_minor: patch.food_per_day_minor,
+      coach_per_week_minor: patch.coach_per_week_minor,
+      currency: patch.currency,
+      created_at: r?.created_at ?? "",
+      updated_at: r?.updated_at ?? "",
+    }));
+    void reload();
+  }, [user, reload]);
+
+  const toggleReminders = (next: boolean) => {
+    if (!user) return;
+    setReminderOn(next);
+    void saveReminderSettings(user.id, next, locale === "en" ? "en" : "de").catch(() => setReminderOn(!next));
+  };
 
   const gaps = useMemo(() => {
     if (!setup) return [] as ProfileGap[];
@@ -81,80 +121,65 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
     return t("tour.t2profGapInsDays", { n: g.days });
   };
 
-  if (authLoading || state === "loading") return <p className="p-6 text-sm text-neutral-400">{t("tour.loading")}</p>;
+  if (authLoading || (user && state === "loading")) {
+    return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  }
   if (!user) return <TourLoginCard />;
-  if (state === "error" || !setup) return <p className="p-6 text-sm text-neutral-400">{t("tour.loadError")}</p>;
+  if (state === "error" || !setup) return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
-  const name = setup.displayName || setup.firstName;
-  const countryName = (c: string) => {
-    const n = t(`tour.country.${c}`);
-    return n.startsWith("tour.country.") ? c : n;
-  };
-  const home = [setup.city, setup.countryName || (setup.country ? countryName(setup.country) : null)].filter(Boolean).join(", ");
-  const nats = setup.passports.map(countryName).join(" · ");
+  const money = (n: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  const ratesOk = costRatesComplete(rates ?? setup.rates);
+
+  const kpis = (
+    <div className="grid gap-0 md:grid-cols-4">
+      <Kpi label={t("tour.plBudget")}>{setup.seasonBudget != null ? money(setup.seasonBudget) : "—"}</Kpi>
+      <Kpi label={t("tour.t2profRates")}>{ratesOk ? t("tour.t2profRatesReady") : t("tour.t2profRatesNeed")}</Kpi>
+      <Kpi label={t("tour.costsNights")}>{prefs.nights || "—"}</Kpi>
+      <Kpi label={t("tour.wsRemindersLabel")}>{reminderOn ? t("tour.t2profRemindOn") : t("tour.t2profRemindOff")}</Kpi>
+    </div>
+  );
+
+  const aside = (
+    <>
+      <section>
+        <h2 className="t2-kicker">{t("tour.t2profOptUsesTitle")}</h2>
+        <p className="mt-2 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptUses")}</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptSkip")}</p>
+      </section>
+      {gaps.length > 0 && (
+        <section>
+          <h2 className="t2-kicker">{t("tour.t2profGaps")}</h2>
+          <ul className="mt-2 space-y-1 text-[13px] text-[var(--t2-muted)]">
+            {gaps.map((g) => <li key={g.kind}>{gapText(g)}</li>)}
+          </ul>
+        </section>
+      )}
+      <p>
+        <Link href="/app" className="text-[13px] font-semibold text-matchup">{t("tour.t2profEditApp")} →</Link>
+      </p>
+    </>
+  );
 
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-6 pb-28 sm:px-6">
-      <header className="relative border-t-2 border-matchup py-6">
-        <div className="relative flex items-center gap-4">
-          {setup.profileImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={setup.profileImage} alt="" className="h-16 w-16 rounded-2xl object-cover sm:h-20 sm:w-20" />
-          ) : (
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[22px] font-semibold ring-1 ring-black/10 sm:h-20 sm:w-20 sm:text-[26px]">
-              {(name?.[0] ?? "?").toUpperCase()}
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="t2-kicker">{t("tour.t2navProfile")}</p>
-            <h1 className="mt-1 truncate text-[1.6rem] font-bold tracking-tight sm:text-[1.9rem]">{name || t("tour.fieldMissing")}</h1>
-            <p className="mt-1 text-[13px] text-neutral-400">
-              {[
-                setup.ranking != null ? `#${setup.ranking}` : null,
-                nats || null,
-                home || null,
-              ].filter(Boolean).join(" · ") || "—"}
-            </p>
-          </div>
-          <Link href="/app" className="ml-auto hidden shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold text-matchup sm:inline">{t("tour.t2profEditApp")} →</Link>
-        </div>
-        {gaps.length > 0 && (
-          <ul className="relative mt-4 flex flex-wrap gap-1.5">
-            {gaps.map((g) => (
-              <li key={g.kind} className="t2-chip">{gapText(g)}</li>
-            ))}
-          </ul>
-        )}
-        <Link href="/app" className="relative mt-3 inline-block text-[12px] font-semibold text-matchup sm:hidden">{t("tour.t2profEditApp")} →</Link>
-      </header>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_18rem]">
-        <div>
-          <StepWhoAreYou state={setup} userId={user.id} tone="light" onSaved={() => { void reload(); }} />
-          <PlanRulesCard userId={user.id} seasonBudget={setup.seasonBudget} onBudgetSaved={() => { void reload(); }} />
-          <div className="mt-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-400">{t("tour.t2profKit")}</p>
-            <PlayerMasterForm tone="light" />
-            <TravelDocsCard tone="light" />
-          </div>
-        </div>
-
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <section className="border-t-2 border-matchup py-4">
-            <h2 className="t2-kicker">{t("tour.t2profTools")}</h2>
-            <ul className="mt-3 space-y-1">
-              {TOOLS.map((x) => (
-                <li key={x.href}>
-                  <Link href={x.href} className="flex items-center justify-between px-2 py-2 text-[13px] font-semibold text-neutral-800 hover:bg-neutral-50">
-                    {t(`tour.${x.label}`)}
-                    <span className="text-neutral-600">→</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </aside>
+    <Tour2Area title={t("tour.t2navProfile")} lead={t("tour.t2profLead")} kpis={kpis} aside={aside}>
+      <StepWhoAreYou state={setup} userId={user.id} tone="light" onSaved={() => { void reload(); }} />
+      <PlanRulesCard userId={user.id} seasonBudget={setup.seasonBudget} onBudgetSaved={() => { void reload(); }} />
+      <div className="mt-6">
+        <CostRatesForm rates={rates ?? setup.rates} userId={user.id} onSaved={onRatesSaved} hideTravelAssumptions />
       </div>
+      <PlayerMasterForm tone="light" hideIds />
+      <TravelDocsCard tone="light" />
+
+      <section className="t2-panel mt-6">
+        <h2 className="t2-kicker">{t("tour.wsRemindersLabel")}</h2>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.wsRemindersHint")}</p>
+          <button type="button" role="switch" aria-checked={reminderOn} onClick={() => toggleReminders(!reminderOn)}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderOn ? "bg-matchup" : "bg-[var(--t2-line-strong)]"}`}>
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${reminderOn ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+          </button>
+        </div>
+      </section>
 
       <section className="mt-8">
         <button
@@ -163,14 +188,14 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
           className="flex w-full items-center justify-between border-t border-[var(--t2-line)] py-3 text-left"
         >
           <span className="text-[13px] font-bold">{t("tour.t2profSetup")}</span>
-          <span className="text-[12px] text-neutral-500">{setup.complete ? t("tour.t2profSetupDone") : t("tour.t2profSetupHint")}</span>
+          <span className="text-[12px] text-[var(--t2-muted)]">{setup.complete ? t("tour.t2profSetupDone") : t("tour.t2profSetupHint")}</span>
         </button>
         {showSetup && (
-          <div className="mt-3 border-t border-[var(--t2-line)] pt-4 text-[var(--t2-ink)]">
+          <div className="mt-3 border-t border-[var(--t2-line)] pt-4">
             <SetupPanel initialStep={initialStep} />
           </div>
         )}
       </section>
-    </div>
+    </Tour2Area>
   );
 }

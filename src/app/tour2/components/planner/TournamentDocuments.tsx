@@ -54,8 +54,8 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
 
   return (
     <section className="mt-1">
-      <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.docTitle")}</p>
-      <p className="mt-1 text-[12px] text-neutral-500">{t("tour.docIntro")}</p>
+      <p className="t2-kicker">{t("tour.docTitle")}</p>
+      <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.docIntro")}</p>
       {err && <p className="mt-2 text-[12px] font-semibold text-red-600">{err}</p>}
       <input ref={fileRef} type="file" accept={DOC_ACCEPT_MIME.join(",")} onChange={onFile} className="hidden" />
 
@@ -63,14 +63,14 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
         {DOC_KINDS.map((k) => {
           const files = docs.filter((d) => d.kind === k);
           return (
-            <div key={k} className="flex items-start gap-2 rounded-xl border border-black/10 px-2.5 py-2">
-              <span className="w-20 shrink-0 pt-0.5 text-[12px] font-semibold text-neutral-600">{kindLabel(k)}</span>
+            <div key={k} className="flex items-start gap-2 rounded-xl border border-[var(--t2-line)] px-2.5 py-2">
+              <span className="w-20 shrink-0 pt-0.5 text-[12px] font-semibold text-[var(--t2-muted)]">{kindLabel(k)}</span>
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                {files.length === 0 && <span className="text-[12px] text-neutral-300">—</span>}
+                {files.length === 0 && <span className="text-[12px] text-[var(--t2-faint)]">—</span>}
                 {files.map((d) => (
-                  <span key={d.id} className="inline-flex items-center gap-1 rounded-full bg-black/[0.05] py-0.5 pl-2.5 pr-1 text-[11px] font-semibold text-neutral-700">
+                  <span key={d.id} className="inline-flex items-center gap-1 rounded-full bg-[var(--t2-surface)] py-0.5 pl-2.5 pr-1 text-[11px] font-semibold text-[var(--t2-ink)]">
                     <button type="button" onClick={() => open(d)} className="max-w-[10rem] truncate hover:text-matchup">{d.label || fmtDay(d.created_at)}</button>
-                    <button type="button" onClick={() => del(d)} disabled={busy} aria-label={t("tour.docRemove")} className="text-neutral-300 hover:text-red-500 disabled:opacity-50">✕</button>
+                    <button type="button" onClick={() => del(d)} disabled={busy} aria-label={t("tour.docRemove")} className="text-[var(--t2-faint)] hover:text-red-500 disabled:opacity-50">✕</button>
                   </span>
                 ))}
               </div>
@@ -79,7 +79,7 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
           );
         })}
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.docNote")}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.docNote")}</p>
     </section>
   );
 }

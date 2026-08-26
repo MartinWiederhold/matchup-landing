@@ -12,7 +12,7 @@ import type { TourTravelDocument, TravelDocKind, TravelDocStatus } from "@/lib/t
 
 const inpL = "t2-input";
 const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
-const lblL = "mb-1 block text-[12px] font-semibold text-neutral-600";
+const lblL = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
 const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
 const cardL = "t2-panel";
 const cardD = "border border-white/10 bg-black p-4";
@@ -75,11 +75,11 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
   const inp = dark ? inpD : inpL;
   const lbl = dark ? lblD : lblL;
   const card = dark ? cardD : cardL;
-  const title = dark ? "text-white" : "text-neutral-900";
-  const muted = dark ? "text-neutral-400" : "text-neutral-500";
-  const row = dark ? "rounded-xl border border-white/10 px-3 py-2" : "rounded-xl border border-black/10 px-3 py-2";
-  const pill = dark ? "rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-neutral-300" : "rounded-full bg-black/[0.05] px-2 py-0.5 text-[11px] font-semibold text-neutral-600";
-  const mini = dark ? "rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-[12px] text-white [color-scheme:dark]" : "rounded-lg border border-black/15 bg-white px-2 py-1 text-[12px]";
+  const title = dark ? "text-white" : "text-[var(--t2-ink)]";
+  const muted = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
+  const row = dark ? "rounded-xl border border-white/10 px-3 py-2" : "rounded-xl border border-[var(--t2-line)] px-3 py-2";
+  const pill = dark ? "rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-neutral-300" : "rounded-full bg-[var(--t2-surface)] px-2 py-0.5 text-[11px] font-semibold text-[var(--t2-muted)]";
+  const mini = dark ? "rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-[12px] text-white [color-scheme:dark]" : "rounded-lg border border-[var(--t2-line)] bg-white px-2 py-1 text-[12px]";
 
   if (authLoading || status === "loading") return null; // Auth/Laden zeigt bereits PlayerMasterForm
   if (!user) return null;
@@ -92,7 +92,7 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
 
       {/* Bestehende Dokumente */}
       {docs.length === 0 ? (
-        <p className={`mt-3 text-[12px] ${dark ? "text-neutral-500" : "text-neutral-400"}`}>{t("tour.tdEmpty")}</p>
+        <p className={`mt-3 text-[12px] ${dark ? "text-neutral-500" : "text-[var(--t2-faint)]"}`}>{t("tour.tdEmpty")}</p>
       ) : (
         <div className="mt-3 space-y-2">
           {docs.map((d) => (
@@ -103,12 +103,12 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
                 {STATUSES.map((s) => <option key={s} value={s}>{t(`tour.tdStatus_${s}`)}</option>)}
               </select>
               <input type="date" value={d.valid_until ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { valid_until: nn(e.target.value) }))} disabled={busy} className={mini} />
-              {d.valid_until && <span className="text-[11px] text-neutral-400">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
-              <label className="flex items-center gap-1 text-[11px] text-neutral-500">
+              {d.valid_until && <span className="text-[11px] text-[var(--t2-faint)]">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
+              <label className="flex items-center gap-1 text-[11px] text-[var(--t2-muted)]">
                 <input type="number" min={0} max={104} value={d.lead_weeks ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { lead_weeks: intOrNull(e.target.value) }))} disabled={busy} placeholder="—" className={`w-14 ${mini}`} />
                 {t("tour.tdLeadUnit")}
               </label>
-              <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto text-[12px] font-semibold text-neutral-400 hover:text-red-500">{t("tour.tdRemove")}</button>
+              <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto text-[12px] font-semibold text-[var(--t2-faint)] hover:text-red-500">{t("tour.tdRemove")}</button>
             </div>
           ))}
         </div>
@@ -143,8 +143,8 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
           </label>
         )}
       </div>
-      <p className="mt-2 text-[11px] text-neutral-400">{t("tour.tdLeadHint")}</p>
-      <p className="mt-1 text-[11px] text-neutral-400">{t("tour.tdNoNumber")}</p>
+      <p className="mt-2 text-[11px] text-[var(--t2-faint)]">{t("tour.tdLeadHint")}</p>
+      <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.tdNoNumber")}</p>
       <button type="button" onClick={add} disabled={busy || !canAdd} className={btn}>{t("tour.tdAdd")}</button>
     </div>
   );

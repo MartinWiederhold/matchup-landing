@@ -5,8 +5,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import { SCHENGEN_AREA } from "@/domain/tour/schengen";
 import { addStay } from "@/lib/tourStays";
 
-const inputCls =
-  "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inputCls = "t2-input";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -61,7 +60,7 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
 
   return (
     <section className="t2-panel">
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.schengenAddTitle")}</h2>
+      <h2 className="t2-kicker">{t("tour.schengenAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
@@ -77,7 +76,7 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
         </label>
         <label className="block">
           <span className="mb-1 block text-[12px] font-semibold text-neutral-600">
-            {t("tour.schengenExit")} <span className="font-normal text-neutral-400">({t("tour.schengenExitHint")})</span>
+            {t("tour.schengenExit")} <span className="font-normal text-[var(--t2-faint)]">({t("tour.schengenExitHint")})</span>
           </span>
           <input type="date" value={exit} onChange={(e) => setExit(e.target.value)} className={inputCls} />
         </label>
@@ -97,8 +96,8 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
         <button type="button" onClick={save} disabled={busy} className="t2-cta disabled:opacity-50">
           {t("tour.schengenSave")}
         </button>
-        {error === "fields" && <span className="text-[12px] text-neutral-500">{t("tour.schengenNeedFields")}</span>}
-        {error === "save" && <span className="text-[12px] text-neutral-500">{t("tour.schengenSaveError")}</span>}
+        {error === "fields" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.schengenNeedFields")}</span>}
+        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</span>}
       </div>
     </section>
   );

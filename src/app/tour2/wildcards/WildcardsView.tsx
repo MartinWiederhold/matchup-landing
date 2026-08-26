@@ -17,6 +17,7 @@ import {
   type WildcardOutcome,
   type WildcardEventKind,
 } from "@/lib/tourWildcards";
+import { t2markArea } from "@/app/tour2/t2mark";
 
 const EVENT_KINDS: WildcardEventKind[] = ["contacted", "follow_up", "request", "response", "note"];
 const OUTCOMES: WildcardOutcome[] = ["pending", "granted", "declined"];
@@ -29,7 +30,7 @@ type TourItem = { id: string; name: string; monday: string };
  * Verlauf der Beziehungspflege. Nutzergebunden, owner-only (fremde Personendaten, MU-035).
  * Karten sind eingeklappt und zeigen im Kopf den Anfragestand — so bleibt die Saison scanbar.
  */
-export default function WildcardsView() {
+export default function WildcardsView({ skipMark = false }: { skipMark?: boolean }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
 
@@ -69,28 +70,28 @@ export default function WildcardsView() {
     if (!user) return;
     let alive = true;
     reload()
-      .then(() => { if (alive) setStatus("ready"); })
+      .then(() => { if (alive) { setStatus("ready"); if (!skipMark) t2markArea("network"); } })
       .catch(() => { if (alive) setStatus("error"); });
     return () => { alive = false; };
-  }, [user, reload]);
+  }, [user, reload, skipMark]);
 
-  if (authLoading) return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) {
     return (
-      <div className="mt-8 rounded-2xl bg-black/[0.02] p-6 text-center">
-        <p className="text-sm text-neutral-500">{t("tour.loginRequiredText")}</p>
+      <div className="mt-8 t2-panel bg-[var(--t2-surface)] p-6 text-center">
+        <p className="text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loading")}</p>;
-  if (status === "error") return <p className="mt-6 text-sm text-neutral-500">{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (status === "error") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   return (
     <div className="mt-8 space-y-4">
-      <p className="rounded-xl bg-black/[0.02] px-4 py-3 text-[13px] leading-relaxed text-neutral-500">{t("tour.wcHint")}</p>
+      <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.wcHint")}</p>
       {tours.length === 0 ? (
-        <p className="rounded-xl bg-black/[0.02] px-4 py-4 text-[14px] text-neutral-500">{t("tour.wcEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 text-[14px] text-[var(--t2-muted)]">{t("tour.wcEmpty")}</p>
       ) : (
         <div className="space-y-3">
           {tours.map((tour) => {
@@ -139,7 +140,7 @@ function WildcardCard({
 
   const nn = (s: string) => (s.trim() === "" ? null : s.trim());
   const inp = "t2-input";
-  const lbl = "mb-1 block text-[12px] font-semibold text-neutral-600";
+  const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
 
   const requested = contact != null && (contact.requested_on != null || contact.outcome != null);
 
@@ -175,24 +176,24 @@ function WildcardCard({
     <div className="t2-panel">
       {/* Kopf: Turniername + Anfragestand + Auf-/Zuklappen. */}
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-        <span className="min-w-0 truncate text-[14px] font-bold text-neutral-900">{tour.name}</span>
+        <span className="min-w-0 truncate text-[14px] font-bold text-[var(--t2-ink)]">{tour.name}</span>
         <span className="flex shrink-0 items-center gap-2">
           {contact?.wildcard_type && (
-            <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[11px] font-semibold text-neutral-500">{t(`tour.wcType_${contact.wildcard_type}`)}</span>
+            <span className="rounded-full bg-[var(--t2-surface)] px-2 py-0.5 text-[11px] font-semibold text-[var(--t2-muted)]">{t(`tour.wcType_${contact.wildcard_type}`)}</span>
           )}
           {contact?.outcome ? (
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${outcomeClass(contact.outcome)}`}>{t(`tour.wcOutcome_${contact.outcome}`)}</span>
           ) : (
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${requested ? "bg-amber-50 text-amber-700" : "bg-black/[0.04] text-neutral-400"}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${requested ? "bg-amber-50 text-amber-700" : "bg-[var(--t2-surface)] text-[var(--t2-faint)]"}`}>
               {requested ? t("tour.wcStatusRequested") : t("tour.wcStatusNotRequested")}
             </span>
           )}
-          <span className="text-neutral-400">{open ? "−" : "+"}</span>
+          <span className="text-[var(--t2-faint)]">{open ? "−" : "+"}</span>
         </span>
       </button>
 
       {open && (
-        <div className="border-t border-black/[0.06] px-4 py-4">
+        <div className="border-t border-[var(--t2-line)] px-4 py-4">
           {/* Kontakt-Felder. */}
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="block"><span className={lbl}>{t("tour.wcDirector")}</span><input value={dir} onChange={(e) => setDir(e.target.value)} className={inp} /></label>
@@ -224,24 +225,24 @@ function WildcardCard({
           </button>
 
           {/* Verlauf — erst nach dem ersten Speichern (Events hängen am Kontakt). */}
-          <div className="mt-5 border-t border-black/[0.06] pt-4">
-            <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wcTimeline")}</h3>
+          <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
+            <h3 className="t2-kicker">{t("tour.wcTimeline")}</h3>
             {!contactId ? (
-              <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wcSaveContactFirst")}</p>
+              <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.wcSaveContactFirst")}</p>
             ) : (
               <>
                 {events.length === 0 ? (
-                  <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wcTimelineEmpty")}</p>
+                  <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.wcTimelineEmpty")}</p>
                 ) : (
                   <ul className="mt-2 space-y-1.5">
                     {events.map((ev) => (
                       <li key={ev.id} className="flex items-start justify-between gap-2 text-[13px]">
-                        <span className="min-w-0 text-neutral-700">
-                          <span className="tabular-nums text-neutral-400">{ev.occurred_on}</span>{" · "}
+                        <span className="min-w-0 text-[var(--t2-ink)]">
+                          <span className="tabular-nums text-[var(--t2-faint)]">{ev.occurred_on}</span>{" · "}
                           <span className="font-semibold">{t(`tour.wcEvent_${ev.kind}`)}</span>
-                          {ev.detail ? <span className="text-neutral-500"> — {ev.detail}</span> : null}
+                          {ev.detail ? <span className="text-[var(--t2-muted)]"> — {ev.detail}</span> : null}
                         </span>
-                        <button type="button" onClick={() => delEvent(ev.id)} aria-label={t("tour.wcDeleteEvent")} className="shrink-0 text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                        <button type="button" onClick={() => delEvent(ev.id)} aria-label={t("tour.wcDeleteEvent")} className="shrink-0 text-[var(--t2-faint)] transition-colors hover:text-red-500">✕</button>
                       </li>
                     ))}
                   </ul>
@@ -257,7 +258,7 @@ function WildcardCard({
                   <label className="block"><span className={lbl}>{t("tour.wcEventDate")}</span><input type="date" value={evDate} onChange={(e) => setEvDate(e.target.value)} className={inp} /></label>
                   <label className="block"><span className={lbl}>{t("tour.wcEventDetail")}</span><input value={evDetail} onChange={(e) => setEvDetail(e.target.value)} className={inp} /></label>
                 </div>
-                <button type="button" onClick={addEvent} className="mt-2 rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-neutral-700">
+                <button type="button" onClick={addEvent} className="t2-cta mt-2">
                   {t("tour.wcAddEventBtn")}
                 </button>
               </>

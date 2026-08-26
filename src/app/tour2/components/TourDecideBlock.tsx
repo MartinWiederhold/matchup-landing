@@ -18,10 +18,10 @@ function confidenceKey(v: number): "confidenceHigh" | "confidenceMedium" | "conf
 // Bewusst KEIN Vorzeichen (+/−): ein Minus liest sich schnell als Fehler. Der einzige
 // Akzent (Emerald) markiert das einzig echt Positive; alles andere bleibt in Grautönen.
 function dotClass(d: ReasonDirection): string {
-  return d === "dafuer" ? "bg-emerald-500" : d === "dagegen" ? "bg-neutral-400" : "bg-neutral-300";
+  return d === "dafuer" ? "bg-[var(--t2-accent)]" : d === "dagegen" ? "bg-[var(--t2-faint)]" : "bg-[var(--t2-line-strong)]";
 }
 function reasonTextClass(d: ReasonDirection): string {
-  return d === "dafuer" ? "text-neutral-700" : d === "dagegen" ? "text-neutral-500" : "text-neutral-600";
+  return d === "dafuer" ? "text-[var(--t2-ink)]" : d === "dagegen" ? "text-[var(--t2-muted)]" : "text-[var(--t2-muted)]";
 }
 
 /**
@@ -54,11 +54,11 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
   const confKey = confidenceKey(decision.confidence);
 
   return (
-    <div className="mt-4 border-t border-black/[0.06] pt-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.decide.title")}</p>
+    <div className="mt-4 border-t border-[var(--t2-line)] pt-3">
+      <p className="t2-kicker">{t("tour.decide.title")}</p>
       {/* Ruhige Einordnungszeile + Verlässlichkeit als Wortstufe (keine Prozentzahl) */}
-      <p className="mt-1 text-[14px] font-semibold text-neutral-800">{t(`tour.decide.cls.${decision.classification}`)}</p>
-      <p className="mt-0.5 text-[11px] text-neutral-400">
+      <p className="mt-1 text-[14px] font-semibold text-[var(--t2-ink)]">{t(`tour.decide.cls.${decision.classification}`)}</p>
+      <p className="mt-0.5 text-[11px] text-[var(--t2-faint)]">
         {t("tour.decide.confidenceLabel")}: {t(`tour.decide.${confKey}`)}
       </p>
 
@@ -77,10 +77,10 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
       {/* Grenzen dieser Einschätzung — sichtbar, aber unaufgeregt (kein Fehler-Look) */}
       {decision.basisLuecken.length > 0 && (
         <div className="mt-2.5">
-          <p className="text-[11px] font-semibold text-neutral-400">{t("tour.decide.lueckenTitle")}</p>
+          <p className="text-[11px] font-semibold text-[var(--t2-faint)]">{t("tour.decide.lueckenTitle")}</p>
           <ul className="mt-0.5 space-y-0.5">
             {decision.basisLuecken.map((code) => (
-              <li key={code} className="text-[11px] leading-relaxed text-neutral-400">{t(`tour.decide.luecke.${code}`)}</li>
+              <li key={code} className="text-[11px] leading-relaxed text-[var(--t2-faint)]">{t(`tour.decide.luecke.${code}`)}</li>
             ))}
           </ul>
         </div>

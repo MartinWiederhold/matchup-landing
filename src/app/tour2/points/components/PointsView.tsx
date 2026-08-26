@@ -1,17 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+/**
+ * /tour2 Ranking & Punkte: Punktestand, Zählgrenze (MU-047), Ausblick 4/8/12
+ * aus pointsForecast. Kein Rangplatz, keine Projected Ranking.
+ */
+
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import { scorePoints, type ScoredResult } from "@/domain/tour/points";
 import { pointsForecast } from "@/domain/tour/pointsForecast";
 import { loadResultHistory, toMatchResults, addResult, deleteResult, type ResultHistoryRow } from "@/lib/tourResultHistory";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
+import { t2markArea } from "@/app/tour2/t2mark";
 
 type LoadState = "loading" | "error" | "done";
 
 const KNOWN_ROUNDS = new Set(["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"]);
-// Kategorien als points.ts-Codes mit Anzeige-Label (Eigennamen, nicht übersetzt).
 const CAT_OPTIONS: { code: string; label: string }[] = [
   { code: "challenger_175", label: "Challenger 175" },
   { code: "challenger_125", label: "Challenger 125" },
@@ -23,12 +30,16 @@ const CAT_OPTIONS: { code: string; label: string }[] = [
 ];
 const ROUND_OPTIONS = ["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"];
 
-/**
- * Rangprognose: aktueller Punktestand aus den selbst erfassten zählenden Ergebnissen
- * (web.tour_result_history), der Ausblick auf +4/+8/+12 Wochen und der Verfallsplan. Die
- * Rechnung liegt rein in points.ts (Stand/Verfall) und pointsForecast.ts (Ausblick) — der
- * Stichtag (heute) wird HIER erzeugt und hineingereicht. Die App zeigt PUNKTE, keine Ränge.
- */
+function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
+      <p className="t2-kicker">{label}</p>
+      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
+      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+    </div>
+  );
+}
+
 export default function PointsView() {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
@@ -36,15 +47,11 @@ export default function PointsView() {
 
   const [rows, setRows] = useState<ResultHistoryRow[]>([]);
   const [state, setState] = useState<LoadState>("loading");
-
-  // Stichtag = heute, einmal beim Mounten (lokaler Kalendertag).
   const [asOf] = useState(() => {
     const d = new Date();
     const p = (n: number) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   });
-
-  // Erfassungsformular.
   const [fName, setFName] = useState("");
   const [fCat, setFCat] = useState("m25");
   const [fRound, setFRound] = useState("R16");
@@ -60,12 +67,11 @@ export default function PointsView() {
     if (authLoading || !user) return;
     let cancel = false;
     setState("loading");
-    reload().then(() => { if (!cancel) setState("done"); }).catch(() => { if (!cancel) setState("error"); });
+    reload().then(() => { if (!cancel) { setState("done"); t2markArea("ranking"); } }).catch(() => { if (!cancel) setState("error"); });
     return () => { cancel = true; };
   }, [authLoading, user, reload]);
 
   const matchResults = useMemo(() => toMatchResults(rows), [rows]);
-  // Ausblick (Stand + 4/8/12 Wochen + Verfallsplan) und die per-Ergebnis-Bewertung (Notizen/Tags).
   const forecast = useMemo(() => pointsForecast(matchResults, asOf), [matchResults, asOf]);
   const scored = useMemo(() => scorePoints(matchResults, asOf), [matchResults, asOf]);
 
@@ -99,77 +105,77 @@ export default function PointsView() {
   };
   const del = async (id: string) => { await deleteResult(id); await reload(); };
 
-  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (!user) {
-    return (
-      <div className="t2-panel mt-6 text-center">
-        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="t2-cta mt-6">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (authLoading) return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (!user) return <TourLoginCard />;
+  if (state === "loading") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const inp = "t2-input";
   const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
   const view = rows.map((row, i) => ({ row, s: scored.results[i] }));
   const withPoints = view.filter((v) => v.s && v.s.points > 0 && !v.s.notes.includes("verfallen")).sort((a, b) => b.s.points - a.s.points);
   const noPoints = view.filter((v) => v.s && (v.s.points === 0 || v.s.notes.includes("verfallen")));
+  const next = forecast.schedule[0] ?? null;
+  const step = (w: number) => forecast.steps.find((s) => s.weeks === w);
+
+  const kpis = (
+    <div className="grid grid-cols-2 gap-0 md:grid-cols-4">
+      <Kpi label={t("tour.pointsTotalLabel")} note={t("tour.t2rkLimit", { n: forecast.countingLimit })}>
+        {forecast.currentTotal}
+      </Kpi>
+      {([4, 8, 12] as const).map((w) => {
+        const s = step(w);
+        return (
+          <Kpi
+            key={w}
+            label={t("tour.pointsForecastWeeks", { n: w })}
+            note={s && s.delta < 0 ? t("tour.pointsForecastFalls", { n: -s.delta }) : t("tour.pointsForecastStable")}
+          >
+            {s ? s.total : "—"}
+          </Kpi>
+        );
+      })}
+    </div>
+  );
+
+  const aside = (
+    <>
+      <div>
+        <p className="t2-kicker">{t("tour.t2rkNext")}</p>
+        {next ? (
+          <p className="mt-2 text-[14px] leading-snug">
+            <span className="font-semibold">{rows[next.index]?.tournament_name ?? "—"}</span>
+            <span className="mt-1 block text-[12px] text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: next.points, date: fmt(next.expiresOn) })}</span>
+          </p>
+        ) : (
+          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2rkNextEmpty")}</p>
+        )}
+      </div>
+      <p className="text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2rkHow")}</p>
+      <Link href="/tour2/form" className="text-[13px] font-semibold text-matchup hover:underline">{t("tour.formTitle")} →</Link>
+    </>
+  );
 
   return (
-    <div className="mt-8 space-y-8">
-      {/* Punktestand + Zählgrenze + „keine Ränge" */}
-      <div className="t2-panel">
-        <p className="t2-kicker">{t("tour.pointsTotalLabel")}</p>
-        <p className="mt-2 text-[clamp(2rem,5vw,3rem)] font-black tracking-[-0.04em] tabular-nums">{forecast.currentTotal}</p>
-        <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsLimitLabel", { n: forecast.countingLimit })}</p>
-        <p className="mt-3 text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsNoRanksNote")}</p>
-      </div>
-
-      {/* Ausblick: heute + 4/8/12 Wochen */}
-      {rows.length > 0 && (
-        <section>
-          <h2 className="t2-kicker">{t("tour.pointsForecastTitle")}</h2>
-          <dl className="t2-telem mt-3">
-            <div>
-              <dt>{t("tour.pointsForecastToday")}</dt>
-              <dd>{forecast.currentTotal}</dd>
-            </div>
-            {forecast.steps.map((s) => (
-              <div key={s.weeks}>
-                <dt>{t("tour.pointsForecastWeeks", { n: s.weeks })}</dt>
-                <dd>{s.total}</dd>
-                <p className={`mt-1 text-[11px] tabular-nums ${s.delta < 0 ? "text-red-700" : "text-[var(--t2-muted)]"}`}>
-                  {s.delta < 0 ? t("tour.pointsForecastFalls", { n: -s.delta }) : t("tour.pointsForecastStable")}
-                </p>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
-
-      {/* Muss verteidigt werden — Verfallsplan */}
+    <Tour2Area title={t("tour.t2rkTitle")} lead={t("tour.t2rkLead")} kpis={kpis} aside={aside}>
       {forecast.schedule.length > 0 && (
-        <section>
-          <h2 className="text-[15px] font-bold text-neutral-900">{t("tour.pointsDefendTitle")}</h2>
-          <p className="mt-1 text-[13px] text-neutral-500">{t("tour.pointsDefendHint")}</p>
+        <section className="mb-10">
+          <h2 className="text-[15px] font-bold">{t("tour.pointsDefendTitle")}</h2>
+          <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsDefendHint")}</p>
           <div className="mt-3 space-y-2">
             {forecast.schedule.map((e) => (
               <div key={`def-${e.index}`} className="flex items-center justify-between border-b border-[var(--t2-line)] py-3">
-                <span className="min-w-0 truncate text-sm font-semibold text-neutral-900">{rows[e.index]?.tournament_name ?? "—"}</span>
-                <span className="shrink-0 text-[13px] text-neutral-600">{t("tour.pointsExpiresOn", { points: e.points, date: fmt(e.expiresOn) })}</span>
+                <span className="min-w-0 truncate text-sm font-semibold">{rows[e.index]?.tournament_name ?? "—"}</span>
+                <span className="shrink-0 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: e.points, date: fmt(e.expiresOn) })}</span>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Ergebnis erfassen */}
-      <section className="t2-panel">
+      <section className="t2-panel mb-10">
         <h2 className="t2-kicker">{t("tour.pointsCaptureTitle")}</h2>
-        <p className="mt-1 text-[12px] text-neutral-500">{t("tour.pointsCaptureHint")}</p>
+        <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.pointsCaptureHint")}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block sm:col-span-2 lg:col-span-1"><span className={lbl}>{t("tour.pointsFieldTournament")}</span><input value={fName} onChange={(e) => setFName(e.target.value)} className={inp} /></label>
           <label className="block"><span className={lbl}>{t("tour.pointsFieldCategory")}</span>
@@ -183,25 +189,25 @@ export default function PointsView() {
         <button type="button" onClick={submit} disabled={saving || fName.trim() === ""} className="t2-cta mt-3 disabled:opacity-50">{t("tour.pointsAdd")}</button>
       </section>
 
-      {/* Erfasste Ergebnisse (wertend) */}
       {withPoints.length > 0 && (
-        <section>
-          <h2 className="text-[15px] font-bold text-neutral-900">{t("tour.pointsResultsTitle")}</h2>
+        <section className="mb-10">
+          <h2 className="text-[15px] font-bold">{t("tour.t2rkTable")}</h2>
+          <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.t2rkLimit", { n: forecast.countingLimit })}</p>
           <div className="mt-3 space-y-2">
             {withPoints.map(({ row, s }) => {
               const tag = tagFor(s);
               return (
                 <div key={`res-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-neutral-900">{row.tournament_name} <span className="font-normal text-neutral-400">· {catLabel(row.category)}</span></p>
-                    <p className="text-[12px] text-neutral-500">
+                    <p className="truncate text-sm font-semibold">{row.tournament_name} <span className="font-normal text-[var(--t2-faint)]">· {catLabel(row.category)}</span></p>
+                    <p className="text-[12px] text-[var(--t2-muted)]">
                       {roundLabel(s.round, row.round)} · {t("tour.pointsExpiresLabel", { date: fmt(s.expiresOn) })}
-                      {tag && <span className="text-neutral-400"> · {tag}</span>}
+                      {tag && <span className="text-[var(--t2-faint)]"> · {tag}</span>}
                     </p>
                   </div>
                   <span className="flex shrink-0 items-center gap-3">
-                    <span className={`text-lg font-bold ${s.counts ? "text-matchup" : "text-neutral-400"}`}>{s.points}</span>
-                    <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                    <span className={`text-lg font-bold ${s.counts ? "text-matchup" : "text-[var(--t2-faint)]"}`}>{s.points}</span>
+                    <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="text-[var(--t2-faint)] hover:text-red-500">✕</button>
                   </span>
                 </div>
               );
@@ -210,26 +216,24 @@ export default function PointsView() {
         </section>
       )}
 
-      {/* Ohne Punkte — mit Grund, nicht stillschweigend weggelassen */}
       {noPoints.length > 0 && (
-        <section>
-          <h2 className="text-[15px] font-bold text-neutral-900">{t("tour.pointsNoPointsTitle")}</h2>
+        <section className="mb-10">
+          <h2 className="text-[15px] font-bold">{t("tour.pointsNoPointsTitle")}</h2>
           <div className="mt-3 space-y-2">
             {noPoints.map(({ row, s }) => (
               <div key={`np-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-neutral-700">{row.tournament_name} <span className="text-neutral-400">· {catLabel(row.category)} · {roundLabel(s.round, row.round)}</span></p>
-                  <p className="text-[12px] text-neutral-500">{reasonFor(s)}</p>
+                  <p className="truncate text-sm font-medium">{row.tournament_name} <span className="text-[var(--t2-faint)]">· {catLabel(row.category)} · {roundLabel(s.round, row.round)}</span></p>
+                  <p className="text-[12px] text-[var(--t2-muted)]">{reasonFor(s)}</p>
                 </div>
-                <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="shrink-0 text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="shrink-0 text-[var(--t2-faint)] hover:text-red-500">✕</button>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Ehrlicher Hinweis auf die Unvollständigkeit */}
-      <p className="t2-panel text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsIncompleteHint")}</p>
-    </div>
+      <p className="text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsIncompleteHint")}</p>
+    </Tour2Area>
   );
 }

@@ -6,8 +6,8 @@ import HomeView from "./components/home/HomeView";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
-    title: t("tour.t2navHome"),
-    description: t("tour.plSubtitle"),
+    title: t("tour.t2navOverview"),
+    description: t("tour.t2ovLead"),
     alternates: { canonical: "/tour2" },
     robots: { index: false, follow: false },
   };

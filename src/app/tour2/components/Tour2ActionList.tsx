@@ -36,11 +36,11 @@ export default function Tour2ActionList({
   const isUserEstimate = (a: ActionItem) => a.kind === "visa_lead";
 
   if (actions.length === 0) {
-    return <p className="mt-4 text-[17px] font-semibold tracking-tight">{t("tour.boardClear")}</p>;
+    return <p className="mt-4 text-[clamp(1.15rem,2.4vw,1.6rem)] font-semibold tracking-[-0.02em]">{t("tour.boardClear")}</p>;
   }
 
   return (
-    <ul className="mt-4 divide-y divide-black/10 border-y border-black/10">
+    <ul className="mt-4 border-t border-[var(--t2-line)]">
       {actions.map((a, i) => {
         const href = a.target.type === "tournament"
           ? tour2PlannerTournamentHref(a.target.id)
@@ -50,15 +50,17 @@ export default function Tour2ActionList({
             <Link
               href={href}
               onClick={() => { if (a.target.type === "tournament") onOpenTournament?.(a.target.id); }}
-              className="flex w-full items-start gap-4 py-4 text-left hover:text-matchup"
+              className="t2-row group items-start text-left"
             >
-              <span aria-hidden className={`mt-2 h-1.5 w-1.5 shrink-0 ${a.severity === "red" ? "bg-red-600" : "bg-matchup"}`} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold leading-snug tracking-tight">{actionText(a)}</span>
-                {isRuleOfThumb(a) && <span className="mt-1 block text-[12px] font-normal text-[var(--t2-muted)]">{t("tour.docWarnRuleOfThumb")}</span>}
-                {isUserEstimate(a) && <span className="mt-1 block text-[12px] font-normal text-[var(--t2-muted)]">{t("tour.visaLeadUserEstimate")}</span>}
+              <span className="flex min-w-0 flex-1 items-start gap-4">
+                <span aria-hidden className={`mt-2 h-2 w-2 shrink-0 rounded-full ${a.severity === "red" ? "bg-red-600" : "bg-matchup"}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="t2-row-city block text-[15px] font-semibold leading-snug tracking-[-0.01em] transition-colors">{actionText(a)}</span>
+                  {isRuleOfThumb(a) && <span className="mt-1 block text-[12px] font-normal text-[var(--t2-muted)]">{t("tour.docWarnRuleOfThumb")}</span>}
+                  {isUserEstimate(a) && <span className="mt-1 block text-[12px] font-normal text-[var(--t2-muted)]">{t("tour.visaLeadUserEstimate")}</span>}
+                </span>
               </span>
-              <span className="mt-0.5 shrink-0 text-matchup">→</span>
+              <span className="mt-0.5 shrink-0 text-[var(--t2-faint)] transition-all duration-300 group-hover:translate-x-1 group-hover:text-matchup">→</span>
             </Link>
           </li>
         );

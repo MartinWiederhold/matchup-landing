@@ -5,8 +5,7 @@ import { useT } from "@/lib/i18n";
 import { addEvent, updateEvent, EVENT_KINDS, type EventInput, type EventKind, type TourEvent } from "@/lib/tourEvents";
 import type { SeasonEntry } from "@/lib/tourSeason";
 
-const inputCls =
-  "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inputCls = "t2-input";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -85,7 +84,7 @@ export default function EventForm({
 
   return (
     <section className="t2-panel">
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+      <h2 className="t2-kicker">
         {event ? t("tour.calEditTitle") : t("tour.calAddTitle")}
       </h2>
 
@@ -96,9 +95,7 @@ export default function EventForm({
             key={k}
             type="button"
             onClick={() => setKind(k)}
-            className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-              kind === k ? "border-matchup bg-matchup text-white" : "border-black/15 text-neutral-600 hover:border-black/30"
-            }`}
+            className={`t2-chip ${kind === k ? "is-on" : ""}`}
           >
             {t(`tour.calKind_${k}`)}
           </button>
@@ -107,30 +104,30 @@ export default function EventForm({
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calFieldTitle")}</span>
+          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calFieldTitle")}</span>
           <input type="text" value={title} onChange={(e) => { setTitle(e.target.value); setError(""); }} className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calDate")}</span>
+          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calDate")}</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTime")}</span>
+            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTime")}</span>
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTimeEnd")}</span>
+            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTimeEnd")}</span>
             <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} disabled={time.trim() === ""} className={`${inputCls} disabled:opacity-40`} />
           </label>
         </div>
-        <p className="text-[11px] text-neutral-400 sm:col-span-2 -mt-1">{t("tour.calTimeHint")}</p>
+        <p className="text-[11px] text-[var(--t2-faint)] sm:col-span-2 -mt-1">{t("tour.calTimeHint")}</p>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calNote")}</span>
+          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calNote")}</span>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputCls} />
         </label>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calTournament")}</span>
+          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTournament")}</span>
           <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)} className={inputCls}>
             <option value="">{t("tour.calTournamentNone")}</option>
             {season.map((e) => (
@@ -144,21 +141,21 @@ export default function EventForm({
 
       {/* Match-Felder nur bei kind='match' */}
       {kind === "match" && (
-        <div className="mt-3 space-y-3 rounded-xl border border-black/[0.06] bg-white p-3">
+        <div className="mt-3 space-y-3 rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calRound")}</span>
+              <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calRound")}</span>
               <input type="text" value={round} onChange={(e) => setRound(e.target.value)} placeholder={t("tour.calRoundPlaceholder")} className={inputCls} />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calOpponent")}</span>
+              <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calOpponent")}</span>
               <input type="text" value={opponent} onChange={(e) => setOpponent(e.target.value)} className={inputCls} />
             </label>
           </div>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.calScore")}</span>
+            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calScore")}</span>
             <input type="text" value={score} onChange={(e) => setScore(e.target.value)} placeholder={t("tour.calScorePlaceholder")} className={inputCls} />
-            <span className="mt-1 block text-[11px] text-neutral-400">{t("tour.calScoreHint")}</span>
+            <span className="mt-1 block text-[11px] text-[var(--t2-faint)]">{t("tour.calScoreHint")}</span>
           </label>
           {/* Sieg/Niederlage/kein Ergebnis — dezent, ohne Ampelfarben */}
           <div className="flex gap-2">
@@ -168,7 +165,7 @@ export default function EventForm({
                 type="button"
                 onClick={() => setWon(val)}
                 className={`flex-1 rounded-xl py-2 text-[12px] font-semibold transition-colors ${
-                  won === val ? "bg-neutral-900 text-white" : "bg-white text-neutral-500 ring-1 ring-black/[0.08]"
+                  won === val ? "bg-[var(--t2-ink)] text-white" : "bg-[var(--t2-paper)] text-[var(--t2-muted)] ring-1 ring-[var(--t2-line)]"
                 }`}
               >
                 {t(`tour.${k}`)}
@@ -182,9 +179,9 @@ export default function EventForm({
         <button type="button" onClick={save} disabled={busy} className="t2-cta disabled:opacity-50">
           {t("tour.calSave")}
         </button>
-        <button type="button" onClick={onDone} className="text-[13px] font-semibold text-neutral-500 hover:text-neutral-800">{t("tour.calCancel")}</button>
-        {error === "title" && <span className="text-[12px] text-neutral-500">{t("tour.calNeedTitle")}</span>}
-        {error === "save" && <span className="text-[12px] text-neutral-500">{t("tour.calSaveError")}</span>}
+        <button type="button" onClick={onDone} className="text-[13px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.calCancel")}</button>
+        {error === "title" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.calNeedTitle")}</span>}
+        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.calSaveError")}</span>}
       </div>
     </section>
   );

@@ -6,7 +6,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
     title: t("tour.t2navProfile"),
-    description: t("tour.setupSubtitle"),
+    description: t("tour.t2profLead"),
     alternates: { canonical: "/tour2/profile" },
     robots: { index: false, follow: false },
   };

@@ -25,6 +25,9 @@ export type JourneyStop = {
   month: string;
   category: string;
   pill: React.ReactNode;
+  deadline: string | null;
+  cost: string | null;
+  why: string[];
 };
 
 export default function SeasonJourney({
@@ -92,7 +95,17 @@ export default function SeasonJourney({
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
                 <p className="truncate text-[15px] font-semibold tracking-tight">{s.city}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
                 <p className="text-[11px] text-[var(--t2-muted)]">{s.date} · {s.category}</p>
+                {(s.deadline || s.cost) && (
+                  <p className="text-[11px] text-[var(--t2-muted)]">
+                    {s.deadline ?? ""}
+                    {s.deadline && s.cost ? " · " : ""}
+                    {s.cost ?? ""}
+                  </p>
+                )}
                 {s.pill}
+                {s.why.length > 0 && (
+                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--t2-faint)]">{t("tour.t2whyTitle")}: {s.why.join(" · ")}</p>
+                )}
               </button>
               <button type="button" onClick={() => onRemove(s.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.seasonRemove")}</button>
             </div>

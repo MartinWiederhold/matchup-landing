@@ -370,7 +370,7 @@ export default function TournamentDetail({
   const isWta = tt.series === "wta";
   const portalUrl = isWta ? WTA_PORTAL : isChallenger ? ATP_PORTAL : ITF_PORTAL;
   const portalLabel = isWta ? t("tour.entryPortalWta") : isChallenger ? t("tour.entryPortalAtp") : t("tour.entryPortalItf");
-  const noteCls = "font-semibold text-neutral-500 underline";
+  const noteCls = "font-semibold text-[var(--t2-muted)] underline";
   const entryHint = (
     <>
       {/* Turnierseite: bei ITF die öffentliche itftennis.com-Turnierseite (in `website`
@@ -381,7 +381,7 @@ export default function TournamentDetail({
       {tt.website && (
         <p>
           <a href={tt.website} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.entryWebsite")} →</a>
-          <span className="mt-0.5 block font-normal text-neutral-400">{t("tour.entryWebsiteNote")}</span>
+          <span className="mt-0.5 block font-normal text-[var(--t2-faint)]">{t("tour.entryWebsiteNote")}</span>
         </p>
       )}
       {isWta ? (
@@ -404,7 +404,7 @@ export default function TournamentDetail({
   const visaProvInner = visaInfo && (
     <>
       <p>{t("mode.visaNatSource", { date: visaInfo.sourceRevisedAt ? fmtDay(visaInfo.sourceRevisedAt.slice(0, 10)) : "—" })} · <a href={visaInfo.sourceUrl} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("mode.visaNatSourceLink")}</a></p>
-      <p className="mt-1 font-semibold text-neutral-500">{t("mode.visaNatConsulate")}</p>
+      <p className="mt-1 font-semibold text-[var(--t2-muted)]">{t("mode.visaNatConsulate")}</p>
     </>
   );
   // Einreise als EIN Wort + Grund/Details hinter „i". „Keine Angabe" ist NEUTRAL (grau,
@@ -440,10 +440,10 @@ export default function TournamentDetail({
       const expired = myDoc.valid_until ? myDoc.valid_until < todayDocIso : false;
       docNode = <p className={`mt-1 text-[12px] font-semibold ${expired ? "text-amber-700" : "text-emerald-700"}`}>{myDoc.valid_until ? t("tour.wsDocHave", { date: fmtDay(myDoc.valid_until) }) : t("tour.wsDocHaveNoDate")}</p>;
     } else if (myDoc && myDoc.status === "applied") {
-      docNode = <p className="mt-1 text-[12px] text-neutral-500">{t("tour.wsDocApplied")}</p>;
+      docNode = <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.wsDocApplied")}</p>;
     } else {
       docNode = (
-        <p className="mt-1 text-[12px] text-neutral-500">
+        <p className="mt-1 text-[12px] text-[var(--t2-muted)]">
           {t("tour.wsDocNone")}
           {applyUrl && <> · <a href={applyUrl} target="_blank" rel="noopener noreferrer" className={noteCls}>{t("tour.wsDocApply")} ↗</a></>}
         </p>
@@ -451,17 +451,17 @@ export default function TournamentDetail({
     }
   }
 
-  const link = "flex items-center justify-between rounded-xl border border-black/10 px-3 py-2.5 text-[13px] font-semibold text-neutral-800 transition-colors hover:bg-black/[0.03]";
+  const link = "flex items-center justify-between rounded-xl border border-[var(--t2-line)] px-3 py-2.5 text-[13px] font-semibold text-[var(--t2-ink)] transition-colors hover:bg-[var(--t2-surface)]";
 
   // Pill-Tönung je Status (dezent, kein Alarmrot): angenommen = grün, Alternate = bernstein,
   // zurückgezogen = grau/durchgestrichen, geplant = neutral.
   const entryPillClass = (s: TourEntryStatus) =>
     s === "main_draw" || s === "entered" || s === "qualifying" || s === "confirmed" ? "bg-emerald-500/10 text-emerald-700"
     : s === "alternate" ? "bg-amber-500/10 text-amber-700"
-    : s === "withdrawn" || s === "cancelled" ? "bg-black/[0.05] text-neutral-500 line-through"
-    : "bg-black/[0.05] text-neutral-600";
+    : s === "withdrawn" || s === "cancelled" ? "bg-[var(--t2-surface)] text-[var(--t2-muted)] line-through"
+    : "bg-[var(--t2-surface)] text-[var(--t2-muted)]";
   const entryWord = `${t(`tour.status_${entryStatus}`)}${entryStatus === "alternate" && alternatePosition != null ? ` #${alternatePosition}` : ""}`;
-  const inp2 = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+  const inp2 = "w-full rounded-lg border border-[var(--t2-line-strong)] bg-white px-2.5 py-1.5 text-[13px] text-[var(--t2-ink)] placeholder:text-[var(--t2-faint)] focus:border-[var(--t2-accent)] focus:outline-none";
 
   // ── „Vor Ort": aus den zwei Absichten LESBARE Aussagen bilden — „Sucht Trainingspartner",
   // „Sucht Unterkunft in {Stadt}". Bild + Name kommen aus dem Profil (Punkt 1: Name liegt in
@@ -476,9 +476,9 @@ export default function TournamentDetail({
   const avatarEl = (src: string | null, name: string | null) =>
     src ? (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt="" loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-full bg-neutral-100 object-cover" />
+      <img src={src} alt="" loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-full bg-[var(--t2-surface)] object-cover" />
     ) : (
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[15px] font-bold text-neutral-500">{(name || "?").slice(0, 1).toUpperCase()}</span>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--t2-surface)] text-[15px] font-bold text-[var(--t2-muted)]">{(name || "?").slice(0, 1).toUpperCase()}</span>
     );
 
   // ── Lesbare Detail-Zeile zu den Absichten (statt bloßem „Sucht Unterkunft"). ────────────
@@ -505,7 +505,7 @@ export default function TournamentDetail({
   const othersShown = others.filter((r) => filterMatch(r.looking, r.looking_room));
   const demoAll = SHOW_PRESENCE_DEMO ? demoPresenceFor(tt.id, tt.category, tt.tournament_monday) : [];
   const demoShown = demoAll.filter((d) => filterMatch(d.looking, d.lookingRoom));
-  const selCls = "w-full rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] text-neutral-900 focus:border-black/30 focus:outline-none";
+  const selCls = "w-full rounded-lg border border-[var(--t2-line-strong)] bg-white px-2.5 py-1.5 text-[13px] text-[var(--t2-ink)] focus:border-[var(--t2-accent)] focus:outline-none";
 
   // ── Punkte je Runde aus points.ts (belegt, ATP-Regelwerk). Nur wenn die Kategorie erkannt
   //    ist; sonst Hinweis statt Nullen. Erstrunde (R32) = 0 bei Challenger/ITF → bewusst gezeigt.
@@ -573,8 +573,8 @@ export default function TournamentDetail({
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
         <div>
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="min-w-0 text-[clamp(1.6rem,5vw,2.2rem)] font-black uppercase leading-[0.9] tracking-[-0.04em]">{tt.city || t("tour.fieldMissing")}</h2>
-            <p className="shrink-0 text-[1.6rem] font-black tabular-nums tracking-[-0.04em]" aria-hidden>
+            <h2 className="t2-display min-w-0 text-[clamp(1.6rem,5vw,2.2rem)]">{tt.city || t("tour.fieldMissing")}</h2>
+            <p className="shrink-0 text-[1.6rem] font-semibold tabular-nums tracking-[-0.03em]" aria-hidden>
               {startDm.slice(0, 2)}<span className="text-matchup">.</span>{startDm.slice(3)}
             </p>
           </div>
@@ -683,14 +683,14 @@ export default function TournamentDetail({
         // Gruppiert: erst TURNIER-FAKTEN (Belag, Punkte je Runde), dann MEIN STAND (Entry-
         // Status, Gebühr, Frist), dann REFERENZ (Kosten, Einreise, Weg zur Meldung, Notizen).
         // Alles Erklärende hinter „i". Eine Einreisesperre bleibt sichtbar (rot).
-        <div className="divide-y divide-black/[0.06]">
+        <div className="divide-y divide-[var(--t2-line)]">
 
           {/* ── TURNIER-FAKTEN ───────────────────────────────────────────────────────────── */}
           {/* Belag — aus dem Bestand (tour_tournaments), mit drinnen/draußen falls bekannt. */}
           {tt.surface && (
             <div className="flex items-center justify-between gap-3 py-2.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovSurfaceTitle")}</span>
-              <span className="text-[13px] font-semibold text-neutral-700">{t(`tour.surface_${tt.surface}`)}{tt.indoor != null ? ` · ${tt.indoor ? t("tour.ovIndoor") : t("tour.ovOutdoor")}` : ""}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.ovSurfaceTitle")}</span>
+              <span className="text-[13px] font-semibold text-[var(--t2-muted)]">{t(`tour.surface_${tt.surface}`)}{tt.indoor != null ? ` · ${tt.indoor ? t("tour.ovIndoor") : t("tour.ovOutdoor")}` : ""}</span>
             </div>
           )}
 
@@ -698,16 +698,16 @@ export default function TournamentDetail({
               keine Auswahl). Erstrunde = 0 bleibt SICHTBAR in derselben Zeile (der ehrliche
               Teil), nicht hinter dem „i". */}
           <div className="py-2.5">
-            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
               {t("tour.ovPointsTitle")}
               <InfoHint label={t("tour.ovPointsInfo")}><p>{t("tour.ovPointsInfo")}</p></InfoHint>
             </span>
             {roundPts ? (
-              <p className="mt-1 text-[12px] leading-relaxed text-neutral-700">
-                {roundPts.map((r) => `${r.label} ${r.points}`).join(" · ")} <span className="text-neutral-400">· {t("tour.ovFirstRoundLine")}</span>
+              <p className="mt-1 text-[12px] leading-relaxed text-[var(--t2-muted)]">
+                {roundPts.map((r) => `${r.label} ${r.points}`).join(" · ")} <span className="text-[var(--t2-faint)]">· {t("tour.ovFirstRoundLine")}</span>
               </p>
             ) : (
-              <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovPointsUnknownCat")}</p>
+              <p className="mt-1 text-[12px] text-[var(--t2-faint)]">{t("tour.ovPointsUnknownCat")}</p>
             )}
           </div>
 
@@ -717,14 +717,14 @@ export default function TournamentDetail({
           {planId && (
             <div className="py-2.5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsEntryStatusLabel")}</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.wsEntryStatusLabel")}</span>
                 <div className="flex items-center gap-2.5">
                   {entryEvents.length > 0 && (
-                    <button type="button" onClick={() => setHistOpen((o) => !o)} className={`text-[11px] font-semibold ${histOpen ? "text-matchup" : "text-neutral-400 hover:text-neutral-700"}`}>{t("tour.wsEntryHistory")} ({entryEvents.length})</button>
+                    <button type="button" onClick={() => setHistOpen((o) => !o)} className={`text-[11px] font-semibold ${histOpen ? "text-matchup" : "text-[var(--t2-faint)] hover:text-[var(--t2-muted)]"}`}>{t("tour.wsEntryHistory")} ({entryEvents.length})</button>
                   )}
                   <button type="button" onClick={() => setEntryOpen((o) => !o)} className="flex items-center gap-1.5">
                     <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${entryPillClass(entryStatus)}`}>{entryWord}</span>
-                    <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5 text-[var(--t2-faint)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
                   </button>
                 </div>
               </div>
@@ -732,46 +732,46 @@ export default function TournamentDetail({
               {/* Verlauf — chronologisch, neueste zuerst; Abstände zeigen das Tempo. Jede
                   Beobachtung löschbar (append-only: nur löschen, nicht ändern). */}
               {histOpen && (
-                <ul className="mt-2 space-y-1 rounded-xl border border-black/10 bg-black/[0.02] p-2.5">
+                <ul className="mt-2 space-y-1 rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-2.5">
                   {entryHistory(entryEvents.map((e) => ({ id: e.id, observedAt: e.observed_at, status: e.status, alternatePosition: e.alternate_position, note: e.note }))).map((r) => (
                     <li key={r.id} className="flex items-start justify-between gap-2 text-[12px]">
                       <span className="min-w-0">
-                        <span className="font-semibold text-neutral-700">{fmtObsDate(r.observedAt)}</span>
-                        <span className="text-neutral-500"> · {t(`tour.status_${r.status}`)}{r.status === "alternate" && r.alternatePosition != null ? ` #${r.alternatePosition}` : ""}</span>
-                        {r.gapDays != null && <span className="text-neutral-400"> · {r.gapDays === 0 ? t("tour.wsEntryGapSameDay") : t("tour.wsEntryGapDays", { n: r.gapDays })}</span>}
-                        {r.note && <span className="block truncate text-[11px] text-neutral-400">{r.note}</span>}
+                        <span className="font-semibold text-[var(--t2-muted)]">{fmtObsDate(r.observedAt)}</span>
+                        <span className="text-[var(--t2-muted)]"> · {t(`tour.status_${r.status}`)}{r.status === "alternate" && r.alternatePosition != null ? ` #${r.alternatePosition}` : ""}</span>
+                        {r.gapDays != null && <span className="text-[var(--t2-faint)]"> · {r.gapDays === 0 ? t("tour.wsEntryGapSameDay") : t("tour.wsEntryGapDays", { n: r.gapDays })}</span>}
+                        {r.note && <span className="block truncate text-[11px] text-[var(--t2-faint)]">{r.note}</span>}
                       </span>
-                      <button type="button" onClick={() => delObs(r.id)} aria-label={t("tour.wsEntryDelete")} className="shrink-0 text-neutral-300 transition-colors hover:text-red-500">✕</button>
+                      <button type="button" onClick={() => delObs(r.id)} aria-label={t("tour.wsEntryDelete")} className="shrink-0 text-[var(--t2-faint)] transition-colors hover:text-red-500">✕</button>
                     </li>
                   ))}
                 </ul>
               )}
 
               {entryOpen && (
-                <div className="mt-2 space-y-2.5 rounded-xl border border-black/10 bg-black/[0.02] p-3">
+                <div className="mt-2 space-y-2.5 rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3">
                   {/* Status-Auswahl */}
                   <div className="flex flex-wrap gap-1.5">
                     {ENTRY_STATUS_OPTS.map((s) => (
-                      <button key={s} type="button" onClick={() => setEStatus(s)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${eStatus === s ? "bg-matchup text-white ring-matchup" : "bg-white text-neutral-700 ring-black/10 hover:bg-black/[0.03]"}`}>{t(`tour.status_${s}`)}</button>
+                      <button key={s} type="button" onClick={() => setEStatus(s)} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ring-1 ${eStatus === s ? "bg-matchup text-white ring-matchup" : "bg-white text-[var(--t2-muted)] ring-[var(--t2-line)] hover:bg-[var(--t2-surface)]"}`}>{t(`tour.status_${s}`)}</button>
                     ))}
                   </div>
                   {/* Position nur bei Alternate */}
                   {eStatus === "alternate" && (
-                    <label className="flex items-center gap-2 text-[12px] font-semibold text-neutral-600">{t("tour.wsEntryPosition")}
-                      <input type="number" min={1} value={ePos} onChange={(e) => setEPos(e.target.value)} className="w-24 rounded-lg border border-black/15 bg-white px-2.5 py-1.5 text-[13px] focus:border-black/30 focus:outline-none" />
+                    <label className="flex items-center gap-2 text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsEntryPosition")}
+                      <input type="number" min={1} value={ePos} onChange={(e) => setEPos(e.target.value)} className="w-24 rounded-lg border border-[var(--t2-line-strong)] bg-white px-2.5 py-1.5 text-[13px] focus:border-[var(--t2-accent)] focus:outline-none" />
                     </label>
                   )}
                   {/* Stand vom (bleibt änderbar — Nachtrag möglich) + Gebühr */}
                   <div className="grid grid-cols-2 gap-2">
-                    <label className="block text-[12px] font-semibold text-neutral-600">{t("tour.wsEntryObservedAt")}
+                    <label className="block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.wsEntryObservedAt")}
                       <input type="date" value={eObserved} onChange={(e) => setEObserved(e.target.value)} className={`mt-1 ${inp2}`} />
                     </label>
-                    <label className="flex items-end gap-2 pb-1.5 text-[12px] text-neutral-700">
+                    <label className="flex items-end gap-2 pb-1.5 text-[12px] text-[var(--t2-muted)]">
                       <input type="checkbox" checked={eFee} onChange={(e) => setEFee(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsEntryFeePaid")}
                     </label>
                   </div>
                   <input value={eNote} onChange={(e) => setENote(e.target.value)} placeholder={t("tour.wsEntryNote")} className={inp2} />
-                  <p className="text-[11px] leading-relaxed text-neutral-400">{t("tour.wsEntryHint")}</p>
+                  <p className="text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsEntryHint")}</p>
                   <button type="button" onClick={saveEntry} disabled={savingEntry} className="w-full rounded-full bg-matchup py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">
                     {savingEntry ? t("tour.wsFilling") : t("tour.wsEntrySet")}
                   </button>
@@ -793,11 +793,11 @@ export default function TournamentDetail({
               Grund: die Prominenz war für den laufenden Countdown gedacht, nicht für ein
               „unbekannt" (Challenger) oder „abgelaufen". */}
           <div className={`flex items-center justify-between gap-3 ${hasCountdown ? "py-3" : "py-2.5"}`}>
-            <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-neutral-600" : "text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400"}>
+            <span className={hasCountdown ? "text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--t2-muted)]" : "text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]"}>
               {t("tour.wsDetailDeadline")}
               {/* WTA: Frist ist berechnet (−28 T) mit Vorbehalt „unless otherwise determined by the WTA".
                   Knapp gehalten (ein Zusatz, kein Satz); das Fact-Sheet-Detail bleibt im „i". */}
-              {tt.series === "wta" && <span className="ml-1.5 normal-case tracking-normal font-medium text-neutral-400">· {t("tour.entryMayVary")}</span>}
+              {tt.series === "wta" && <span className="ml-1.5 normal-case tracking-normal font-medium text-[var(--t2-faint)]">· {t("tour.entryMayVary")}</span>}
             </span>
             <DeadlineCountdown tournament={tt} now={nowMs} size={hasCountdown ? "lg" : "sm"} />
           </div>
@@ -810,7 +810,7 @@ export default function TournamentDetail({
 
           {/* 2) Wochenkosten — Live-Flugpreis + Hinweis auf fehlende Sätze hinter „i" */}
           <div className="flex items-center justify-between gap-3 py-2.5">
-            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
               {t("tour.wsWeekCostLabel")}
               {(flightPrice != null || !ratesDone) && (
                 <InfoHint label={t("tour.wsCostInfo")}>
@@ -819,7 +819,7 @@ export default function TournamentDetail({
                 </InfoHint>
               )}
             </span>
-            <span className="text-[13px] font-semibold text-neutral-700">{ratesDone ? t("tour.wsWeekCostValue", { amount: fmtCur(weekMinor, rates!.currency ?? "EUR") }) : "—"}</span>
+            <span className="text-[13px] font-semibold text-[var(--t2-muted)]">{ratesDone ? t("tour.wsWeekCostValue", { amount: fmtCur(weekMinor, rates!.currency ?? "EUR") }) : "—"}</span>
           </div>
 
           {/* 3) Einreise — EIN Wort. AUSNAHME: Sperre bleibt sichtbar & deutlich (rot). */}
@@ -827,7 +827,7 @@ export default function TournamentDetail({
             visaInfo && visaInfo.requirementClass === "admission_refused" ? (
               <div className="py-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.wsVisaTitle")}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.wsVisaTitle")}</span>
                   <span className="shrink-0 rounded-full bg-red-500/10 px-2.5 py-0.5 text-[11px] font-bold text-red-600">{t("mode.visaNatClass_admission_refused")}</span>
                 </div>
                 <p className="mt-1 text-[12px] leading-relaxed text-red-700">
@@ -838,11 +838,11 @@ export default function TournamentDetail({
             ) : (
               <div className="py-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+                  <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
                     {t("tour.wsVisaTitle")}
                     <InfoHint label={t("tour.wsVisaInfo")}>{visaHint}</InfoHint>
                   </span>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${visaWordNeutral ? "bg-black/[0.05] text-neutral-500" : "bg-matchup/10 text-matchup"}`}>{visaWord}</span>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${visaWordNeutral ? "bg-[var(--t2-surface)] text-[var(--t2-muted)]" : "bg-matchup/10 text-matchup"}`}>{visaWord}</span>
                 </div>
                 {docNode}
               </div>
@@ -851,7 +851,7 @@ export default function TournamentDetail({
 
           {/* 4) Weg zur Meldung — schlichter Link; App-Erklärung/Links hinter „i" */}
           <div className="flex items-center justify-between gap-3 py-2.5">
-            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+            <span className="flex items-center text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
               {t("tour.entryPathTitle")}
               <InfoHint label={t("tour.wsEntryInfo")}>{entryHint}</InfoHint>
             </span>
@@ -862,42 +862,42 @@ export default function TournamentDetail({
               Bestandsdaten darüber (Selbstauskunft, keine amtlichen Daten). ─────────────────── */}
           <div className="py-2.5">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-400">{t("tour.ovNotesTitle")}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.ovNotesTitle")}</span>
               <button type="button" onClick={() => setNoteOpen((o) => !o)} className="text-[11px] font-semibold text-matchup hover:underline">{hasNote ? t("tour.ovNotesEdit") : t("tour.ovNotesAdd")}</button>
             </div>
-            <p className="mt-0.5 text-[11px] text-neutral-400">{t("tour.ovNotesHint")}</p>
+            <p className="mt-0.5 text-[11px] text-[var(--t2-faint)]">{t("tour.ovNotesHint")}</p>
 
             {/* Anzeige: nur befüllte Felder, gestrichelte Karte + „Eigene Notiz"-Merkmal. */}
             {!noteOpen && hasNote && (
-              <div className="mt-2 space-y-1 rounded-xl border border-dashed border-black/15 bg-black/[0.015] p-2.5">
-                <span className="inline-flex items-center rounded-full bg-black/[0.05] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neutral-500">{t("tour.ovNotesBadge")}</span>
-                {nFee.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteFee")}: </span>{nFee} {nCurrency}</p>}
-                {nCourts.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteCourts")}: </span>{nCourts}</p>}
-                {nConditions.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteConditions")}: </span>{nConditions}</p>}
-                {nHotel.trim() && <p className="text-[12px] text-neutral-700"><span className="text-neutral-400">{t("tour.ovNoteHotel")}: </span>{nHotel}</p>}
+              <div className="mt-2 space-y-1 rounded-xl border border-dashed border-[var(--t2-line-strong)] bg-[var(--t2-surface)] p-2.5">
+                <span className="inline-flex items-center rounded-full bg-[var(--t2-surface)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--t2-muted)]">{t("tour.ovNotesBadge")}</span>
+                {nFee.trim() && <p className="text-[12px] text-[var(--t2-muted)]"><span className="text-[var(--t2-faint)]">{t("tour.ovNoteFee")}: </span>{nFee} {nCurrency}</p>}
+                {nCourts.trim() && <p className="text-[12px] text-[var(--t2-muted)]"><span className="text-[var(--t2-faint)]">{t("tour.ovNoteCourts")}: </span>{nCourts}</p>}
+                {nConditions.trim() && <p className="text-[12px] text-[var(--t2-muted)]"><span className="text-[var(--t2-faint)]">{t("tour.ovNoteConditions")}: </span>{nConditions}</p>}
+                {nHotel.trim() && <p className="text-[12px] text-[var(--t2-muted)]"><span className="text-[var(--t2-faint)]">{t("tour.ovNoteHotel")}: </span>{nHotel}</p>}
               </div>
             )}
-            {!noteOpen && !hasNote && noteLoaded && <p className="mt-1 text-[12px] text-neutral-400">{t("tour.ovNotesEmpty")}</p>}
+            {!noteOpen && !hasNote && noteLoaded && <p className="mt-1 text-[12px] text-[var(--t2-faint)]">{t("tour.ovNotesEmpty")}</p>}
 
             {/* Turnierdirektor read-only aus tour_wildcard_contact (getrennt gepflegt). */}
             {directorName && (
-              <p className="mt-2 text-[12px] text-neutral-500">{t("tour.ovNoteDirector")}: <span className="font-semibold text-neutral-700">{directorName}</span> · <a href="/tour2/wildcards" className="font-semibold text-matchup hover:underline">{t("tour.wildcardsOpen")} →</a></p>
+              <p className="mt-2 text-[12px] text-[var(--t2-muted)]">{t("tour.ovNoteDirector")}: <span className="font-semibold text-[var(--t2-muted)]">{directorName}</span> · <a href="/tour2/network" className="font-semibold text-matchup hover:underline">{t("tour.wildcardsOpen")} →</a></p>
             )}
 
             {/* Bearbeiten — kurzes Formular. */}
             {noteOpen && (
-              <div className="mt-2 space-y-2 rounded-xl border border-black/10 bg-black/[0.02] p-3">
+              <div className="mt-2 space-y-2 rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3">
                 <div className="grid grid-cols-3 gap-2">
-                  <label className="col-span-2 block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteFee")}</span>
+                  <label className="col-span-2 block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.ovNoteFee")}</span>
                     <input value={nFee} onChange={(e) => setNFee(e.target.value)} inputMode="decimal" placeholder="40" className={selCls} /></label>
-                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteCurrency")}</span>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.ovNoteCurrency")}</span>
                     <input value={nCurrency} onChange={(e) => setNCurrency(e.target.value.toUpperCase().slice(0, 3))} className={selCls} /></label>
                 </div>
-                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteCourts")}</span>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.ovNoteCourts")}</span>
                   <input value={nCourts} onChange={(e) => setNCourts(e.target.value)} placeholder={t("tour.ovNoteCourtsPh")} className={selCls} /></label>
-                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteConditions")}</span>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.ovNoteConditions")}</span>
                   <input value={nConditions} onChange={(e) => setNConditions(e.target.value)} placeholder={t("tour.ovNoteConditionsPh")} className={selCls} /></label>
-                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.ovNoteHotel")}</span>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.ovNoteHotel")}</span>
                   <input value={nHotel} onChange={(e) => setNHotel(e.target.value)} className={selCls} /></label>
                 <button type="button" onClick={saveNote} disabled={noteSaving} className="w-full rounded-full bg-matchup py-2 text-[13px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{noteSaving ? t("tour.wsFilling") : t("tour.ovNotesSave")}</button>
               </div>
@@ -911,98 +911,98 @@ export default function TournamentDetail({
         <>
         {/* Wer ist hier? — Opt-in-Präsenz (freiwillig, selbst gewählter Kontakt). */}
         <section>
-          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsHereTitle")}{presence ? ` · ${presence.length}` : ""}</p>
+          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{t("tour.wsHereTitle")}{presence ? ` · ${presence.length}` : ""}</p>
 
           {/* Eigene Eintragung (Opt-in): zwei Absichten + Kontakt, PLUS eine Vorschau in genau
               der Form, wie andere dich sehen — damit klar ist, was preisgegeben wird. */}
           <div className="mt-2 rounded-2xl border border-matchup/20 bg-matchup/5 p-3">
-            <p className="text-[13px] font-bold text-neutral-800">{meListed ? t("tour.wsHereListed") : t("tour.wsHereAsk")}</p>
-            <label className="mt-2 flex items-center gap-2 text-[13px] text-neutral-700">
+            <p className="text-[13px] font-bold text-[var(--t2-ink)]">{meListed ? t("tour.wsHereListed") : t("tour.wsHereAsk")}</p>
+            <label className="mt-2 flex items-center gap-2 text-[13px] text-[var(--t2-muted)]">
               <input type="checkbox" checked={pPartner} onChange={(e) => setPPartner(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsSeekPartner")}
             </label>
-            <label className="mt-1 flex items-center gap-2 text-[13px] text-neutral-700">
+            <label className="mt-1 flex items-center gap-2 text-[13px] text-[var(--t2-muted)]">
               <input type="checkbox" checked={pRoom} onChange={(e) => setPRoom(e.target.checked)} className="h-4 w-4 accent-matchup" />{t("tour.wsSeekRoom")}
             </label>
-            <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[13px] placeholder:text-neutral-400 focus:border-black/30 focus:outline-none" />
+            <input value={pContact} onChange={(e) => setPContact(e.target.value)} placeholder={t("tour.wsContactPlaceholder")} className="mt-2 w-full rounded-xl border border-[var(--t2-line-strong)] bg-white px-3 py-2 text-[13px] placeholder:text-[var(--t2-faint)] focus:border-[var(--t2-accent)] focus:outline-none" />
 
             {/* Detailfelder — NUR zur angekreuzten Absicht, alles optional (kurzes Formular). */}
             {/* Partner-Zeiten laufen jetzt über die Trainingsslots (unten), nicht mehr als
                 Freitext im Opt-in. */}
             {pRoom && (
-              <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-black/5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-neutral-400">{t("tour.wsSeekRoom")}</p>
+              <div className="mt-2 space-y-2 rounded-xl bg-white/70 p-2.5 ring-1 ring-[var(--t2-line)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--t2-faint)]">{t("tour.wsSeekRoom")}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomFrom")}</span>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoomFrom")}</span>
                     <input type="date" value={pRoomFrom} onChange={(e) => setPRoomFrom(e.target.value)} className={selCls} /></label>
-                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomTo")}</span>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoomTo")}</span>
                     <input type="date" value={pRoomTo} onChange={(e) => setPRoomTo(e.target.value)} className={selCls} /></label>
                 </div>
-                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomArea")}</span>
+                <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoomArea")}</span>
                   <input value={pRoomArea} onChange={(e) => setPRoomArea(e.target.value)} className={selCls} /></label>
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomCost")}</span>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoomCost")}</span>
                     <input value={pRoomCost} onChange={(e) => setPRoomCost(e.target.value)} placeholder="~40 €/N" className={selCls} /></label>
-                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-neutral-500">{t("tour.wsRoomTypeLabel")}</span>
+                  <label className="block"><span className="mb-1 block text-[11px] font-semibold text-[var(--t2-muted)]">{t("tour.wsRoomTypeLabel")}</span>
                     <select value={pRoomType} onChange={(e) => setPRoomType(e.target.value)} className={selCls}><option value="">—</option><option value="room">{t("tour.roomType_room")}</option><option value="apartment">{t("tour.roomType_apartment")}</option></select></label>
                 </div>
               </div>
             )}
 
             {/* Vorschau: so erscheinst du für andere vor Ort. */}
-            <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-2.5 py-2 ring-1 ring-black/5">
+            <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-2.5 py-2 ring-1 ring-[var(--t2-line)]">
               {avatarEl(myPresence?.profile_image ?? null, viewerName)}
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-semibold text-neutral-900">{viewerName || t("tour.fieldMissing")}</span>
-                <span className="block truncate text-[12px] text-neutral-600">{seekText(pPartner, pRoom)}</span>
+                <span className="block truncate text-[13px] font-semibold text-[var(--t2-ink)]">{viewerName || t("tour.fieldMissing")}</span>
+                <span className="block truncate text-[12px] text-[var(--t2-muted)]">{seekText(pPartner, pRoom)}</span>
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-neutral-400">{t("tour.wsHerePreviewNote")}</p>
+            <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.wsHerePreviewNote")}</p>
 
             <div className="mt-2 flex gap-2">
               <button type="button" onClick={joinP} disabled={pBusy} className="flex-1 rounded-full bg-matchup px-3 py-2 text-[12px] font-bold text-white transition-colors hover:bg-matchup-hover disabled:opacity-50">{meListed ? t("tour.wsHereUpdate") : t("tour.wsHereJoin")}</button>
-              {meListed && <button type="button" onClick={leaveP} disabled={pBusy} className="rounded-full bg-neutral-100 px-3 py-2 text-[12px] font-semibold text-neutral-500 hover:bg-neutral-200 disabled:opacity-50">{t("tour.wsHereLeave")}</button>}
+              {meListed && <button type="button" onClick={leaveP} disabled={pBusy} className="rounded-full bg-[var(--t2-surface)] px-3 py-2 text-[12px] font-semibold text-[var(--t2-muted)] hover:bg-[var(--t2-line)] disabled:opacity-50">{t("tour.wsHereLeave")}</button>}
             </div>
           </div>
 
           {/* Ansichts-Filter: wer welche Absicht hat (getrennt vom eigenen Opt-in oben). Wirkt
               auf echte UND Beispiel-Einträge. */}
-          <div className="mt-3 flex gap-1 rounded-full bg-black/[0.04] p-1">
+          <div className="mt-3 flex gap-1 rounded-full bg-[var(--t2-surface)] p-1">
             {(["all", "partner", "room"] as const).map((f) => (
-              <button key={f} type="button" onClick={() => setHereFilter(f)} className={`flex-1 rounded-full px-2 py-1.5 text-[12px] font-bold transition-colors ${hereFilter === f ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}>{t(`tour.hereFilter_${f}`)}</button>
+              <button key={f} type="button" onClick={() => setHereFilter(f)} className={`flex-1 rounded-full px-2 py-1.5 text-[12px] font-bold transition-colors ${hereFilter === f ? "bg-white text-[var(--t2-ink)] shadow-sm" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}>{t(`tour.hereFilter_${f}`)}</button>
             ))}
           </div>
 
           {/* Andere vor Ort — lesbare Aussage mit Bild und Name statt Häkchen. */}
           {presence == null ? (
-            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
+            <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.loading")}</p>
           ) : othersShown.length === 0 ? (
-            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.wsHereEmpty")}</p>
+            <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.wsHereEmpty")}</p>
           ) : (
             <div className="mt-2 space-y-1.5">
               {othersShown.map((r) => {
                 const href = r.contact ? contactHref(r.contact) : null;
                 return (
-                  <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2">
+                  <div key={r.user_id} className="flex items-center gap-2.5 rounded-xl border border-[var(--t2-line)] px-2.5 py-2">
                     {avatarEl(r.profile_image, r.name)}
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-semibold text-neutral-900">{r.name || t("tour.fieldMissing")}</span>
-                      <span className="block truncate text-[12px] text-neutral-600">{intentLine(realIntent(r))}</span>
-                      {(r.rank_label || r.nationality) && <span className="block truncate text-[11px] text-neutral-400">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>}
+                      <span className="block truncate text-[13px] font-semibold text-[var(--t2-ink)]">{r.name || t("tour.fieldMissing")}</span>
+                      <span className="block truncate text-[12px] text-[var(--t2-muted)]">{intentLine(realIntent(r))}</span>
+                      {(r.rank_label || r.nationality) && <span className="block truncate text-[11px] text-[var(--t2-faint)]">{[r.rank_label, r.nationality].filter(Boolean).join(" · ")}</span>}
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
                       {canMessage && (r.looking || r.looking_room) && (
                         <button type="button" onClick={() => setChatWith(r)} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.wsMessage")}</button>
                       )}
                       {r.contact && (href
-                        ? <a href={href} target="_blank" rel="noreferrer" className="rounded-full bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.wsContact")}</a>
-                        : <span className="text-[11px] text-neutral-500">{r.contact}</span>)}
+                        ? <a href={href} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--t2-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--t2-ink)] hover:bg-[var(--t2-line)]">{t("tour.wsContact")}</a>
+                        : <span className="text-[11px] text-[var(--t2-muted)]">{r.contact}</span>)}
                     </span>
                   </div>
                 );
               })}
             </div>
           )}
-          <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsHereNote")}</p>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsHereNote")}</p>
 
           {/* BEISPIEL-Block — reine Anzeige (nie in player_presence). Hinweis über der Liste,
               „Beispiel"-Merkmal je Eintrag, KEIN Anschreiben/Kontakt. Abschaltbar über
@@ -1010,24 +1010,24 @@ export default function TournamentDetail({
               /tour2: SHOW_PRESENCE_DEMO (MU-041), nicht das globale Flag. */}
           {SHOW_PRESENCE_DEMO && demoShown.length > 0 && (
             <div className="mt-4">
-              <p className="flex items-center gap-1.5 rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] font-semibold text-neutral-500">
+              <p className="flex items-center gap-1.5 rounded-xl bg-[var(--t2-surface)] px-3 py-2 text-[11px] font-semibold text-[var(--t2-muted)]">
                 <span aria-hidden>ⓘ</span>{t("tour.wsHereDemoBanner")}
               </p>
               <div className="mt-2 space-y-1.5">
                 {demoShown.map((d) => (
                   // Klick öffnet die simulierte Profil-/Chat-Vorschau. KEIN Anschreiben-/Kontakt-
                   // Knopf (würde an may_match scheitern) — die Vorschau ersetzt ihn.
-                  <button key={d.id} type="button" onClick={() => setDemoSelected(d)} className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-200 bg-white px-2.5 py-2 text-left transition-colors hover:bg-black/[0.02]">
+                  <button key={d.id} type="button" onClick={() => setDemoSelected(d)} className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--t2-line)] px-2.5 py-2 text-left transition-colors hover:bg-[var(--t2-surface)]">
                     {avatarEl(d.image, d.name)}
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
-                        <span className="truncate text-[13px] font-semibold text-neutral-900">{d.name}</span>
-                        <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-neutral-500">{t("tour.wsHereDemoBadge")}</span>
+                        <span className="truncate text-[13px] font-semibold text-[var(--t2-ink)]">{d.name}</span>
+                        <span className="shrink-0 rounded-full bg-[var(--t2-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--t2-muted)]">{t("tour.wsHereDemoBadge")}</span>
                       </span>
-                      <span className="block truncate text-[12px] text-neutral-600">{intentLine(demoIntent(d))}</span>
-                      <span className="block truncate text-[11px] text-neutral-400">{[d.rankLabel, d.nationality].filter(Boolean).join(" · ")}</span>
+                      <span className="block truncate text-[12px] text-[var(--t2-muted)]">{intentLine(demoIntent(d))}</span>
+                      <span className="block truncate text-[11px] text-[var(--t2-faint)]">{[d.rankLabel, d.nationality].filter(Boolean).join(" · ")}</span>
                     </span>
-                    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4 shrink-0 text-[var(--t2-faint)]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
                   </button>
                 ))}
               </div>
@@ -1046,13 +1046,13 @@ export default function TournamentDetail({
         {/* Dienstleister vor Ort — Anbieter im 50-km-Umkreis, redaktioneller Bestand.
             Kein Bild (auch bei Selbst-Einträgen): Darstellung wie Plätze/Vereine in /map. */}
         <section>
-          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--t2-faint)]">
             {t("tour.svcTitle")}{prov && prov.length > 0 ? ` · ${prov.length}` : ""}
           </p>
           {prov == null ? (
-            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.loading")}</p>
+            <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.loading")}</p>
           ) : prov.length === 0 ? (
-            <p className="mt-2 text-[12px] text-neutral-400">{t("tour.svcEmpty", { city: tt.city || countryName })}</p>
+            <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.svcEmpty", { city: tt.city || countryName })}</p>
           ) : (
             <>
               {provCats.length > 1 && (
@@ -1062,7 +1062,7 @@ export default function TournamentDetail({
                       key={c}
                       type="button"
                       onClick={() => { setProvCat(c); setProvShowAll(false); }}
-                      className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${provCat === c ? "bg-matchup text-white" : "bg-black/[0.05] text-neutral-500"}`}
+                      className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${provCat === c ? "bg-matchup text-white" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"}`}
                     >
                       {c === "all" ? t("tour.svcAll") : t(`services.cat_${c}`)}
                     </button>
@@ -1074,29 +1074,29 @@ export default function TournamentDetail({
                   const dom = providerDomain(p.website);
                   const open = openProv.has(p.id);
                   return (
-                    <div key={p.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                    <div key={p.id} className="overflow-hidden rounded-xl border border-[var(--t2-line)]">
                       <button type="button" onClick={() => toggleProv(p.id)} aria-expanded={open} className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left">
                         {dom ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={`https://icons.duckduckgo.com/ip3/${dom}.ico`} alt="" loading="lazy" decoding="async" className="h-9 w-9 shrink-0 rounded-full bg-neutral-100 object-contain p-1.5" />
+                          <img src={`https://icons.duckduckgo.com/ip3/${dom}.ico`} alt="" loading="lazy" decoding="async" className="h-9 w-9 shrink-0 rounded-full bg-[var(--t2-surface)] object-contain p-1.5" />
                         ) : (
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[13px] font-bold text-neutral-500">{(p.name || "?").slice(0, 1).toUpperCase()}</span>
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--t2-surface)] text-[13px] font-bold text-[var(--t2-muted)]">{(p.name || "?").slice(0, 1).toUpperCase()}</span>
                         )}
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-semibold text-neutral-900">{p.name}</span>
-                          <span className="block truncate text-[11px] text-neutral-500">
+                          <span className="block truncate text-[13px] font-semibold text-[var(--t2-ink)]">{p.name}</span>
+                          <span className="block truncate text-[11px] text-[var(--t2-muted)]">
                             {t(`services.cat_${p.category}`)}{p.city ? ` · ${p.city}` : ""} · {Math.round(p.distance_km)} km
                             {p.price_from != null ? ` · ${t("tour.svcFrom")} ${p.currency ?? ""} ${p.price_from}${p.price_unit ? " " + unitLabel(p.price_unit) : ""}` : ""}
                           </span>
                         </span>
-                        <svg viewBox="0 0 24 24" aria-hidden className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                        <svg viewBox="0 0 24 24" aria-hidden className={`h-4 w-4 shrink-0 text-[var(--t2-faint)] transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                       </button>
                       {open && (
-                        <div className="border-t border-neutral-100 px-3 py-2.5">
-                          {p.languages?.length > 0 && <p className="mb-2 text-[11px] text-neutral-400">{p.languages.join(" · ").toUpperCase()}</p>}
+                        <div className="border-t border-[var(--t2-line)] px-3 py-2.5">
+                          {p.languages?.length > 0 && <p className="mb-2 text-[11px] text-[var(--t2-faint)]">{p.languages.join(" · ").toUpperCase()}</p>}
                           <div className="flex flex-wrap gap-1.5">
-                            {p.phone && <a href={`tel:${p.phone}`} className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.svcPhone")}</a>}
-                            {p.website && <a href={p.website} target="_blank" rel="noreferrer" className="rounded-full bg-neutral-100 px-3 py-1.5 text-[12px] font-bold text-neutral-700 hover:bg-neutral-200">{t("tour.svcWeb")}</a>}
+                            {p.phone && <a href={`tel:${p.phone}`} className="rounded-full bg-[var(--t2-surface)] px-3 py-1.5 text-[12px] font-bold text-[var(--t2-ink)] hover:bg-[var(--t2-line)]">{t("tour.svcPhone")}</a>}
+                            {p.website && <a href={p.website} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--t2-surface)] px-3 py-1.5 text-[12px] font-bold text-[var(--t2-ink)] hover:bg-[var(--t2-line)]">{t("tour.svcWeb")}</a>}
                             {p.contact_email && <a href={`mailto:${p.contact_email}`} className="rounded-full bg-matchup px-3 py-1.5 text-[12px] font-bold text-white hover:bg-matchup-hover">{t("tour.svcEmail")}</a>}
                           </div>
                         </div>
@@ -1108,7 +1108,7 @@ export default function TournamentDetail({
                   <button type="button" onClick={() => setProvShowAll(true)} className="w-full rounded-xl px-3 py-2 text-[12px] font-semibold text-matchup hover:bg-matchup/[0.06]">{t("tour.svcShowAll", { n: provShown.length })}</button>
                 )}
                 {provShowAll && provShown.length > 3 && (
-                  <button type="button" onClick={() => setProvShowAll(false)} className="w-full rounded-xl px-3 py-2 text-[12px] font-semibold text-neutral-500 hover:bg-black/[0.03]">{t("tour.svcShowLess")}</button>
+                  <button type="button" onClick={() => setProvShowAll(false)} className="w-full rounded-xl px-3 py-2 text-[12px] font-semibold text-[var(--t2-muted)] hover:bg-[var(--t2-surface)]">{t("tour.svcShowLess")}</button>
                 )}
               </div>
             </>
@@ -1123,13 +1123,13 @@ export default function TournamentDetail({
         {/* Buchen — Deep-Links. Funktionieren IMMER (auch ohne Live-Preis) und sind der
             eigentliche Nutzen. Bewusst KEIN „Live-Preise"-Titel mehr. */}
         <section>
-          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.wsBookTitle")}</p>
+          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{t("tour.wsBookTitle")}</p>
           <div className="mt-2 space-y-1.5">
-            <a href={flightUrl(stop, originCity || undefined)} target="_blank" rel="noopener noreferrer" className={link}><span>✈ {t("tour.wsBookFlights")}</span><span className="text-neutral-400">↗</span></a>
-            <a href={hotelUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🏨 {t("tour.wsBookHotels")}</span><span className="text-neutral-400">↗</span></a>
-            <a href={carUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🚗 {t("tour.wsBookCars")}</span><span className="text-neutral-400">↗</span></a>
+            <a href={flightUrl(stop, originCity || undefined)} target="_blank" rel="noopener noreferrer" className={link}><span>✈ {t("tour.wsBookFlights")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
+            <a href={hotelUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🏨 {t("tour.wsBookHotels")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
+            <a href={carUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🚗 {t("tour.wsBookCars")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">{t("tour.wsBookNote")}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.wsBookNote")}</p>
         </section>
         </>
         )}

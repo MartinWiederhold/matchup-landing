@@ -8,8 +8,7 @@ import type { SeasonEntry } from "@/lib/tourSeason";
 
 const CATS: ExpenseCategory[] = ["hotel", "flight", "coach", "physio", "stringing", "entry_fee", "taxi", "food", "other"];
 
-const inputCls =
-  "w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:border-black/30 focus:outline-none";
+const inputCls = "t2-input";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -97,7 +96,7 @@ export default function ExpenseForm({
 
   return (
     <section className="t2-panel">
-      <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-neutral-400">{t("tour.expAddTitle")}</h2>
+      <h2 className="t2-kicker">{t("tour.expAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
@@ -125,9 +124,7 @@ export default function ExpenseForm({
               key={c}
               type="button"
               onClick={() => setCategory(c)}
-              className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-                category === c ? "border-matchup bg-matchup text-white" : "border-black/15 text-neutral-600 hover:border-black/30"
-              }`}
+              className={`t2-chip ${category === c ? "is-on" : ""}`}
             >
               {t(`tour.expCat_${c}`)}
             </button>
@@ -166,18 +163,18 @@ export default function ExpenseForm({
             type="button"
             onClick={() => fileInput.current?.click()}
             disabled={uploading}
-            className="rounded-full border border-black/15 px-3.5 py-1.5 text-[12px] font-semibold text-neutral-700 transition-colors hover:border-black/30 disabled:opacity-50"
+            className="t2-ghost disabled:opacity-50"
           >
             {t("tour.expReceiptPick")}
           </button>
-          {uploading && <span className="text-[12px] text-neutral-500">{t("tour.expReceiptUploading")}</span>}
+          {uploading && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expReceiptUploading")}</span>}
           {receiptPath && !uploading && (
             <span className="inline-flex items-center gap-2 text-[12px] text-emerald-600">
               {t("tour.expReceiptAttached")}
-              <button type="button" onClick={() => setReceiptPath(null)} className="text-neutral-400 hover:text-neutral-700">{t("tour.expReceiptRemove")}</button>
+              <button type="button" onClick={() => setReceiptPath(null)} className="text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">{t("tour.expReceiptRemove")}</button>
             </span>
           )}
-          {uploadError && <span className="text-[12px] text-neutral-500">{t("tour.expUploadError")}</span>}
+          {uploadError && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expUploadError")}</span>}
         </div>
       </div>
 
@@ -185,9 +182,9 @@ export default function ExpenseForm({
         <button type="button" onClick={save} disabled={saving || uploading} className="t2-cta disabled:opacity-50">
           {saving ? t("tour.expSaving") : t("tour.expSave")}
         </button>
-        {error === "invalid" && <span className="text-[12px] text-neutral-500">{t("tour.expInvalidAmount")}</span>}
-        {error === "fields" && <span className="text-[12px] text-neutral-500">{t("tour.expNeedFields")}</span>}
-        {error === "save" && <span className="text-[12px] text-neutral-500">{t("tour.expSaveError")}</span>}
+        {error === "invalid" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expInvalidAmount")}</span>}
+        {error === "fields" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expNeedFields")}</span>}
+        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expSaveError")}</span>}
       </div>
     </section>
   );
