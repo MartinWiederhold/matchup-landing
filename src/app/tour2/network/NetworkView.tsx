@@ -5,7 +5,7 @@
  * Kein Anbieterbild, kein Verified-Abzeichen. Leerzustand benennt den dünnen Bestand.
  */
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -15,7 +15,7 @@ import { loadTournamentSlots, type TrainingSlot } from "@/lib/tourTrainingSlots"
 import { loadProvidersNearCoords, type ProviderNear } from "@/lib/services";
 import { loadWildcardContacts } from "@/lib/tourWildcards";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import TrainingSlots from "@/app/tour2/components/planner/TrainingSlots";
 import WildcardsView from "@/app/tour2/wildcards/WildcardsView";
 import { t2markArea } from "@/app/tour2/t2mark";
@@ -23,15 +23,6 @@ import { tour2PlannerTournamentHref } from "@/app/tour2/components/t2Action";
 
 const PROVIDER_RADIUS_KM = 50;
 const MAX_WEEKS = 16;
-
-function Kpi({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-    </div>
-  );
-}
 
 type PresenceRow = TourPresence & { city: string; tournamentId: string };
 type SlotWeek = { id: string; city: string; monday: string; slots: TrainingSlot[] };
@@ -116,30 +107,29 @@ export default function NetworkView() {
   if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
-    <div className="grid gap-0 md:grid-cols-4">
-      <Kpi label={t("tour.t2netPeople")}>{uniqueOnTour}</Kpi>
-      <Kpi label={t("tour.t2netOnTour")}>{uniqueOnTour}</Kpi>
-      <Kpi label={t("tour.t2netLooking")}>{lookingN}</Kpi>
-      <Kpi label={t("tour.t2netRequests")}>{requests}</Kpi>
-    </div>
+    <>
+      <T2Kpi label={t("tour.t2netPeople")}>{uniqueOnTour}</T2Kpi>
+      <T2Kpi label={t("tour.t2netOnTour")}>{uniqueOnTour}</T2Kpi>
+      <T2Kpi label={t("tour.t2netLooking")}>{lookingN}</T2Kpi>
+      <T2Kpi label={t("tour.t2netRequests")}>{requests}</T2Kpi>
+    </>
   );
 
   const aside = (
-    <section>
-      <h2 className="t2-kicker">{t("tour.t2netSlots")}</h2>
-      <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{slotTotal}</p>
+    <T2AsideBlock title={t("tour.t2netSlots")}>
+      <p className="text-[15px] font-semibold tabular-nums">{slotTotal}</p>
       {weeks.filter((w) => w.slots.length > 0).map((w) => (
         <p key={w.id} className="mt-1 text-[12px] text-[var(--t2-muted)]">
           <Link href={tour2PlannerTournamentHref(w.id)} className="font-semibold text-matchup">{w.city}</Link>
           {" · "}{w.slots.length}
         </p>
       ))}
-    </section>
+    </T2AsideBlock>
   );
 
   return (
     <Tour2Area title={t("tour.t2navNetwork")} lead={t("tour.t2netLead")} kpis={kpis} aside={aside}>
-      <section>
+      <section className="t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netPresence")}</h2>
         {people.length === 0 ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netPresenceEmpty")}</p>
@@ -165,7 +155,7 @@ export default function NetworkView() {
         )}
       </section>
 
-      <section className="mt-10">
+      <section className="mt-4 t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netSlots")}</h2>
         {!nextWeek ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netSlotsEmpty")}</p>
@@ -177,7 +167,7 @@ export default function NetworkView() {
         )}
       </section>
 
-      <section className="mt-10">
+      <section className="mt-4 t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netProv")}</h2>
         {!provCity ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netProvEmptyNone")}</p>
@@ -199,7 +189,7 @@ export default function NetworkView() {
         )}
       </section>
 
-      <section className="mt-10">
+      <section className="mt-4 t2-dash-card">
         <WildcardsView skipMark />
       </section>
     </Tour2Area>

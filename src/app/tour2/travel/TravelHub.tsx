@@ -5,7 +5,7 @@
  * Keine Reisezeit, kein CO₂, kein Vorsaison-Vergleich.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -20,7 +20,7 @@ import { loadPlannerProfile, type PlannerProfile, ratesToCostParams, costRatesCo
 import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import PlannerMap from "@/app/tour2/components/planner/PlannerMap";
 import { t2markArea } from "@/app/tour2/t2mark";
 import { tour2PlannerTournamentHref } from "@/app/tour2/components/t2Action";
@@ -28,16 +28,6 @@ import type { TourCostRates } from "@/lib/types";
 
 const NIGHTS_KEY = "mu_tour_nights";
 const DAY = 86_400_000;
-
-function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
-  return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
-    </div>
-  );
-}
 
 export default function TravelHub() {
   const { user, loading: authLoading } = useAuth();
@@ -206,28 +196,27 @@ export default function TravelHub() {
   if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
-    <div className="grid gap-0 md:grid-cols-4">
-      <Kpi label={t("tour.t2trPlanned")} note={planned ? t("tour.t2trPlannedHint") : t("tour.t2trRatesNeed")}>
+    <>
+      <T2Kpi label={t("tour.t2trPlanned")} note={planned ? t("tour.t2trPlannedHint") : t("tour.t2trRatesNeed")}>
         {planned ? fmtBag(planned.total) : "—"}
-      </Kpi>
-      <Kpi label={t("tour.t2trRecorded")} note={t("tour.t2trRecordedHint")}>
+      </T2Kpi>
+      <T2Kpi label={t("tour.t2trRecorded")} note={t("tour.t2trRecordedHint")}>
         {fmtBag(recorded.expensesTotal)}
-      </Kpi>
-      <Kpi label={t("tour.t2trKm")} note={kmTotal.unknown ? t("tour.t2ovLegUnknownKm") : undefined}>
+      </T2Kpi>
+      <T2Kpi label={t("tour.t2trKm")} note={kmTotal.unknown ? t("tour.t2ovLegUnknownKm") : undefined}>
         {active.length === 0 ? "—" : t("tour.t2legKm", { n: Math.round(kmTotal.sum) })}
-      </Kpi>
-      <Kpi label={t("tour.t2trPerTour")} note={t("tour.t2trPerTourHint")}>
+      </T2Kpi>
+      <T2Kpi label={t("tour.t2trPerTour")} note={t("tour.t2trPerTourHint")}>
         {recorded.tournamentsWithExpenses ? fmtBag(recorded.costPerTournament) : "—"}
-      </Kpi>
-    </div>
+      </T2Kpi>
+    </>
   );
 
   const aside = (
     <>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2trSplit")}</h2>
-        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitPlanned")}</p>
-        <ul className="mt-1 space-y-1 text-[13px] text-[var(--t2-muted)]">
+      <T2AsideBlock title={t("tour.t2trSplit")}>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitPlanned")}</p>
+        <ul className="mt-1 space-y-1 text-[var(--t2-muted)]">
           {Object.keys(plannedByCode).length === 0 ? (
             <li>—</li>
           ) : (
@@ -236,8 +225,8 @@ export default function TravelHub() {
             ))
           )}
         </ul>
-        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitRecorded")}</p>
-        <ul className="mt-1 space-y-1 text-[13px] text-[var(--t2-muted)]">
+        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitRecorded")}</p>
+        <ul className="mt-1 space-y-1 text-[var(--t2-muted)]">
           {Object.keys(recordedByCat).length === 0 ? (
             <li>—</li>
           ) : (
@@ -246,31 +235,30 @@ export default function TravelHub() {
             ))
           )}
         </ul>
-      </section>
+      </T2AsideBlock>
       {schengenApplies && schengen && (
-        <section>
-          <h2 className="t2-kicker">{t("tour.schengenTitle")}</h2>
-          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })}</p>
-          <Link href="/tour2/schengen" className="mt-2 inline-block text-[13px] font-semibold text-matchup">{t("tour.schengenTitle")} →</Link>
-        </section>
+        <T2AsideBlock title={t("tour.schengenTitle")}>
+          <p className="text-[var(--t2-muted)]">{t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })}</p>
+          <Link href="/tour2/schengen" className="mt-2 inline-block font-semibold text-matchup">{t("tour.schengenTitle")} →</Link>
+        </T2AsideBlock>
       )}
-      <section>
-        <ul className="space-y-2 text-[13px]">
+      <T2AsideBlock title={t("tour.t2navTravel")}>
+        <ul className="space-y-2">
           <li><Link href="/tour2/costs" className="font-semibold text-matchup">{t("tour.costsTitle")} →</Link></li>
           <li><Link href="/tour2/expenses" className="font-semibold text-matchup">{t("tour.expTitle")} →</Link></li>
         </ul>
-      </section>
+      </T2AsideBlock>
     </>
   );
 
   return (
     <Tour2Area title={t("tour.t2navTravel")} lead={t("tour.t2travelLead")} kpis={kpis} aside={aside}>
       {mapPlan.length > 0 && (
-        <div className="mb-8 h-64 overflow-hidden rounded-2xl border border-[var(--t2-line)]">
+        <div className="mb-4 h-64 overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)]">
           <PlannerMap start={mapStart} plan={mapPlan} candidates={[]} />
         </div>
       )}
-      <section>
+      <section className="t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2trPlan")}</h2>
         {active.length === 0 ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>

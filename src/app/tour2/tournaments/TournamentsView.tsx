@@ -6,9 +6,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import { loadPlannerProfile, type PlannerProfile, costRatesComplete } from "@/lib/tourPlanner";
 import { getTourCatalog } from "@/lib/tourCatalogCache";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
@@ -256,7 +258,7 @@ export default function TournamentsView() {
 
   const hasPassports = (profile?.passports ?? []).length > 0;
 
-  if (authLoading) return <div className="flex h-full items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</div>;
+  if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
 
   const selectedTt = selectedId ? byId.get(selectedId) : undefined;
@@ -414,8 +416,43 @@ export default function TournamentsView() {
     </div>
   );
 
+  const openDlN = filtered.filter((x) => isDeadlineOpen(x, nowMs)).length;
+
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
+    <Tour2Area
+      title={t("tour.t2navFinder")}
+      lead={t("tour.t2findLead")}
+      kpis={
+        <>
+          <T2Kpi label={t("tour.t2findHits")}>{status === "ready" ? filtered.length : "—"}</T2Kpi>
+          <T2Kpi label={t("tour.t2findInSeason")}>{seasonIds.size}</T2Kpi>
+          <T2Kpi label={t("tour.t2findCatalog")}>{upcoming.length}</T2Kpi>
+          <T2Kpi label={t("tour.t2findOpenDl")}>{status === "ready" ? openDlN : "—"}</T2Kpi>
+        </>
+      }
+      aside={
+        <>
+          <T2AsideBlock title={t("tour.t2navFinder")}>
+            {selectedTt ? (
+              <p>
+                <span className="block text-[15px] font-semibold">{selectedTt.city || selectedTt.name}</span>
+                <span className="mt-1 block text-[12px] text-[var(--t2-muted)]">
+                  {[selectedTt.category, catName(selectedTt.country), seasonIds.has(selectedTt.id) ? t("tour.t2findInSeason") : null].filter(Boolean).join(" · ")}
+                </span>
+              </p>
+            ) : (
+              <p className="text-[var(--t2-muted)]">{t("tour.t2findPick")}</p>
+            )}
+          </T2AsideBlock>
+          {!hasPassports && (
+            <T2AsideBlock title={t("tour.t2navDocs")}>
+              <Link href="/tour2/documents" className="font-semibold text-matchup">{t("tour.t2ovPassportGo")} →</Link>
+            </T2AsideBlock>
+          )}
+        </>
+      }
+    >
+    <div className="relative flex min-h-[520px] flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)]">
       <div className="shrink-0 px-4 pt-3 sm:px-6">
         <div className="flex flex-wrap items-end gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-[10rem] flex-1" />
@@ -510,5 +547,6 @@ export default function TournamentsView() {
         </>
       )}
     </div>
+    </Tour2Area>
   );
 }

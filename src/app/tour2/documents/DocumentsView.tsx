@@ -5,7 +5,7 @@
  * Sechs-Monats-Regel als Faustregel (documentWarnings.ruleOfThumb).
  */
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -20,22 +20,12 @@ import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
 import type { TourTravelDocument } from "@/lib/types";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import PlayerMasterForm from "../setup/PlayerMasterForm";
 import TravelDocsCard from "../setup/TravelDocsCard";
 import { t2markArea } from "../t2mark";
 
 const DAY = 86_400_000;
-
-function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
-  return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
-    </div>
-  );
-}
 
 type Paper = { key: string; cat: "passport" | "insurance" | "travel"; label: string; scope: string | null; until: string | null; status: string | null };
 
@@ -158,19 +148,18 @@ export default function DocumentsView() {
   if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
-    <div className="grid gap-0 md:grid-cols-4">
-      <Kpi label={t("tour.t2docValid")}>{validN}</Kpi>
-      <Kpi label={t("tour.t2docSoon")}>{soonN}</Kpi>
-      <Kpi label={t("tour.t2docAction")}>{actionN}</Kpi>
-      <Kpi label={t("tour.t2docTotal")}>{papers.length}</Kpi>
-    </div>
+    <>
+      <T2Kpi label={t("tour.t2docValid")}>{validN}</T2Kpi>
+      <T2Kpi label={t("tour.t2docSoon")}>{soonN}</T2Kpi>
+      <T2Kpi label={t("tour.t2docAction")}>{actionN}</T2Kpi>
+      <T2Kpi label={t("tour.t2docTotal")}>{papers.length}</T2Kpi>
+    </>
   );
 
   const aside = (
     <>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2docCheck")}</h2>
-        <ul className="mt-3 space-y-3 text-[13px]">
+      <T2AsideBlock title={t("tour.t2docCheck")}>
+        <ul className="space-y-3">
           <li>
             <p className="font-semibold">{passOk ? "✓ " : "○ "}{t("tour.t2docCheckPass")}</p>
             <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">{t("tour.t2docCheckPassHint")}</p>
@@ -178,16 +167,14 @@ export default function DocumentsView() {
           <li className="font-semibold">{visaOk ? "✓ " : "○ "}{t("tour.t2docCheckVisa")}</li>
           <li className="font-semibold">{insOk ? "✓ " : "○ "}{t("tour.t2docCheckIns")}</li>
         </ul>
-      </section>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2docNext")}</h2>
-        <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{nextExpiry ? fmtDate(nextExpiry) : "—"}</p>
-      </section>
+      </T2AsideBlock>
+      <T2AsideBlock title={t("tour.t2docNext")}>
+        <p className="text-[var(--t2-muted)]">{nextExpiry ? fmtDate(nextExpiry) : "—"}</p>
+      </T2AsideBlock>
       {schengenApplies && schengen && (
-        <section>
-          <h2 className="t2-kicker">{t("tour.schengenTitle")}</h2>
-          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })}</p>
-        </section>
+        <T2AsideBlock title={t("tour.schengenTitle")}>
+          <p className="text-[var(--t2-muted)]">{t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })}</p>
+        </T2AsideBlock>
       )}
     </>
   );
@@ -202,7 +189,7 @@ export default function DocumentsView() {
   return (
     <Tour2Area title={t("tour.t2navDocs")} lead={t("tour.t2docsLead")} kpis={kpis} aside={aside}>
       {warnings.length > 0 && (
-        <ul className="mb-8 space-y-2 text-[13px]">
+        <ul className="mb-4 space-y-2 t2-dash-card text-[13px]">
           {warnings.map((w, i) => (
             <li key={`${w.kind}-${i}`} className={w.severity === "error" ? "font-semibold text-red-800" : "text-[var(--t2-ink)]"}>
               {warnText(w)}
@@ -211,7 +198,7 @@ export default function DocumentsView() {
           ))}
         </ul>
       )}
-      <section>
+      <section className="t2-dash-card mt-4">
         <h2 className="t2-kicker">{t("tour.t2docTable")}</h2>
         {papers.length === 0 ? (
           <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2docNone")}</p>

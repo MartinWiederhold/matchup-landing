@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import type { TFunction } from "@/lib/i18n/core";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { getTourCatalog } from "@/lib/tourCatalogCache";
@@ -731,7 +732,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   }, [todayISO, seasonOrdered, planByTour, eventsByPlan, resultHistory, travelDocs, banned, docWarnings, schengen, wildcards, byId, rates?.currency, cost, budgetMinor]);
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-full items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</div>;
+  if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -1138,7 +1139,33 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   );
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
+    <Tour2Area
+      title={t("tour.t2navPlanner")}
+      lead={t("tour.plSubtitle")}
+      kpis={
+        <>
+          <T2Kpi label={t("tour.t2count")}>{seasonOrdered.length}</T2Kpi>
+          <T2Kpi label={t("tour.t2budget")}>{budgetText ?? t("tour.t2budgetNoData")}</T2Kpi>
+          <T2Kpi label={t("tour.t2expPoints")} note={t("tour.t2pointsAssume", { round: t("tour.round_R16") })}>{healthPoints ?? "—"}</T2Kpi>
+          <T2Kpi label={t("tour.t2tightShort")}>{tightMap.size}</T2Kpi>
+        </>
+      }
+      aside={
+        <>
+          <T2AsideBlock title={t("tour.t2ovAsideTravel")}>
+            {schengenApplies && schengen
+              ? t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })
+              : profile && profile.passports.length > 0
+                ? t("tour.t2ovSchengenSkip")
+                : <Link href="/tour2/documents" className="font-semibold text-matchup">{t("tour.t2ovPassportGo")} →</Link>}
+          </T2AsideBlock>
+          <T2AsideBlock title={t("tour.t2navFinder")}>
+            <Link href="/tour2/finder" className="font-semibold text-matchup">{t("tour.t2browseAdd")} →</Link>
+          </T2AsideBlock>
+        </>
+      }
+    >
+    <div className="relative flex min-h-[560px] flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)] text-[var(--t2-ink)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}
@@ -1330,5 +1357,6 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         </div>
       )}
     </div>
+    </Tour2Area>
   );
 }

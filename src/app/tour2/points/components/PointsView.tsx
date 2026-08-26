@@ -5,7 +5,7 @@
  * aus pointsForecast. Kein Rangplatz, keine Projected Ranking.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -13,7 +13,7 @@ import { scorePoints, type ScoredResult } from "@/domain/tour/points";
 import { pointsForecast } from "@/domain/tour/pointsForecast";
 import { loadResultHistory, toMatchResults, addResult, deleteResult, type ResultHistoryRow } from "@/lib/tourResultHistory";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
+import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import { t2markArea } from "@/app/tour2/t2mark";
 
 type LoadState = "loading" | "error" | "done";
@@ -29,16 +29,6 @@ const CAT_OPTIONS: { code: string; label: string }[] = [
   { code: "m15", label: "M15" },
 ];
 const ROUND_OPTIONS = ["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"];
-
-function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
-  return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
-    </div>
-  );
-}
 
 export default function PointsView() {
   const { user, loading: authLoading } = useAuth();
@@ -119,40 +109,41 @@ export default function PointsView() {
   const step = (w: number) => forecast.steps.find((s) => s.weeks === w);
 
   const kpis = (
-    <div className="grid grid-cols-2 gap-0 md:grid-cols-4">
-      <Kpi label={t("tour.pointsTotalLabel")} note={t("tour.t2rkLimit", { n: forecast.countingLimit })}>
+    <>
+      <T2Kpi label={t("tour.pointsTotalLabel")} note={t("tour.t2rkLimit", { n: forecast.countingLimit })}>
         {forecast.currentTotal}
-      </Kpi>
+      </T2Kpi>
       {([4, 8, 12] as const).map((w) => {
         const s = step(w);
         return (
-          <Kpi
+          <T2Kpi
             key={w}
             label={t("tour.pointsForecastWeeks", { n: w })}
             note={s && s.delta < 0 ? t("tour.pointsForecastFalls", { n: -s.delta }) : t("tour.pointsForecastStable")}
           >
             {s ? s.total : "—"}
-          </Kpi>
+          </T2Kpi>
         );
       })}
-    </div>
+    </>
   );
 
   const aside = (
     <>
-      <div>
-        <p className="t2-kicker">{t("tour.t2rkNext")}</p>
+      <T2AsideBlock title={t("tour.t2rkNext")}>
         {next ? (
-          <p className="mt-2 text-[14px] leading-snug">
-            <span className="font-semibold">{rows[next.index]?.tournament_name ?? "—"}</span>
+          <p>
+            <span className="block font-semibold">{rows[next.index]?.tournament_name ?? "—"}</span>
             <span className="mt-1 block text-[12px] text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: next.points, date: fmt(next.expiresOn) })}</span>
           </p>
         ) : (
-          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2rkNextEmpty")}</p>
+          <p className="text-[var(--t2-muted)]">{t("tour.t2rkNextEmpty")}</p>
         )}
-      </div>
-      <p className="text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2rkHow")}</p>
-      <Link href="/tour2/form" className="text-[13px] font-semibold text-matchup hover:underline">{t("tour.formTitle")} →</Link>
+      </T2AsideBlock>
+      <T2AsideBlock title={t("tour.t2rkHow")}>
+        <p className="text-[var(--t2-muted)]">{t("tour.t2rkLead")}</p>
+        <Link href="/tour2/form" className="mt-2 inline-block font-semibold text-matchup hover:underline">{t("tour.formTitle")} →</Link>
+      </T2AsideBlock>
     </>
   );
 

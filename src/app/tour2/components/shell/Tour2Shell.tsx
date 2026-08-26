@@ -29,8 +29,7 @@ const AREA = [
 ] as const;
 
 const FULL_BLEED = [
-  "/tour2/finder", "/tour2/tournaments", "/tour2/browse", "/tour2/map",
-  "/tour2/season", "/tour2/planner", "/tour2/pipeline",
+  "/tour2/map",
 ];
 
 function Icon({ name }: { name: (typeof AREA)[number]["key"] }) {
