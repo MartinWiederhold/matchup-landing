@@ -731,7 +731,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   }, [todayISO, seasonOrdered, planByTour, eventsByPlan, resultHistory, travelDocs, banned, docWarnings, schengen, wildcards, byId, rates?.currency, cost, budgetMinor]);
 
   // ── Auth-Gate ────────────────────────────────────────────────────────────────
-  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.t2authChecking")}</div>;
+  if (authLoading) return <div className="flex h-full items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</div>;
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
@@ -1138,7 +1138,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   );
 
   return (
-    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-full flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
         budgetText={budgetText}

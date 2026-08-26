@@ -18,7 +18,7 @@ export default function Tour2Area({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-8 pb-28 sm:px-8 md:py-12">
+    <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-8 md:py-12">
       <p className="t2-kicker">Matchup Tour</p>
       <h1 className="t2-display mt-2 text-[clamp(1.75rem,4vw,2.4rem)]">{title}</h1>
       <p className="t2-lead mt-3 max-w-2xl">{lead}</p>

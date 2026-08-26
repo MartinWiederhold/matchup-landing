@@ -188,7 +188,7 @@ export default function CalendarWeek() {
   })() : null;
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-8 pb-28 sm:px-8 md:pb-12">
+    <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-8 md:pb-12">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="t2-eyebrow">{t("tour.t2navCalendar")}</p>

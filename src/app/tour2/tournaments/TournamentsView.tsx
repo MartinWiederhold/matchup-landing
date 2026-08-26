@@ -256,7 +256,7 @@ export default function TournamentsView() {
 
   const hasPassports = (profile?.passports ?? []).length > 0;
 
-  if (authLoading) return <div className="flex h-[100dvh] items-center justify-center text-sm text-[var(--t2-muted)] max-md:h-[calc(100dvh-3.5rem)]">{t("tour.t2authChecking")}</div>;
+  if (authLoading) return <div className="flex h-full items-center justify-center text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</div>;
   if (!user) return <TourLoginCard />;
 
   const selectedTt = selectedId ? byId.get(selectedId) : undefined;
@@ -415,7 +415,7 @@ export default function TournamentsView() {
   );
 
   return (
-    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)] max-md:h-[calc(100dvh-3.5rem)]">
+    <div className="relative flex h-full flex-col overflow-hidden bg-[var(--t2-paper)] text-[var(--t2-ink)]">
       <div className="shrink-0 px-4 pt-3 sm:px-6">
         <div className="flex flex-wrap items-end gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-[10rem] flex-1" />

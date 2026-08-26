@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
 import { loadSeason, loadAllEntryEvents, type SeasonEntry } from "@/lib/tourSeason";
 import { loadPlannerProfile, type PlannerProfile, ratesToCostParams, budgetMoney, costRatesComplete, placeKey } from "@/lib/tourPlanner";
 import { loadCostRates } from "@/lib/tourCosts";
@@ -42,10 +41,11 @@ import { t2markArea } from "@/app/tour2/t2mark";
 import { loadEvents, type TourEvent } from "@/lib/tourEvents";
 import { loadSlotsOnDates, loadSlotPeople } from "@/lib/tourTrainingSlots";
 import { acceptedMeetingsForViewer, addIsoDays, buildDayGlance, type GlanceMeeting } from "@/domain/tour/dayGlance";
+import { getTourCatalog } from "@/lib/tourCatalogCache";
+import type { ItemCode } from "@/domain/tour/costs";
 
 const DAY = 86_400_000;
 const NIGHTS_KEY = "mu_tour_nights";
-const DEADLINE_WINDOW_DAYS = 7;
 type LoadState = "loading" | "error" | "done";
 
 function isoAddDays(iso: string, n: number): string {
@@ -60,12 +60,39 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
   return m;
 }
 
-function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
+function Kpi({ label, children, note, extra, compact }: { label: string; children: ReactNode; note?: ReactNode; extra?: ReactNode; compact?: boolean }) {
   return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
+    <div className="t2-dash-card">
       <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <div className={compact ? "min-w-0 flex-1" : "text-[clamp(1.45rem,3vw,1.95rem)] font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
+        {extra}
+      </div>
       {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+    </div>
+  );
+}
+
+function flagEmoji(cc: string): string {
+  const u = cc.toUpperCase();
+  if (!/^[A-Z]{2}$/.test(u)) return "";
+  return String.fromCodePoint(...[...u].map((c) => 127397 + c.charCodeAt(0)));
+}
+
+function Donut({ parts }: { parts: { n: number; color: string }[] }) {
+  const total = parts.reduce((s, p) => s + p.n, 0);
+  if (total <= 0) return <div className="h-12 w-12 rounded-full border border-[var(--t2-line)]" />;
+  let acc = 0;
+  const stops = parts.filter((p) => p.n > 0).map((p) => {
+    const a = (acc / total) * 100;
+    acc += p.n;
+    const b = (acc / total) * 100;
+    return `${p.color} ${a}% ${b}%`;
+  });
+  return (
+    <div className="relative h-12 w-12 shrink-0" aria-hidden>
+      <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${stops.join(",")})` }} />
+      <div className="absolute inset-[3.5px] rounded-full bg-[var(--t2-card)]" />
     </div>
   );
 }
@@ -112,6 +139,7 @@ export default function HomeView() {
   const [stays, setStays] = useState<Stay[]>([]);
   const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
   const [slotMeetings, setSlotMeetings] = useState<GlanceMeeting[]>([]);
+  const [catalogN, setCatalogN] = useState<number | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [nowMs] = useState(() => Date.now());
   const [homeRise] = useState(() => {
@@ -158,6 +186,15 @@ export default function HomeView() {
       .catch(() => { if (!cancel) setState("error"); });
     return () => { cancel = true; };
   }, [authLoading, user]);
+
+  useEffect(() => {
+    if (state !== "done") return;
+    let stop = false;
+    getTourCatalog()
+      .then((rows) => { if (!stop) setCatalogN(rows.length); })
+      .catch(() => { /* Zähler optional */ });
+    return () => { stop = true; };
+  }, [state]);
 
   const nights = useMemo(() => { try { const n = parseInt(localStorage.getItem(NIGHTS_KEY) ?? "", 10); return Number.isFinite(n) && n >= 0 ? n : 7; } catch { return 7; } }, []);
   const todayISO = new Date(nowMs).toISOString().slice(0, 10);
@@ -216,6 +253,7 @@ export default function HomeView() {
   const money = useCallback((minor: number) => new Intl.NumberFormat(loc, { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(minor / 100), [loc, cur]);
   const countryName = useCallback((c: string | null) => (c && !t(`tour.country.${c}`).startsWith("tour.country.") ? t(`tour.country.${c}`) : (c ?? "")), [t]);
   const fmtDate = (iso: string) => new Intl.DateTimeFormat(loc, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
+  const fmtMonth = (iso: string) => new Intl.DateTimeFormat(loc, { month: "short", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
 
   const cost = useMemo(() => {
     if (!costRatesComplete(rates)) return null;
@@ -227,6 +265,17 @@ export default function HomeView() {
   const usedMinor = cost?.total[cur] ?? null;
   const overMinor = usedMinor != null && budget ? usedMinor - budget.amount : null;
   const leftMinor = usedMinor != null && budget ? budget.amount - usedMinor : null;
+  const costByCode = useMemo(() => {
+    const bag: Partial<Record<ItemCode, number>> = {};
+    if (!cost) return bag;
+    for (const st of cost.stations) {
+      for (const it of st.items) {
+        if ("unknown" in it && it.unknown) continue;
+        if ("amount" in it) bag[it.code] = (bag[it.code] ?? 0) + it.amount;
+      }
+    }
+    return bag;
+  }, [cost]);
 
   const matchResults = useMemo(() => toMatchResults(resultHistory), [resultHistory]);
   const pointsNow = useMemo(() => scorePoints(matchResults, todayISO), [matchResults, todayISO]);
@@ -361,8 +410,6 @@ export default function HomeView() {
     return out;
   }, [active, nowMs]);
 
-  const soonDeadlines = upcomingDeadlines.filter((d) => d.ms - nowMs <= DEADLINE_WINDOW_DAYS * DAY);
-
   const clusters = useMemo(() => {
     const groups: { city: string; n: number; savedMinor: number | null }[] = [];
     let i = 0;
@@ -406,7 +453,9 @@ export default function HomeView() {
     return { surfItems, catItems, ctryItems };
   }, [active, t, countryName]);
 
-  const hasLeadDoc = travelDocs.some((d) => d.lead_weeks != null);
+  const clusterIds = useMemo(() => new Set(clusters.flatMap((c) =>
+    active.filter((s) => (s.tournament.city || "—") === c.city).map((s) => s.tournament.id),
+  )), [clusters, active]);
   const cpp = finance.costPerPoint?.[cur];
 
   if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
@@ -425,69 +474,24 @@ export default function HomeView() {
     );
   }
 
-  const kpis = (
-    <div className="grid gap-6 border-y border-[var(--t2-line)] py-5 md:grid-cols-4 md:gap-0">
-      <Kpi
-        label={t("tour.t2ovPoints")}
-        note={
-          resultHistory.length === 0 ? (
-            <Link href={T2_RANKING} className="font-semibold text-matchup">{t("tour.t2ovPointsEmptyHint")} →</Link>
-          ) : (
-            <>
-              <p>
-                {pointsDelta == null || pointsDelta === 0
-                  ? t("tour.t2ovPointsDeltaZero")
-                  : pointsDelta > 0
-                    ? t("tour.t2ovPointsDeltaUp", { n: pointsDelta })
-                    : t("tour.t2ovPointsDeltaDown", { n: pointsDelta })}
-              </p>
-              <p className="mt-1">{t("tour.t2ovPointsDeltaNote")}</p>
-            </>
-          )
-        }
-      >
-        {resultHistory.length === 0 ? t("tour.t2ovPointsEmpty") : pointsNow.countingTotal}
-      </Kpi>
-      <Kpi
-        label={t("tour.t2ovDropping")}
-        note={resultHistory.length === 0 || !nextDrop ? t("tour.t2ovDroppingEmpty") : t("tour.t2ovOn", { date: fmtDate(nextDrop.expiresOn) })}
-      >
-        {resultHistory.length === 0 || !nextDrop ? "—" : nextDrop.points}
-      </Kpi>
-      <Kpi
-        label={t("tour.t2ovBudgetTotal")}
-        note={
-          !budget ? t("tour.t2budgetNoData")
-            : usedMinor == null ? t("tour.t2ovBudgetRatesMissing")
-              : (
-                <>
-                  <p>{t("tour.t2ovBudgetPlanned", { n: money(usedMinor) })}</p>
-                  {leftMinor != null && <p className={leftMinor < 0 ? "text-red-700" : ""}>{t("tour.t2ovBudgetLeft", { n: money(leftMinor) })}</p>}
-                </>
-              )
-        }
-      >
-        {budget ? money(budget.amount) : "—"}
-      </Kpi>
-      <Kpi label={t("tour.t2ovPlanned")}>{active.length}</Kpi>
-    </div>
-  );
+  const step = (w: number) => forecast.steps.find((x) => x.weeks === w);
+  const seasonYear = active[0]?.tournament.tournament_monday.slice(0, 4) ?? String(new Date(nowMs).getUTCFullYear());
+  const arrivalAmt = rates && costRatesComplete(rates) ? ratesToCostParams(rates).arrival : null;
+  const budgetRing = [
+    { n: Math.max(0, usedMinor ?? 0), color: "var(--t2-accent)" },
+    { n: Math.max(0, leftMinor ?? 0), color: "#e7e5e4" },
+  ];
+  const surfRing = dists.surfItems.map((x, i) => ({
+    n: x.n,
+    color: ["#4b3bf3", "#0a0a0a", "#a8a29e", "#78716c"][i] ?? "#d6d3d1",
+  }));
 
   const insights: ReactNode[] = [];
-  if (expenses.length === 0) {
+  if (cpp != null && finance.points > 0) {
     insights.push(
-      <Link key="exp" href="/tour2/expenses" className="t2-row">
-        <span>
-          <span className="t2-row-city block text-[15px] font-semibold">{t("tour.t2ovCostPerPointCta")}</span>
-          <span className="mt-0.5 block text-[12px] text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointGo")} →</span>
-        </span>
-      </Link>,
-    );
-  } else if (cpp != null && finance.points > 0) {
-    insights.push(
-      <div key="cpp" className="border-t border-[var(--t2-line)] py-3">
+      <div key="cpp">
         <p className="t2-kicker">{t("tour.t2ovCostPerPoint")}</p>
-        <p className="mt-1 text-[18px] font-semibold tabular-nums">{money(cpp)}</p>
+        <p className="mt-2 text-[18px] font-semibold tabular-nums">{money(cpp)}</p>
         <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointBasis", { n: finance.tournamentsWithExpenses })}</p>
       </div>,
     );
@@ -495,168 +499,280 @@ export default function HomeView() {
   for (const c of clusters) {
     if (c.savedMinor == null) continue;
     insights.push(
-      <div key={`cl-${c.city}`} className="border-t border-[var(--t2-line)] py-3">
+      <div key={`cl-${c.city}`}>
         <p className="text-[14px] font-semibold">{t("tour.t2ovCluster", { n: c.n, city: c.city, amount: money(c.savedMinor) })}</p>
-      </div>,
-    );
-  }
-  if (soonDeadlines.length > 0) {
-    insights.push(
-      <div key="dl" className="border-t border-[var(--t2-line)] py-3">
-        <p className="t2-kicker">{t("tour.t2ovDeadlinesSoon", { n: DEADLINE_WINDOW_DAYS })}</p>
-        <ul className="mt-2 space-y-1 text-[13px]">
-          {soonDeadlines.slice(0, 4).map((d) => (
-            <li key={d.id} className="flex justify-between gap-3">
-              <Link href={tour2PlannerTournamentHref(d.id)} className="font-semibold hover:underline">{d.city}</Link>
-              <span className="tabular-nums text-[var(--t2-muted)]">{countdown(d.ms)}</span>
-            </li>
-          ))}
-        </ul>
       </div>,
     );
   }
   if (visaLead.length > 0) {
     const v = visaLead[0];
     insights.push(
-      <div key="visa" className="border-t border-[var(--t2-line)] py-3 text-[14px]">
+      <div key="visa" className="text-[14px]">
         {t("tour.t2ovVisaRisk", { city: v.city || countryName(v.dest), lead: v.leadWeeks, weeks: v.weeksUntil })}
       </div>,
     );
-  } else if (hasLeadDoc) {
-    insights.push(
-      <div key="visaok" className="border-t border-[var(--t2-line)] py-3 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovVisaOk")}</div>,
-    );
   }
 
-  const aside = (
-    <>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2ovAsideBudget")}</h2>
-        <p className="mt-2 text-[15px] font-semibold">
-          {budget && usedMinor != null ? t("tour.t2budgetOf", { used: money(usedMinor), total: money(budget.amount) }) : t("tour.t2budgetNoData")}
-        </p>
-      </section>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2ovAsideDeadlines")}</h2>
-        {upcomingDeadlines.length === 0 ? (
-          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2noSeason")}</p>
-        ) : (
-          <ul className="mt-2 space-y-2 text-[13px]">
-            {upcomingDeadlines.slice(0, 5).map((d) => (
-              <li key={d.id} className="flex justify-between gap-2">
-                <Link href={tour2PlannerTournamentHref(d.id)} className="min-w-0 truncate font-semibold hover:underline">{d.city}</Link>
-                <span className="shrink-0 tabular-nums text-[var(--t2-muted)]">{countdown(d.ms)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <section>
-        <h2 className="t2-kicker">{t("tour.t2ovAsideTravel")}</h2>
-        <ul className="mt-2 space-y-2 text-[13px] text-[var(--t2-muted)]">
-          <li>
-            {docs?.passport_expiry
-              ? t("tour.t2ovPassportUntil", { date: fmtDate(docs.passport_expiry) })
-              : <Link href="/tour2/documents" className="font-semibold text-matchup">{t("tour.t2ovPassportMissing")} · {t("tour.t2ovPassportGo")} →</Link>}
-          </li>
-          <li>
-            {schengenApplies && schengen
-              ? t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })
-              : profile && profile.passports.length > 0
-                ? t("tour.t2ovSchengenSkip")
-                : null}
-          </li>
-        </ul>
-      </section>
-    </>
+  const deltaArrow = pointsDelta == null || pointsDelta === 0 ? "→" : pointsDelta > 0 ? "↑" : "↓";
+
+  const kpis = (
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Kpi
+          label={t("tour.t2ovPoints")}
+          extra={
+            resultHistory.length > 0 && pointsDelta != null ? (
+              <span className={`mt-1 text-[13px] font-semibold tabular-nums ${pointsDelta > 0 ? "text-emerald-700" : pointsDelta < 0 ? "text-red-700" : "text-[var(--t2-muted)]"}`}>
+                {deltaArrow} {pointsDelta > 0 ? `+${pointsDelta}` : pointsDelta}
+              </span>
+            ) : null
+          }
+          note={
+            resultHistory.length === 0 ? (
+              <Link href={T2_RANKING} className="font-semibold text-matchup">{t("tour.t2ovPointsEmptyHint")} →</Link>
+            ) : (
+              <>
+                <p>{t("tour.t2ovAsOfToday")}</p>
+                <p className="mt-1">{t("tour.t2ovPointsDeltaNote")}</p>
+              </>
+            )
+          }
+        >
+          {resultHistory.length === 0 ? t("tour.t2ovPointsEmpty") : pointsNow.countingTotal}
+        </Kpi>
+        <Kpi label={t("tour.t2ovHorizon")} note={t("tour.t2ovHorizonHint")} compact>
+          {resultHistory.length === 0 ? "—" : (
+            <ul className="space-y-1 text-[15px] font-semibold tabular-nums">
+              {[4, 8, 12].map((w) => (
+                <li key={w} className="flex justify-between gap-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2ovHorizonW", { n: w })}</span>
+                  <span>{step(w)?.total ?? "—"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Kpi>
+        <Kpi
+          label={t("tour.t2ovDropping")}
+          note={resultHistory.length === 0 || !nextDrop ? t("tour.t2ovDroppingEmpty") : t("tour.t2ovOn", { date: fmtDate(nextDrop.expiresOn) })}
+        >
+          {resultHistory.length === 0 || !nextDrop ? "—" : nextDrop.points}
+        </Kpi>
+        <Kpi
+          label={t("tour.t2ovBudgetTotal")}
+          extra={budget && usedMinor != null ? <Donut parts={budgetRing} /> : null}
+          note={
+            !budget ? t("tour.t2budgetNoData")
+              : usedMinor == null ? t("tour.t2ovBudgetRatesMissing")
+                : leftMinor != null
+                  ? <p className={leftMinor < 0 ? "text-red-700" : ""}>{t("tour.t2ovBudgetLeft", { n: money(leftMinor) })}</p>
+                  : null
+          }
+        >
+          {budget ? money(budget.amount) : "—"}
+        </Kpi>
+      </div>
   );
 
   return (
-    <Tour2Area title={t("tour.t2navOverview")} lead={t("tour.t2ovLead")} kpis={kpis} aside={aside}>
-      <DayGlance todayISO={todayISO} groups={glance} />
-      <section className="mt-12">
-        <h2 className="t2-kicker">{t("tour.t2ovRoute")}</h2>
-        {active.length === 0 ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
-        ) : (
-          <ol className="mt-4 border-t border-[var(--t2-line)]">
-            {active.map((s, i) => {
-              const prev = i > 0 ? active[i - 1] : null;
-              const place = placeKey(s.tournament.country, s.tournament.city);
-              const prevPlace = prev ? placeKey(prev.tournament.country, prev.tournament.city) : null;
-              const same = prev != null && place != null && place === prevPlace;
-              let km: number | null = null;
-              if (prev && !same && prev.tournament.latitude != null && prev.tournament.longitude != null && s.tournament.latitude != null && s.tournament.longitude != null) {
-                km = haversineKm(prev.tournament.latitude, prev.tournament.longitude, s.tournament.latitude, s.tournament.longitude);
-              }
-              const arrival = rates && costRatesComplete(rates) ? ratesToCostParams(rates).arrival : null;
-              return (
-                <li key={s.tournament.id}>
-                  {prev && (
-                    <p className="px-1 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
-                      {same
-                        ? t("tour.t2legCluster")
-                        : [
-                            km != null ? t("tour.t2legKm", { n: km }) : t("tour.t2ovLegUnknownKm"),
-                            arrival ? t("tour.t2legArrival", { amount: money(arrival.amount) }) : null,
-                          ].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <Link href={tour2PlannerTournamentHref(s.tournament.id)} className="t2-row group">
-                    <span className="min-w-0">
-                      <span className="t2-row-city block truncate text-[clamp(1.05rem,2.4vw,1.4rem)] font-semibold">{s.tournament.city || t("tour.fieldMissing")}</span>
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--t2-faint)]">
-                        {fmtDate(s.tournament.tournament_monday)} · {s.tournament.category || "—"} · {s.tournament.country ? countryName(s.tournament.country) : ""}
-                      </span>
-                    </span>
-                    <span className="text-[var(--t2-faint)]">→</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
-        )}
-        {clusters.filter((c) => c.savedMinor != null).map((c) => (
-          <p key={c.city} className="mt-3 text-[13px] font-semibold text-[var(--t2-ink)]">{t("tour.t2ovCluster", { n: c.n, city: c.city, amount: money(c.savedMinor!) })}</p>
-        ))}
-        {active.length === 0 && (
-          <Link href={T2_SEASON} className="t2-cta mt-6">{t("tour.wsFill")}<span aria-hidden>→</span></Link>
-        )}
-      </section>
+    <div className="t2-overview">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="t2-display text-[clamp(1.7rem,3.4vw,2.15rem)]">{t("tour.t2navOverview")}</h1>
+          <p className="t2-lead mt-1.5 max-w-xl">{t("tour.t2ovLead")}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          <p className="t2-season-chip">{seasonYear}</p>
+          {catalogN != null && (
+            <p className="text-[12px] text-[var(--t2-muted)]">{t("tour.t2ovCatalog", { n: catalogN })}</p>
+          )}
+        </div>
+      </header>
 
-      {active.length > 0 && (
-        <section className="mt-12 grid gap-8 sm:grid-cols-3">
-          <div>
-            <h2 className="t2-kicker">{t("tour.t2ovDistSurface")}</h2>
-            <DistBars items={dists.surfItems} />
-          </div>
-          <div>
-            <h2 className="t2-kicker">{t("tour.t2ovDistLevel")}</h2>
-            <DistBars items={dists.catItems} />
-          </div>
-          <div>
-            <h2 className="t2-kicker">{t("tour.t2ovDistCountry")}</h2>
-            <DistBars items={dists.ctryItems} />
-          </div>
-        </section>
-      )}
+      <div className="mt-5">
+        <DayGlance todayISO={todayISO} groups={glance} />
+      </div>
 
-      {insights.length > 0 && (
-        <section className="mt-12">
-          <h2 className="t2-kicker">{t("tour.t2ovInsights")}</h2>
-          <div className="mt-2">{insights}</div>
-        </section>
-      )}
+      <div className="mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="min-w-0 space-y-4">
+          {kpis}
+          <section className="t2-dash-card">
+            <h2 className="t2-kicker">{t("tour.t2ovRoute")}</h2>
+            {active.length === 0 ? (
+              <>
+                <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
+                <Link href={T2_SEASON} className="t2-cta mt-6">{t("tour.wsFill")}<span aria-hidden>→</span></Link>
+              </>
+            ) : (
+              <div className="t2-route-scroll mt-4">
+                <div className="t2-route-track">
+                  {active.map((s, i) => {
+                    const prev = i > 0 ? active[i - 1] : null;
+                    const place = placeKey(s.tournament.country, s.tournament.city);
+                    const prevPlace = prev ? placeKey(prev.tournament.country, prev.tournament.city) : null;
+                    const same = prev != null && place != null && place === prevPlace;
+                    let km: number | null = null;
+                    if (prev && !same && prev.tournament.latitude != null && prev.tournament.longitude != null && s.tournament.latitude != null && s.tournament.longitude != null) {
+                      km = haversineKm(prev.tournament.latitude, prev.tournament.longitude, s.tournament.latitude, s.tournament.longitude);
+                    }
+                    const mon = s.tournament.tournament_monday.slice(0, 7);
+                    const prevMon = prev?.tournament.tournament_monday.slice(0, 7);
+                    const showMonth = mon !== prevMon;
+                    const clustered = clusterIds.has(s.tournament.id);
+                    return (
+                      <div key={s.tournament.id} className="flex items-stretch">
+                        {prev && (
+                          <div className="t2-route-leg">
+                            {same
+                              ? t("tour.t2legCluster")
+                              : [km != null ? t("tour.t2legKm", { n: km }) : t("tour.t2ovLegUnknownKm"), arrivalAmt ? t("tour.t2legArrival", { amount: money(arrivalAmt.amount) }) : null].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                        <div>
+                          {showMonth && (
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{fmtMonth(s.tournament.tournament_monday)}</p>
+                          )}
+                          <Link href={tour2PlannerTournamentHref(s.tournament.id)} className={`t2-route-card ${clustered ? "is-cluster" : ""}`}>
+                            <p className="text-[11px] font-semibold tabular-nums text-[var(--t2-muted)]">{fmtDate(s.tournament.tournament_monday)}</p>
+                            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{s.tournament.category || "—"}</p>
+                            <p className="mt-1 truncate text-[14px] font-semibold">{s.tournament.city || t("tour.fieldMissing")}</p>
+                            <p className="mt-0.5 truncate text-[12px] text-[var(--t2-muted)]">
+                              {s.tournament.country ? `${flagEmoji(s.tournament.country)} ${countryName(s.tournament.country)}` : ""}
+                            </p>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
 
-      <section className="mt-12">
-        <h2 className="t2-kicker">{t("tour.t2action")}</h2>
-        <Tour2ActionList
-          actions={board.actions}
-          countryName={countryName}
-          fmtDate={fmtDate}
-          money={(minor) => money(minor)}
-        />
-      </section>
-    </Tour2Area>
+          {active.length > 0 && (
+            <section className="grid gap-3 sm:grid-cols-3">
+              <div className="t2-dash-card">
+                <h2 className="t2-kicker">{t("tour.t2ovDistSurface")}</h2>
+                <div className="mt-3 flex items-center gap-4">
+                  <Donut parts={surfRing} />
+                  <ul className="min-w-0 space-y-1 text-[12px]">
+                    {dists.surfItems.map((x) => (
+                      <li key={x.key} className="flex justify-between gap-3">
+                        <span className="truncate">{x.label}</span>
+                        <span className="tabular-nums text-[var(--t2-muted)]">{x.n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="t2-dash-card">
+                <h2 className="t2-kicker">{t("tour.t2ovDistLevel")}</h2>
+                <DistBars items={dists.catItems} />
+              </div>
+              <div className="t2-dash-card">
+                <h2 className="t2-kicker">{t("tour.t2ovDistCountry")}</h2>
+                <ul className="mt-3 space-y-1.5 text-[13px]">
+                  {dists.ctryItems.map((x) => (
+                    <li key={x.key} className="flex justify-between gap-3">
+                      <span className="truncate">{x.key !== "—" ? `${flagEmoji(x.key)} ${x.label}` : x.label}</span>
+                      <span className="tabular-nums font-semibold">{x.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {insights.length > 0 && (
+            <section className="t2-dash-card">
+              <h2 className="t2-kicker">{t("tour.t2ovInsights")}</h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">{insights}</div>
+            </section>
+          )}
+
+          <section className="t2-dash-card" id="t2-actions">
+            <h2 className="t2-kicker">{t("tour.t2action")}</h2>
+            <Tour2ActionList
+              actions={board.actions}
+              countryName={countryName}
+              fmtDate={fmtDate}
+              money={(minor) => money(minor)}
+            />
+          </section>
+        </div>
+
+        <aside className="space-y-3">
+          <section className="t2-dash-card">
+            <h2 className="t2-kicker">{t("tour.t2ovAsideBudget")}</h2>
+            <p className="mt-2 text-[15px] font-semibold">
+              {budget && usedMinor != null ? t("tour.t2budgetOf", { used: money(usedMinor), total: money(budget.amount) }) : t("tour.t2budgetNoData")}
+            </p>
+            {usedMinor != null && (
+              <ul className="mt-3 space-y-1.5 text-[12px] text-[var(--t2-muted)]">
+                {(["arrival", "lodging", "food", "coach", "entry"] as ItemCode[]).map((code) => {
+                  const n = costByCode[code];
+                  if (!n) return null;
+                  return (
+                    <li key={code} className="flex justify-between gap-2">
+                      <span>{t(`tour.costsItem_${code}`)}</span>
+                      <span className="tabular-nums">{money(n)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+          <section className="t2-dash-card">
+            <h2 className="t2-kicker">{t("tour.t2ovAsideOutlook")}</h2>
+            {resultHistory.length === 0 ? (
+              <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2ovPointsEmpty")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1.5 text-[13px]">
+                {[4, 8, 12].map((w) => (
+                  <li key={w} className="flex justify-between gap-2">
+                    <span>{t("tour.t2ovHorizonW", { n: w })}</span>
+                    <span className="tabular-nums font-semibold">{step(w)?.total ?? "—"}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="t2-dash-card">
+            <h2 className="t2-kicker">{t("tour.t2ovAsideDeadlines")}</h2>
+            {upcomingDeadlines.length === 0 ? (
+              <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2noSeason")}</p>
+            ) : (
+              <ul className="mt-2 space-y-2 text-[13px]">
+                {upcomingDeadlines.slice(0, 5).map((d) => (
+                  <li key={d.id} className="flex justify-between gap-2">
+                    <Link href={tour2PlannerTournamentHref(d.id)} className="min-w-0 truncate font-semibold hover:underline">{d.city}</Link>
+                    <span className="shrink-0 tabular-nums text-[var(--t2-muted)]">{countdown(d.ms)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="t2-dash-card">
+            <h2 className="t2-kicker">{t("tour.t2ovAsideTravel")}</h2>
+            <ul className="mt-2 space-y-2 text-[13px] text-[var(--t2-muted)]">
+              <li>
+                {docs?.passport_expiry
+                  ? t("tour.t2ovPassportUntil", { date: fmtDate(docs.passport_expiry) })
+                  : <Link href="/tour2/documents" className="font-semibold text-matchup">{t("tour.t2ovPassportMissing")} · {t("tour.t2ovPassportGo")} →</Link>}
+              </li>
+              <li>
+                {schengenApplies && schengen
+                  ? t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })
+                  : profile && profile.passports.length > 0
+                    ? t("tour.t2ovSchengenSkip")
+                    : null}
+              </li>
+              {visaLead[0] && (
+                <li>{t("tour.t2ovVisaNext", { city: visaLead[0].city || countryName(visaLead[0].dest) })}</li>
+              )}
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
   );
 }
