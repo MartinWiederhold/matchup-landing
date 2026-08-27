@@ -512,10 +512,10 @@ md.push("");
 const out = md.join("\n");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 writeFileSync(join(__dirname, "wikipedia-import-report.md"), out, "utf8");
-writeFileSync(join(homedir(), "Downloads", "wikipedia-import-report.md"), out, "utf8");
+try { writeFileSync(join(homedir(), "Downloads", "wikipedia-import-report.md"), out, "utf8"); } catch { /* Downloads optional (CI-Runner hat kein ~/Downloads) */ }
 const distinctRefs = new Set(kept.map((k) => k.record.source_ref)).size;
 console.log(`\n${WRITE ? "SCHARF" : "TROCKENLAUF"} · importierbar=${kept.length} (distinkt=${distinctRefs}) verworfen=${dropped.length}`);
-console.log(`Bericht: scripts/wikipedia-import-report.md (+ ~/Downloads)`);
+console.log(`Bericht: scripts/wikipedia-import-report.md`);
 
 // Wächter gegen den STILLEN NULLLAUF (wie itf-/wta-import): 0 importierbare Turniere heißt
 // fast sicher Wikipedia nicht erreichbar oder Seitenstruktur/Parser gebrochen — NICHT ein

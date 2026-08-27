@@ -443,5 +443,5 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoPath = join(__dirname, "wikipedia-calendar-coverage-report.md");
 const downloadsPath = join(homedir(), "Downloads", "wikipedia-calendar-coverage-report.md");
 writeFileSync(repoPath, out, "utf8");
-writeFileSync(downloadsPath, out, "utf8");
-console.log(`\nBericht geschrieben:\n  ${repoPath}\n  ${downloadsPath}`);
+try { writeFileSync(downloadsPath, out, "utf8"); } catch { /* Downloads optional (CI-Runner hat kein ~/Downloads) */ }
+console.log(`\nBericht geschrieben:\n  ${repoPath}`);

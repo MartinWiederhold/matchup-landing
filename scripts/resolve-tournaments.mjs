@@ -217,6 +217,6 @@ md.push("");
 const out = md.join("\n");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 writeFileSync(join(__dirname, "resolve-report.md"), out, "utf8");
-writeFileSync(join(homedir(), "Downloads", "resolve-report.md"), out, "utf8");
+try { writeFileSync(join(homedir(), "Downloads", "resolve-report.md"), out, "utf8"); } catch { /* Downloads optional (CI-Runner hat kein ~/Downloads) */ }
 console.log(`${WRITE ? "SCHARF" : "TROCKENLAUF"} · aufgelöst=${resolvedCount} felder=${fieldWrites} itf-seite=${itfPageDerived} konflikte=${conflicts.length}${WRITE ? ` geschrieben=${written}` : ""}`);
-console.log(`Bericht: scripts/resolve-report.md (+ ~/Downloads)`);
+console.log(`Bericht: scripts/resolve-report.md`);

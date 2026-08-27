@@ -424,8 +424,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoPath = join(__dirname, "wikidata-coverage-report.md");
 const downloadsPath = join(homedir(), "Downloads", "wikidata-coverage-report.md");
 writeFileSync(repoPath, outMd, "utf8");
-writeFileSync(downloadsPath, outMd, "utf8");
+try { writeFileSync(downloadsPath, outMd, "utf8"); } catch { /* Downloads optional (CI-Runner hat kein ~/Downloads) */ }
 
 console.log(`\nBericht geschrieben:`);
 console.log(`  ${repoPath}`);
-console.log(`  ${downloadsPath}`);
