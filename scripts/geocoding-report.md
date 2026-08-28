@@ -8,25 +8,32 @@
 
 | | Anzahl |
 |---|---:|
-| Turniere ohne Koordinaten | 295 |
-| Distinkte Orte (Stadt+Land) | 143 |
-| **abgefragt (fertig)** | 143 |
+| Turniere ohne Koordinaten | 303 |
+| Distinkte Orte (Stadt+Land) | 150 |
+| **abgefragt (fertig)** | 150 |
 | noch offen (--limit) | 0 |
-| aufgeloest | 0 |
+| aufgeloest | 7 |
 | mehrdeutig | 132 |
 | nicht gefunden | 11 |
 | falsches Land | 0 |
 | Fehler/keine Antwort | 0 |
-| Netz-Abfragen in diesem Lauf | 0 (Cache: 143) |
+| Netz-Abfragen in diesem Lauf | 0 (Cache: 150) |
 
-**Wuerde geschrieben:** 0 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 0 Orte / 0 Turniere.
+**Wuerde geschrieben:** 14 Claims (je aufgeloestem Ort x Turnieranzahl x 2 Felder) fuer 7 Orte / 7 Turniere.
 
-**Geschrieben:** 0 Claims ok, 0 Fehler (von 0).
+**Geschrieben:** 14 Claims ok, 0 Fehler (von 14).
 
 ## Stichprobe: 10 aufgeloeste Orte (zur Pruefung)
 
 | Ort | Land | lat | lon | Turniere | OSM |
 |---|---|---:|---:|---:|---|
+| Roehampton | GB | 51.44988 | -0.24127 | 1 | https://www.openstreetmap.org/node/385147398 |
+| Kingston | JM | 17.97121 | -76.79281 | 1 | https://www.openstreetmap.org/node/53371112 |
+| Astana | KZ | 51.11599 | 71.46771 | 1 | https://www.openstreetmap.org/relation/3087155 |
+| Santa Cruz de la Sierra | BO | -17.78342 | -63.18209 | 1 | https://www.openstreetmap.org/relation/4511527 |
+| Cali | CO | 3.41084 | -76.58121 | 1 | https://www.openstreetmap.org/relation/1320707 |
+| Quebec City | CA | 46.81374 | -71.20841 | 1 | https://www.openstreetmap.org/relation/2319206 |
+| Hersonissos | GR | 35.30593 | 25.41046 | 1 | https://www.openstreetmap.org/node/7249897232 |
 
 ## Mehrdeutige Orte (NICHT uebernommen — bitte pruefen)
 
@@ -40,7 +47,7 @@
   - -34.4571, -58.9142 · Pilar, Partido del Pilar, Buenos Aires, Argentina
   - -31.6814, -63.8824 · Pilar, Municipio de Pilar, Pedanía Pilar, Departamento Río Segundo, Córdoba, X5972, Argentina
   - -31.4401, -61.2598 · Municipio de Pilar, Departamento Las Colonias, Santa Fe, S3085, Argentina
-- **Wuning, CN** (14 Turniere) — 2 verschiedene Orte:
+- **Wuning, CN** (15 Turniere) — 2 verschiedene Orte:
   - 29.2778, 115.0476 · Wuning County, Jiujiang, Jiangxi, China
   - 37.3673, 121.5560 · Wuning, Muping District, Yantai, Shandong, 264100, China
 - **Las Vegas, US** (2 Turniere) — 2 verschiedene Orte:
@@ -610,6 +617,13 @@ Keine.
 
 | Ort | Land | lat | lon | Turniere |
 |---|---|---:|---:|---:|
+| Roehampton | GB | 51.44988 | -0.24127 | 1 |
+| Kingston | JM | 17.97121 | -76.79281 | 1 |
+| Astana | KZ | 51.11599 | 71.46771 | 1 |
+| Santa Cruz de la Sierra | BO | -17.78342 | -63.18209 | 1 |
+| Cali | CO | 3.41084 | -76.58121 | 1 |
+| Quebec City | CA | 46.81374 | -71.20841 | 1 |
+| Hersonissos | GR | 35.30593 | 25.41046 | 1 |
 
 ## Hinweise
 

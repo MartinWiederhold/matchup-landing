@@ -9,7 +9,7 @@ import { useEffect, useState, type ReactNode, type UIEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale, type Locale } from "@/lib/i18n";
 import { loadPlannerProfile, type PlannerProfile } from "@/lib/tourPlanner";
 import { loadTravelDocuments } from "@/lib/tourTravelDocuments";
 import { loadWildcardContacts } from "@/lib/tourWildcards";
@@ -42,6 +42,55 @@ function Icon({ name }: { name: (typeof AREA)[number]["key"] }) {
   if (name === "travel") return <svg {...p}><path d="M3 17 21 7M8 17l3-3M14 11l3-3" /></svg>;
   if (name === "docs") return <svg {...p}><path d="M7 4h7l5 5v11H7z" /><path d="M14 4v5h5" /></svg>;
   return <svg {...p}><circle cx="8" cy="10" r="2.4" /><circle cx="16" cy="10" r="2.4" /><path d="M4.5 18c.8-2.4 2.5-3.6 4.5-3.6s3.7 1.2 4.5 3.6M13.5 18c.4-1.2 1.2-2 2.5-2.4" /></svg>;
+}
+
+// Kleiner DE/EN-Umschalter für die /tour2-Rail (weißer Text auf blauer Leiste).
+// /tour2 hatte bisher keine Locale-Steuerung, deshalb blieb ein einmal auf "en"
+// gesetztes Cookie stecken. Play (/app) hat den Switch in Settings; hier ist er
+// direkt in der Rail-Tools-Zeile.
+function LangSwitchRail() {
+  const { locale, setLocale } = useLocale();
+  const options: Locale[] = ["de", "en"];
+  return (
+    <div className="ml-1 inline-flex items-center rounded-full bg-white/10 p-0.5 text-[10px] font-bold">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => setLocale(opt)}
+          aria-pressed={locale === opt}
+          className={`rounded-full px-1.5 py-0.5 uppercase tracking-wide transition-colors ${
+            locale === opt ? "bg-white text-[color:var(--t2-accent)]" : "text-white/70 hover:text-white"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Selbes Muster für das mobile More-Sheet — dort dunkler Text auf weißem Bogen.
+function LangSwitchSheet() {
+  const { locale, setLocale } = useLocale();
+  const options: Locale[] = ["de", "en"];
+  return (
+    <div className="inline-flex items-center rounded-full border border-[var(--t2-line-strong)] bg-[var(--t2-surface)] p-0.5 text-[11px] font-bold">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => setLocale(opt)}
+          aria-pressed={locale === opt}
+          className={`rounded-full px-2 py-0.5 uppercase tracking-wide transition-colors ${
+            locale === opt ? "bg-[var(--t2-ink)] text-white" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function Tour2Shell({ children }: { children: ReactNode }) {
@@ -153,6 +202,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M10 7V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-2M15 12H3m0 0 3-3M3 12l3 3" /></svg>
             </button>
           )}
+          <LangSwitchRail />
         </div>
       </div>
     </>
@@ -230,6 +280,10 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
                     </button>
                   </li>
                 )}
+                <li className="mt-2 flex items-center justify-between px-3 py-2 text-[13px] font-semibold text-[var(--t2-muted)]">
+                  <span>{t("tour.t2langLabel")}</span>
+                  <LangSwitchSheet />
+                </li>
               </ul>
             </div>
           </div>
