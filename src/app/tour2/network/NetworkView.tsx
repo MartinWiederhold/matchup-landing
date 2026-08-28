@@ -20,6 +20,7 @@ import TrainingSlots from "@/app/tour2/components/planner/TrainingSlots";
 import WildcardsView from "@/app/tour2/wildcards/WildcardsView";
 import { t2markArea } from "@/app/tour2/t2mark";
 import { tour2PlannerTournamentHref } from "@/app/tour2/components/t2Action";
+import { displayCity } from "@/domain/tour/displayCity";
 
 const PROVIDER_RADIUS_KM = 50;
 const MAX_WEEKS = 16;
@@ -65,13 +66,13 @@ export default function NetworkView() {
         upcoming.forEach((x, i) => {
           for (const p of presLists[i]) {
             if (p.user_id === user.id) continue;
-            rows.push({ ...p, city: x.tournament.city || x.tournament.name || "—", tournamentId: x.tournament.id });
+            rows.push({ ...p, city: displayCity(x.tournament.city) || x.tournament.name || "—", tournamentId: x.tournament.id });
           }
         });
         setPeople(rows);
         setWeeks(upcoming.map((x, i) => ({
           id: x.tournament.id,
-          city: x.tournament.city || x.tournament.name || "—",
+          city: displayCity(x.tournament.city) || x.tournament.name || "—",
           monday: x.tournament.tournament_monday,
           slots: slotLists[i].slots,
         })));
@@ -120,7 +121,7 @@ export default function NetworkView() {
       <p className="t2-fs-body font-semibold tabular-nums">{slotTotal}</p>
       {weeks.filter((w) => w.slots.length > 0).map((w) => (
         <p key={w.id} className="mt-1 t2-fs-micro text-[var(--t2-muted)]">
-          <Link href={tour2PlannerTournamentHref(w.id)} className="font-semibold text-[var(--t2-accent)]">{w.city}</Link>
+          <Link href={tour2PlannerTournamentHref(w.id)} className="font-semibold text-[var(--t2-accent)]">{displayCity(w.city)}</Link>
           {" · "}{w.slots.length}
         </p>
       ))}
@@ -161,7 +162,7 @@ export default function NetworkView() {
           <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netSlotsEmpty")}</p>
         ) : (
           <div className="mt-2">
-            <p className="t2-fs-body-sm text-[var(--t2-muted)]">{nextWeek.city} · {fmtDate(nextWeek.monday)}</p>
+            <p className="t2-fs-body-sm text-[var(--t2-muted)]">{displayCity(nextWeek.city)} · {fmtDate(nextWeek.monday)}</p>
             <TrainingSlots tournamentId={nextWeek.id} tournamentMonday={nextWeek.monday} viewerId={user.id} viewerContact={null} nowMs={nowMs} />
           </div>
         )}

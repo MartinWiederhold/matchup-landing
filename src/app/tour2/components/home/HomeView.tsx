@@ -39,6 +39,9 @@ import { SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
 import Tour2ActionList from "@/app/tour2/components/Tour2ActionList";
 import DayGlance from "@/app/tour2/components/home/DayGlance";
+import SeasonMap, { type SeasonStop, type SeasonStopState } from "@/app/tour2/components/home/SeasonMap";
+import SeasonTimeline from "@/app/tour2/components/home/SeasonTimeline";
+import { RouteStop, Drawer, EmptyState } from "@/app/tour2/components/ui";
 import { t2markArea } from "@/app/tour2/t2mark";
 import { loadEvents, type TourEvent } from "@/lib/tourEvents";
 import { loadSlotsOnDates, loadSlotPeople } from "@/lib/tourTrainingSlots";
@@ -143,6 +146,10 @@ export default function HomeView() {
   const [slotMeetings, setSlotMeetings] = useState<GlanceMeeting[]>([]);
   const [catalogN, setCatalogN] = useState<number | null>(null);
   const [state, setState] = useState<LoadState>("loading");
+  // Zone-B-Interaktion: hoveredStopId verbindet die Zeitachse mit der Karte,
+  // selectedStopId öffnet die Detailschublade für einen Turnierstop.
+  const [hoveredStopId, setHoveredStopId] = useState<string | null>(null);
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [nowMs] = useState(() => Date.now());
   const [homeRise] = useState(() => {
     try { return typeof window !== "undefined" && sessionStorage.getItem("mu_t2_home_rise") !== "1"; } catch { return false; }
@@ -378,7 +385,7 @@ export default function HomeView() {
       schengen: schengen ? { exceeds: schengen.exceeds, used: schengen.used, left: schengen.left } : null,
       points,
       wildcards: wildcards.map((wc) => ({
-        tournamentName: byId.get(wc.tournament_id)?.tournament.city ?? "—",
+        tournamentName: displayCity(byId.get(wc.tournament_id)?.tournament.city) || "—",
         tournamentId: wc.tournament_id,
         requestedOn: wc.requested_on,
         outcome: wc.outcome,
@@ -424,7 +431,7 @@ export default function HomeView() {
       if (!dl.known || !dl.entry) continue;
       const ms = dl.entry.getTime();
       if (ms < nowMs) continue;
-      out.push({ id: s.tournament.id, city: s.tournament.city || s.tournament.name || "—", ms, known: true });
+      out.push({ id: s.tournament.id, city: displayCity(s.tournament.city) || s.tournament.name || "—", ms, known: true });
     }
     out.sort((a, b) => a.ms - b.ms);
     return out;
@@ -441,7 +448,7 @@ export default function HomeView() {
       if (n >= 3) {
         const arrival = costRatesComplete(rates) ? ratesToCostParams(rates!).arrival : null;
         groups.push({
-          city: active[i].tournament.city || "—",
+          city: displayCity(active[i].tournament.city) || "—",
           n,
           savedMinor: arrival ? (n - 1) * arrival.amount : null,
         });
@@ -485,6 +492,75 @@ export default function HomeView() {
     }
     return ids;
   }, [board.actions]);
+
+  // Zustands-Bestimmung je Stop — dieselbe Logik für Karte, Zeitachse und
+  // RouteStop-Karten. Priorität: missed > current > past > planned.
+  const stateForStop = (id: string, monday: string): SeasonStopState => {
+    if (missedEntryIds.has(id)) return "missed";
+    if (nextStop?.tournament.id === id) return "current";
+    if (monday < todayISO) return "past";
+    return "planned";
+  };
+
+  // Karte: nur Stops mit Koordinaten (Marker brauchen lat/lng).
+  const mapStops: SeasonStop[] = useMemo(() => active
+    .filter((s) => s.tournament.latitude != null && s.tournament.longitude != null)
+    .map((s) => ({
+      id: s.tournament.id,
+      city: displayCity(s.tournament.city) || s.tournament.name || "—",
+      countryCode: s.tournament.country,
+      category: s.tournament.category,
+      monday: s.tournament.tournament_monday,
+      latitude: s.tournament.latitude as number,
+      longitude: s.tournament.longitude as number,
+      state: stateForStop(s.tournament.id, s.tournament.tournament_monday),
+    })), [active, missedEntryIds, nextStop?.tournament.id, todayISO]);
+
+  // Zeitachse und Stop-Karten dürfen auch Stops ohne Koordinaten enthalten
+  // (nur die Karte braucht sie zwingend). Reiht sich in dieselbe SeasonStop-
+  // Form ein — lat/lng werden dort ignoriert.
+  const timelineStops: SeasonStop[] = useMemo(() => active.map((s) => ({
+    id: s.tournament.id,
+    city: displayCity(s.tournament.city) || s.tournament.name || "—",
+    countryCode: s.tournament.country,
+    category: s.tournament.category,
+    monday: s.tournament.tournament_monday,
+    latitude: (s.tournament.latitude as number) ?? 0,
+    longitude: (s.tournament.longitude as number) ?? 0,
+    state: stateForStop(s.tournament.id, s.tournament.tournament_monday),
+  })), [active, missedEntryIds, nextStop?.tournament.id, todayISO]);
+
+  // Für die Detailschublade: das ausgewählte Turnier und sein Vorgänger.
+  const selectedIndex = selectedStopId ? active.findIndex((s) => s.tournament.id === selectedStopId) : -1;
+  const selectedEntry = selectedIndex >= 0 ? active[selectedIndex] : null;
+  const prevEntry = selectedIndex > 0 ? active[selectedIndex - 1] : null;
+
+  // Distanz zum vorherigen Stop, wenn beide Koordinaten haben — sonst weglassen.
+  const drawerDistanceKm: number | null = (() => {
+    if (!selectedEntry || !prevEntry) return null;
+    const a = prevEntry.tournament, b = selectedEntry.tournament;
+    if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) return null;
+    if (a.latitude === b.latitude && a.longitude === b.longitude) return null;
+    return haversineKm(a.latitude, a.longitude, b.latitude, b.longitude);
+  })();
+
+  // Meldefrist-Countdown für die Detailschublade (nutzt die vorhandene
+  // deadlineCountdown-Funktion — dieselbe Rechnung wie Zone C und Action-Liste).
+  const drawerDeadlineMs: number | null = (() => {
+    if (!selectedEntry) return null;
+    const dl = tourDeadlines(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"), selectedEntry.tournament.series, selectedEntry.tournament.category);
+    return dl.entry ? dl.entry.getTime() : null;
+  })();
+
+  // Beschriftungen für RouteStop-Karten (Baukasten-Baustein braucht die
+  // vier Zustandstexte als Prop, damit er selbst keinen Text festhält).
+  const routeStopLabels = {
+    past: t("tour.t2ovStopPast"),
+    current: t("tour.t2ovStopCurrent"),
+    planned: t("tour.t2ovStopPlanned"),
+    missed: t("tour.t2ovStopMissed"),
+  };
+
   const cpp = finance.costPerPoint?.[cur];
 
   if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
@@ -616,67 +692,40 @@ export default function HomeView() {
             <Link href={T2_SEASON} className="t2-cta mt-6">{t("tour.wsFill")}<span aria-hidden>→</span></Link>
           </div>
         ) : (
-          <div className="t2-route-scroll mt-5 min-h-[36vh]">
-            <div className="t2-route-track">
-              {active.map((s, i) => {
-                const prev = i > 0 ? active[i - 1] : null;
-                const place = placeKey(s.tournament.country, s.tournament.city);
-                const prevPlace = prev ? placeKey(prev.tournament.country, prev.tournament.city) : null;
-                const same = prev != null && place != null && place === prevPlace;
-                let km: number | null = null;
-                if (prev && !same && prev.tournament.latitude != null && prev.tournament.longitude != null && s.tournament.latitude != null && s.tournament.longitude != null) {
-                  km = haversineKm(prev.tournament.latitude, prev.tournament.longitude, s.tournament.latitude, s.tournament.longitude);
-                }
-                const mon = s.tournament.tournament_monday.slice(0, 7);
-                const prevMon = prev?.tournament.tournament_monday.slice(0, 7);
-                const showMonth = mon !== prevMon;
-                const clustered = clusterIds.has(s.tournament.id);
-                // Kommender Stopp: erster Stopp mit Montag ≥ heute wird hervorgehoben,
-                // vergangene Stopps werden gedämpft dargestellt (spec Zone B).
-                const isPast = s.tournament.tournament_monday < todayISO;
-                const isNext = nextStop?.tournament.id === s.tournament.id;
-                // Meldefrist verpasst → wird in Zone B sichtbar markiert, damit
-                // der Widerspruch zur Action-Liste verschwindet. Zustand kommt
-                // aus dem Action-Board (missedEntryIds), keine Zweitberechnung.
-                const missed = missedEntryIds.has(s.tournament.id);
-                return (
-                  <div key={s.tournament.id} className="flex items-stretch">
-                    {prev && (
-                      <div className="t2-route-leg">
-                        {same
-                          ? t("tour.t2legCluster")
-                          // Nur die berechnete Distanz ausweisen — die Anreise-Pauschale
-                          // (bisher „Arrival €120" auf JEDEM Leg) war ein Konfig-Wert
-                          // ohne Bezug zur konkreten Etappe und wurde daher entfernt.
-                          : (km != null ? t("tour.t2legKm", { n: km }) : t("tour.t2ovLegUnknownKm"))}
-                      </div>
-                    )}
-                    <div className={`${isPast ? "opacity-40" : ""} ${missed && !isPast ? "opacity-60" : ""}`}>
-                      {showMonth && (
-                        <p className="mb-1 t2-fs-meta font-semibold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{fmtMonth(s.tournament.tournament_monday)}</p>
-                      )}
-                      <Link
-                        href={tour2PlannerTournamentHref(s.tournament.id)}
-                        title={missed ? t("tour.t2routeMissed") : undefined}
-                        className={`t2-route-card relative ${clustered ? "is-cluster" : ""} ${isNext ? "ring-2 ring-[var(--t2-accent)] ring-offset-2 ring-offset-[var(--t2-card)]" : ""} ${missed ? "border-[var(--t2-state-deadline-missed)]" : ""}`}
-                      >
-                        {missed && (
-                          <span
-                            aria-label={t("tour.t2routeMissed")}
-                            className="absolute right-1.5 top-1.5 inline-flex h-2 w-2 rounded-full bg-[var(--t2-state-deadline-missed)]"
-                          />
-                        )}
-                        <p className="t2-fs-meta font-semibold tabular-nums text-[var(--t2-muted)]">{fmtDate(s.tournament.tournament_monday)}</p>
-                        <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{s.tournament.category || "—"}</p>
-                        <p className="mt-1 truncate t2-fs-body font-semibold">{displayCity(s.tournament.city) || t("tour.fieldMissing")}</p>
-                        <p className="mt-0.5 truncate t2-fs-micro text-[var(--t2-muted)]">
-                          {s.tournament.country ? `${flagEmoji(s.tournament.country)} ${countryName(s.tournament.country)}` : ""}
-                        </p>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+          <div className="mt-5 space-y-4">
+            {/* Saisonkarte — dominante Fläche mit Route und Kategorie-Markern. */}
+            <SeasonMap
+              stops={mapStops}
+              onMarkerClick={setSelectedStopId}
+              highlightId={hoveredStopId ?? selectedStopId}
+            />
+            {/* Grafische Zeitachse — Hover-verlinkt mit der Karte oben. */}
+            <SeasonTimeline
+              stops={timelineStops}
+              todayISO={todayISO}
+              locale={loc}
+              onSelect={setSelectedStopId}
+              onHover={setHoveredStopId}
+              highlightId={hoveredStopId ?? selectedStopId}
+            />
+            {/* RouteStop-Karten aus dem Baukasten. Auf dem Desktop im Fluss,
+                auf dem Handy horizontal scrollbar. Klick öffnet dieselbe Schublade
+                wie ein Marker auf der Karte. */}
+            <div className="flex gap-3 overflow-x-auto pb-2 md:flex-wrap md:overflow-x-visible">
+              {active.map((s) => (
+                <div key={s.tournament.id} className="shrink-0">
+                  <RouteStop
+                    date={fmtDate(s.tournament.tournament_monday)}
+                    category={s.tournament.category}
+                    city={displayCity(s.tournament.city) || s.tournament.name || t("tour.fieldMissing")}
+                    countryLabel={s.tournament.country ? countryName(s.tournament.country) : null}
+                    state={stateForStop(s.tournament.id, s.tournament.tournament_monday)}
+                    labels={routeStopLabels}
+                    active={selectedStopId === s.tournament.id}
+                    onClick={() => setSelectedStopId(s.tournament.id)}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -711,13 +760,31 @@ export default function HomeView() {
         <section className="t2-dash-card">
           <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketPoints")}</h2>
           {resultHistory.length === 0 ? (
-            // Ruhiger Leerzustand: kein hero-großes „keine Ergebnisse erfasst",
-            // stattdessen eine erklärende Zeile + bestehender Erfassungs-Link.
+            // Etappe 3-Feinschliff (Schritt 5): kein großes Loch in der Spalte
+            // mehr. Zuerst die Aufgabenliste, weil sie den echten Inhalt trägt;
+            // darunter der EmptyState-Baustein als kompakte Erklärung.
             <>
-              <p className="mt-3 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2ovPointsHollow")}</p>
-              <Link href={T2_RANKING} className="mt-3 inline-block t2-fs-body-sm font-semibold text-[var(--t2-accent)]">
-                {t("tour.t2ovPointsEmptyHint")} →
-              </Link>
+              {board.actions.length > (nextDeadline ? 1 : 0) && (
+                <div className="mt-3">
+                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
+                  <div className="mt-2">
+                    <Tour2ActionList
+                      actions={nextDeadline ? board.actions.slice(1) : board.actions}
+                      countryName={countryName}
+                      fmtDate={fmtDate}
+                      money={(minor) => money(minor)}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className={board.actions.length > (nextDeadline ? 1 : 0) ? "mt-5 border-t border-[var(--t2-line)] pt-4" : "mt-3"}>
+                <EmptyState
+                  icon="🎾"
+                  title={t("tour.t2ovPointsEmpty")}
+                  hint={t("tour.t2ovPointsHollow")}
+                  action={<Link href={T2_RANKING} className="t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{t("tour.t2ovPointsEmptyHint")} →</Link>}
+                />
+              </div>
             </>
           ) : (
             <>
@@ -752,20 +819,20 @@ export default function HomeView() {
                   </p>
                 </div>
               )}
+              {board.actions.length > (nextDeadline ? 1 : 0) && (
+                <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
+                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
+                  <div className="mt-2">
+                    <Tour2ActionList
+                      actions={nextDeadline ? board.actions.slice(1) : board.actions}
+                      countryName={countryName}
+                      fmtDate={fmtDate}
+                      money={(minor) => money(minor)}
+                    />
+                  </div>
+                </div>
+              )}
             </>
-          )}
-          {board.actions.length > (nextDeadline ? 1 : 0) && (
-            <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
-              <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
-              <div className="mt-2">
-                <Tour2ActionList
-                  actions={nextDeadline ? board.actions.slice(1) : board.actions}
-                  countryName={countryName}
-                  fmtDate={fmtDate}
-                  money={(minor) => money(minor)}
-                />
-              </div>
-            </div>
           )}
         </section>
 
@@ -813,6 +880,63 @@ export default function HomeView() {
           )}
         </section>
       </div>
+
+      {/* Detailschublade — geöffnet von Kartenmarker, Zeitachse oder RouteStop-Karte. */}
+      {selectedEntry && (
+        <Drawer
+          open
+          onClose={() => setSelectedStopId(null)}
+          title={displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || t("tour.fieldMissing")}
+        >
+          <dl className="space-y-3">
+            {selectedEntry.tournament.category && (
+              <div>
+                <dt className="t2-label">{t("tour.t2ovDrawerCategory")}</dt>
+                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{selectedEntry.tournament.category}</dd>
+              </div>
+            )}
+            <div>
+              <dt className="t2-label">{t("tour.t2ovDrawerDate")}</dt>
+              <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">
+                {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"))}
+              </dd>
+            </div>
+            {selectedEntry.tournament.surface && (
+              <div>
+                <dt className="t2-label">{t("tour.t2ovDrawerSurface")}</dt>
+                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">
+                  {t(`tour.surface_${selectedEntry.tournament.surface}`).startsWith("tour.surface_")
+                    ? selectedEntry.tournament.surface
+                    : t(`tour.surface_${selectedEntry.tournament.surface}`)}
+                </dd>
+              </div>
+            )}
+            {drawerDeadlineMs != null && (
+              <div>
+                <dt className="t2-label">{t("tour.t2ovDrawerDeadline")}</dt>
+                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{countdown(drawerDeadlineMs)}</dd>
+              </div>
+            )}
+            {drawerDistanceKm != null && (
+              <div>
+                <dt className="t2-label">{t("tour.t2ovDrawerDistancePrev")}</dt>
+                <dd className="mt-1 t2-fs-body text-[var(--t2-text)] tabular-nums">
+                  {t("tour.t2legKm", { n: Math.round(drawerDistanceKm) })}
+                </dd>
+              </div>
+            )}
+            {selectedEntry.tournament.country && (
+              <div>
+                <dt className="t2-label">{t("tour.t2ovDrawerCountry")}</dt>
+                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{countryName(selectedEntry.tournament.country)}</dd>
+              </div>
+            )}
+          </dl>
+          <Link href={tour2PlannerTournamentHref(selectedEntry.tournament.id)} className="t2-cta mt-6">
+            {t("tour.t2ovActionCTA")}<span aria-hidden>→</span>
+          </Link>
+        </Drawer>
+      )}
     </div>
   );
 }

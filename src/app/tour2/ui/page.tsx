@@ -182,10 +182,15 @@ export default function UIOverviewPage() {
       {/* ── 5. RouteStop ──────────────────────────────────────── */}
       <BausteinBlock name="RouteStop" beschreibung="Ein Halt in der Saison-Route. Vier Zustände.">
         <div className="flex flex-wrap gap-3">
-          <RouteStop href="#" date="18. Aug" category="ITF M25" city="Adana"     countryLabel="TR" state="past" />
-          <RouteStop href="#" date="25. Aug" category="Challenger 75" city="Porto"    countryLabel="PT" state="current" />
-          <RouteStop href="#" date="1. Sep"  category="Challenger 100" city="Genoa"   countryLabel="IT" state="planned" />
-          <RouteStop href="#" date="8. Sep"  category="ITF M15" city="Le Neubourg"    countryLabel="FR" state="missed" />
+          {(() => {
+            const labels = { past: "vergangen", current: "als Nächstes", planned: "geplant", missed: "Frist verpasst" };
+            return <>
+              <RouteStop href="#" date="18. Aug" category="ITF M25" city="Adana"     countryLabel="TR" state="past"    labels={labels} />
+              <RouteStop href="#" date="25. Aug" category="Challenger 75" city="Porto"    countryLabel="PT" state="current" labels={labels} />
+              <RouteStop href="#" date="1. Sep"  category="Challenger 100" city="Genoa"   countryLabel="IT" state="planned" labels={labels} />
+              <RouteStop href="#" date="8. Sep"  category="ITF M15" city="Le Neubourg"    countryLabel="FR" state="missed"  labels={labels} />
+            </>;
+          })()}
         </div>
       </BausteinBlock>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import type { ActionItem } from "@/domain/tour/actionBoard";
+import { displayCity } from "@/domain/tour/displayCity";
 import { tour2ActionHref, tour2PlannerTournamentHref } from "./t2Action";
 
 /** Klickbare Handlungsbedarf-Liste (Home + Saison). Texte über i18n, Ziele über t2Action. */
@@ -27,9 +28,9 @@ export default function Tour2ActionList({
       return t(`tour.docWarn_${p.kind}`, { date: p.date ?? "", days: p.days ?? 0, dest: p.dest ? countryName(String(p.dest)) : "" });
     }
     if (a.kind === "budget_over") return t("tour.action_budget_over", { amount: money(Number(p.amount), String(p.currency)) });
-    if (a.kind === "entry_banned") return t("tour.action_entry_banned", { city: p.city ?? "", dest: countryName(String(p.dest)) });
+    if (a.kind === "entry_banned") return t("tour.action_entry_banned", { city: displayCity(typeof p.city === "string" ? p.city : ""), dest: countryName(String(p.dest)) });
     if (a.kind === "points_expiring") return t("tour.action_points_expiring", { points: p.points ?? 0, date: fmtDate(String(p.date)) });
-    if (a.kind === "visa_lead") return t("tour.action_visa_lead", { city: p.city ?? "", dest: countryName(String(p.dest)), weeks: p.weeks ?? 0, lead: p.lead ?? 0 });
+    if (a.kind === "visa_lead") return t("tour.action_visa_lead", { city: displayCity(typeof p.city === "string" ? p.city : ""), dest: countryName(String(p.dest)), weeks: p.weeks ?? 0, lead: p.lead ?? 0 });
     return t(`tour.action_${a.kind}`, p);
   };
   const isRuleOfThumb = (a: ActionItem) => (a.kind === "doc_expiring" || a.kind === "doc_expired") && a.params.ruleOfThumb === 1;

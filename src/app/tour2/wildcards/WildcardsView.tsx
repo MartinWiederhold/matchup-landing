@@ -18,6 +18,7 @@ import {
   type WildcardEventKind,
 } from "@/lib/tourWildcards";
 import { t2markArea } from "@/app/tour2/t2mark";
+import { displayCity } from "@/domain/tour/displayCity";
 
 const EVENT_KINDS: WildcardEventKind[] = ["contacted", "follow_up", "request", "response", "note"];
 const OUTCOMES: WildcardOutcome[] = ["pending", "granted", "declined"];
@@ -51,7 +52,7 @@ export default function WildcardsView({ skipMark = false }: { skipMark?: boolean
     const byId = new Map(tt.map((x) => [x.id, x]));
     const list: TourItem[] = ids.map((id) => {
       const x = byId.get(id);
-      const name = x ? (x.city ? `${x.city}${x.country ? ", " + x.country : ""}` : x.name ?? id) : id;
+      const name = x ? (x.city ? `${displayCity(x.city)}${x.country ? ", " + x.country : ""}` : x.name ?? id) : id;
       return { id, name, monday: x?.tournament_monday ?? "" };
     });
     list.sort((a, b) => a.monday.localeCompare(b.monday) || a.name.localeCompare(b.name));

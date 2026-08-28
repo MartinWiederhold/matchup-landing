@@ -11,6 +11,7 @@ import { alternateTrend } from "@/domain/tour/entryTrend";
 import { buildPipeline } from "@/domain/tour/pipeline";
 import { DeadlineCountdown } from "../components/EntryDeadline";
 import type { TourSeasonPlanEntry, TourEntryEvent, TourTournament, TourDecision, TourCostRates } from "@/lib/types";
+import { displayCity } from "@/domain/tour/displayCity";
 
 const NIGHTS_KEY = "mu_tour_nights";
 const DECISIONS: TourDecision[] = ["play", "wait", "fallback", "open"];
@@ -145,7 +146,7 @@ export default function PipelineView() {
             ) : w.items.map((it, idx) => (
               <tr key={it.plan.id} className="border-t border-[var(--t2-line)] align-top">
                 <td className="whitespace-nowrap px-4 py-3">{idx === 0 && (<><span className="font-semibold text-[var(--t2-ink)]">{t("tour.pipeKw", { n: w.isoWeek })}</span><span className="ml-2 t2-fs-meta text-[var(--t2-faint)]">{fmtRange(w.monday)}</span></>)}</td>
-                <td className="px-4 py-3"><span className="font-semibold text-[var(--t2-ink)]">{it.tour.city || t("tour.fieldMissing")}</span><span className="text-[var(--t2-faint)]">, {catName(it.tour.country)}</span><span className="ml-1.5 inline-block rounded-full bg-[var(--t2-surface)] px-2 py-0.5 t2-fs-meta font-semibold text-[var(--t2-muted)]">{it.tour.category || "—"}</span></td>
+                <td className="px-4 py-3"><span className="font-semibold text-[var(--t2-ink)]">{displayCity(it.tour.city) || t("tour.fieldMissing")}</span><span className="text-[var(--t2-faint)]">, {catName(it.tour.country)}</span><span className="ml-1.5 inline-block rounded-full bg-[var(--t2-surface)] px-2 py-0.5 t2-fs-meta font-semibold text-[var(--t2-muted)]">{it.tour.category || "—"}</span></td>
                 <td className="px-4 py-3">{pill(it.plan)}</td>
                 <td className="px-4 py-3"><DeadlineCountdown tournament={it.tour} now={nowMs} /></td>
                 <td className="whitespace-nowrap px-4 py-3 text-[var(--t2-ink)]">{weekCostMinor != null ? money(weekCostMinor) : "—"}</td>
@@ -168,7 +169,7 @@ export default function PipelineView() {
               <p className="mt-1 t2-fs-micro italic text-[var(--t2-faint)]">{t("tour.pipeGap")}</p>
             ) : w.items.map((it) => (
               <div key={it.plan.id} className="mt-2 border-t border-[var(--t2-line)] pt-2 [&:nth-child(2)]:mt-1.5 [&:nth-child(2)]:border-0 [&:nth-child(2)]:pt-0">
-                <p className="t2-fs-body font-semibold text-[var(--t2-ink)]">{it.tour.city || t("tour.fieldMissing")}<span className="text-[var(--t2-faint)]">, {catName(it.tour.country)}</span></p>
+                <p className="t2-fs-body font-semibold text-[var(--t2-ink)]">{displayCity(it.tour.city) || t("tour.fieldMissing")}<span className="text-[var(--t2-faint)]">, {catName(it.tour.country)}</span></p>
                 <p className="t2-fs-meta text-[var(--t2-muted)]">{it.tour.category || "—"}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   {pill(it.plan)}

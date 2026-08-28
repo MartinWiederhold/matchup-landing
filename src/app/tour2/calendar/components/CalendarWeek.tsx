@@ -15,6 +15,7 @@ import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 import { isoWeekNumber } from "@/domain/tour/seasonWeeks";
 import EventForm from "@/app/tour2/timeline/components/EventForm";
 import { t2markArea } from "@/app/tour2/t2mark";
+import { displayCity } from "@/domain/tour/displayCity";
 
 type LoadState = "loading" | "error" | "done";
 type CalView = "day" | "week" | "month";
@@ -145,7 +146,7 @@ export default function CalendarWeek() {
     const dt = isoToDate(anchor);
     const dd = pad(dt.getDate());
     const mm = pad(dt.getMonth() + 1);
-    const city = tours[0]?.city || tours[0]?.name;
+    const city = displayCity(tours[0]?.city) || tours[0]?.name;
     return (
       <section className="mt-8">
         <p className="t2-eyebrow">
@@ -161,7 +162,7 @@ export default function CalendarWeek() {
         </div>
         {tours[0] && (
           <p className="mt-3 t2-fs-body text-[var(--t2-muted)]">
-            {[tours[0].category, tours.slice(1).map((x) => x.city).filter(Boolean).join(" · ")].filter(Boolean).join(" · ")}
+            {[tours[0].category, tours.slice(1).map((x) => displayCity(x.city)).filter(Boolean).join(" · ")].filter(Boolean).join(" · ")}
           </p>
         )}
         <ul className="mt-8 divide-y divide-[var(--t2-line)] border-y border-[var(--t2-line)]">
@@ -278,7 +279,7 @@ export default function CalendarWeek() {
                         href="/tour2/season"
                         className={`block px-2 py-2 t2-fs-micro font-semibold leading-snug ${isToday ? "bg-[var(--t2-paper)] text-[var(--t2-ink)]" : "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]"}`}
                       >
-                        {tt.city || tt.name}
+                        {displayCity(tt.city) || tt.name}
                         {tt.category ? <span className={`mt-0.5 block t2-fs-meta font-medium uppercase tracking-wide ${isToday ? "text-[var(--t2-muted)]" : "text-[var(--t2-on-accent)]/60"}`}>{tt.category}</span> : null}
                       </Link>
                     ))}
@@ -347,7 +348,7 @@ function MonthGrid({
               </button>
               {tour && inMonth && (
                 <Link href="/tour2/season" className="mt-1 block truncate bg-[var(--t2-ink)] px-1.5 py-1 t2-fs-meta font-semibold text-[var(--t2-on-accent)]">
-                  {tour.city || tour.name}
+                  {displayCity(tour.city) || tour.name}
                 </Link>
               )}
               {dayEvents.map((e) => (

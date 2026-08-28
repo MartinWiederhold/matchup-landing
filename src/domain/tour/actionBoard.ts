@@ -25,6 +25,7 @@
 
 import { tourDeadlines, type TourSeries } from "./deadlines";
 import { alternateTrend } from "./entryTrend";
+import { displayCity } from "./displayCity";
 import type { VisaLeadWarning } from "./visaLeadWarnings";
 
 export const ACTION_BOARD_VERSION = "v1";
@@ -150,11 +151,11 @@ export function buildActionBoard(input: BoardInput): ActionBoard {
 
     // Einreise gesperrt (ROT — harte Sperre, bereits geltender Zustand).
     if (!out && t.country && bannedSet.has(t.country.toUpperCase())) {
-      push("entry_banned", "red", tgt, -2, { city: t.city ?? "", dest: t.country });
+      push("entry_banned", "red", tgt, -2, { city: displayCity(t.city), dest: t.country });
     }
 
     // Turnier nicht mehr verfügbar (BERNSTEIN — ersetzen/entfernen).
-    if (t.inactive && !out) push("tournament_inactive", "amber", tgt, 50, { city: t.city ?? "" });
+    if (t.inactive && !out) push("tournament_inactive", "amber", tgt, 50, { city: displayCity(t.city) });
 
     // Fristen (nur ITF bekannt).
     const dl = tourDeadlines(new Date(ms), t.series);
@@ -162,34 +163,34 @@ export function buildActionBoard(input: BoardInput): ActionBoard {
       const d = diffDays(dl.entry.getTime(), asOfMs);
       if (dl.entry.getTime() < asOfMs) {
         // Meldefrist VERPASST (ROT — bereits eingetreten).
-        push("entry_missed", "red", tgt, d, { city: t.city ?? "", date: dl.entry.toISOString().slice(0, 10) });
+        push("entry_missed", "red", tgt, d, { city: displayCity(t.city), date: dl.entry.toISOString().slice(0, 10) });
       } else if (d <= ENTRY_SOON_DAYS) {
         // Meldefrist NAHT (BERNSTEIN — bevorstehend, nie rot).
-        push("entry_deadline", "amber", tgt, d, { city: t.city ?? "", days: d });
+        push("entry_deadline", "amber", tgt, d, { city: displayCity(t.city), days: d });
       }
     }
     if (dl.known && dl.withdrawal && entered) {
       const d = diffDays(dl.withdrawal.getTime(), asOfMs);
       if (dl.withdrawal.getTime() >= asOfMs && d <= WITHDRAW_SOON_DAYS) {
-        push("withdrawal_deadline", "amber", tgt, d, { city: t.city ?? "", days: d });
+        push("withdrawal_deadline", "amber", tgt, d, { city: displayCity(t.city), days: d });
       }
     }
 
     // Meldegebühr offen bei gemeldetem Turnier (BERNSTEIN).
-    if (entered && !t.feePaid) push("fee_unpaid", "amber", tgt, 10, { city: t.city ?? "" });
+    if (entered && !t.feePaid) push("fee_unpaid", "amber", tgt, 10, { city: displayCity(t.city) });
 
     // Alternate bewegt sich (BERNSTEIN).
     if (t.status === "alternate") {
       const tr = alternateTrend(t.alternateObs, input.asOf);
       if (tr.kind === "up" || tr.kind === "down") {
-        push("alternate_moving", "amber", tgt, 15, { city: t.city ?? "", dir: tr.kind, delta: Math.abs(tr.delta), pos: t.alternatePosition ?? 0 });
+        push("alternate_moving", "amber", tgt, 15, { city: displayCity(t.city), dir: tr.kind, delta: Math.abs(tr.delta), pos: t.alternatePosition ?? 0 });
       }
     }
 
     // Entscheidung offen für ein Turnier der nächsten ~2 Wochen (BERNSTEIN).
     if ((t.decision === "open" || t.decision == null) && t.status === "planned" && !out) {
       const d = diffDays(ms, asOfMs);
-      if (d >= 0 && d <= DECISION_SOON_DAYS) push("decision_open", "amber", { type: "route", href: "/tour/pipeline" }, d, { city: t.city ?? "" });
+      if (d >= 0 && d <= DECISION_SOON_DAYS) push("decision_open", "amber", { type: "route", href: "/tour/pipeline" }, d, { city: displayCity(t.city) });
     }
   }
 

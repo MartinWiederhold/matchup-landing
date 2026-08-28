@@ -5,6 +5,7 @@ import { useT } from "@/lib/i18n";
 import { CURRENCIES, euroToMinor } from "@/lib/tourCosts";
 import { addExpense, uploadReceipt, type ExpenseCategory, type ExpenseInput } from "@/lib/tourExpenses";
 import type { SeasonEntry } from "@/lib/tourSeason";
+import { displayCity } from "@/domain/tour/displayCity";
 
 const CATS: ExpenseCategory[] = ["hotel", "flight", "coach", "physio", "stringing", "entry_fee", "taxi", "food", "other"];
 
@@ -143,7 +144,7 @@ export default function ExpenseForm({
             <option value="">{t("tour.expTournamentNone")}</option>
             {season.map((e) => (
               <option key={e.tournament.id} value={e.tournament.id}>
-                {e.tournament.city || e.tournament.id}{e.tournament.country ? `, ${e.tournament.country}` : ""}
+                {displayCity(e.tournament.city) || e.tournament.id}{e.tournament.country ? `, ${e.tournament.country}` : ""}
               </option>
             ))}
           </select>

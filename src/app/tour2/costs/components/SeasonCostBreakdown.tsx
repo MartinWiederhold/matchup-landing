@@ -5,6 +5,7 @@ import { computeSeasonCost, type CostParams, type MoneyBag } from "@/domain/tour
 import { minorToEuro } from "@/lib/tourCosts";
 import { placeKey } from "../../components/TourDecideBlock";
 import type { SeasonEntry } from "@/lib/tourSeason";
+import { displayCity } from "@/domain/tour/displayCity";
 
 // Turnierwoche als UTC-Kalendertag formatieren (keine Zeitzonen-Verschiebung).
 function fmtMonday(iso: string, locale: string) {
@@ -92,7 +93,7 @@ export default function SeasonCostBreakdown({
             <article key={entries[i].planId} className="t2-panel">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="t2-fs-body font-bold tracking-tight text-[var(--t2-text)]">
-                  {x.city || t("tour.fieldMissing")}
+                  {displayCity(x.city) || t("tour.fieldMissing")}
                   <span className="text-[var(--t2-faint)]">, </span>
                   <span className="text-[var(--t2-muted)]">{countryName}</span>
                 </h3>

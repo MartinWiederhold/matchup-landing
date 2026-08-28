@@ -17,6 +17,7 @@ import {
 } from "@/lib/tourExpenses";
 import ExpenseForm from "./ExpenseForm";
 import ReceiptLink from "./ReceiptLink";
+import { displayCity } from "@/domain/tour/displayCity";
 
 type LoadState = "loading" | "error" | "done";
 
@@ -143,7 +144,7 @@ export default function ExpensesTourView() {
               return (
                 <article key={uuid} className="t2-panel">
                   <p className="truncate t2-fs-body font-bold text-[var(--t2-text)]">
-                    {e.tournament.city || t("tour.fieldMissing")}
+                    {displayCity(e.tournament.city) || t("tour.fieldMissing")}
                     {e.tournament.country ? <span className="text-[var(--t2-muted)]">, {e.tournament.country}</span> : null}
                   </p>
 

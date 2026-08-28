@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import type { GlanceRow } from "@/domain/tour/dayGlance";
+import { displayCity } from "@/domain/tour/displayCity";
 
 export default function DayGlance({
   todayISO,
@@ -29,7 +30,7 @@ export default function DayGlance({
     return t("tour.calAllDay");
   };
   const title = (row: GlanceRow) => {
-    if (row.source === "tournament") return row.city || t("tour.fieldMissing");
+    if (row.source === "tournament") return displayCity(row.city) || t("tour.fieldMissing");
     if (row.title) return row.title;
     return kindLabel(row);
   };
