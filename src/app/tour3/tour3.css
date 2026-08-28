@@ -1,0 +1,172 @@
+/*
+ * /tour3 — eigenständiger Prototyp der Saison-Übersicht.
+ *
+ * FARBEN: OKLCH, warm und entsättigt. Papier statt Weiß, kein reines Schwarz.
+ * MATERIAL: Linien statt Schatten. Tiefe durch Flächen-Helligkeit.
+ * AKZENT: zwei Varianten umschaltbar über data-accent am Wurzel-Container.
+ *
+ * Die Klassen sind bewusst mit `.t3-` präfixt und teilen keine Namen mit dem
+ * bestehenden `--t2-*`-System — /tour2 läuft davon unabhängig weiter.
+ */
+
+.t3-root {
+  /* ── Flächen ─────────────────────────────────────────────────── */
+  --t3-bg:              oklch(0.985 0.008 85);   /* warmes Papier */
+  --t3-surface:         oklch(1 0 0);            /* Karten — Schritt heller */
+  --t3-sunken:          oklch(0.96 0.012 82);    /* vertiefte Flächen — Schritt dunkler */
+
+  /* ── Text (vier Stufen, alle ≥ 4.5:1 gegen --t3-bg) ─────────── */
+  --t3-text:            oklch(0.20 0.02 65);     /* primär (~15:1) */
+  --t3-text-2:          oklch(0.34 0.02 65);     /* sekundär (~8:1) */
+  --t3-text-3:          oklch(0.42 0.02 65);     /* tertiär (~5.5:1) */
+  --t3-text-4:          oklch(0.47 0.018 65);    /* schwach (≥ 4.5:1) */
+
+  /* ── Linien: fein, warm getönt, nicht grau ──────────────────── */
+  --t3-line:            oklch(0.20 0.02 65 / 0.09);
+  --t3-line-strong:     oklch(0.20 0.02 65 / 0.16);
+
+  /* ── Status: gedämpft, nie grell ────────────────────────────── */
+  --t3-success:         oklch(0.50 0.11 145);
+  --t3-success-surface: oklch(0.955 0.035 145);
+  --t3-warn:            oklch(0.55 0.13 60);
+  --t3-warn-surface:    oklch(0.955 0.04 70);
+  --t3-danger:          oklch(0.50 0.15 25);
+  --t3-danger-surface:  oklch(0.955 0.04 25);
+  --t3-info:            oklch(0.50 0.11 220);
+  --t3-info-surface:    oklch(0.955 0.035 220);
+
+  /* ── Akzent — indigo (Default) ───────────────────────────────── */
+  /* Der bestehende Wert aus /tour2 (#4b3bf3) bewusst 1:1 übernommen,
+     damit die beiden Prototypen sich direkt vergleichen lassen. */
+  --t3-accent:          #4b3bf3;
+  --t3-accent-soft:     rgba(75, 59, 243, 0.10);
+  --t3-on-accent:       #ffffff;
+
+  /* ── Radien — genau zwei ─────────────────────────────────────── */
+  --t3-radius:          10px;
+  --t3-radius-full:     999px;
+
+  /* ── Schatten NUR für Überlagerungen (Schublade, Menü) ──────── */
+  --t3-shadow-overlay:  0 12px 40px oklch(0.20 0.02 65 / 0.18);
+
+  /* ── Typografie-Skala (8 Stufen, keine mehr) ─────────────────── */
+  --t3-fs-display: clamp(3rem, 8vw, 5rem);
+  --t3-fs-h1:      1.75rem;
+  --t3-fs-h2:      1.25rem;
+  --t3-fs-h3:      1.0625rem;
+  --t3-fs-body:    0.9375rem;
+  --t3-fs-body-sm: 0.8125rem;
+  --t3-fs-micro:   0.75rem;
+  --t3-fs-meta:    0.6875rem;
+
+  background: var(--t3-bg);
+  color: var(--t3-text);
+  color-scheme: light;
+  font-family: var(--font-geist-sans), "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.006em;
+}
+
+/* Akzent-Alternative: warmer Sandplatz-Terrakotta, abgestimmt aufs Papier. */
+.t3-root[data-accent="clay"] {
+  --t3-accent:      oklch(0.56 0.135 42);
+  --t3-accent-soft: oklch(0.56 0.135 42 / 0.12);
+}
+
+/* ── Typo-Utilities ─────────────────────────────────────────── */
+/* Anzeigezahlen: variable Serife, nur für Ziffern. */
+.t3-num-display {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+/* Technische Kleinbeschriftungen: Monospace. */
+.t3-mono {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.t3-tabular { font-variant-numeric: tabular-nums; }
+
+.t3-fs-display  { font-size: var(--t3-fs-display); line-height: 1;    letter-spacing: -0.035em; }
+.t3-fs-h1       { font-size: var(--t3-fs-h1);      line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; }
+.t3-fs-h2       { font-size: var(--t3-fs-h2);      line-height: 1.25; letter-spacing: -0.01em; font-weight: 500; }
+.t3-fs-h3       { font-size: var(--t3-fs-h3);      line-height: 1.35; font-weight: 500; }
+.t3-fs-body     { font-size: var(--t3-fs-body);    line-height: 1.55; }
+.t3-fs-body-sm  { font-size: var(--t3-fs-body-sm); line-height: 1.5; }
+.t3-fs-micro    { font-size: var(--t3-fs-micro);   line-height: 1.4; }
+.t3-fs-meta     { font-size: var(--t3-fs-meta);    line-height: 1.4; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t3-text-4); font-weight: 600; }
+
+::selection { background: var(--t3-accent); color: var(--t3-on-accent); }
+
+/* ── Karten und Werkzeuge ─────────────────────────────────────── */
+.t3-card {
+  background: var(--t3-surface);
+  border: 1px solid var(--t3-line);
+  border-radius: var(--t3-radius);
+  /* KEIN Schatten — Tiefe kommt aus der Flächenhelligkeit. */
+}
+.t3-sunken {
+  background: var(--t3-sunken);
+  border: 1px solid var(--t3-line);
+  border-radius: var(--t3-radius);
+}
+
+.t3-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--t3-accent);
+  color: var(--t3-on-accent);
+  padding: 0.7rem 1.15rem;
+  font-family: var(--font-geist-sans);
+  font-size: var(--t3-fs-body-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--t3-radius-full);
+  border: 0;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+.t3-cta:hover  { transform: translateY(-1px); }
+.t3-cta:active { transform: translateY(0); }
+.t3-cta:focus-visible { outline: 2px solid var(--t3-accent); outline-offset: 2px; }
+
+.t3-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--t3-text);
+  padding: 0.6rem 1.05rem;
+  font-family: var(--font-geist-sans);
+  font-size: var(--t3-fs-body-sm);
+  font-weight: 500;
+  border-radius: var(--t3-radius-full);
+  border: 1px solid var(--t3-line-strong);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.t3-ghost:hover { border-color: var(--t3-text-3); background: var(--t3-sunken); }
+.t3-ghost:focus-visible { outline: 2px solid var(--t3-accent); outline-offset: 2px; }
+
+/* Fokus-Ring für alles Anklickbare. */
+.t3-focusable:focus-visible { outline: 2px solid var(--t3-accent); outline-offset: 2px; border-radius: var(--t3-radius); }
+
+/* Reduced-Motion respektieren. */
+@media (prefers-reduced-motion: reduce) {
+  .t3-cta, .t3-ghost { transition: none; }
+}
+
+/* ── Bewegung: View Transitions API (mit sinnvollem Fallback) ── */
+@supports (view-transition-name: none) {
+  ::view-transition-old(t3-drawer),
+  ::view-transition-new(t3-drawer) {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
