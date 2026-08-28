@@ -11,11 +11,11 @@ import {
 import type { TourTravelDocument, TravelDocKind, TravelDocStatus } from "@/lib/types";
 
 const inpL = "t2-input";
-const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
-const lblL = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
-const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
+const inpD = "w-full rounded-xl border border-[var(--t2-on-accent)]/15 bg-[var(--t2-on-accent)]/[0.04] px-3 py-2 t2-fs-body-sm text-[var(--t2-on-accent)] placeholder:text-[var(--t2-text-soft)] focus:border-[var(--t2-on-accent)]/30 focus:outline-none [color-scheme:dark]";
+const lblL = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]";
+const lblD = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-soft)]";
 const cardL = "t2-panel";
-const cardD = "border border-white/10 bg-black p-4";
+const cardD = "border border-[var(--t2-on-accent)]/10 bg-[var(--t2-text)] p-4";
 const btn = "t2-cta mt-3 disabled:opacity-50";
 
 const KINDS: TravelDocKind[] = ["esta", "eta", "schengen_visa", "national_visa", "other"];
@@ -75,40 +75,40 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
   const inp = dark ? inpD : inpL;
   const lbl = dark ? lblD : lblL;
   const card = dark ? cardD : cardL;
-  const title = dark ? "text-white" : "text-[var(--t2-ink)]";
-  const muted = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
-  const row = dark ? "rounded-xl border border-white/10 px-3 py-2" : "rounded-xl border border-[var(--t2-line)] px-3 py-2";
-  const pill = dark ? "rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-neutral-300" : "rounded-full bg-[var(--t2-surface)] px-2 py-0.5 text-[11px] font-semibold text-[var(--t2-muted)]";
-  const mini = dark ? "rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-[12px] text-white [color-scheme:dark]" : "rounded-lg border border-[var(--t2-line)] bg-white px-2 py-1 text-[12px]";
+  const title = dark ? "text-[var(--t2-on-accent)]" : "text-[var(--t2-ink)]";
+  const muted = dark ? "text-[var(--t2-text-soft)]" : "text-[var(--t2-muted)]";
+  const row = dark ? "rounded-xl border border-[var(--t2-on-accent)]/10 px-3 py-2" : "rounded-xl border border-[var(--t2-line)] px-3 py-2";
+  const pill = dark ? "rounded-full bg-[var(--t2-on-accent)]/10 px-2 py-0.5 t2-fs-meta font-semibold text-[var(--t2-text-faint)]" : "rounded-full bg-[var(--t2-surface)] px-2 py-0.5 t2-fs-meta font-semibold text-[var(--t2-muted)]";
+  const mini = dark ? "rounded-lg border border-[var(--t2-on-accent)]/15 bg-[var(--t2-on-accent)]/[0.04] px-2 py-1 t2-fs-micro text-[var(--t2-on-accent)] [color-scheme:dark]" : "rounded-lg border border-[var(--t2-line)] bg-[var(--t2-on-accent)] px-2 py-1 t2-fs-micro";
 
   if (authLoading || status === "loading") return null; // Auth/Laden zeigt bereits PlayerMasterForm
   if (!user) return null;
-  if (status === "error") return <p className={`mt-4 text-sm ${muted}`}>{t("tour.loadError")}</p>;
+  if (status === "error") return <p className={`mt-4 t2-fs-body ${muted}`}>{t("tour.loadError")}</p>;
 
   return (
     <div className={`${card} mt-4`}>
-      <h3 className={`text-[13px] font-bold ${title}`}>{t("tour.tdTitle")}</h3>
-      <p className={`mt-1 text-[12px] ${muted}`}>{t("tour.tdIntro")}</p>
+      <h3 className={`t2-fs-body-sm font-bold ${title}`}>{t("tour.tdTitle")}</h3>
+      <p className={`mt-1 t2-fs-micro ${muted}`}>{t("tour.tdIntro")}</p>
 
       {/* Bestehende Dokumente */}
       {docs.length === 0 ? (
-        <p className={`mt-3 text-[12px] ${dark ? "text-neutral-500" : "text-[var(--t2-faint)]"}`}>{t("tour.tdEmpty")}</p>
+        <p className={`mt-3 t2-fs-micro ${dark ? "text-[var(--t2-text-soft)]" : "text-[var(--t2-faint)]"}`}>{t("tour.tdEmpty")}</p>
       ) : (
         <div className="mt-3 space-y-2">
           {docs.map((d) => (
             <div key={d.id} className={`flex flex-wrap items-center gap-2 ${row}`}>
-              <span className={`text-[13px] font-semibold ${title}`}>{kindLabel(d.kind)}</span>
+              <span className={`t2-fs-body-sm font-semibold ${title}`}>{kindLabel(d.kind)}</span>
               {d.scope && <span className={pill}>{scopeLabel(d.scope)}</span>}
               <select value={d.status} onChange={(e) => run(() => updateTravelDocument(d.id, { status: e.target.value as TravelDocStatus }))} disabled={busy} className={mini}>
                 {STATUSES.map((s) => <option key={s} value={s}>{t(`tour.tdStatus_${s}`)}</option>)}
               </select>
               <input type="date" value={d.valid_until ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { valid_until: nn(e.target.value) }))} disabled={busy} className={mini} />
-              {d.valid_until && <span className="text-[11px] text-[var(--t2-faint)]">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
-              <label className="flex items-center gap-1 text-[11px] text-[var(--t2-muted)]">
+              {d.valid_until && <span className="t2-fs-meta text-[var(--t2-faint)]">{t("tour.tdValidUntilShort", { date: fmtDay(d.valid_until) })}</span>}
+              <label className="flex items-center gap-1 t2-fs-meta text-[var(--t2-muted)]">
                 <input type="number" min={0} max={104} value={d.lead_weeks ?? ""} onChange={(e) => run(() => updateTravelDocument(d.id, { lead_weeks: intOrNull(e.target.value) }))} disabled={busy} placeholder="—" className={`w-14 ${mini}`} />
                 {t("tour.tdLeadUnit")}
               </label>
-              <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto text-[12px] font-semibold text-[var(--t2-faint)] hover:text-red-500">{t("tour.tdRemove")}</button>
+              <button type="button" onClick={() => run(() => removeTravelDocument(d.id))} disabled={busy} className="ml-auto t2-fs-micro font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-danger)]">{t("tour.tdRemove")}</button>
             </div>
           ))}
         </div>
@@ -143,8 +143,8 @@ export default function TravelDocsCard({ tone = "light" }: { tone?: "light" | "d
           </label>
         )}
       </div>
-      <p className="mt-2 text-[11px] text-[var(--t2-faint)]">{t("tour.tdLeadHint")}</p>
-      <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.tdNoNumber")}</p>
+      <p className="mt-2 t2-fs-meta text-[var(--t2-faint)]">{t("tour.tdLeadHint")}</p>
+      <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.tdNoNumber")}</p>
       <button type="button" onClick={add} disabled={busy || !canAdd} className={btn}>{t("tour.tdAdd")}</button>
     </div>
   );

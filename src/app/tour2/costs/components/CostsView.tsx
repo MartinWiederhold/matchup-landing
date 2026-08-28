@@ -63,13 +63,13 @@ export default function CostsView() {
 
   // ── Auth-Gate (identisch zu SeasonView/TourBrowser) ──────────────────────
   if (authLoading) {
-    return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+    return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
   if (!user) {
     return (
       <div className="t2-panel mt-10 text-center">
-        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <h2 className="t2-fs-h3 font-bold">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">
           {t("tour.loginCta")}
         </Link>
@@ -77,8 +77,8 @@ export default function CostsView() {
     );
   }
 
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   return (
     <div className="mt-8 space-y-2">
@@ -92,8 +92,8 @@ export default function CostsView() {
 
       {entries.length === 0 ? (
         <div className="t2-panel mt-8 text-center">
-          <h2 className="text-lg font-bold">{t("tour.costsEmptyTitle")}</h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.costsEmptyText")}</p>
+          <h2 className="t2-fs-h3 font-bold">{t("tour.costsEmptyTitle")}</h2>
+          <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.costsEmptyText")}</p>
           <Link href="/tour2/finder" className="mt-6 t2-cta">
             {t("tour.costsEmptyCta")}
           </Link>

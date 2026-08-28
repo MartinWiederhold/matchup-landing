@@ -52,7 +52,7 @@ function LangSwitchRail() {
   const { locale, setLocale } = useLocale();
   const options: Locale[] = ["de", "en"];
   return (
-    <div className="ml-1 inline-flex items-center rounded-full bg-white/10 p-0.5 text-[10px] font-bold">
+    <div className="ml-1 inline-flex items-center rounded-full bg-[var(--t2-on-accent)]/10 p-0.5 t2-fs-meta font-bold">
       {options.map((opt) => (
         <button
           key={opt}
@@ -60,7 +60,7 @@ function LangSwitchRail() {
           onClick={() => setLocale(opt)}
           aria-pressed={locale === opt}
           className={`rounded-full px-1.5 py-0.5 uppercase tracking-wide transition-colors ${
-            locale === opt ? "bg-white text-[color:var(--t2-accent)]" : "text-white/70 hover:text-white"
+            locale === opt ? "bg-[var(--t2-on-accent)] text-[color:var(--t2-accent)]" : "text-[var(--t2-on-accent)]/70 hover:text-[var(--t2-on-accent)]"
           }`}
         >
           {opt}
@@ -75,7 +75,7 @@ function LangSwitchSheet() {
   const { locale, setLocale } = useLocale();
   const options: Locale[] = ["de", "en"];
   return (
-    <div className="inline-flex items-center rounded-full border border-[var(--t2-line-strong)] bg-[var(--t2-surface)] p-0.5 text-[11px] font-bold">
+    <div className="inline-flex items-center rounded-full border border-[var(--t2-line-strong)] bg-[var(--t2-surface)] p-0.5 t2-fs-meta font-bold">
       {options.map((opt) => (
         <button
           key={opt}
@@ -83,7 +83,7 @@ function LangSwitchSheet() {
           onClick={() => setLocale(opt)}
           aria-pressed={locale === opt}
           className={`rounded-full px-2 py-0.5 uppercase tracking-wide transition-colors ${
-            locale === opt ? "bg-[var(--t2-ink)] text-white" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
+            locale === opt ? "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
           }`}
         >
           {opt}
@@ -176,8 +176,8 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
               <span className="t2-rail-avatar t2-rail-avatar-fallback">{(name || "?").slice(0, 1)}</span>
             )}
             <span className="min-w-0">
-              <span className="block truncate text-[12px] font-semibold leading-tight">{name || "—"}</span>
-              <span className="mt-0.5 block truncate text-[10px] opacity-80">
+              <span className="block truncate t2-fs-micro font-semibold leading-tight">{name || "—"}</span>
+              <span className="mt-0.5 block truncate t2-fs-meta opacity-80">
                 {[ranking != null ? `#${ranking}` : null, country || null].filter(Boolean).join(" · ")}
               </span>
             </span>
@@ -230,7 +230,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
       <div className="t2-workspace">
         <header className="t2-mhead md:hidden">
           <span className="t2-rail-mark" aria-hidden>M</span>
-          <p className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-[-0.02em]">{t(`tour.${headerKey}`)}</p>
+          <p className="min-w-0 flex-1 truncate t2-fs-body font-semibold tracking-[-0.02em]">{t(`tour.${headerKey}`)}</p>
           {user && (
             <Link href="/tour2/profile" className="shrink-0" aria-label={t("tour.t2navProfile")}>
               {profile?.profileImage ? (
@@ -252,7 +252,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
         {moreOpen && (
           <div className="fixed inset-0 z-[35] md:hidden" onClick={() => setMoreOpen(false)}>
             <div
-              className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white px-5 pt-4 pb-[max(6.5rem,calc(5.5rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
+              className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--t2-on-accent)] px-5 pt-4 pb-[max(6.5rem,calc(5.5rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="t2-kicker">{t("tour.t2more")}</p>
@@ -261,11 +261,11 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
                   <li key={x.href}>
                     <Link
                       href={x.href}
-                      className={`flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-semibold ${x.match ? "bg-[var(--t2-accent-soft)] text-[var(--t2-ink)]" : "text-[var(--t2-ink)]"}`}
+                      className={`flex items-center justify-between rounded-xl px-3 py-3 t2-fs-body font-semibold ${x.match ? "bg-[var(--t2-accent-soft)] text-[var(--t2-ink)]" : "text-[var(--t2-ink)]"}`}
                       onClick={() => t2markNavStart()}
                     >
                       <span>{x.label}</span>
-                      {x.n != null && <span className="text-[12px] tabular-nums text-[var(--t2-muted)]">{x.n}</span>}
+                      {x.n != null && <span className="t2-fs-micro tabular-nums text-[var(--t2-muted)]">{x.n}</span>}
                     </Link>
                   </li>
                 ))}
@@ -273,14 +273,14 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
                   <li>
                     <button
                       type="button"
-                      className="flex w-full items-center rounded-xl px-3 py-3 text-left text-[15px] font-semibold text-[var(--t2-muted)]"
+                      className="flex w-full items-center rounded-xl px-3 py-3 text-left t2-fs-body font-semibold text-[var(--t2-muted)]"
                       onClick={() => { void signOut().then(() => router.push("/app")); }}
                     >
                       {t("tour.t2signOut")}
                     </button>
                   </li>
                 )}
-                <li className="mt-2 flex items-center justify-between px-3 py-2 text-[13px] font-semibold text-[var(--t2-muted)]">
+                <li className="mt-2 flex items-center justify-between px-3 py-2 t2-fs-body-sm font-semibold text-[var(--t2-muted)]">
                   <span>{t("tour.t2langLabel")}</span>
                   <LangSwitchSheet />
                 </li>

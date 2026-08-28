@@ -32,8 +32,8 @@ function Kpi({ label, children, note }: { label: string; children: ReactNode; no
   return (
     <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
       <p className="t2-kicker">{label}</p>
-      <div className="mt-2 text-[clamp(1.4rem,3vw,1.85rem)] font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+      <div className="mt-2 t2-fs-display font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
+      {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
     </div>
   );
 }
@@ -122,10 +122,10 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
   };
 
   if (authLoading || (user && state === "loading")) {
-    return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+    return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
   }
   if (!user) return <TourLoginCard />;
-  if (state === "error" || !setup) return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "error" || !setup) return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const money = (n: number) => new Intl.NumberFormat(locale === "en" ? "en-GB" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
   const ratesOk = costRatesComplete(rates ?? setup.rates);
@@ -143,19 +143,19 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
     <>
       <section>
         <h2 className="t2-kicker">{t("tour.t2profOptUsesTitle")}</h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptUses")}</p>
-        <p className="mt-3 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptSkip")}</p>
+        <p className="mt-2 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptUses")}</p>
+        <p className="mt-3 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptSkip")}</p>
       </section>
       {gaps.length > 0 && (
         <section>
           <h2 className="t2-kicker">{t("tour.t2profGaps")}</h2>
-          <ul className="mt-2 space-y-1 text-[13px] text-[var(--t2-muted)]">
+          <ul className="mt-2 space-y-1 t2-fs-body-sm text-[var(--t2-muted)]">
             {gaps.map((g) => <li key={g.kind}>{gapText(g)}</li>)}
           </ul>
         </section>
       )}
       <p>
-        <Link href="/app" className="text-[13px] font-semibold text-matchup">{t("tour.t2profEditApp")} →</Link>
+        <Link href="/app" className="t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{t("tour.t2profEditApp")} →</Link>
       </p>
     </>
   );
@@ -173,10 +173,10 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
       <section className="t2-panel mt-6">
         <h2 className="t2-kicker">{t("tour.wsRemindersLabel")}</h2>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.wsRemindersHint")}</p>
+          <p className="t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.wsRemindersHint")}</p>
           <button type="button" role="switch" aria-checked={reminderOn} onClick={() => toggleReminders(!reminderOn)}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderOn ? "bg-matchup" : "bg-[var(--t2-line-strong)]"}`}>
-            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${reminderOn ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${reminderOn ? "bg-[var(--t2-accent)]" : "bg-[var(--t2-line-strong)]"}`}>
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-[var(--t2-on-accent)] shadow transition-transform ${reminderOn ? "translate-x-[22px]" : "translate-x-0.5"}`} />
           </button>
         </div>
       </section>
@@ -187,8 +187,8 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
           onClick={() => setShowSetup((v) => !v)}
           className="flex w-full items-center justify-between border-t border-[var(--t2-line)] py-3 text-left"
         >
-          <span className="text-[13px] font-bold">{t("tour.t2profSetup")}</span>
-          <span className="text-[12px] text-[var(--t2-muted)]">{setup.complete ? t("tour.t2profSetupDone") : t("tour.t2profSetupHint")}</span>
+          <span className="t2-fs-body-sm font-bold">{t("tour.t2profSetup")}</span>
+          <span className="t2-fs-micro text-[var(--t2-muted)]">{setup.complete ? t("tour.t2profSetupDone") : t("tour.t2profSetupHint")}</span>
         </button>
         {showSetup && (
           <div className="mt-3 border-t border-[var(--t2-line)] pt-4">

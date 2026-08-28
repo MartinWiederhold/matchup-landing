@@ -1,26 +1,105 @@
-/* /tour2: awwwards-Editorial — Weiß, Luft, Grotesk × Matchup-Violett (einziger Akzent). */
+/* /tour2 Design-Tokens — Etappe 1.
+   Drei Schichten: Rohwerte, Bedeutung, Zustände. Bedeutung und Zustände sind
+   die einzigen Namen, die im Code stehen sollen. Rohwerte sind Debug-Anker
+   und Ausgangspunkt für einen späteren Dark-Modus (nicht Teil dieser Etappe). */
 .t2-root {
-  --t2-paper: #ffffff;
-  --t2-card: #ffffff;
-  --t2-surface: #f3f3f1;
-  --t2-ink: #0a0a0a;          /* Fast-Schwarz für Text/Chrome */
-  --t2-muted: #6b6b6b;        /* Sekundärtext */
-  --t2-faint: #9a9a9a;        /* Tertiär/Labels */
-  --t2-line: rgba(10, 10, 10, 0.09);
-  --t2-line-strong: rgba(10, 10, 10, 0.16);
-  --t2-accent: #4b3bf3;       /* Matchup-Violett */
-  --t2-accent-hover: #3b2cd9;
-  --t2-accent-soft: rgba(75, 59, 243, 0.08);
-  --t2-radius: 16px;
-  --t2-radius-lg: 22px;
-  --t2-shadow: 0 1px 2px rgba(10, 10, 10, 0.04), 0 12px 32px -12px rgba(10, 10, 10, 0.12);
-  --t2-shadow-hover: 0 2px 4px rgba(10, 10, 10, 0.05), 0 30px 60px -20px rgba(10, 10, 10, 0.22);
+  /* ── Schicht 1: Rohwerte ──────────────────────────────────────── */
+  --t2-raw-warm-white:      #FFFFFF;
+  --t2-raw-paper:           #F7F6F3;   /* warmes Hell für Seitenhintergrund */
+  --t2-raw-paper-muted:     #F1F0EC;   /* gedämpfte Fläche */
+  --t2-raw-ink:             #171512;   /* warmes Fast-Schwarz */
+  --t2-raw-ink-muted:       #3D3A35;   /* warmer Sekundärtext */
+  --t2-raw-ink-soft:        #78736B;   /* Beschriftungen */
+  --t2-raw-ink-faint:       #A8A29A;   /* Metadaten */
+  --t2-raw-line:            rgba(23, 21, 18, 0.09);
+  --t2-raw-line-strong:     rgba(23, 21, 18, 0.16);
+  --t2-raw-accent:          #4b3bf3;   /* Matchup-Violett — unverändert */
+  --t2-raw-accent-hover:    #3b2cd9;
+  --t2-raw-accent-soft:     rgba(75, 59, 243, 0.10);
+  --t2-raw-warn:            #B45309;
+  --t2-raw-warn-surface:    #FEF3C7;
+  --t2-raw-danger:          #B42318;
+  --t2-raw-danger-surface:  #FEE4E2;
+  --t2-raw-success:         #067647;
+  --t2-raw-success-surface: #DCFAE6;
+
+  /* ── Schicht 2: Bedeutung (die einzigen Namen im Code) ────────── */
+  --t2-bg:              var(--t2-raw-paper);
+  --t2-surface:         var(--t2-raw-warm-white);
+  --t2-surface-muted:   var(--t2-raw-paper-muted);
+  --t2-line:            var(--t2-raw-line);
+  --t2-line-strong:     var(--t2-raw-line-strong);
+  --t2-text:            var(--t2-raw-ink);
+  --t2-text-muted:      var(--t2-raw-ink-muted);
+  --t2-text-soft:       var(--t2-raw-ink-soft);
+  --t2-text-faint:      var(--t2-raw-ink-faint);
+  --t2-accent:          var(--t2-raw-accent);
+  --t2-accent-soft:     var(--t2-raw-accent-soft);
+  --t2-warn:            var(--t2-raw-warn);
+  --t2-warn-surface:    var(--t2-raw-warn-surface);
+  --t2-danger:          var(--t2-raw-danger);
+  --t2-danger-surface:  var(--t2-raw-danger-surface);
+  --t2-success:         var(--t2-raw-success);
+  --t2-success-surface: var(--t2-raw-success-surface);
+  --t2-on-accent:       #fff;   /* Vordergrund auf accent-Fläche */
+
+  /* ── Schicht 3: Zustände ──────────────────────────────────────── */
+  --t2-state-deadline-open:   var(--t2-text-soft);
+  --t2-state-deadline-soon:   var(--t2-warn);
+  --t2-state-deadline-missed: var(--t2-danger);
+  --t2-state-stop-past:       var(--t2-text-faint);
+  --t2-state-stop-current:    var(--t2-accent);
+  --t2-state-stop-planned:    var(--t2-text);
+  --t2-state-done:            var(--t2-success);
+
+  /* ── Legacy-Aliase (Etappe 1 Übergang, Etappe 2 löst sie auf) ── */
+  /* Ohne Aliase müssten in dieser Etappe ~200 var(--t2-ink|-muted|-faint|-paper|-card)-
+     Referenzen mitgeführt werden. Aliase halten den Diff klein und die Semantik stabil. */
+  --t2-paper:         var(--t2-bg);
+  --t2-card:          var(--t2-surface);
+  /* alter --t2-surface (Werkstattfläche, #f3f3f1) wandert auf das neue
+     --t2-surface-muted (F1F0EC) — visuell praktisch identisch */
+  --t2-ink:           var(--t2-text);
+  --t2-muted:         var(--t2-text-soft);
+  --t2-faint:         var(--t2-text-faint);
+  --t2-accent-hover:  var(--t2-raw-accent-hover);
+
+  /* ── Radien: 3 Stufen ─────────────────────────────────────────── */
+  --t2-radius-sm:   8px;
+  --t2-radius-md:   12px;
+  --t2-radius-full: 999px;
+  /* Legacy: alter --t2-radius (16px) und -lg (22px) auf md ummapping. */
+  --t2-radius:      var(--t2-radius-md);
+  --t2-radius-lg:   var(--t2-radius-md);
+
+  /* ── Schatten: nur noch bei Überlagerern ──────────────────────── */
+  --t2-shadow-overlay: 0 20px 50px -18px rgba(23, 21, 18, 0.6);
+  --t2-shadow-drawer:  12px 0 40px rgba(23, 21, 18, 0.25);
+  --t2-shadow-sheet:   0 -12px 40px rgba(23, 21, 18, 0.18);
+  /* Legacy — Karten-Hover-Ebene, nur noch bei .t2-card:hover benutzt */
+  --t2-shadow:        0 1px 2px rgba(23, 21, 18, 0.04), 0 12px 32px -12px rgba(23, 21, 18, 0.12);
+  --t2-shadow-hover:  0 2px 4px rgba(23, 21, 18, 0.05), 0 30px 60px -20px rgba(23, 21, 18, 0.22);
+
+  /* ── Typografie-Skala: 8 Stufen ───────────────────────────────── */
+  --t2-text-display:  clamp(2.25rem, 5vw, 3.25rem);   /* Hero-Zahlen, tabular */
+  --t2-text-h1:       1.75rem;
+  --t2-text-h2:       1.25rem;
+  --t2-text-h3:       1rem;
+  --t2-text-body:     0.875rem;
+  --t2-text-body-sm:  0.8125rem;
+  --t2-text-micro:    0.75rem;
+  --t2-text-meta:     0.6875rem;   /* nur hier Uppercase + Sperrung */
+
+  /* ── Layout-Konstanten (unverändert) ──────────────────────────── */
   --t2-rail: 175px;
   --t2-chrome: 0px;
-  background: var(--t2-paper);
-  color: var(--t2-ink);
+
+  background: var(--t2-bg);
+  color: var(--t2-text);
   color-scheme: light;
-  font-family: var(--t2-font), "Helvetica Neue", Arial, sans-serif;
+  /* Schrift: DM Sans aus dem Root-Layout (Play/Marketing-Parität).
+     Instrument Sans wurde in Etappe 1 zurückgezogen. */
+  font-family: var(--font-dm-sans), "Helvetica Neue", Arial, sans-serif;
   font-feature-settings: "ss01", "cv01";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -28,9 +107,24 @@
 }
 .t2-root ::selection {
   background: var(--t2-accent);
-  color: #fff;
+  color: var(--t2-on-accent);
 }
 html:has(.t2-root) { scroll-behavior: smooth; }
+
+/* ── Typo-Utility-Klassen (Etappe 1) ─────────────────────────────── */
+/* Statt „text-[12px]" überall im JSX: eine schmale Menge Klassen, die auf die
+   8er-Typo-Skala verweisen. Ziffern in Aktualisierungs-Werten bekommen
+   tabellarische Ziffern — display und h1 sind es per Default, andere Größen
+   müssen es explizit über `.t2-num` mitziehen. */
+.t2-fs-display  { font-size: var(--t2-text-display);  letter-spacing: -0.03em; line-height: 1.02; font-variant-numeric: tabular-nums; }
+.t2-fs-h1       { font-size: var(--t2-text-h1);       letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.t2-fs-h2       { font-size: var(--t2-text-h2);       letter-spacing: -0.01em; line-height: 1.25; }
+.t2-fs-h3       { font-size: var(--t2-text-h3);       line-height: 1.4; }
+.t2-fs-body     { font-size: var(--t2-text-body);     line-height: 1.5; }
+.t2-fs-body-sm  { font-size: var(--t2-text-body-sm);  line-height: 1.5; }
+.t2-fs-micro    { font-size: var(--t2-text-micro);    line-height: 1.4; }
+.t2-fs-meta     { font-size: var(--t2-text-meta);     line-height: 1.4; }
+.t2-num         { font-variant-numeric: tabular-nums; }
 
 /* ---------- Typografie ---------- */
 .t2-kicker {
@@ -105,12 +199,12 @@ html:has(.t2-root) { scroll-behavior: smooth; }
   justify-content: center;
   gap: 0.5rem;
   background: var(--t2-ink);
-  color: #fff;
+  color: var(--t2-on-accent);
   padding: 0.85rem 1.4rem;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   border: 1px solid var(--t2-ink);
   transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1), background 0.2s ease, box-shadow 0.3s ease;
 }
@@ -128,11 +222,11 @@ html:has(.t2-root) { scroll-behavior: smooth; }
   padding: 0.8rem 1.3rem;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   background: transparent;
   transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1), background 0.2s ease, border-color 0.2s ease;
 }
-.t2-ghost:hover { background: var(--t2-ink); color: #fff; border-color: var(--t2-ink); transform: translateY(-2px); }
+.t2-ghost:hover { background: var(--t2-ink); color: var(--t2-on-accent); border-color: var(--t2-ink); transform: translateY(-2px); }
 
 /* ---------- Karten (awwwards-Media-Card) ---------- */
 .t2-card {
@@ -144,9 +238,10 @@ html:has(.t2-root) { scroll-behavior: smooth; }
   transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), box-shadow 0.5s cubic-bezier(0.19, 1, 0.22, 1), border-color 0.3s ease;
 }
 a.t2-card:hover, .t2-card--hover:hover {
+  /* Etappe 1: Karten-Hover ist ein Rahmen-Wechsel + subtiler Lift,
+     kein Schwebe-Schatten mehr. */
   transform: translateY(-4px);
-  box-shadow: var(--t2-shadow-hover);
-  border-color: transparent;
+  border-color: var(--t2-accent);
 }
 .t2-media {
   position: relative;
@@ -176,7 +271,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(6px);
   padding: 0.32rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
 }
 .t2-badge {
   display: inline-flex;
@@ -188,7 +283,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   color: var(--t2-accent);
   border: 1px solid color-mix(in srgb, var(--t2-accent) 35%, transparent);
   padding: 0.1rem 0.35rem;
-  border-radius: 5px;
+  border-radius: var(--t2-radius-sm);
   line-height: 1;
 }
 
@@ -255,7 +350,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   padding: 0.75rem 0.95rem;
   font-size: 14px;
   color: var(--t2-ink);
-  border-radius: 12px;
+  border-radius: var(--t2-radius-md);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -280,13 +375,13 @@ a.t2-card:hover, .t2-card--hover:hover {
   letter-spacing: 0.01em;
   color: var(--t2-ink);
   background: transparent;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 .t2-chip:hover { border-color: var(--t2-ink); }
 .t2-chip.is-on {
   border-color: var(--t2-accent);
-  color: #fff;
+  color: var(--t2-on-accent);
   background: var(--t2-accent);
 }
 
@@ -301,11 +396,11 @@ a.t2-card:hover, .t2-card--hover:hover {
   align-items: center;
   gap: 0.2rem;
   padding: 0.35rem 0.4rem;
-  border-radius: 999px;
-  background: rgba(10, 10, 10, 0.92);
+  border-radius: var(--t2-radius-full);
+  background: rgba(23, 21, 18, 0.92);
   backdrop-filter: blur(16px) saturate(1.2);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 50px -18px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--t2-shadow-overlay);
   max-width: calc(100vw - 1.5rem);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -316,7 +411,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   align-items: center;
   gap: 0.35rem;
   padding: 0.5rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   font-size: 12.5px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -325,10 +420,10 @@ a.t2-card:hover, .t2-card--hover:hover {
   flex-shrink: 0;
   transition: color 0.25s ease, background 0.25s ease;
 }
-.t2-dock-item:hover { color: #fff; }
+.t2-dock-item:hover { color: var(--t2-on-accent); }
 .t2-dock-item.is-on {
-  color: var(--t2-ink);
-  background: #fff;
+  color: var(--t2-text);
+  background: var(--t2-surface);
 }
 .t2-dock-brand {
   display: inline-flex;
@@ -336,9 +431,9 @@ a.t2-card:hover, .t2-card--hover:hover {
   justify-content: center;
   height: 34px;
   width: 34px;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   background: var(--t2-accent);
-  color: #fff;
+  color: var(--t2-on-accent);
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
@@ -361,7 +456,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   width: 44px;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   border: 1px solid var(--t2-line-strong);
   background: var(--t2-paper);
   color: var(--t2-ink);
@@ -413,7 +508,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   display: flex;
   flex-direction: column;
   background: var(--t2-accent);
-  color: #fff;
+  color: var(--t2-on-accent);
 }
 .t2-rail-desk { display: none; }
 @media (min-width: 768px) {
@@ -423,18 +518,18 @@ a.t2-card:hover, .t2-card--hover:hover {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(10, 10, 10, 0.4);
+  background: rgba(23, 21, 18, 0.4);
 }
 .t2-rail-drawer {
   height: 100%;
-  box-shadow: 12px 0 40px rgba(10, 10, 10, 0.25);
+  box-shadow: var(--t2-shadow-drawer);
 }
 .t2-rail-brand {
   display: flex;
   align-items: center;
   gap: 0.55rem;
   padding: 1.1rem 0.85rem 1rem;
-  color: #fff;
+  color: var(--t2-on-accent);
   text-decoration: none;
 }
 .t2-rail-mark {
@@ -467,26 +562,26 @@ a.t2-card:hover, .t2-card--hover:hover {
   align-items: center;
   gap: 0.55rem;
   padding: 0.48rem 0.55rem;
-  border-radius: 8px;
+  border-radius: var(--t2-radius-sm);
   color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-.t2-rail-item:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.t2-rail-item:hover { color: var(--t2-on-accent); background: rgba(255, 255, 255, 0.1); }
 .t2-rail-item.is-on {
-  color: #fff;
+  color: var(--t2-on-accent);
   background: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 3px 0 0 #fff;
+  box-shadow: inset 3px 0 0 var(--t2-on-accent);
 }
 .t2-rail-label { min-width: 0; flex: 1; }
 .t2-rail-badge {
   min-width: 1.15rem;
   height: 1.15rem;
   padding: 0 0.28rem;
-  border-radius: 999px;
-  background: #fff;
+  border-radius: var(--t2-radius-full);
+  background: var(--t2-on-accent);
   color: var(--t2-accent);
   font-size: 10px;
   font-weight: 700;
@@ -501,13 +596,13 @@ a.t2-card:hover, .t2-card--hover:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #fff;
+  color: var(--t2-on-accent);
   text-decoration: none;
 }
 .t2-rail-avatar {
   width: 1.7rem;
   height: 1.7rem;
-  border-radius: 999px;
+  border-radius: var(--t2-radius-full);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -522,7 +617,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   margin-top: 0.7rem;
   padding: 0.35rem 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 6px;
+  border-radius: var(--t2-radius-sm);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -537,10 +632,10 @@ a.t2-card:hover, .t2-card--hover:hover {
   place-items: center;
   width: 1.85rem;
   height: 1.85rem;
-  color: #fff;
+  color: var(--t2-on-accent);
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--t2-radius-sm);
   cursor: pointer;
 }
 .t2-rail-tool:hover { background: rgba(255, 255, 255, 0.14); }
@@ -618,28 +713,27 @@ a.t2-card:hover, .t2-card--hover:hover {
 @media (min-width: 768px) {
   .t2-overview { padding: 1.35rem 1.75rem 2.25rem; }
 }
+/* Karten und Listen im Dashboard: nur Rahmen, kein Schatten (Etappe 1). */
 .t2-dash-card {
   border: 1px solid var(--t2-line);
-  border-radius: 12px;
+  border-radius: var(--t2-radius-md);
   padding: 0.95rem 1.05rem 1.05rem;
-  background: var(--t2-card);
-  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.04);
+  background: var(--t2-surface);
 }
 .t2-season-chip {
   display: inline-block;
   border: 1px solid var(--t2-line-strong);
-  border-radius: 8px;
+  border-radius: var(--t2-radius-sm);
   padding: 0.35rem 0.75rem;
-  background: var(--t2-card);
-  font-size: 13px;
+  background: var(--t2-surface);
+  font-size: var(--t2-text-body-sm);
   font-weight: 600;
 }
 .t2-kpi-card {
   border: 1px solid var(--t2-line);
-  border-radius: 12px;
+  border-radius: var(--t2-radius-md);
   padding: 1rem 1.05rem 1.1rem;
-  background: var(--t2-card);
-  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.04);
+  background: var(--t2-surface);
 }
 .t2-route-scroll {
   overflow-x: auto;
@@ -655,9 +749,9 @@ a.t2-card:hover, .t2-card--hover:hover {
   width: 9.5rem;
   flex-shrink: 0;
   border: 1px solid var(--t2-line);
-  border-radius: 10px;
+  border-radius: var(--t2-radius-sm);
   padding: 0.7rem 0.75rem;
-  background: var(--t2-card);
+  background: var(--t2-surface);
   text-decoration: none;
   color: inherit;
 }

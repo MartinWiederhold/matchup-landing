@@ -62,8 +62,8 @@ export default function SeasonJourney({
   return (
     <ul ref={listRef} className="space-y-0">
       {startLabel && (
-        <li className="mb-3 flex items-center gap-2 text-[13px] font-semibold">
-          <span className="flex h-6 w-6 items-center justify-center border border-[var(--t2-line)] text-[11px]">⌂</span>
+        <li className="mb-3 flex items-center gap-2 t2-fs-body-sm font-semibold">
+          <span className="flex h-6 w-6 items-center justify-center border border-[var(--t2-line)] t2-fs-meta">⌂</span>
           {t("tour.t2startHome", { name: startLabel })}
         </li>
       )}
@@ -75,10 +75,10 @@ export default function SeasonJourney({
         return (
           <li key={s.id} data-stop={s.id}>
             {showMonth && (
-              <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-muted)] first:mt-0">{s.month}</p>
+              <p className="mb-2 mt-4 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-muted)] first:mt-0">{s.month}</p>
             )}
             {leg && (
-              <div className={`my-1 ml-[11px] border-l py-2 pl-5 text-[11px] leading-snug ${leg.tight ? "border-[var(--t2-ink)] text-[var(--t2-ink)]" : "border-[var(--t2-line)] text-[var(--t2-muted)]"}`}>
+              <div className={`my-1 ml-[11px] border-l py-2 pl-5 t2-fs-meta leading-snug ${leg.tight ? "border-[var(--t2-ink)] text-[var(--t2-ink)]" : "border-[var(--t2-line)] text-[var(--t2-muted)]"}`}>
                 {leg.cluster ? (
                   <p>{t("tour.t2legCluster")}</p>
                 ) : (
@@ -90,13 +90,13 @@ export default function SeasonJourney({
                 )}
               </div>
             )}
-            <div className={`flex items-start gap-2 border-l px-2 py-2 ${sel ? "border-matchup" : "border-transparent"}`}>
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-matchup text-[11px] font-bold text-white">{s.order}</span>
+            <div className={`flex items-start gap-2 border-l px-2 py-2 ${sel ? "border-[var(--t2-accent)]" : "border-transparent"}`}>
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-[var(--t2-accent)] t2-fs-meta font-bold text-[var(--t2-on-accent)]">{s.order}</span>
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
-                <p className="truncate text-[15px] font-semibold tracking-tight">{s.city}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
-                <p className="text-[11px] text-[var(--t2-muted)]">{s.date} · {s.category}</p>
+                <p className="truncate t2-fs-body font-semibold tracking-tight">{s.city}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
+                <p className="t2-fs-meta text-[var(--t2-muted)]">{s.date} · {s.category}</p>
                 {(s.deadline || s.cost) && (
-                  <p className="text-[11px] text-[var(--t2-muted)]">
+                  <p className="t2-fs-meta text-[var(--t2-muted)]">
                     {s.deadline ?? ""}
                     {s.deadline && s.cost ? " · " : ""}
                     {s.cost ?? ""}
@@ -104,10 +104,10 @@ export default function SeasonJourney({
                 )}
                 {s.pill}
                 {s.why.length > 0 && (
-                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--t2-faint)]">{t("tour.t2whyTitle")}: {s.why.join(" · ")}</p>
+                  <p className="mt-0.5 t2-fs-meta leading-snug text-[var(--t2-faint)]">{t("tour.t2whyTitle")}: {s.why.join(" · ")}</p>
                 )}
               </button>
-              <button type="button" onClick={() => onRemove(s.id)} className="mt-0.5 shrink-0 text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.seasonRemove")}</button>
+              <button type="button" onClick={() => onRemove(s.id)} className="mt-0.5 shrink-0 t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.seasonRemove")}</button>
             </div>
           </li>
         );

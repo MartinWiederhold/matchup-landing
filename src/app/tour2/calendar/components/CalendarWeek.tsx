@@ -109,10 +109,10 @@ export default function CalendarWeek() {
     setAnchor(addDaysISO(anchor, shiftBy));
   };
 
-  if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
-  if (state === "loading") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
-  if (state === "error") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (state === "error") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const monthTitle = new Intl.DateTimeFormat(loc, { month: "long", year: "numeric" }).format(isoToDate(anchor));
   const rangeStart = days[0];
@@ -124,8 +124,8 @@ export default function CalendarWeek() {
       : `${new Intl.DateTimeFormat(loc, { day: "numeric", month: "short" }).format(isoToDate(rangeStart))} – ${new Intl.DateTimeFormat(loc, { day: "numeric", month: "short" }).format(isoToDate(rangeEnd))}`;
 
   const formModal = form && (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setForm(null)}>
-      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto bg-white p-1 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-[var(--t2-text)]/50 p-4 sm:items-center" onClick={() => setForm(null)}>
+      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto bg-[var(--t2-on-accent)] p-1 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <EventForm
           event={form.event}
           season={season}
@@ -152,37 +152,37 @@ export default function CalendarWeek() {
           {anchor === todayISO ? t("tour.calGoToday") : rangeLabel}
         </p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
-          <h2 className="t2-display min-w-0 text-[clamp(2.4rem,8vw,5rem)] leading-[0.88]">
+          <h2 className="t2-display min-w-0 t2-fs-display leading-[0.88]">
             {city || t("tour.calNoTournament")}
           </h2>
-          <p className="t2-display shrink-0 text-[clamp(2.4rem,8vw,5rem)] leading-none tabular-nums">
+          <p className="t2-display shrink-0 t2-fs-display leading-none tabular-nums">
             {dd}<span className="text-[var(--t2-accent)]">.</span>{mm}
           </p>
         </div>
         {tours[0] && (
-          <p className="mt-3 text-[14px] text-[var(--t2-muted)]">
+          <p className="mt-3 t2-fs-body text-[var(--t2-muted)]">
             {[tours[0].category, tours.slice(1).map((x) => x.city).filter(Boolean).join(" · ")].filter(Boolean).join(" · ")}
           </p>
         )}
         <ul className="mt-8 divide-y divide-[var(--t2-line)] border-y border-[var(--t2-line)]">
           {evs.length === 0 ? (
             <li className="flex items-center justify-between py-5">
-              <p className="text-[14px] text-[var(--t2-muted)]">{t("tour.calNoEvents")}</p>
+              <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.calNoEvents")}</p>
               <button type="button" onClick={() => setForm({ event: null, date: anchor })} className="t2-eyebrow">{t("tour.calAdd")}</button>
             </li>
           ) : evs.map((e) => (
             <li key={e.id}>
               <button type="button" onClick={() => setForm({ event: e })} className="flex w-full items-baseline gap-6 py-4 text-left hover:text-[var(--t2-accent)]">
-                <span className="w-16 shrink-0 text-[13px] font-semibold tabular-nums text-[var(--t2-muted)]">{e.event_time ? hhmm(e.event_time) : "—"}</span>
+                <span className="w-16 shrink-0 t2-fs-body-sm font-semibold tabular-nums text-[var(--t2-muted)]">{e.event_time ? hhmm(e.event_time) : "—"}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[17px] font-semibold tracking-tight">{e.title || t(`tour.calKind_${e.kind}`)}</span>
+                  <span className="block t2-fs-h3 font-semibold tracking-tight">{e.title || t(`tour.calKind_${e.kind}`)}</span>
                   <span className="mt-0.5 block t2-kicker">{t(`tour.calKind_${e.kind}`)}</span>
                 </span>
               </button>
             </li>
           ))}
         </ul>
-        <Link href="/tour2/season" className="mt-6 inline-block text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-accent)]">{t("tour.t2navSeason")} →</Link>
+        <Link href="/tour2/season" className="mt-6 inline-block t2-fs-micro font-semibold uppercase tracking-[0.16em] text-[var(--t2-accent)]">{t("tour.t2navSeason")} →</Link>
       </section>
     );
   })() : null;
@@ -192,16 +192,16 @@ export default function CalendarWeek() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="t2-eyebrow">{t("tour.t2navCalendar")}</p>
-          <h1 className="t2-display mt-2 text-[clamp(2rem,5vw,3.25rem)] leading-[0.9]">{monthTitle}</h1>
+          <h1 className="t2-display mt-2 t2-fs-display leading-[0.9]">{monthTitle}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/tour2/timeline" title={t("tour.calGanttHint")} className="px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">
+          <Link href="/tour2/timeline" title={t("tour.calGanttHint")} className="px-3 py-2 t2-fs-micro font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">
             {t("tour.calGantt")}
           </Link>
-          <button type="button" onClick={goToday} className="px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">{t("tour.calGoToday")}</button>
-          <button type="button" onClick={goPrev} aria-label={t("tour.calPrev")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">‹</button>
-          <button type="button" onClick={goNext} aria-label={t("tour.calNext")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-white">›</button>
-          <button type="button" onClick={() => setForm({ event: null, date: view === "day" ? anchor : weekStart })} className="bg-[var(--t2-ink)] px-4 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[var(--t2-accent)]">
+          <button type="button" onClick={goToday} className="px-3 py-2 t2-fs-micro font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">{t("tour.calGoToday")}</button>
+          <button type="button" onClick={goPrev} aria-label={t("tour.calPrev")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">‹</button>
+          <button type="button" onClick={goNext} aria-label={t("tour.calNext")} className="flex h-10 w-10 items-center justify-center ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">›</button>
+          <button type="button" onClick={() => setForm({ event: null, date: view === "day" ? anchor : weekStart })} className="bg-[var(--t2-ink)] px-4 py-2.5 t2-fs-micro font-semibold uppercase tracking-[0.14em] text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]">
             {t("tour.calAdd")}
           </button>
         </div>
@@ -214,7 +214,7 @@ export default function CalendarWeek() {
               key={f}
               type="button"
               onClick={() => setFilter(f)}
-              className={`-mb-px border-b-2 px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] ${
+              className={`-mb-px border-b-2 px-4 py-3 t2-fs-micro font-semibold uppercase tracking-[0.14em] ${
                 filter === f ? "border-[var(--t2-ink)] text-[var(--t2-ink)]" : "border-transparent text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
               }`}
             >
@@ -228,7 +228,7 @@ export default function CalendarWeek() {
               key={v}
               type="button"
               onClick={() => setView(v)}
-              className={`px-3 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] ${
+              className={`px-3 py-3 t2-fs-micro font-semibold uppercase tracking-[0.14em] ${
                 view === v ? "text-[var(--t2-ink)]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
               }`}
             >
@@ -239,7 +239,7 @@ export default function CalendarWeek() {
       </div>
 
       {view === "week" && (
-        <p className="mt-3 text-[12px] font-medium uppercase tracking-[0.16em] text-[var(--t2-muted)]">
+        <p className="mt-3 t2-fs-micro font-medium uppercase tracking-[0.16em] text-[var(--t2-muted)]">
           {rangeLabel} · {t("tour.t2calWeek", { n: isoWeekNumber(weekStart) })}
         </p>
       )}
@@ -266,20 +266,20 @@ export default function CalendarWeek() {
               const evs = eventsOn(iso);
               const wd = new Intl.DateTimeFormat(loc, { weekday: "short" }).format(dt);
               return (
-                <div key={iso} className={`min-h-[22rem] border-b border-r border-[var(--t2-line)] last:border-r-0 ${isToday ? "bg-[var(--t2-ink)] text-white" : ""}`}>
+                <div key={iso} className={`min-h-[22rem] border-b border-r border-[var(--t2-line)] last:border-r-0 ${isToday ? "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]" : ""}`}>
                   <button type="button" onClick={() => { setAnchor(iso); setView("day"); }} className="flex w-full flex-col items-start px-3 pb-3 pt-4 text-left">
-                    <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isToday ? "text-white/70" : "text-[var(--t2-muted)]"}`}>{wd}</span>
-                    <span className="t2-display mt-1 text-[2rem] leading-none tabular-nums">{dt.getDate()}</span>
+                    <span className={`t2-fs-meta font-semibold uppercase tracking-[0.18em] ${isToday ? "text-[var(--t2-on-accent)]/70" : "text-[var(--t2-muted)]"}`}>{wd}</span>
+                    <span className="t2-display mt-1 t2-fs-h1 leading-none tabular-nums">{dt.getDate()}</span>
                   </button>
                   <div className="space-y-px px-2 pb-4">
                     {tours.map((tt) => (
                       <Link
                         key={tt.id}
                         href="/tour2/season"
-                        className={`block px-2 py-2 text-[12px] font-semibold leading-snug ${isToday ? "bg-[var(--t2-paper)] text-[var(--t2-ink)]" : "bg-[var(--t2-ink)] text-white"}`}
+                        className={`block px-2 py-2 t2-fs-micro font-semibold leading-snug ${isToday ? "bg-[var(--t2-paper)] text-[var(--t2-ink)]" : "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]"}`}
                       >
                         {tt.city || tt.name}
-                        {tt.category ? <span className={`mt-0.5 block text-[10px] font-medium uppercase tracking-wide ${isToday ? "text-[var(--t2-muted)]" : "text-white/60"}`}>{tt.category}</span> : null}
+                        {tt.category ? <span className={`mt-0.5 block t2-fs-meta font-medium uppercase tracking-wide ${isToday ? "text-[var(--t2-muted)]" : "text-[var(--t2-on-accent)]/60"}`}>{tt.category}</span> : null}
                       </Link>
                     ))}
                     {evs.map((e) => (
@@ -287,14 +287,14 @@ export default function CalendarWeek() {
                         key={e.id}
                         type="button"
                         onClick={() => setForm({ event: e })}
-                        className={`block w-full px-2 py-2 text-left text-[12px] leading-snug ${isToday ? "text-white" : "text-[var(--t2-ink)]"} hover:text-[var(--t2-accent)]`}
+                        className={`block w-full px-2 py-2 text-left t2-fs-micro leading-snug ${isToday ? "text-[var(--t2-on-accent)]" : "text-[var(--t2-ink)]"} hover:text-[var(--t2-accent)]`}
                       >
-                        <span className={`block text-[10px] font-semibold tabular-nums ${isToday ? "text-white/50" : "text-[var(--t2-muted)]"}`}>{e.event_time ? hhmm(e.event_time) : t("tour.calAllDay")}</span>
+                        <span className={`block t2-fs-meta font-semibold tabular-nums ${isToday ? "text-[var(--t2-on-accent)]/50" : "text-[var(--t2-muted)]"}`}>{e.event_time ? hhmm(e.event_time) : t("tour.calAllDay")}</span>
                         {e.title || t(`tour.calKind_${e.kind}`)}
                       </button>
                     ))}
                     {tours.length === 0 && evs.length === 0 && (
-                      <button type="button" onClick={() => setForm({ event: null, date: iso })} className={`w-full px-2 py-6 text-left text-[11px] uppercase tracking-[0.12em] ${isToday ? "text-white/40" : "text-[var(--t2-faint)]"} hover:text-[var(--t2-accent)]`}>
+                      <button type="button" onClick={() => setForm({ event: null, date: iso })} className={`w-full px-2 py-6 text-left t2-fs-meta uppercase tracking-[0.12em] ${isToday ? "text-[var(--t2-on-accent)]/40" : "text-[var(--t2-faint)]"} hover:text-[var(--t2-accent)]`}>
                         {t("tour.calAdd")}
                       </button>
                     )}
@@ -330,7 +330,7 @@ function MonthGrid({
     <div className="mt-6 border-t border-[var(--t2-line-strong)]">
       <div className="grid grid-cols-7 border-b border-[var(--t2-line)]">
         {dow.map((k) => (
-          <div key={k} className="px-2 py-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-muted)]">{t(`tour.${k}`)}</div>
+          <div key={k} className="px-2 py-3 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-muted)]">{t(`tour.${k}`)}</div>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -342,20 +342,20 @@ function MonthGrid({
           const tour = tours.find((tt) => coversDay(tt.tournament_monday, iso));
           return (
             <div key={iso} className={`min-h-[7rem] border-b border-r border-[var(--t2-line)] p-2 [&:nth-child(7n)]:border-r-0 ${inMonth ? "" : "opacity-35"}`}>
-              <button type="button" onClick={() => onDay(iso)} className={`text-[13px] font-black tabular-nums ${isToday ? "text-[var(--t2-accent)]" : ""}`}>
+              <button type="button" onClick={() => onDay(iso)} className={`t2-fs-body-sm font-black tabular-nums ${isToday ? "text-[var(--t2-accent)]" : ""}`}>
                 {isoToDate(iso).getDate()}
               </button>
               {tour && inMonth && (
-                <Link href="/tour2/season" className="mt-1 block truncate bg-[var(--t2-ink)] px-1.5 py-1 text-[10px] font-semibold text-white">
+                <Link href="/tour2/season" className="mt-1 block truncate bg-[var(--t2-ink)] px-1.5 py-1 t2-fs-meta font-semibold text-[var(--t2-on-accent)]">
                   {tour.city || tour.name}
                 </Link>
               )}
               {dayEvents.map((e) => (
-                <button key={e.id} type="button" onClick={() => onEvent(e)} className="mt-0.5 block w-full truncate text-left text-[11px] hover:text-[var(--t2-accent)]">
+                <button key={e.id} type="button" onClick={() => onEvent(e)} className="mt-0.5 block w-full truncate text-left t2-fs-meta hover:text-[var(--t2-accent)]">
                   {e.event_time ? `${hhmm(e.event_time)} ` : ""}{e.title || t(`tour.calKind_${e.kind}`)}
                 </button>
               ))}
-              {extra > 0 && <p className="text-[10px] text-[var(--t2-faint)]">+{extra}</p>}
+              {extra > 0 && <p className="t2-fs-meta text-[var(--t2-faint)]">+{extra}</p>}
               {inMonth && dayEvents.length === 0 && !tour && (
                 <button type="button" aria-label={t("tour.calAdd")} onClick={() => onCreate(iso)} className="mt-2 h-8 w-full" />
               )}

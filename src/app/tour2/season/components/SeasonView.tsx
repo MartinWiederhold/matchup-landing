@@ -54,13 +54,13 @@ export default function SeasonView() {
 
   // ── Auth-Gate (identisch zum TourBrowser) ────────────────────────────────
   if (authLoading) {
-    return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+    return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
   if (!user) {
     return (
       <div className="mt-10 t2-panel bg-[var(--t2-surface)] px-6 py-10 text-center">
-        <h2 className="t2-h2 text-lg text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <h2 className="t2-h2 t2-fs-h3 text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link
           href="/app"
           className="mt-6 t2-cta"
@@ -72,14 +72,14 @@ export default function SeasonView() {
   }
 
   // ── Daten ────────────────────────────────────────────────────────────────
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   if (entries.length === 0) {
     return (
       <div className="mt-8 t2-panel bg-[var(--t2-surface)] px-6 py-10 text-center">
-        <h2 className="t2-h2 text-lg text-[var(--t2-ink)]">{t("tour.seasonEmptyTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.seasonEmptyText")}</p>
+        <h2 className="t2-h2 t2-fs-h3 text-[var(--t2-ink)]">{t("tour.seasonEmptyTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.seasonEmptyText")}</p>
         <Link
           href="/tour2/finder"
           className="mt-6 t2-cta"
@@ -92,8 +92,8 @@ export default function SeasonView() {
 
   return (
     <div className="mt-8">
-      <p className="text-[13px] font-medium text-[var(--t2-muted)]">{t("tour.seasonCount", { n: entries.length })}</p>
-      {writeError && <p className="mt-2 text-[12px] text-[var(--t2-muted)]">{t("tour.seasonSaveError")}</p>}
+      <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.seasonCount", { n: entries.length })}</p>
+      {writeError && <p className="mt-2 t2-fs-micro text-[var(--t2-muted)]">{t("tour.seasonSaveError")}</p>}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {entries.map((e, i) => (
           <SeasonCard

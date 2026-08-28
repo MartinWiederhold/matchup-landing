@@ -258,7 +258,7 @@ export default function TournamentsView() {
 
   const hasPassports = (profile?.passports ?? []).length > 0;
 
-  if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
 
   const selectedTt = selectedId ? byId.get(selectedId) : undefined;
@@ -302,10 +302,10 @@ export default function TournamentsView() {
       key={code}
       type="button"
       onClick={() => toggleSet(countries, code, setCountries)}
-      className={`mr-1 mb-1 text-[13px] ${countries.has(code) ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
+      className={`mr-1 mb-1 t2-fs-body-sm ${countries.has(code) ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`}
     >
       {catName(code)}
-      <span className="ml-1 tabular-nums text-[11px] font-normal text-[var(--t2-faint)]">{countByCountry.get(code) ?? 0}</span>
+      <span className="ml-1 tabular-nums t2-fs-meta font-normal text-[var(--t2-faint)]">{countByCountry.get(code) ?? 0}</span>
     </button>
   );
 
@@ -341,7 +341,7 @@ export default function TournamentsView() {
     setEuropeOnly(true); setVisaMode("all"); setDateFrom(""); setDateTo("");
   };
 
-  const optBtn = (on: boolean) => `text-left text-[13px] leading-snug ${on ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`;
+  const optBtn = (on: boolean) => `text-left t2-fs-body-sm leading-snug ${on ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"}`;
 
   const filterSheet = (
     <div className="flex h-full flex-col bg-[var(--t2-paper)]">
@@ -349,9 +349,9 @@ export default function TournamentsView() {
         <p className="t2-kicker">{t("tour.wsFilters")}{activeFilterN > 0 ? ` · ${activeFilterN}` : ""}</p>
         <div className="flex items-center gap-3">
           {activeFilterN > 0 && (
-            <button type="button" onClick={resetFilters} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>
+            <button type="button" onClick={resetFilters} className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>
           )}
-          <button type="button" onClick={() => setFiltersOpen(false)} className="text-[18px] text-[var(--t2-faint)] hover:text-[var(--t2-ink)]" aria-label={t("common.close")}>✕</button>
+          <button type="button" onClick={() => setFiltersOpen(false)} className="t2-fs-h3 text-[var(--t2-faint)] hover:text-[var(--t2-ink)]" aria-label={t("common.close")}>✕</button>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-10">
@@ -371,7 +371,7 @@ export default function TournamentsView() {
                 <button type="button" className={optBtn(visaMode === "need")} onClick={() => setVisaMode((v) => v === "need" ? "all" : "need")}>{t("tour.t2findVisaNeed")}</button>
               </>
             ) : (
-              <p className="text-[12px] text-[var(--t2-faint)]">{t("tour.t2findVisaNeedPass")}</p>
+              <p className="t2-fs-micro text-[var(--t2-faint)]">{t("tour.t2findVisaNeedPass")}</p>
             )}
           </div>
         </section>
@@ -407,7 +407,7 @@ export default function TournamentsView() {
             {showRest && restCollapsible.map(countryChip)}
           </div>
           {restCollapsible.length > 0 && (
-            <button type="button" onClick={() => setShowRest((v) => !v)} className="mt-3 text-[12px] font-semibold text-[var(--t2-ink)]">
+            <button type="button" onClick={() => setShowRest((v) => !v)} className="mt-3 t2-fs-micro font-semibold text-[var(--t2-ink)]">
               {showRest ? t("tour.filterCountriesFewer") : t("tour.filterCountriesMore", { n: restCollapsible.length })}
             </button>
           )}
@@ -436,8 +436,8 @@ export default function TournamentsView() {
           <T2AsideBlock title={t("tour.t2navFinder")}>
             {selectedTt ? (
               <p>
-                <span className="block text-[15px] font-semibold">{selectedTt.city || selectedTt.name}</span>
-                <span className="mt-1 block text-[12px] text-[var(--t2-muted)]">
+                <span className="block t2-fs-body font-semibold">{selectedTt.city || selectedTt.name}</span>
+                <span className="mt-1 block t2-fs-micro text-[var(--t2-muted)]">
                   {[selectedTt.category, catName(selectedTt.country), seasonIds.has(selectedTt.id) ? t("tour.t2findInSeason") : null].filter(Boolean).join(" · ")}
                 </span>
               </p>
@@ -447,7 +447,7 @@ export default function TournamentsView() {
           </T2AsideBlock>
           {!hasPassports && (
             <T2AsideBlock title={t("tour.t2navDocs")}>
-              <Link href="/tour2/documents" className="font-semibold text-matchup">{t("tour.t2ovPassportGo")} →</Link>
+              <Link href="/tour2/documents" className="font-semibold text-[var(--t2-accent)]">{t("tour.t2ovPassportGo")} →</Link>
             </T2AsideBlock>
           )}
         </>
@@ -468,22 +468,22 @@ export default function TournamentsView() {
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
-            className="relative flex shrink-0 items-center gap-2 py-2 text-[13px] font-semibold"
+            className="relative flex shrink-0 items-center gap-2 py-2 t2-fs-body-sm font-semibold"
           >
             {t("tour.wsFilters")}
-            {activeFilterN > 0 && <span className="tabular-nums text-[13px] font-semibold text-[var(--t2-accent)]">{activeFilterN}</span>}
+            {activeFilterN > 0 && <span className="tabular-nums t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{activeFilterN}</span>}
           </button>
           <div className="flex shrink-0 items-baseline gap-3 pb-2">
-            <button type="button" onClick={() => setMapOpen(false)} className={`text-[13px] ${!mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findList")}</button>
-            <button type="button" onClick={() => setMapOpen(true)} className={`text-[13px] ${mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findMap")}</button>
+            <button type="button" onClick={() => setMapOpen(false)} className={`t2-fs-body-sm ${!mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findList")}</button>
+            <button type="button" onClick={() => setMapOpen(true)} className={`t2-fs-body-sm ${mapOpen ? "font-semibold text-[var(--t2-ink)]" : "font-medium text-[var(--t2-faint)]"}`}>{t("tour.t2findMap")}</button>
           </div>
         </div>
         {activeChips.length > 0 && (
           <div className="no-scrollbar mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1">
             {activeChips.map((c) => (
-              <span key={c.key} className="inline-flex shrink-0 items-center gap-1 py-1 pl-0.5 pr-1 text-[12px] font-medium text-[var(--t2-muted)]">
+              <span key={c.key} className="inline-flex shrink-0 items-center gap-1 py-1 pl-0.5 pr-1 t2-fs-micro font-medium text-[var(--t2-muted)]">
                 <span className="max-w-[10rem] truncate">{c.label}</span>
-                <button type="button" onClick={c.onRemove} aria-label={t("tour.wsChipRemove", { label: c.label })} className="text-[11px] text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">✕</button>
+                <button type="button" onClick={c.onRemove} aria-label={t("tour.wsChipRemove", { label: c.label })} className="t2-fs-meta text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">✕</button>
               </span>
             ))}
           </div>
@@ -492,16 +492,16 @@ export default function TournamentsView() {
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div className={`min-h-0 min-w-0 flex-1 overflow-hidden px-4 py-4 pb-4 sm:px-6 ${mapOpen ? "md:w-[60%] md:flex-none" : ""}`}>
-          {status === "loading" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
-          {status === "error" && <p className="text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
+          {status === "loading" && <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.t2catalogLoading")}</p>}
+          {status === "error" && <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
           {status === "ready" && (
             <div className="flex h-full min-h-0 flex-col">
               <p className="mb-3 flex shrink-0 items-baseline gap-2">
-                <span className="text-[clamp(1.75rem,3vw,2.25rem)] font-semibold leading-none tracking-[-0.04em] tabular-nums">{filtered.length}</span>
+                <span className="t2-fs-display font-semibold leading-none tracking-[-0.04em] tabular-nums">{filtered.length}</span>
                 <span className="t2-kicker">{t("tour.t2findHits")}</span>
               </p>
               {filtered.length === 0 ? (
-                <p className="py-8 text-sm text-[var(--t2-muted)]">{t("tour.empty")}</p>
+                <p className="py-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.empty")}</p>
               ) : (
                 <WindowedList
                   items={filtered}
@@ -527,7 +527,7 @@ export default function TournamentsView() {
                   )}
                 </WindowedList>
               )}
-              <p className="mt-2 shrink-0 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.t2findIpinFooter")}</p>
+              <p className="mt-2 shrink-0 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.t2findIpinFooter")}</p>
             </div>
           )}
         </div>
@@ -536,14 +536,14 @@ export default function TournamentsView() {
 
       {filtersOpen && (
         <div className="absolute inset-0 z-[80] flex">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+          <div className="absolute inset-0 bg-[var(--t2-text)]/40" onClick={() => setFiltersOpen(false)} />
           <aside className="relative z-[81] ml-auto flex h-full w-full max-w-[360px] flex-col shadow-2xl">{filterSheet}</aside>
         </div>
       )}
 
       {detailEl && (
         <>
-          <div className="absolute inset-0 z-[75] bg-black/40" onClick={() => setSelectedId(null)} />
+          <div className="absolute inset-0 z-[75] bg-[var(--t2-text)]/40" onClick={() => setSelectedId(null)} />
           <aside className="absolute right-0 top-0 z-[76] flex h-full w-full max-w-[720px] flex-col bg-[var(--t2-paper)] shadow-2xl">{detailEl}</aside>
         </>
       )}

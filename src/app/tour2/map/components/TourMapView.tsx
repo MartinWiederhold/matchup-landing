@@ -110,7 +110,7 @@ export default function TourMapView({
       // Reiseweg-Linie (im Planer-Kandidatenmodus aus)
       if (showRoute && line.length > 1) {
         map.addSource("route", { type: "geojson", data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line } } });
-        map.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#4b3bf3", "line-width": 3, "line-opacity": 0.9 } });
+        map.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "var(--t2-accent)", "line-width": 3, "line-opacity": 0.9 } });
       }
 
       // Marker + Popups je Ort
@@ -155,5 +155,5 @@ export default function TourMapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, locale, focus?.lat, focus?.lng, focusZoom, showRoute]);
 
-  return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-2xl border border-[var(--t2-line)]`} />;
+  return <div ref={mapRef} className={`${heightClass} w-full overflow-hidden rounded-xl border border-[var(--t2-line)]`} />;
 }

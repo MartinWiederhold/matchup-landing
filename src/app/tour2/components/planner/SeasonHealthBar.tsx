@@ -74,53 +74,53 @@ export default function SeasonHealthBar({
         </div>
         <div>
           <dt>{t("tour.t2budget")}</dt>
-          <dd className={budgetOver ? "text-red-700" : ""}>{budgetText ?? t("tour.t2budgetNoData")}</dd>
+          <dd className={budgetOver ? "text-[var(--t2-danger)]" : ""}>{budgetText ?? t("tour.t2budgetNoData")}</dd>
         </div>
         <div>
           <dt>{t("tour.t2expPoints")}</dt>
           <dd>{points}</dd>
-          <p className="mt-1 text-[11px] font-medium text-[var(--t2-faint)]">{t("tour.t2pointsAssume", { round: roundLabel })}</p>
+          <p className="mt-1 t2-fs-meta font-medium text-[var(--t2-faint)]">{t("tour.t2pointsAssume", { round: roundLabel })}</p>
         </div>
       </dl>
       {notes.length > 0 && (
-        <p className="mt-2 text-[12px] text-[var(--t2-muted)]">{notes.join(" · ")}</p>
+        <p className="mt-2 t2-fs-micro text-[var(--t2-muted)]">{notes.join(" · ")}</p>
       )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.wsObjectiveTitle")}</span>
+          <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.wsObjectiveTitle")}</span>
           <div className="flex flex-wrap gap-1.5">
             <button type="button" onClick={() => onObjective("most_tournaments")} className={chip(objective === "most_tournaments")}>{t("tour.wsObjTournaments")}</button>
             <button type="button" onClick={() => onObjective("most_points")} className={chip(objective === "most_points")}>{t("tour.wsObjPoints")}</button>
           </div>
         </div>
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plBudget")}</span>
+          <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plBudget")}</span>
           <input value={budget} onChange={(e) => onBudget(e.target.value)} inputMode="numeric" placeholder="—" className="t2-input" />
         </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plFrom")}</span>
+            <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plFrom")}</span>
             <input type="date" value={frame.from} onChange={(e) => onFrame({ from: e.target.value })} className="t2-input" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plTo")}</span>
+            <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plTo")}</span>
             <input type="date" value={frame.to} onChange={(e) => onFrame({ to: e.target.value })} className="t2-input" />
           </label>
         </div>
         <div>
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plRegion")}</span>
+          <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.plRegion")}</span>
           <div className="flex flex-wrap gap-1.5">
             <button type="button" onClick={() => setRegion("europe")} className={chip(frame.region === "europe" && (frame.countries?.length ?? 0) === 0)}>{t("tour.plRegionEurope")}</button>
             <button type="button" onClick={() => setRegion("all")} className={chip(frame.region === "all" && (frame.countries?.length ?? 0) === 0)}>{t("tour.plRegionAll")}</button>
           </div>
         </div>
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2optMaxStreak")}</span>
+          <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2optMaxStreak")}</span>
           <input value={maxStreak} onChange={(e) => onMaxStreak(e.target.value)} inputMode="numeric" placeholder="—" className="t2-input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2optBufferShort")}</span>
+          <span className="mb-1 block t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2optBufferShort")}</span>
           <input value={buffer} onChange={(e) => onBuffer(e.target.value)} inputMode="numeric" placeholder="2" className="t2-input" />
         </label>
       </div>
@@ -129,7 +129,7 @@ export default function SeasonHealthBar({
         <button type="button" onClick={onPlan} disabled={planning || planDisabled} className="t2-cta disabled:opacity-40">
           {planning ? t("tour.wsPlanning") : t("tour.wsFill")}
         </button>
-        <button type="button" onClick={onMore} className="text-[12px] font-semibold text-matchup">{t("tour.t2optMoreFilters")}</button>
+        <button type="button" onClick={onMore} className="t2-fs-micro font-semibold text-[var(--t2-accent)]">{t("tour.t2optMoreFilters")}</button>
       </div>
     </div>
   );

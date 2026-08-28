@@ -81,18 +81,18 @@ export default function ExpensesTourView() {
   }, [user, prizeInputs]);
 
   // ── Auth-Gate (wie SeasonView) ───────────────────────────────────────────
-  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
       <div className="t2-panel mt-10 text-center">
-        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <h2 className="t2-fs-h3 font-bold">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   // Summen je Währung über ALLE Ausgaben.
   const totals = new Map<string, number>();
@@ -114,10 +114,10 @@ export default function ExpensesTourView() {
           <h2 className="t2-kicker">{t("tour.expTotals")}</h2>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[...totals.entries()].sort().map(([c, v]) => (
-              <span key={c} className="text-[20px] font-extrabold tracking-tight text-neutral-900 tabular-nums">{money(v, c)}</span>
+              <span key={c} className="t2-fs-h2 font-extrabold tracking-tight text-[var(--t2-text)] tabular-nums">{money(v, c)}</span>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.expTotalsNote")}</p>
+          <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.expTotalsNote")}</p>
         </section>
       )}
 
@@ -142,7 +142,7 @@ export default function ExpensesTourView() {
 
               return (
                 <article key={uuid} className="t2-panel">
-                  <p className="truncate text-[14px] font-bold text-neutral-900">
+                  <p className="truncate t2-fs-body font-bold text-[var(--t2-text)]">
                     {e.tournament.city || t("tour.fieldMissing")}
                     {e.tournament.country ? <span className="text-[var(--t2-muted)]">, {e.tournament.country}</span> : null}
                   </p>
@@ -173,7 +173,7 @@ export default function ExpensesTourView() {
 
                     <div>
                       <span className="mb-1 block t2-kicker">{t("tour.expExpenses")}</span>
-                      <p className="text-[14px] font-bold text-neutral-900">
+                      <p className="t2-fs-body font-bold text-[var(--t2-text)]">
                         {cost.size ? [...cost.entries()].sort().map(([c, v]) => money(v, c)).join(" · ") : "—"}
                       </p>
                     </div>
@@ -183,11 +183,11 @@ export default function ExpensesTourView() {
                   {netLines.length > 0 && (
                     <div className="mt-2 border-t border-[var(--t2-line)] pt-2">
                       {netLines.map(({ c, net }) => (
-                        <p key={c} className={`text-[13px] font-bold ${net >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                        <p key={c} className={`t2-fs-body-sm font-bold ${net >= 0 ? "text-[var(--t2-success)]" : "text-[var(--t2-danger)]"}`}>
                           {t("tour.expNet")}: {money(net, c)}
                         </p>
                       ))}
-                      {curs.size > 1 && <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.expMixedNote")}</p>}
+                      {curs.size > 1 && <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.expMixedNote")}</p>}
                     </div>
                   )}
                 </article>
@@ -201,12 +201,12 @@ export default function ExpensesTourView() {
       <section>
         <h2 className="t2-kicker">{t("tour.expListTitle")}</h2>
         {actionError && (
-          <p className="mt-2 text-[12px] text-[var(--t2-muted)]">
+          <p className="mt-2 t2-fs-micro text-[var(--t2-muted)]">
             {actionError === "receipt" ? t("tour.expRemoveReceiptFailed") : t("tour.expRemoveError")}
           </p>
         )}
         {rows.length === 0 ? (
-          <p className="mt-6 rounded-2xl bg-[var(--t2-surface)] px-5 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.expEmpty")}</p>
+          <p className="mt-6 rounded-xl bg-[var(--t2-surface)] px-5 py-8 text-center t2-fs-body text-[var(--t2-muted)]">{t("tour.expEmpty")}</p>
         ) : (
           <div className="mt-3 divide-y divide-[var(--t2-line)]">
             {rows.map((r) => {
@@ -215,17 +215,17 @@ export default function ExpensesTourView() {
               return (
                 <div key={r.id} className="flex items-center gap-3 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[14px] font-semibold text-neutral-900">{r.merchant || t(`tour.expCat_${r.category ?? "other"}`)}</p>
-                    <p className="text-[11.5px] text-[var(--t2-muted)]">
+                    <p className="truncate t2-fs-body font-semibold text-[var(--t2-text)]">{r.merchant || t(`tour.expCat_${r.category ?? "other"}`)}</p>
+                    <p className="t2-fs-meta text-[var(--t2-muted)]">
                       {t(`tour.expCat_${r.category ?? "other"}`)} · {dateFmt(r.spent_on)}
                       {tname ? ` · ${tname}` : ""}
                     </p>
                     {r.receipt_path && <div className="mt-1"><ReceiptLink path={r.receipt_path} /></div>}
                   </div>
-                  <span className="shrink-0 text-[14px] font-bold text-neutral-900 tabular-nums">
+                  <span className="shrink-0 t2-fs-body font-bold text-[var(--t2-text)] tabular-nums">
                     {r.amount != null ? money(amountToMinor(r.amount), r.currency ?? "") : "—"}
                   </span>
-                  <button type="button" onClick={() => handleRemove(r)} className="shrink-0 text-[12px] font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">
+                  <button type="button" onClick={() => handleRemove(r)} className="shrink-0 t2-fs-micro font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">
                     {t("tour.expRemove")}
                   </button>
                 </div>

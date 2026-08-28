@@ -22,10 +22,10 @@ export function T2Kpi({
     <div className="t2-dash-card">
       <p className="t2-kicker">{label}</p>
       <div className="mt-2 flex items-start justify-between gap-3">
-        <div className={compact ? "min-w-0 flex-1" : "text-[clamp(1.45rem,3vw,1.95rem)] font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
+        <div className={compact ? "min-w-0 flex-1" : "t2-fs-display font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
         {extra}
       </div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+      {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
     </div>
   );
 }
@@ -34,7 +34,7 @@ export function T2AsideBlock({ title, children }: { title: string; children: Rea
   return (
     <section className="t2-dash-card">
       <h2 className="t2-kicker">{title}</h2>
-      <div className="mt-2 text-[13px] leading-relaxed">{children}</div>
+      <div className="mt-2 t2-fs-body-sm leading-relaxed">{children}</div>
     </section>
   );
 }
@@ -58,7 +58,7 @@ export default function Tour2Area({
     <div className={`t2-overview ${fill ? "flex min-h-0 flex-1 flex-col max-xl:min-h-min max-xl:flex-none" : ""}`}>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="t2-display text-[clamp(1.7rem,3.4vw,2.15rem)]">{title}</h1>
+          <h1 className="t2-display t2-fs-display">{title}</h1>
           <p className="t2-lead mt-1.5 max-w-xl">{lead}</p>
         </div>
       </header>

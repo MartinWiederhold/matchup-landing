@@ -98,7 +98,7 @@ export default function CostRatesForm({
 
   const field = (label: string, value: string, setValue: (v: string) => void, placeholder: string) => (
     <label className="block">
-      <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{label}</span>
+      <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{label}</span>
       <input
         type="text"
         inputMode="decimal"
@@ -122,7 +122,7 @@ export default function CostRatesForm({
         {field(t("tour.costsCoachPerWeek"), coach, setCoach, t("tour.costsAmountPlaceholder"))}
 
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsCurrency")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.costsCurrency")}</span>
           <select
             value={currency}
             onChange={(e) => { setCurrency(e.target.value); setStatus("idle"); }}
@@ -134,7 +134,7 @@ export default function CostRatesForm({
 
         {!hideTravelAssumptions && onNightsChange && (
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsNights")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.costsNights")}</span>
           <input
             type="text"
             inputMode="numeric"
@@ -150,7 +150,7 @@ export default function CostRatesForm({
             Nur wenn der Aufrufer ihn reicht (Planer); im Onboarding weggelassen. */}
         {!hideTravelAssumptions && onBufferChange && (
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.costsBuffer")}</span>
+            <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.costsBuffer")}</span>
             <input
               type="text"
               inputMode="numeric"
@@ -163,9 +163,9 @@ export default function CostRatesForm({
         )}
       </div>
 
-      {!hideTravelAssumptions && <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsNightsHint")}</p>}
-      {!hideTravelAssumptions && onBufferChange && <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsBufferHint")}</p>}
-      <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{t("tour.costsEstimateHint")}</p>
+      {!hideTravelAssumptions && <p className="mt-3 t2-fs-meta leading-relaxed text-[var(--t2-text-soft)]">{t("tour.costsNightsHint")}</p>}
+      {!hideTravelAssumptions && onBufferChange && <p className="mt-1 t2-fs-meta leading-relaxed text-[var(--t2-text-soft)]">{t("tour.costsBufferHint")}</p>}
+      <p className="mt-1 t2-fs-meta leading-relaxed text-[var(--t2-text-soft)]">{t("tour.costsEstimateHint")}</p>
 
       <div className="mt-4 flex items-center gap-3">
         <button
@@ -176,9 +176,9 @@ export default function CostRatesForm({
         >
           {t("tour.costsSave")}
         </button>
-        {status === "saved" && <span className="text-[12px] text-emerald-600">{t("tour.costsSaved")}</span>}
-        {status === "error" && <span className="text-[12px] text-neutral-500">{t("tour.costsSaveError")}</span>}
-        {status === "invalid" && <span className="text-[12px] text-neutral-500">{t("tour.costsInvalidAmount")}</span>}
+        {status === "saved" && <span className="t2-fs-micro text-[var(--t2-success)]">{t("tour.costsSaved")}</span>}
+        {status === "error" && <span className="t2-fs-micro text-[var(--t2-text-soft)]">{t("tour.costsSaveError")}</span>}
+        {status === "invalid" && <span className="t2-fs-micro text-[var(--t2-text-soft)]">{t("tour.costsInvalidAmount")}</span>}
       </div>
     </section>
   );

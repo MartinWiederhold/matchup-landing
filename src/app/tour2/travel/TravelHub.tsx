@@ -190,10 +190,10 @@ export default function TravelHub() {
   }, [expenses, cur]);
 
   if (authLoading || (user && state === "loading")) {
-    return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+    return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
   if (!user) return <TourLoginCard />;
-  if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "error") return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
     <>
@@ -215,7 +215,7 @@ export default function TravelHub() {
   const aside = (
     <>
       <T2AsideBlock title={t("tour.t2trSplit")}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitPlanned")}</p>
+        <p className="t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitPlanned")}</p>
         <ul className="mt-1 space-y-1 text-[var(--t2-muted)]">
           {Object.keys(plannedByCode).length === 0 ? (
             <li>—</li>
@@ -225,7 +225,7 @@ export default function TravelHub() {
             ))
           )}
         </ul>
-        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitRecorded")}</p>
+        <p className="mt-3 t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{t("tour.t2trSplitRecorded")}</p>
         <ul className="mt-1 space-y-1 text-[var(--t2-muted)]">
           {Object.keys(recordedByCat).length === 0 ? (
             <li>—</li>
@@ -239,13 +239,13 @@ export default function TravelHub() {
       {schengenApplies && schengen && (
         <T2AsideBlock title={t("tour.schengenTitle")}>
           <p className="text-[var(--t2-muted)]">{t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })}</p>
-          <Link href="/tour2/schengen" className="mt-2 inline-block font-semibold text-matchup">{t("tour.schengenTitle")} →</Link>
+          <Link href="/tour2/schengen" className="mt-2 inline-block font-semibold text-[var(--t2-accent)]">{t("tour.schengenTitle")} →</Link>
         </T2AsideBlock>
       )}
       <T2AsideBlock title={t("tour.t2navTravel")}>
         <ul className="space-y-2">
-          <li><Link href="/tour2/costs" className="font-semibold text-matchup">{t("tour.costsTitle")} →</Link></li>
-          <li><Link href="/tour2/expenses" className="font-semibold text-matchup">{t("tour.expTitle")} →</Link></li>
+          <li><Link href="/tour2/costs" className="font-semibold text-[var(--t2-accent)]">{t("tour.costsTitle")} →</Link></li>
+          <li><Link href="/tour2/expenses" className="font-semibold text-[var(--t2-accent)]">{t("tour.expTitle")} →</Link></li>
         </ul>
       </T2AsideBlock>
     </>
@@ -261,7 +261,7 @@ export default function TravelHub() {
       <section className="t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2trPlan")}</h2>
         {active.length === 0 ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
         ) : (
           <ol className="mt-4 border-t border-[var(--t2-line)]">
             {active.map((s, i) => {
@@ -278,7 +278,7 @@ export default function TravelHub() {
               return (
                 <li key={s.tournament.id}>
                   {prev && (
-                    <p className="px-1 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
+                    <p className="px-1 py-2 t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">
                       {same
                         ? t("tour.t2legCluster")
                         : [km != null ? t("tour.t2legKm", { n: Math.round(km) }) : t("tour.t2ovLegUnknownKm"), arrival ? t("tour.t2legArrival", { amount: money(arrival.amount) }) : null].filter(Boolean).join(" · ")}
@@ -286,12 +286,12 @@ export default function TravelHub() {
                   )}
                   <Link href={tour2PlannerTournamentHref(s.tournament.id)} className="t2-row group">
                     <span>
-                      <span className="t2-row-city block text-[15px] font-semibold">{s.tournament.city || s.tournament.name}</span>
-                      <span className="mt-0.5 block text-[12px] text-[var(--t2-muted)]">
+                      <span className="t2-row-city block t2-fs-body font-semibold">{s.tournament.city || s.tournament.name}</span>
+                      <span className="mt-0.5 block t2-fs-micro text-[var(--t2-muted)]">
                         {fmtDate(s.tournament.tournament_monday)} · {t(`tour.status_${s.status}`)}
                       </span>
                     </span>
-                    <span className="text-right text-[12px] text-[var(--t2-muted)]">
+                    <span className="text-right t2-fs-micro text-[var(--t2-muted)]">
                       <span className="block">{rec ? fmtBag(rec) : t("tour.t2trLodgingUnknown")}</span>
                     </span>
                   </Link>

@@ -42,17 +42,17 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
         { from: "me", text: t("tour.demoChatPartner3") },
       ];
 
-  const badge = <span className="shrink-0 rounded-full bg-[var(--t2-surface)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--t2-muted)]">{t("tour.wsHereDemoBadge")}</span>;
+  const badge = <span className="shrink-0 rounded-full bg-[var(--t2-surface)] px-1.5 py-0.5 t2-fs-meta font-bold uppercase tracking-wide text-[var(--t2-muted)]">{t("tour.wsHereDemoBadge")}</span>;
   const field = (label: string, value: string) => (
     <div className="flex items-center justify-between gap-3 py-2">
-      <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--t2-faint)]">{label}</span>
-      <span className="text-[13px] font-semibold text-[var(--t2-ink)]">{value}</span>
+      <span className="t2-fs-meta font-bold uppercase tracking-[0.1em] text-[var(--t2-faint)]">{label}</span>
+      <span className="t2-fs-body-sm font-semibold text-[var(--t2-ink)]">{value}</span>
     </div>
   );
 
   return (
-    <div className="absolute inset-0 z-[80] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-[var(--t2-line)] sm:max-h-[88vh] sm:rounded-3xl">
+    <div className="absolute inset-0 z-[80] flex items-end justify-center bg-[var(--t2-text)]/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-[var(--t2-on-accent)] shadow-2xl ring-1 ring-[var(--t2-line)] sm:max-h-[88vh] sm:rounded-3xl">
 
         {view === "profile" ? (
           <>
@@ -60,16 +60,16 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={player.image} alt="" className="h-44 w-full bg-[var(--t2-surface)] object-cover" />
-              <button type="button" onClick={onClose} aria-label={t("common.close")} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[16px] text-[var(--t2-muted)] shadow ring-1 ring-[var(--t2-line)] hover:bg-white">✕</button>
+              <button type="button" onClick={onClose} aria-label={t("common.close")} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--t2-on-accent)]/90 t2-fs-h3 text-[var(--t2-muted)] shadow ring-1 ring-[var(--t2-line)] hover:bg-[var(--t2-on-accent)]">✕</button>
               <span className="absolute left-3 top-3">{badge}</span>
             </div>
 
             <div className="overflow-y-auto p-5">
               <div className="flex items-center gap-2">
-                <h2 className="t2-display text-xl">{player.name}</h2>
+                <h2 className="t2-display t2-fs-h2">{player.name}</h2>
                 {badge}
               </div>
-              <p className="mt-0.5 text-[13px] font-semibold text-matchup">{intent}</p>
+              <p className="mt-0.5 t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{intent}</p>
 
               <div className="mt-3 divide-y divide-[var(--t2-line)]">
                 {field(t("tour.demoFieldNationality"), player.nationality)}
@@ -86,7 +86,7 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
               </div>
 
               {/* Kennzeichnung: Vorschau, nichts wird gespeichert. */}
-              <p className="mt-4 rounded-xl bg-[var(--t2-surface)] px-3 py-2.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.demoProfilePreview")}</p>
+              <p className="mt-4 rounded-xl bg-[var(--t2-surface)] px-3 py-2.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{t("tour.demoProfilePreview")}</p>
 
               <button type="button" onClick={() => setView("chat")} className="t2-cta mt-4 w-full">
                 {t("tour.demoConnect")}
@@ -97,22 +97,22 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
           <>
             {/* Chat-Kopf: zurück zum Profil + Name + Beispiel-Merkmal */}
             <div className="flex shrink-0 items-center gap-2.5 border-b border-[var(--t2-line)] px-4 py-3">
-              <button type="button" onClick={() => setView("profile")} aria-label={t("tour.demoBackToProfile")} className="flex h-8 w-8 items-center justify-center rounded-full text-[18px] text-[var(--t2-muted)] hover:bg-[var(--t2-surface)]">←</button>
+              <button type="button" onClick={() => setView("profile")} aria-label={t("tour.demoBackToProfile")} className="flex h-8 w-8 items-center justify-center rounded-full t2-fs-h3 text-[var(--t2-muted)] hover:bg-[var(--t2-surface)]">←</button>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={player.image} alt="" className="h-8 w-8 shrink-0 rounded-full bg-[var(--t2-surface)] object-cover" />
-              <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-[var(--t2-ink)]">{player.name}</span>
+              <span className="min-w-0 flex-1 truncate t2-fs-body font-bold text-[var(--t2-ink)]">{player.name}</span>
               {badge}
-              <button type="button" onClick={onClose} aria-label={t("common.close")} className="flex h-8 w-8 items-center justify-center rounded-full text-[16px] text-[var(--t2-faint)] hover:bg-[var(--t2-surface)]">✕</button>
+              <button type="button" onClick={onClose} aria-label={t("common.close")} className="flex h-8 w-8 items-center justify-center rounded-full t2-fs-h3 text-[var(--t2-faint)] hover:bg-[var(--t2-surface)]">✕</button>
             </div>
 
             {/* Durchgehende Kennzeichnung im Chat. */}
-            <p className="shrink-0 bg-amber-50 px-4 py-2 text-[11px] font-semibold text-amber-800">{t("tour.demoChatBanner")}</p>
+            <p className="shrink-0 bg-[var(--t2-warn-surface)] px-4 py-2 t2-fs-meta font-semibold text-[var(--t2-warn)]">{t("tour.demoChatBanner")}</p>
 
             {/* Beispiel-Unterhaltung */}
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[var(--t2-surface)] p-4">
               {script.map((m, i) => (
                 <div key={i} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
-                  <span className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[13px] leading-snug ${m.from === "me" ? "bg-matchup text-white" : "bg-white text-[var(--t2-ink)] ring-1 ring-[var(--t2-line)]"}`}>{m.text}</span>
+                  <span className={`max-w-[80%] rounded-xl px-3.5 py-2 t2-fs-body-sm leading-snug ${m.from === "me" ? "bg-[var(--t2-accent)] text-[var(--t2-on-accent)]" : "bg-[var(--t2-on-accent)] text-[var(--t2-ink)] ring-1 ring-[var(--t2-line)]"}`}>{m.text}</span>
                 </div>
               ))}
             </div>
@@ -122,9 +122,9 @@ export default function DemoPlayerSheet({ player, city, onClose }: { player: Dem
               <div className="flex items-center gap-2">
                 <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t("tour.demoChatPlaceholder")} className="t2-input min-w-0 flex-1" />
                 {/* Bewusst KEIN Senden: kein ensureMatch/startTourChat, nichts wird geschrieben. */}
-                <button type="button" disabled aria-label={t("tour.demoChatSendNote")} title={t("tour.demoChatSendNote")} className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-matchup/40 text-white">➤</button>
+                <button type="button" disabled aria-label={t("tour.demoChatSendNote")} title={t("tour.demoChatSendNote")} className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-[var(--t2-accent)]/40 text-[var(--t2-on-accent)]">➤</button>
               </div>
-              <p className="mt-1.5 px-1 text-[11px] text-[var(--t2-faint)]">{t("tour.demoChatSendNote")}</p>
+              <p className="mt-1.5 px-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.demoChatSendNote")}</p>
             </div>
           </>
         )}

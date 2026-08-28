@@ -16,12 +16,12 @@ export default function InfoHint({ label, children }: { label: string; children:
         onClick={() => setOpen((o) => !o)}
         aria-label={label}
         aria-expanded={open}
-        className={`ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold leading-none ring-1 transition-colors ${open ? "bg-matchup text-white ring-matchup" : "bg-[var(--t2-surface)] text-[var(--t2-muted)] ring-[var(--t2-line)] hover:bg-[var(--t2-line)]"}`}
+        className={`ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full t2-fs-meta font-bold leading-none ring-1 transition-colors ${open ? "bg-[var(--t2-accent)] text-[var(--t2-on-accent)] ring-matchup" : "bg-[var(--t2-surface)] text-[var(--t2-muted)] ring-[var(--t2-line)] hover:bg-[var(--t2-line)]"}`}
       >
         i
       </button>
       {open && (
-        <div className="mt-1.5 rounded-xl bg-[var(--t2-surface)] px-3 py-2 text-[11px] leading-relaxed font-normal normal-case tracking-normal text-[var(--t2-muted)]">
+        <div className="mt-1.5 rounded-xl bg-[var(--t2-surface)] px-3 py-2 t2-fs-meta leading-relaxed font-normal normal-case tracking-normal text-[var(--t2-muted)]">
           {children}
         </div>
       )}

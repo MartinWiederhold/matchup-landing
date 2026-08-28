@@ -37,7 +37,7 @@ export default function DayGlance({
   return (
     <section className="t2-dash-card">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold tracking-tight">{t("tour.t2ovGlance")}</h2>
+        <h2 className="t2-fs-body font-semibold tracking-tight">{t("tour.t2ovGlance")}</h2>
         <Link href="/tour2/calendar" className="t2-cta">
           {t("tour.t2ovGlanceCal")}<span aria-hidden>→</span>
         </Link>
@@ -45,20 +45,20 @@ export default function DayGlance({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {groups.map((g) => (
           <div key={g.date}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">
+            <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">
               {g.date === todayISO ? t("tour.t2ovToday") : t("tour.t2ovTomorrow")}
             </p>
             {g.rows.length === 0 ? (
-              <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2ovGlanceEmpty")}</p>
+              <p className="mt-2 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2ovGlanceEmpty")}</p>
             ) : (
               <ul className="mt-1.5">
                 {g.rows.map((row) => (
                   <li key={row.id}>
                     <Link href={row.href} className="flex w-full items-baseline gap-3 py-1.5 text-left hover:text-[var(--t2-accent)]">
-                      <span className="w-[4.75rem] shrink-0 text-[12px] font-semibold tabular-nums text-[var(--t2-muted)]">{when(row)}</span>
+                      <span className="w-[4.75rem] shrink-0 t2-fs-micro font-semibold tabular-nums text-[var(--t2-muted)]">{when(row)}</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[14px] font-semibold tracking-tight">{title(row)}</span>
-                        <span className="mt-0.5 block truncate text-[11px] text-[var(--t2-muted)]">
+                        <span className="block truncate t2-fs-body font-semibold tracking-tight">{title(row)}</span>
+                        <span className="mt-0.5 block truncate t2-fs-meta text-[var(--t2-muted)]">
                           {[kindLabel(row), row.personName ? t("tour.t2ovGlanceWith", { name: row.personName }) : null].filter(Boolean).join(" · ")}
                         </span>
                       </span>

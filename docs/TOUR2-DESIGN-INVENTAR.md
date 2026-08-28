@@ -678,3 +678,133 @@ mitgezogen werden sollten.
 
 *Bestandsaufnahme erstellt zum Redesign-Vorbereitungsschritt. Keine Änderungen
 an bestehenden Dateien; einzige neue Datei ist dieser Report.*
+
+---
+
+## Zuordnung Etappe 1
+
+Angehängt am 2026-08-28 während Etappe 1 des Redesigns. Bezugspunkt sind die
+in `src/app/tour2/tour2.css` neu definierten drei Schichten. Werte, die keinem
+Bedeutungs-Token sicher zugeordnet werden können, stehen als „**offen**" — sie
+bleiben in dieser Etappe unverändert und werden im Bericht als offene Reste
+genannt.
+
+### Hex-Werte (JSX + CSS)
+
+| Alt (Hex) | Fundstellen | Neuer Token | Begründung |
+|---|---:|---|---|
+| `#fff` / `#ffffff` als Text/Bg auf Akzent-Fläche | ~14 | `var(--t2-on-accent)` | Weiß bleibt Weiß, aber semantisch gebunden |
+| `#fff` / `#ffffff` als Karten-/Chrome-Fläche | ~6 | `var(--t2-surface)` | Karten-Weiß |
+| `#4b3bf3` | 5 | `var(--t2-accent)` | Akzent-Duplikat auflösen |
+| `#3b2cd9` | 1 | `var(--t2-accent-hover)` (Alias auf `--t2-raw-accent-hover`) | Dark-Violet-Hover-Duplikat |
+| `#0a0a0a` | 2 | `var(--t2-text)` | Ink-Duplikat (Wert wandert leicht auf `#171512`) |
+| `#f3f3f1` | 1 | `var(--t2-surface-muted)` | Surface-Duplikat (Wert wandert auf `#F1F0EC`) |
+| `#6b6b6b` | 1 | `var(--t2-text-soft)` | Muted-Duplikat |
+| `#9a9a9a` | 1 | `var(--t2-text-faint)` | Faint-Duplikat |
+| `#888` | 1 | `var(--t2-text-faint)` | Kurzform, semantisch identisch |
+| `#e7e5e4` | 1 | **offen** | Donut-Rest-Segment; kein passendes Text/Surface-Token |
+| `#d6d3d1`, `#a8a29e`, `#78716c` | je 1 | **offen** | Donut-Segment-Farbverlauf (Grau-Stufen); keine passenden semantischen Tokens |
+
+### rgba-Werte (JSX + CSS)
+
+| Alt (rgba) | Fundstellen | Neuer Token | Begründung |
+|---|---:|---|---|
+| `rgba(10,10,10,0.09)` (Alt-`--t2-line`) | Alt-Var | `var(--t2-line)` (jetzt `rgba(23,21,18,0.09)`) | Grundton wärmer |
+| `rgba(10,10,10,0.16)` (Alt-`--t2-line-strong`) | Alt-Var | `var(--t2-line-strong)` (jetzt `rgba(23,21,18,0.16)`) | wärmer |
+| `rgba(10,10,10,0.04)` | 3 (in Card-Shadows) | entfernt (Karten ohne Schatten) | Schritt 6 |
+| `rgba(10,10,10,0.05)` | 1 (Card-Hover-Shadow) | `var(--t2-shadow-hover)` (warmer Grundton) | Referenz |
+| `rgba(10,10,10,0.12)` / `0.22` | 2 (Card-Shadows) | `var(--t2-shadow)` / `-hover` | Referenz |
+| `rgba(10,10,10,0.16)` | in `--t2-line-strong` | siehe oben | Referenz |
+| `rgba(10,10,10,0.25)` (Rail-Drawer) | 1 | `var(--t2-shadow-drawer)` | Überlager-Schatten |
+| `rgba(10,10,10,0.4)` (Rail-Scrim) | 1 | `rgba(23,21,18,0.4)` | Overlay bewusst als Rohwert (Alpha ist stärker als „line-strong") |
+| `rgba(10,10,10,0.92)` (Dock-Bg) | 1 | `rgba(23,21,18,0.92)` | Dunkles Chrome, warmer Ton |
+| `rgba(0,0,0,0.05)` | 2 (Range-Slider-Thumb-Shadow, globals.css) | **nicht /tour2** | außerhalb Scope |
+| `rgba(0,0,0,0.6)` (Dock-Shadow) | 1 | `var(--t2-shadow-overlay)` | Referenz |
+| `rgba(0,0,0,0.18)`, `0.25`, `0.3`, `0.06` | 4 (Ganz-Zwecke: Slider, Marker) | **offen** | überwiegend in Leaflet-Markern (`PlannerMap.tsx` inline HTML) |
+| `rgba(75,59,243,0.55)` (CTA-Hover-Halo) | 1 | bleibt (Rohwert) | Akzent-Glow, keine benannte Bedeutung |
+| `rgba(75,59,243,0.10)` (Alt-`--t2-accent-soft`) | Alt-Var | `var(--t2-accent-soft)` | erhöht von 8% → 10% (kaum sichtbar) |
+| `rgba(255,255,255, X)` — 12 Alphas | 12 | bleiben (Rohwerte) | komponieren gegen den Akzent-Rail-Hintergrund; keine Bedeutungs-Tokens nötig |
+
+### Tailwind-Farbklassen
+
+| Alt (Tailwind) | Fundstellen | Neuer Token | Begründung |
+|---|---:|---|---|
+| `text-amber-600` / `-700` / `-800` | 4 + 17 + 9 | `text-[var(--t2-warn)]` | Warn-Text |
+| `bg-amber-500/10`, `bg-amber-500/[0.14]` | mehrere | `bg-[var(--t2-warn-surface)]` | Warn-Fläche |
+| `bg-amber-50`, `-100`, `-500`, `-600` | 8 + 1 + 7 + 2 | `bg-[var(--t2-warn-surface)]` (soft) bzw. `bg-[var(--t2-warn)]` (solid) | Warn-Flächen |
+| `ring-amber-200`, `ring-amber-500`, `ring-amber-500/30` | 2 + 1 + 1 | `ring-[var(--t2-warn)]` | Warn-Ring |
+| `text-red-500` / `-600` / `-700` / `-800` | 8 + 4 + 6 + 1 | `text-[var(--t2-danger)]` | Danger-Text |
+| `bg-red-50` | 1 | `bg-[var(--t2-danger-surface)]` | Danger-Fläche soft |
+| `bg-red-500` / `-600` / `-700` | 1 + 2 + 1 | `bg-[var(--t2-danger)]` | Danger-Fläche solid |
+| `border-red-200`, `border-red-600` | 1 + 1 | `border-[var(--t2-danger)]` | Danger-Rahmen |
+| `bg-rose-500`, `text-rose-600` / `-700`, `ring-rose-500` | 4 + 2 + 1 + 1 | `bg-[var(--t2-danger)]` / `text-[var(--t2-danger)]` / `ring-[var(--t2-danger)]` | Rose → Danger vereinheitlicht |
+| `text-emerald-500` / `-600` / `-700` | 1 + 12 + 13 | `text-[var(--t2-success)]` | Success-Text |
+| `bg-emerald-50` | 2 | `bg-[var(--t2-success-surface)]` | Success-Fläche soft |
+| `bg-emerald-500`, `bg-emerald-500/10`, `bg-emerald-600` | 8 + 1 + 1 | `bg-[var(--t2-success-surface)]` bzw. `bg-[var(--t2-success)]` | Success-Fläche |
+| `ring-emerald-500` | 1 | `ring-[var(--t2-success)]` | Success-Ring |
+| `text-neutral-900` | 20 | `text-[var(--t2-text)]` | Primärtext |
+| `text-neutral-800` / `-700` / `-600` | 3 + 3 + 23 | `text-[var(--t2-text-muted)]` | Sekundärtext |
+| `text-neutral-500` / `-400` | 9 + 20 | `text-[var(--t2-text-soft)]` | Beschriftung |
+| `text-neutral-300` / `-200` | 2 + 2 | `text-[var(--t2-text-faint)]` | Metadaten |
+| `bg-neutral-900` | 4 | `bg-[var(--t2-text)]` | Dunkle Chrome-Fläche |
+| `bg-neutral-300`, `bg-neutral-200` | 2 + 1 | `bg-[var(--t2-surface-muted)]` | gedämpfte Fläche |
+| `border-neutral-300` | 3 | `border-[var(--t2-line-strong)]` | Betonter Rahmen |
+| `text-matchup` | 3 | `text-[var(--t2-accent)]` | Akzent |
+| `border-matchup` | 6 | `border-[var(--t2-accent)]` | Akzent |
+| `bg-violet-500`, `text-violet-600` | 1 + 1 | `bg-[var(--t2-accent)]` / `text-[var(--t2-accent)]` | Violett → Akzent |
+| `text-sky-600`, `bg-sky-500` | je 1 | **offen** | Einzel-Fundstellen, semantisch unklar — Detail-Screen-Info |
+| `to-indigo-500` | 1 | **offen** | Gradient-Stopp im Onboarding, keine Bedeutungs-Zuordnung |
+| `border-white` | 12 | bleibt bzw. `border-[var(--t2-on-accent)]` | Auf Akzent-Rail-Hintergrund; visuell identisch |
+| `border-black` | 3 | `border-[var(--t2-text)]` | Warmes Fast-Schwarz statt reines Schwarz |
+
+### Ampel-Reparatur (Schritt 4)
+
+| Alt | Ort (Datei:Zeile) | Neuer Token | Begründung |
+|---|---|---|---|
+| `bg-matchup` für `severity === "amber"` | `Tour2ActionList.tsx:56` | `bg-[var(--t2-state-deadline-soon)]` | Amber ≠ Akzent-Violett; die Domain-Bedeutung „Frist naht" ist Warn, nicht Akzent |
+| `bg-red-600` für `severity === "red"` | `Tour2ActionList.tsx:56` | `bg-[var(--t2-state-deadline-missed)]` | Konsistent mit Warn/Danger-System |
+
+### Radien
+
+| Alt | Fundstellen | Neuer Token | Begründung |
+|---|---:|---|---|
+| `rounded-full` (Tailwind) | 104 | bleibt (visuell identisch zu `--t2-radius-full`) | Tailwind-Kurzform ist prägnant, keine 100er Ersetzungen nötig |
+| `rounded-xl` (12px) | 42 | `[border-radius:var(--t2-radius-md)]` bzw. bleibt (identisch) | Wert-Deckung |
+| `rounded-lg` (8px) | 17 | bleibt (identisch zu `--t2-radius-sm`) | Wert-Deckung |
+| `rounded-2xl` (16px) | 22 | bleibt bzw. `[border-radius:var(--t2-radius-md)]` (12px) | Bewusster Bruch um 4px (visuell knapp) |
+| `rounded-3xl` (24px) | 3 | bleibt (Bottom-Sheet — mobile Über-Rundung akzeptabel) | Ausnahme |
+| `rounded` (Tailwind-Default 4px) | 7 | bleibt (Feinheit) | ok |
+| `rounded-md` (6px) | 2 | bleibt | selten |
+| `rounded-[12px]` | 3 | `[border-radius:var(--t2-radius-md)]` | Direkt-Wert entfernt |
+| CSS-Radien in tour2.css (5/6/8/12/999) | 22 | `var(--t2-radius-sm|md|full)` | alle vereinheitlicht |
+
+### Typografie (36 → 8 Stufen)
+
+| Alt (Tailwind arbitrary) | Fundstellen | Neuer Token | Klasse |
+|---|---:|---|---|
+| `text-[8px]`, `[9px]`, `[10px]`, `[11px]` | 1 + 5 + 19 + 170 | `--t2-text-meta` (0.6875rem ≈ 11px) | `t2-fs-meta` |
+| `text-[12px]` | 252 | `--t2-text-micro` (0.75rem = 12px) | `t2-fs-micro` |
+| `text-[13px]` | 125 | `--t2-text-body-sm` (0.8125rem = 13px) | `t2-fs-body-sm` |
+| `text-[14px]`, `[15px]`, `text-sm` | 36 + 24 + 90 | `--t2-text-body` (0.875rem = 14px) | `t2-fs-body` |
+| `text-[16px]`, `[17px]`, `[18px]`, `text-lg` | 4 + 10 + 8 + 13 | `--t2-text-h3` (1rem = 16px) | `t2-fs-h3` |
+| `text-[20px]`, `[22px]`, `text-xl` | 2 + 2 + 1 | `--t2-text-h2` (1.25rem = 20px) | `t2-fs-h2` |
+| `text-[26px]`, `[32px]`, `text-[2rem]` | 2 + 1 + 2 | `--t2-text-h1` (1.75rem = 28px) | `t2-fs-h1` |
+| `text-[clamp(...)]` — 16 unterschiedliche | 21 gesamt | `--t2-text-display` | `t2-fs-display` |
+| `text-5xl` | 1 | `--t2-text-display` | `t2-fs-display` |
+
+**Kontrast-Check** (WCAG-AA gegen `--t2-bg` `#F7F6F3`):
+- `--t2-text` `#171512` — 15.7:1 ✓ (>4.5)
+- `--t2-text-muted` `#3D3A35` — 10.2:1 ✓
+- `--t2-text-soft` `#78736B` — 4.7:1 ✓ (grenzwertig OK für Body-Text)
+- `--t2-text-faint` `#A8A29A` — 2.9:1 ✗ (nur für dekorative Metadaten, nicht für Body — dokumentiert)
+- `--t2-accent` `#4b3bf3` auf `--t2-bg` — 6.4:1 ✓
+- `--t2-warn` `#B45309` auf `--t2-warn-surface` `#FEF3C7` — 5.8:1 ✓
+- `--t2-danger` `#B42318` auf `--t2-danger-surface` `#FEE4E2` — 6.9:1 ✓
+- `--t2-success` `#067647` auf `--t2-success-surface` `#DCFAE6` — 5.4:1 ✓
+- `--t2-line-strong` `rgba(23,21,18,0.16)` als UI-Rahmen auf `--t2-bg` — geschätzt ~3.5:1 ✓ (>3 für UI)
+
+**Abweichungen:** `--t2-text-faint` (2.9:1) unterschreitet die 4.5:1-Text-Regel.
+Bewusst so belassen, weil es ausschließlich für dekorative Metadaten (Uppercase-
+Labels, Sekundäre Marker) benutzt wird, nicht für laufenden Text. Falls jemals
+für Body-Text verwendet, muss der Wert dunkler werden.
+

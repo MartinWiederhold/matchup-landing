@@ -66,16 +66,16 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
       <p className="t2-kicker">{t("tour.tsTitle")}</p>
 
       {/* ── Meine Slots (Editor) ─────────────────────────────────────────────── */}
-      <div className="mt-2 rounded-2xl border border-matchup/20 bg-matchup/5 p-3">
-        <p className="text-[13px] font-bold text-[var(--t2-ink)]">{t("tour.tsMineTitle")}</p>
-        <p className="mt-0.5 text-[11px] text-[var(--t2-muted)]">{t("tour.tsMineHint")}</p>
+      <div className="mt-2 rounded-xl border border-[var(--t2-accent)]/20 bg-[var(--t2-accent)]/5 p-3">
+        <p className="t2-fs-body-sm font-bold text-[var(--t2-ink)]">{t("tour.tsMineTitle")}</p>
+        <p className="mt-0.5 t2-fs-meta text-[var(--t2-muted)]">{t("tour.tsMineHint")}</p>
         {futureDays.length === 0 ? (
-          <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.tsWeekOver")}</p>
+          <p className="mt-2 t2-fs-micro text-[var(--t2-faint)]">{t("tour.tsWeekOver")}</p>
         ) : (
           <div className="mt-2 space-y-1.5">
             {futureDays.map((date) => (
               <div key={date} className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[12px] font-semibold text-[var(--t2-muted)]">{wdLabel(date)} {fmtDay(date)}</span>
+                <span className="w-16 shrink-0 t2-fs-micro font-semibold text-[var(--t2-muted)]">{wdLabel(date)} {fmtDay(date)}</span>
                 <div className="flex flex-wrap gap-1">
                   {TIME_BLOCKS.map((b) => (
                     <button key={b.code} type="button" disabled={busy} onClick={() => toggle(date, b.code)} className={chip(mySlots.some((s) => s.slot_date === date && s.time_block === b.code))}>{blockLabel(b.code)}</button>
@@ -90,27 +90,27 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
       {/* ── Anfragen an meine Slots ──────────────────────────────────────────── */}
       {incoming.length > 0 && (
         <div className="mt-3">
-          <p className="text-[12px] font-bold text-[var(--t2-ink)]">{t("tour.tsIncomingTitle")} · {incoming.length}</p>
+          <p className="t2-fs-micro font-bold text-[var(--t2-ink)]">{t("tour.tsIncomingTitle")} · {incoming.length}</p>
           <div className="mt-1.5 space-y-1.5">
             {incoming.map((r) => {
               const s = slotById.get(r.slot_id)!;
               return (
                 <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--t2-line)] px-2.5 py-2">
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-semibold text-[var(--t2-ink)]">{personName(r.responder_id)}</span>
-                    <span className="block truncate text-[11px] text-[var(--t2-muted)]">{wdLabel(s.slot_date)} {fmtDay(s.slot_date)} · {blockLabel(s.time_block)}{r.contact ? ` · ${r.contact}` : ""}</span>
+                    <span className="block truncate t2-fs-body-sm font-semibold text-[var(--t2-ink)]">{personName(r.responder_id)}</span>
+                    <span className="block truncate t2-fs-meta text-[var(--t2-muted)]">{wdLabel(s.slot_date)} {fmtDay(s.slot_date)} · {blockLabel(s.time_block)}{r.contact ? ` · ${r.contact}` : ""}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-1.5">
                     {r.status === "pending" ? (
                       <>
-                        <button type="button" disabled={busy} onClick={() => run(() => setResponseStatus(r.id, "accepted"))} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover disabled:opacity-50">{t("tour.tsAccept")}</button>
-                        <button type="button" disabled={busy} onClick={() => run(() => setResponseStatus(r.id, "declined"))} className="rounded-full bg-[var(--t2-surface)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--t2-muted)] hover:bg-[var(--t2-line)] disabled:opacity-50">{t("tour.tsDecline")}</button>
+                        <button type="button" disabled={busy} onClick={() => run(() => setResponseStatus(r.id, "accepted"))} className="rounded-full bg-[var(--t2-accent)] px-2.5 py-1.5 t2-fs-meta font-bold text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]-hover disabled:opacity-50">{t("tour.tsAccept")}</button>
+                        <button type="button" disabled={busy} onClick={() => run(() => setResponseStatus(r.id, "declined"))} className="rounded-full bg-[var(--t2-surface)] px-2.5 py-1.5 t2-fs-meta font-semibold text-[var(--t2-muted)] hover:bg-[var(--t2-line)] disabled:opacity-50">{t("tour.tsDecline")}</button>
                       </>
                     ) : (
                       <>
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${r.status === "accepted" ? "bg-emerald-500/10 text-emerald-700" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"}`}>{statusLabel(r.status)}</span>
+                        <span className={`rounded-full px-2 py-0.5 t2-fs-meta font-bold ${r.status === "accepted" ? "bg-[var(--t2-success-surface)] text-[var(--t2-success)]" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"}`}>{statusLabel(r.status)}</span>
                         {r.status === "accepted" && (
-                          <button type="button" onClick={() => setChatWith({ id: r.responder_id, name: personName(r.responder_id) })} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.tsChat")}</button>
+                          <button type="button" onClick={() => setChatWith({ id: r.responder_id, name: personName(r.responder_id) })} className="rounded-full bg-[var(--t2-accent)] px-2.5 py-1.5 t2-fs-meta font-bold text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]-hover">{t("tour.tsChat")}</button>
                         )}
                       </>
                     )}
@@ -124,9 +124,9 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
 
       {/* ── Slots vor Ort (andere) ───────────────────────────────────────────── */}
       <div className="mt-3">
-        <p className="text-[12px] font-bold text-[var(--t2-ink)]">{t("tour.tsOthersTitle")}</p>
+        <p className="t2-fs-micro font-bold text-[var(--t2-ink)]">{t("tour.tsOthersTitle")}</p>
         {otherSlots.length === 0 ? (
-          <p className="mt-1 text-[12px] text-[var(--t2-faint)]">{t("tour.tsEmptyOthers")}</p>
+          <p className="mt-1 t2-fs-micro text-[var(--t2-faint)]">{t("tour.tsEmptyOthers")}</p>
         ) : (
           <div className="mt-1.5 space-y-1.5">
             {otherSlots.map((s) => {
@@ -134,18 +134,18 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
               return (
                 <div key={s.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--t2-line)] px-2.5 py-2">
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-semibold text-[var(--t2-ink)]">{personName(s.user_id)}</span>
-                    <span className="block truncate text-[11px] text-[var(--t2-muted)]">{wdLabel(s.slot_date)} {fmtDay(s.slot_date)} · {blockLabel(s.time_block)}</span>
+                    <span className="block truncate t2-fs-body-sm font-semibold text-[var(--t2-ink)]">{personName(s.user_id)}</span>
+                    <span className="block truncate t2-fs-meta text-[var(--t2-muted)]">{wdLabel(s.slot_date)} {fmtDay(s.slot_date)} · {blockLabel(s.time_block)}</span>
                   </span>
                   {my ? (
                     <span className="flex shrink-0 items-center gap-1.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${my.status === "accepted" ? "bg-emerald-500/10 text-emerald-700" : my.status === "declined" ? "bg-[var(--t2-surface)] text-[var(--t2-muted)]" : "bg-amber-500/10 text-amber-700"}`}>{t(`tour.tsMyResp_${my.status}`)}</span>
+                      <span className={`rounded-full px-2 py-0.5 t2-fs-meta font-bold ${my.status === "accepted" ? "bg-[var(--t2-success-surface)] text-[var(--t2-success)]" : my.status === "declined" ? "bg-[var(--t2-surface)] text-[var(--t2-muted)]" : "bg-[var(--t2-warn-surface)] text-[var(--t2-warn)]"}`}>{t(`tour.tsMyResp_${my.status}`)}</span>
                       {my.status === "accepted"
-                        ? <button type="button" onClick={() => setChatWith({ id: s.user_id, name: personName(s.user_id) })} className="rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover">{t("tour.tsChat")}</button>
-                        : <button type="button" disabled={busy} onClick={() => run(() => removeResponse(my.id))} aria-label={t("tour.tsWithdraw")} className="text-[var(--t2-faint)] hover:text-red-500">✕</button>}
+                        ? <button type="button" onClick={() => setChatWith({ id: s.user_id, name: personName(s.user_id) })} className="rounded-full bg-[var(--t2-accent)] px-2.5 py-1.5 t2-fs-meta font-bold text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]-hover">{t("tour.tsChat")}</button>
+                        : <button type="button" disabled={busy} onClick={() => run(() => removeResponse(my.id))} aria-label={t("tour.tsWithdraw")} className="text-[var(--t2-faint)] hover:text-[var(--t2-danger)]">✕</button>}
                     </span>
                   ) : (
-                    <button type="button" disabled={busy} onClick={() => run(() => respondToSlot(s.id, viewerId, viewerContact))} className="shrink-0 rounded-full bg-matchup px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-matchup-hover disabled:opacity-50">{t("tour.tsRespond")}</button>
+                    <button type="button" disabled={busy} onClick={() => run(() => respondToSlot(s.id, viewerId, viewerContact))} className="shrink-0 rounded-full bg-[var(--t2-accent)] px-2.5 py-1.5 t2-fs-meta font-bold text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]-hover disabled:opacity-50">{t("tour.tsRespond")}</button>
                   )}
                 </div>
               );
@@ -153,7 +153,7 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
           </div>
         )}
       </div>
-      <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.tsNote")}</p>
+      <p className="mt-1.5 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.tsNote")}</p>
 
       {chatWith && (
         <TourChatPanel meId={viewerId} otherId={chatWith.id} otherName={chatWith.name} onClose={() => setChatWith(null)} />

@@ -50,12 +50,12 @@ export default function PlanRulesCard({
   };
 
   const inp = "t2-input";
-  const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
+  const lbl = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]";
 
   return (
     <section className="t2-panel mt-6">
       <h2 className="t2-kicker">{t("tour.t2profPlan")}</h2>
-      <p className="mt-2 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profPlanLead")}</p>
+      <p className="mt-2 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profPlanLead")}</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block sm:col-span-2">
@@ -82,21 +82,21 @@ export default function PlanRulesCard({
           <span className={`${lbl} mb-1.5`}>{t("tour.t2optBlocked")}</span>
           <div className="grid grid-cols-2 gap-2">
             <label className="block">
-              <span className="mb-1 block text-[11px] text-[var(--t2-muted)]">{t("tour.t2optBlockedFrom")}</span>
+              <span className="mb-1 block t2-fs-meta text-[var(--t2-muted)]">{t("tour.t2optBlockedFrom")}</span>
               <input type="date" value={prefs.blockedFrom} onChange={(e) => setPref({ blockedFrom: e.target.value })} className={inp} />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[11px] text-[var(--t2-muted)]">{t("tour.t2optBlockedTo")}</span>
+              <span className="mb-1 block t2-fs-meta text-[var(--t2-muted)]">{t("tour.t2optBlockedTo")}</span>
               <input type="date" value={prefs.blockedTo} onChange={(e) => setPref({ blockedTo: e.target.value })} className={inp} />
             </label>
           </div>
         </div>
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.costsNightsHint")}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.costsBufferHint")}</p>
+      <p className="mt-2 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.costsNightsHint")}</p>
+      <p className="mt-1 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.costsBufferHint")}</p>
       <div className="mt-3 flex items-center gap-3">
         <button type="button" onClick={() => void saveBudget()} disabled={budgetBusy} className="t2-cta disabled:opacity-50">{t("tour.t2profBudgetSave")}</button>
-        {budgetOk && <span className="text-[12px] text-emerald-600">{t("tour.setupSaved")}</span>}
+        {budgetOk && <span className="t2-fs-micro text-[var(--t2-success)]">{t("tour.setupSaved")}</span>}
       </div>
     </section>
   );

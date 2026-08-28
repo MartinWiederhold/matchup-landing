@@ -62,15 +62,15 @@ export default function StepWhoAreYou({
   const homeLine = [state.city, landName].filter(Boolean).join(", ");
 
   const inputCls = dark
-    ? "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[14px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none"
+    ? "w-full rounded-xl border border-[var(--t2-on-accent)]/15 bg-[var(--t2-on-accent)]/[0.04] px-3 py-2 t2-fs-body text-[var(--t2-on-accent)] placeholder:text-[var(--t2-text-soft)] focus:border-[var(--t2-on-accent)]/30 focus:outline-none"
     : "t2-input";
-  const wrap = dark ? "border border-white/10 bg-black p-5" : "t2-panel";
-  const idWrap = dark ? "border border-white/10 bg-black p-3" : "rounded-2xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3";
-  const nameCls = dark ? "text-white" : "text-[var(--t2-ink)]";
-  const muted = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
-  const lbl = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
-  const drop = dark ? "absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-[var(--t2-line)] bg-[var(--t2-paper)] p-1 shadow-xl" : "absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-[var(--t2-line)] bg-white p-1 shadow-xl";
-  const dropBtn = dark ? "w-full rounded-lg px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-white/10" : "w-full rounded-lg px-3 py-2 text-left text-[13px] text-neutral-800 hover:bg-[var(--t2-surface)]";
+  const wrap = dark ? "border border-[var(--t2-on-accent)]/10 bg-[var(--t2-text)] p-5" : "t2-panel";
+  const idWrap = dark ? "border border-[var(--t2-on-accent)]/10 bg-[var(--t2-text)] p-3" : "rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3";
+  const nameCls = dark ? "text-[var(--t2-on-accent)]" : "text-[var(--t2-ink)]";
+  const muted = dark ? "text-[var(--t2-text-soft)]" : "text-[var(--t2-muted)]";
+  const lbl = dark ? "text-[var(--t2-text-soft)]" : "text-[var(--t2-muted)]";
+  const drop = dark ? "absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-[var(--t2-line)] bg-[var(--t2-paper)] p-1 shadow-xl" : "absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-[var(--t2-line)] bg-[var(--t2-on-accent)] p-1 shadow-xl";
+  const dropBtn = dark ? "w-full rounded-lg px-3 py-2 text-left t2-fs-body-sm text-[var(--t2-text-faint)] hover:bg-[var(--t2-on-accent)]/10" : "w-full rounded-lg px-3 py-2 text-left t2-fs-body-sm text-[var(--t2-text-muted)] hover:bg-[var(--t2-surface)]";
 
   async function save() {
     if (busy) return;
@@ -97,34 +97,34 @@ export default function StepWhoAreYou({
   return (
     <section className={wrap}>
       <h2 className="t2-kicker">{t("tour.setupWhoTitle")}</h2>
-      <p className={`mt-2 text-sm ${muted}`}>{t("tour.setupWhoIntro")}</p>
+      <p className={`mt-2 t2-fs-body ${muted}`}>{t("tour.setupWhoIntro")}</p>
 
       <div className={`mt-4 flex items-center gap-3 ${idWrap}`}>
         {state.profileImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={state.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-matchup/10 object-cover" />
+          <img src={state.profileImage} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-full bg-[var(--t2-accent)]/10 object-cover" />
         ) : (
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-matchup/10 text-[17px] font-bold text-matchup">{(displayName?.[0] ?? "?").toUpperCase()}</span>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--t2-accent)]/10 t2-fs-h3 font-bold text-[var(--t2-accent)]">{(displayName?.[0] ?? "?").toUpperCase()}</span>
         )}
         <div className="min-w-0">
-          <p className={`truncate text-[15px] font-bold ${nameCls}`}>{displayName || t("tour.fieldMissing")}</p>
-          <p className={`truncate text-[12px] ${muted}`}>
+          <p className={`truncate t2-fs-body font-bold ${nameCls}`}>{displayName || t("tour.fieldMissing")}</p>
+          <p className={`truncate t2-fs-micro ${muted}`}>
             {[homeLine || t("tour.setupHomeMissing"), state.age != null ? t("tour.t2profAge", { n: state.age }) : null].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <span className={`ml-auto shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${dark ? "bg-white/10 text-neutral-400" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"}`}>{t("tour.setupFromApp")}</span>
+        <span className={`ml-auto shrink-0 rounded-full px-2.5 py-1 t2-fs-meta font-semibold ${dark ? "bg-[var(--t2-on-accent)]/10 text-[var(--t2-text-soft)]" : "bg-[var(--t2-surface)] text-[var(--t2-muted)]"}`}>{t("tour.setupFromApp")}</span>
       </div>
-      <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.setupFromAppNote")}</p>
+      <p className="mt-1.5 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.setupFromAppNote")}</p>
 
       <p className="mt-5 t2-kicker">{t("tour.t2profTennis")}</p>
       <div className="mt-2 grid gap-3 sm:grid-cols-2">
         <div className="block">
-          <span className={`mb-1 block text-[12px] font-semibold ${lbl}`}>{t("tour.wsPassports")}</span>
+          <span className={`mb-1 block t2-fs-micro font-semibold ${lbl}`}>{t("tour.wsPassports")}</span>
           {passports.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {passports.map((iso) => (
-                <button key={iso} type="button" onClick={() => { setPassports(passports.filter((p) => p !== iso)); setStatus("idle"); }} className="flex items-center gap-1 rounded-full bg-matchup/10 px-2.5 py-1 text-[12px] font-semibold text-matchup">
-                  {countryName(iso)} <span className="text-matchup/60">✕</span>
+                <button key={iso} type="button" onClick={() => { setPassports(passports.filter((p) => p !== iso)); setStatus("idle"); }} className="flex items-center gap-1 rounded-full bg-[var(--t2-accent)]/10 px-2.5 py-1 t2-fs-micro font-semibold text-[var(--t2-accent)]">
+                  {countryName(iso)} <span className="text-[var(--t2-accent)]/60">✕</span>
                 </button>
               ))}
             </div>
@@ -158,7 +158,7 @@ export default function StepWhoAreYou({
         </div>
 
         <label className="block">
-          <span className={`mb-1 block text-[12px] font-semibold ${lbl}`}>
+          <span className={`mb-1 block t2-fs-micro font-semibold ${lbl}`}>
             {t("tour.setupRanking")} <span className="font-normal text-[var(--t2-faint)]">· {t("tour.setupOptional")}</span>
           </span>
           <input type="text" inputMode="numeric" value={ranking} onChange={(e) => { setRanking(e.target.value); setStatus("idle"); }} placeholder="—" className={inputCls} />
@@ -166,11 +166,11 @@ export default function StepWhoAreYou({
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <button type="button" onClick={save} disabled={busy} className={dark ? "rounded-full px-5 py-2 text-[13px] font-bold text-neutral-900 transition-colors disabled:opacity-50 bg-white hover:bg-neutral-200" : "t2-cta"}>
+        <button type="button" onClick={save} disabled={busy} className={dark ? "rounded-full px-5 py-2 t2-fs-body-sm font-bold text-[var(--t2-text)] transition-colors disabled:opacity-50 bg-[var(--t2-on-accent)] hover:bg-[var(--t2-surface-muted)]" : "t2-cta"}>
           {t("tour.setupSave")}
         </button>
-        {status === "saved" && <span className="text-[12px] text-emerald-500">{t("tour.setupSaved")}</span>}
-        {status === "error" && <span className={`text-[12px] ${muted}`}>{t("tour.setupSaveError")}</span>}
+        {status === "saved" && <span className="t2-fs-micro text-[var(--t2-success)]">{t("tour.setupSaved")}</span>}
+        {status === "error" && <span className={`t2-fs-micro ${muted}`}>{t("tour.setupSaveError")}</span>}
       </div>
     </section>
   );

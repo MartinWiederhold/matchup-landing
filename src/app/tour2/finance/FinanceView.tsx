@@ -112,17 +112,17 @@ export default function FinanceView() {
   const fmtMoney = (m: Money) => { const es = Object.entries(m); return es.length ? es.map(([c, v]) => money(v, c)).join(" · ") : "—"; };
   const inp = "t2-input";
 
-  if (authLoading) return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
       <div className="t2-panel mt-6 text-center">
-        <p className="text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="t2-cta mt-3">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (status === "error") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const m = metrics!;
   const tile = "border-t border-[var(--t2-line)] py-4";
@@ -134,57 +134,57 @@ export default function FinanceView() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finBalance")}</p>
-          <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{fmtMoney(m.balance)}</p>
-          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finExpenses")}: {fmtMoney(m.expensesTotal)} · {t("tour.finIncome")}: {fmtMoney(m.incomeTotal)}</p>
+          <p className="mt-1 t2-fs-h3 font-extrabold tabular-nums text-[var(--t2-text)]">{fmtMoney(m.balance)}</p>
+          <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.finExpenses")}: {fmtMoney(m.expensesTotal)} · {t("tour.finIncome")}: {fmtMoney(m.incomeTotal)}</p>
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerPoint")}</p>
           {m.costPerPoint ? (
             <>
-              <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{fmtMoney(m.costPerPoint)}</p>
-              <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{m.points} P · {t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
+              <p className="mt-1 t2-fs-h3 font-extrabold tabular-nums text-[var(--t2-text)]">{fmtMoney(m.costPerPoint)}</p>
+              <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{m.points} P · {t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
             </>
           ) : (
-            <p className="mt-1 text-[13px] font-semibold text-[var(--t2-muted)]">{m.hasResults ? t("tour.finNoCountingPoints") : t("tour.finNoResults")}</p>
+            <p className="mt-1 t2-fs-body-sm font-semibold text-[var(--t2-muted)]">{m.hasResults ? t("tour.finNoCountingPoints") : t("tour.finNoResults")}</p>
           )}
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerTournament")}</p>
-          <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{m.tournamentsWithExpenses > 0 ? fmtMoney(m.costPerTournament) : "—"}</p>
-          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
+          <p className="mt-1 t2-fs-h3 font-extrabold tabular-nums text-[var(--t2-text)]">{m.tournamentsWithExpenses > 0 ? fmtMoney(m.costPerTournament) : "—"}</p>
+          <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.finBasis", { n: m.tournamentsWithExpenses })}</p>
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finCostPerWeek")}</p>
-          <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{m.weeksWithExpenses > 0 ? fmtMoney(m.costPerWeek) : "—"}</p>
+          <p className="mt-1 t2-fs-h3 font-extrabold tabular-nums text-[var(--t2-text)]">{m.weeksWithExpenses > 0 ? fmtMoney(m.costPerWeek) : "—"}</p>
         </div>
         <div className={tile}>
           <p className={tileLabel}>{t("tour.finPrizeToCost")}</p>
-          <p className="mt-1 text-[17px] font-extrabold tabular-nums text-neutral-900">{Object.keys(m.prizeToCost).length ? Object.entries(m.prizeToCost).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") : "—"}</p>
-          <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.finPrize")}: {fmtMoney(m.prizeTotal)}</p>
+          <p className="mt-1 t2-fs-h3 font-extrabold tabular-nums text-[var(--t2-text)]">{Object.keys(m.prizeToCost).length ? Object.entries(m.prizeToCost).map(([c, v]) => `${c} ${v.toFixed(2)}`).join(" · ") : "—"}</p>
+          <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.finPrize")}: {fmtMoney(m.prizeTotal)}</p>
         </div>
       </div>
 
       {/* ── Bilanz je Turnier ──────────────────────────────────────────────── */}
       {balances.length === 0 ? (
-        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 text-[14px] text-[var(--t2-muted)]">{t("tour.finEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.finEmpty")}</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {balances.map((b) => (
             <div key={b.tournamentId} className="border-t border-[var(--t2-line)] py-4">
-              <p className="text-[14px] font-bold text-neutral-900">{nameById.get(b.tournamentId) ?? b.tournamentId}</p>
+              <p className="t2-fs-body font-bold text-[var(--t2-text)]">{nameById.get(b.tournamentId) ?? b.tournamentId}</p>
               {/* Ausgaben nach Posten */}
               <div className="mt-2 space-y-0.5">
                 {b.expensesByCategory.map((c) => (
-                  <p key={c.category} className="flex justify-between text-[12px] text-[var(--t2-muted)]"><span>{t(`tour.expCat_${c.category}`).startsWith("tour.") ? c.category : t(`tour.expCat_${c.category}`)}</span><span className="tabular-nums">{fmtMoney(c.byCurrency)}</span></p>
+                  <p key={c.category} className="flex justify-between t2-fs-micro text-[var(--t2-muted)]"><span>{t(`tour.expCat_${c.category}`).startsWith("tour.") ? c.category : t(`tour.expCat_${c.category}`)}</span><span className="tabular-nums">{fmtMoney(c.byCurrency)}</span></p>
                 ))}
                 {b.incomeByKind.map((k) => (
-                  <p key={k.kind} className="flex justify-between text-[12px] text-emerald-600"><span>{t(`tour.income_${k.kind}`)}</span><span className="tabular-nums">+{fmtMoney(k.byCurrency)}</span></p>
+                  <p key={k.kind} className="flex justify-between t2-fs-micro text-[var(--t2-success)]"><span>{t(`tour.income_${k.kind}`)}</span><span className="tabular-nums">+{fmtMoney(k.byCurrency)}</span></p>
                 ))}
-                {Object.keys(b.prize).length > 0 && <p className="flex justify-between text-[12px] text-emerald-600"><span>{t("tour.finPrize")}</span><span className="tabular-nums">+{fmtMoney(b.prize)}</span></p>}
+                {Object.keys(b.prize).length > 0 && <p className="flex justify-between t2-fs-micro text-[var(--t2-success)]"><span>{t("tour.finPrize")}</span><span className="tabular-nums">+{fmtMoney(b.prize)}</span></p>}
               </div>
-              <div className="mt-2 flex justify-between border-t border-[var(--t2-line)] pt-2 text-[13px] font-bold">
+              <div className="mt-2 flex justify-between border-t border-[var(--t2-line)] pt-2 t2-fs-body-sm font-bold">
                 <span className="text-[var(--t2-muted)]">{t("tour.finBalance")}</span>
-                <span className={`tabular-nums ${Object.values(b.balance).some((v) => v < 0) ? "text-amber-700" : "text-emerald-700"}`}>{fmtMoney(b.balance)}</span>
+                <span className={`tabular-nums ${Object.values(b.balance).some((v) => v < 0) ? "text-[var(--t2-warn)]" : "text-[var(--t2-success)]"}`}>{fmtMoney(b.balance)}</span>
               </div>
             </div>
           ))}
@@ -195,25 +195,25 @@ export default function FinanceView() {
       <section className="t2-panel">
         <h2 className="t2-kicker">{t("tour.finAddIncome")}</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finKind")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finKind")}</span>
             <select value={fKind} onChange={(e) => setFKind(e.target.value as IncomeKind)} className={inp}>{INCOME_KINDS.map((k) => <option key={k} value={k}>{t(`tour.income_${k}`)}</option>)}</select>
           </label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finAmount")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finAmount")}</span>
             <input value={fAmount} onChange={(e) => setFAmount(e.target.value)} inputMode="decimal" placeholder="0.00" className={inp} />
           </label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finCurrency")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finCurrency")}</span>
             <input value={fCurrency} onChange={(e) => setFCurrency(e.target.value.toUpperCase().slice(0, 3))} className={inp} />
           </label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finTournament")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finTournament")}</span>
             <select value={fTour} onChange={(e) => setFTour(e.target.value)} className={inp}>
               <option value="">{t("tour.finTournamentNone")}</option>
               {seasonTours.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finReceivedOn")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finReceivedOn")}</span>
             <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={inp} />
           </label>
-          <label className="block"><span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.finNote")}</span>
+          <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finNote")}</span>
             <input value={fNote} onChange={(e) => setFNote(e.target.value)} className={inp} />
           </label>
         </div>
@@ -224,15 +224,15 @@ export default function FinanceView() {
         {income.length > 0 && (
           <ul className="mt-4 space-y-1.5 border-t border-[var(--t2-line)] pt-3">
             {income.map((i) => (
-              <li key={i.id} className="flex items-center justify-between gap-2 text-[13px]">
-                <span className="min-w-0 truncate text-neutral-700">
+              <li key={i.id} className="flex items-center justify-between gap-2 t2-fs-body-sm">
+                <span className="min-w-0 truncate text-[var(--t2-text-muted)]">
                   <span className="font-semibold">{t(`tour.income_${i.kind}`)}</span>
                   {i.tournament_id ? ` · ${nameById.get(i.tournament_id) ?? i.tournament_id}` : ""}
                   {i.received_on ? ` · ${i.received_on}` : ""}
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="tabular-nums font-semibold text-emerald-700">{i.amount != null ? money(toMinor(i.amount), (i.currency || "EUR").toUpperCase()) : "—"}</span>
-                  <button type="button" onClick={() => delIncome(i.id)} aria-label={t("tour.finDeleteIncome")} className="text-[var(--t2-faint)] transition-colors hover:text-red-500">✕</button>
+                  <span className="tabular-nums font-semibold text-[var(--t2-success)]">{i.amount != null ? money(toMinor(i.amount), (i.currency || "EUR").toUpperCase()) : "—"}</span>
+                  <button type="button" onClick={() => delIncome(i.id)} aria-label={t("tour.finDeleteIncome")} className="text-[var(--t2-faint)] transition-colors hover:text-[var(--t2-danger)]">✕</button>
                 </span>
               </li>
             ))}

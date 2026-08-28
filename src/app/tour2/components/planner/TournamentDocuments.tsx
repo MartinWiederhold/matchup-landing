@@ -55,8 +55,8 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
   return (
     <section className="mt-1">
       <p className="t2-kicker">{t("tour.docTitle")}</p>
-      <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.docIntro")}</p>
-      {err && <p className="mt-2 text-[12px] font-semibold text-red-600">{err}</p>}
+      <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.docIntro")}</p>
+      {err && <p className="mt-2 t2-fs-micro font-semibold text-[var(--t2-danger)]">{err}</p>}
       <input ref={fileRef} type="file" accept={DOC_ACCEPT_MIME.join(",")} onChange={onFile} className="hidden" />
 
       <div className="mt-3 space-y-1.5">
@@ -64,22 +64,22 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
           const files = docs.filter((d) => d.kind === k);
           return (
             <div key={k} className="flex items-start gap-2 rounded-xl border border-[var(--t2-line)] px-2.5 py-2">
-              <span className="w-20 shrink-0 pt-0.5 text-[12px] font-semibold text-[var(--t2-muted)]">{kindLabel(k)}</span>
+              <span className="w-20 shrink-0 pt-0.5 t2-fs-micro font-semibold text-[var(--t2-muted)]">{kindLabel(k)}</span>
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-                {files.length === 0 && <span className="text-[12px] text-[var(--t2-faint)]">—</span>}
+                {files.length === 0 && <span className="t2-fs-micro text-[var(--t2-faint)]">—</span>}
                 {files.map((d) => (
-                  <span key={d.id} className="inline-flex items-center gap-1 rounded-full bg-[var(--t2-surface)] py-0.5 pl-2.5 pr-1 text-[11px] font-semibold text-[var(--t2-ink)]">
-                    <button type="button" onClick={() => open(d)} className="max-w-[10rem] truncate hover:text-matchup">{d.label || fmtDay(d.created_at)}</button>
-                    <button type="button" onClick={() => del(d)} disabled={busy} aria-label={t("tour.docRemove")} className="text-[var(--t2-faint)] hover:text-red-500 disabled:opacity-50">✕</button>
+                  <span key={d.id} className="inline-flex items-center gap-1 rounded-full bg-[var(--t2-surface)] py-0.5 pl-2.5 pr-1 t2-fs-meta font-semibold text-[var(--t2-ink)]">
+                    <button type="button" onClick={() => open(d)} className="max-w-[10rem] truncate hover:text-[var(--t2-accent)]">{d.label || fmtDay(d.created_at)}</button>
+                    <button type="button" onClick={() => del(d)} disabled={busy} aria-label={t("tour.docRemove")} className="text-[var(--t2-faint)] hover:text-[var(--t2-danger)] disabled:opacity-50">✕</button>
                   </span>
                 ))}
               </div>
-              <button type="button" onClick={() => pick(k)} disabled={busy} aria-label={t("tour.docAdd")} className="shrink-0 rounded-full bg-matchup px-2.5 py-1 text-[12px] font-bold leading-none text-white hover:bg-matchup-hover disabled:opacity-50">＋</button>
+              <button type="button" onClick={() => pick(k)} disabled={busy} aria-label={t("tour.docAdd")} className="shrink-0 rounded-full bg-[var(--t2-accent)] px-2.5 py-1 t2-fs-micro font-bold leading-none text-[var(--t2-on-accent)] hover:bg-[var(--t2-accent)]-hover disabled:opacity-50">＋</button>
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.docNote")}</p>
+      <p className="mt-2 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.docNote")}</p>
     </section>
   );
 }

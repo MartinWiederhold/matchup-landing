@@ -95,13 +95,13 @@ export default function PointsView() {
   };
   const del = async (id: string) => { await deleteResult(id); await reload(); };
 
-  if (authLoading) return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (authLoading) return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
-  if (state === "loading") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
-  if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (state === "error") return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const inp = "t2-input";
-  const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
+  const lbl = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]";
   const view = rows.map((row, i) => ({ row, s: scored.results[i] }));
   const withPoints = view.filter((v) => v.s && v.s.points > 0 && !v.s.notes.includes("verfallen")).sort((a, b) => b.s.points - a.s.points);
   const noPoints = view.filter((v) => v.s && (v.s.points === 0 || v.s.notes.includes("verfallen")));
@@ -134,7 +134,7 @@ export default function PointsView() {
         {next ? (
           <p>
             <span className="block font-semibold">{rows[next.index]?.tournament_name ?? "—"}</span>
-            <span className="mt-1 block text-[12px] text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: next.points, date: fmt(next.expiresOn) })}</span>
+            <span className="mt-1 block t2-fs-micro text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: next.points, date: fmt(next.expiresOn) })}</span>
           </p>
         ) : (
           <p className="text-[var(--t2-muted)]">{t("tour.t2rkNextEmpty")}</p>
@@ -142,7 +142,7 @@ export default function PointsView() {
       </T2AsideBlock>
       <T2AsideBlock title={t("tour.t2rkHow")}>
         <p className="text-[var(--t2-muted)]">{t("tour.t2rkLead")}</p>
-        <Link href="/tour2/form" className="mt-2 inline-block font-semibold text-matchup hover:underline">{t("tour.formTitle")} →</Link>
+        <Link href="/tour2/form" className="mt-2 inline-block font-semibold text-[var(--t2-accent)] hover:underline">{t("tour.formTitle")} →</Link>
       </T2AsideBlock>
     </>
   );
@@ -151,13 +151,13 @@ export default function PointsView() {
     <Tour2Area title={t("tour.t2rkTitle")} lead={t("tour.t2rkLead")} kpis={kpis} aside={aside}>
       {forecast.schedule.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-[15px] font-bold">{t("tour.pointsDefendTitle")}</h2>
-          <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsDefendHint")}</p>
+          <h2 className="t2-fs-body font-bold">{t("tour.pointsDefendTitle")}</h2>
+          <p className="mt-1 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.pointsDefendHint")}</p>
           <div className="mt-3 space-y-2">
             {forecast.schedule.map((e) => (
               <div key={`def-${e.index}`} className="flex items-center justify-between border-b border-[var(--t2-line)] py-3">
-                <span className="min-w-0 truncate text-sm font-semibold">{rows[e.index]?.tournament_name ?? "—"}</span>
-                <span className="shrink-0 text-[13px] text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: e.points, date: fmt(e.expiresOn) })}</span>
+                <span className="min-w-0 truncate t2-fs-body font-semibold">{rows[e.index]?.tournament_name ?? "—"}</span>
+                <span className="shrink-0 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.pointsExpiresOn", { points: e.points, date: fmt(e.expiresOn) })}</span>
               </div>
             ))}
           </div>
@@ -166,7 +166,7 @@ export default function PointsView() {
 
       <section className="t2-panel mb-10">
         <h2 className="t2-kicker">{t("tour.pointsCaptureTitle")}</h2>
-        <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.pointsCaptureHint")}</p>
+        <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.pointsCaptureHint")}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block sm:col-span-2 lg:col-span-1"><span className={lbl}>{t("tour.pointsFieldTournament")}</span><input value={fName} onChange={(e) => setFName(e.target.value)} className={inp} /></label>
           <label className="block"><span className={lbl}>{t("tour.pointsFieldCategory")}</span>
@@ -182,23 +182,23 @@ export default function PointsView() {
 
       {withPoints.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-[15px] font-bold">{t("tour.t2rkTable")}</h2>
-          <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{t("tour.t2rkLimit", { n: forecast.countingLimit })}</p>
+          <h2 className="t2-fs-body font-bold">{t("tour.t2rkTable")}</h2>
+          <p className="mt-1 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2rkLimit", { n: forecast.countingLimit })}</p>
           <div className="mt-3 space-y-2">
             {withPoints.map(({ row, s }) => {
               const tag = tagFor(s);
               return (
                 <div key={`res-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{row.tournament_name} <span className="font-normal text-[var(--t2-faint)]">· {catLabel(row.category)}</span></p>
-                    <p className="text-[12px] text-[var(--t2-muted)]">
+                    <p className="truncate t2-fs-body font-semibold">{row.tournament_name} <span className="font-normal text-[var(--t2-faint)]">· {catLabel(row.category)}</span></p>
+                    <p className="t2-fs-micro text-[var(--t2-muted)]">
                       {roundLabel(s.round, row.round)} · {t("tour.pointsExpiresLabel", { date: fmt(s.expiresOn) })}
                       {tag && <span className="text-[var(--t2-faint)]"> · {tag}</span>}
                     </p>
                   </div>
                   <span className="flex shrink-0 items-center gap-3">
-                    <span className={`text-lg font-bold ${s.counts ? "text-matchup" : "text-[var(--t2-faint)]"}`}>{s.points}</span>
-                    <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="text-[var(--t2-faint)] hover:text-red-500">✕</button>
+                    <span className={`t2-fs-h3 font-bold ${s.counts ? "text-[var(--t2-accent)]" : "text-[var(--t2-faint)]"}`}>{s.points}</span>
+                    <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="text-[var(--t2-faint)] hover:text-[var(--t2-danger)]">✕</button>
                   </span>
                 </div>
               );
@@ -209,22 +209,22 @@ export default function PointsView() {
 
       {noPoints.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-[15px] font-bold">{t("tour.pointsNoPointsTitle")}</h2>
+          <h2 className="t2-fs-body font-bold">{t("tour.pointsNoPointsTitle")}</h2>
           <div className="mt-3 space-y-2">
             {noPoints.map(({ row, s }) => (
               <div key={`np-${row.id}`} className="flex items-center justify-between gap-3 border-b border-[var(--t2-line)] py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{row.tournament_name} <span className="text-[var(--t2-faint)]">· {catLabel(row.category)} · {roundLabel(s.round, row.round)}</span></p>
-                  <p className="text-[12px] text-[var(--t2-muted)]">{reasonFor(s)}</p>
+                  <p className="truncate t2-fs-body font-medium">{row.tournament_name} <span className="text-[var(--t2-faint)]">· {catLabel(row.category)} · {roundLabel(s.round, row.round)}</span></p>
+                  <p className="t2-fs-micro text-[var(--t2-muted)]">{reasonFor(s)}</p>
                 </div>
-                <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="shrink-0 text-[var(--t2-faint)] hover:text-red-500">✕</button>
+                <button type="button" onClick={() => del(row.id)} aria-label={t("tour.pointsDeleteResult")} className="shrink-0 text-[var(--t2-faint)] hover:text-[var(--t2-danger)]">✕</button>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      <p className="text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsIncompleteHint")}</p>
+      <p className="t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{t("tour.pointsIncompleteHint")}</p>
     </Tour2Area>
   );
 }

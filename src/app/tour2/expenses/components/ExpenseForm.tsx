@@ -100,24 +100,24 @@ export default function ExpenseForm({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expAmount")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expAmount")}</span>
           <input type="text" inputMode="decimal" value={amount} onChange={(e) => { setAmount(e.target.value); setError(""); }} placeholder="49.50" className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expCurrency")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expCurrency")}</span>
           <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
             {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expMerchant")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expMerchant")}</span>
           <input type="text" value={merchant} onChange={(e) => { setMerchant(e.target.value); setError(""); }} className={inputCls} />
         </label>
       </div>
 
       {/* Kategorie als Chips */}
       <div className="mt-3">
-        <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.expCategory")}</span>
+        <span className="mb-1.5 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expCategory")}</span>
         <div className="flex flex-wrap gap-1.5">
           {CATS.map((c) => (
             <button
@@ -134,11 +134,11 @@ export default function ExpenseForm({
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expDate")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expDate")}</span>
           <input type="date" value={spentOn} onChange={(e) => setSpentOn(e.target.value)} className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expTournament")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expTournament")}</span>
           <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)} className={inputCls}>
             <option value="">{t("tour.expTournamentNone")}</option>
             {season.map((e) => (
@@ -149,14 +149,14 @@ export default function ExpenseForm({
           </select>
         </label>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.expNote")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expNote")}</span>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputCls} />
         </label>
       </div>
 
       {/* Beleg */}
       <div className="mt-3">
-        <span className="mb-1.5 block text-[12px] font-semibold text-neutral-600">{t("tour.expReceipt")}</span>
+        <span className="mb-1.5 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.expReceipt")}</span>
         <input ref={fileInput} type="file" accept="image/*,application/pdf" onChange={onFilePicked} className="hidden" />
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -167,14 +167,14 @@ export default function ExpenseForm({
           >
             {t("tour.expReceiptPick")}
           </button>
-          {uploading && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expReceiptUploading")}</span>}
+          {uploading && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.expReceiptUploading")}</span>}
           {receiptPath && !uploading && (
-            <span className="inline-flex items-center gap-2 text-[12px] text-emerald-600">
+            <span className="inline-flex items-center gap-2 t2-fs-micro text-[var(--t2-success)]">
               {t("tour.expReceiptAttached")}
               <button type="button" onClick={() => setReceiptPath(null)} className="text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">{t("tour.expReceiptRemove")}</button>
             </span>
           )}
-          {uploadError && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expUploadError")}</span>}
+          {uploadError && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.expUploadError")}</span>}
         </div>
       </div>
 
@@ -182,9 +182,9 @@ export default function ExpenseForm({
         <button type="button" onClick={save} disabled={saving || uploading} className="t2-cta disabled:opacity-50">
           {saving ? t("tour.expSaving") : t("tour.expSave")}
         </button>
-        {error === "invalid" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expInvalidAmount")}</span>}
-        {error === "fields" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expNeedFields")}</span>}
-        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.expSaveError")}</span>}
+        {error === "invalid" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.expInvalidAmount")}</span>}
+        {error === "fields" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.expNeedFields")}</span>}
+        {error === "save" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.expSaveError")}</span>}
       </div>
     </section>
   );

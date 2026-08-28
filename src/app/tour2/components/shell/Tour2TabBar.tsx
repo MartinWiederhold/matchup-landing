@@ -43,7 +43,7 @@ export default function Tour2TabBar({
       }`}
     >
       <nav
-        className={`pointer-events-auto flex w-full items-center justify-between rounded-full bg-white px-3 py-2.5 shadow-[0_16px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/10 transition-[max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`pointer-events-auto flex w-full items-center justify-between rounded-full bg-[var(--t2-on-accent)] px-3 py-2.5 shadow-[0_16px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/10 transition-[max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           compact ? "max-w-[320px]" : "max-w-[400px]"
         }`}
         aria-label="Tour"
@@ -57,11 +57,11 @@ export default function Tour2TabBar({
                   on ? "scale-100 opacity-100" : "scale-50 opacity-0"
                 }`}
               />
-              <span className={`relative ${on ? "text-white" : "text-neutral-400"}`}>
+              <span className={`relative ${on ? "text-[var(--t2-on-accent)]" : "text-[var(--t2-text-soft)]"}`}>
                 <Glyph name={tab.icon} />
               </span>
               {tab.badge != null && tab.badge > 0 && (
-                <span className="absolute right-1 top-1 z-10 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-matchup px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                <span className="absolute right-1 top-1 z-10 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[var(--t2-accent)] px-1 t2-fs-meta font-bold text-[var(--t2-on-accent)] ring-2 ring-white">
                   {tab.badge > 9 ? "9+" : tab.badge}
                 </span>
               )}

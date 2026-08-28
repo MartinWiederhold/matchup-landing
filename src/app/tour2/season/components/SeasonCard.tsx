@@ -51,25 +51,25 @@ export default function SeasonCard({
     <article className="t2-card">
       {/* Soft-gelöscht: Planzeile bleibt, wird aber erklärt (kein stiller Verlust). */}
       {entry.tournamentInactive && (
-        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">
+        <p className="mb-3 rounded-lg bg-[var(--t2-warn-surface)] px-3 py-2 t2-fs-micro leading-relaxed text-[var(--t2-warn)]">
           {t("tour.tournamentInactive")}
         </p>
       )}
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="t2-h2 text-[17px] text-[var(--t2-ink)]">
+          <h2 className="t2-h2 t2-fs-h3 text-[var(--t2-ink)]">
             {x.city || t("tour.fieldMissing")}
             <span className="text-[var(--t2-faint)]">, </span>
             <span className="text-[var(--t2-muted)]">{countryName}</span>
           </h2>
-          <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">
+          <p className="mt-0.5 t2-fs-micro text-[var(--t2-muted)]">
             {x.series === "itf_wtt" ? t("tour.seriesItf") : x.series === "itf_juniors" ? t("tour.seriesJuniors") : x.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger")}
             {" · "}
             {t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-[var(--t2-accent-soft)] px-3 py-1 text-[12px] font-bold text-[var(--t2-accent)]">
+        <span className="shrink-0 rounded-full bg-[var(--t2-accent-soft)] px-3 py-1 t2-fs-micro font-bold text-[var(--t2-accent)]">
           {x.category || t("tour.fieldMissing")}
         </span>
       </div>
@@ -79,7 +79,7 @@ export default function SeasonCard({
       <p className="mt-2"><DeadlineCountdown tournament={x} now={now} /></p>
 
       {/* Belag/Halle + Preisgeld */}
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[var(--t2-muted)]">
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 t2-fs-body-sm text-[var(--t2-muted)]">
         <span>
           {t("tour.surfaceLabel")}: {surfaceLabel ?? t("tour.fieldMissing")}
           {hall && <span className="text-[var(--t2-faint)]"> · {hall}</span>}
@@ -100,12 +100,12 @@ export default function SeasonCard({
 
       {/* Status ändern + Entfernen */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--t2-line)] pt-3">
-        <label className="flex items-center gap-2 text-[12px] text-[var(--t2-muted)]">
+        <label className="flex items-center gap-2 t2-fs-micro text-[var(--t2-muted)]">
           {t("tour.statusLabel")}
           <select
             value={entry.status}
             onChange={(e) => onStatusChange(e.target.value as SeasonStatus)}
-            className="rounded-full border border-[var(--t2-line-strong)] px-3 py-1.5 text-[12px] font-semibold text-[var(--t2-ink)] transition-colors hover:border-[var(--t2-ink)]"
+            className="rounded-full border border-[var(--t2-line-strong)] px-3 py-1.5 t2-fs-micro font-semibold text-[var(--t2-ink)] transition-colors hover:border-[var(--t2-ink)]"
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>{t(`tour.status_${s}`)}</option>
@@ -115,7 +115,7 @@ export default function SeasonCard({
         <button
           type="button"
           onClick={onRemove}
-          className="text-[12px] font-semibold text-[var(--t2-muted)] transition-colors hover:text-[var(--t2-ink)]"
+          className="t2-fs-micro font-semibold text-[var(--t2-muted)] transition-colors hover:text-[var(--t2-ink)]"
         >
           {t("tour.seasonRemove")}
         </button>

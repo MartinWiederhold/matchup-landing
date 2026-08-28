@@ -33,10 +33,10 @@ export default function ReceiptLink({ path }: { path: string }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button type="button" onClick={open} disabled={busy} className="text-[12px] font-semibold text-matchup hover:underline disabled:opacity-50">
+      <button type="button" onClick={open} disabled={busy} className="t2-fs-micro font-semibold text-[var(--t2-accent)] hover:underline disabled:opacity-50">
         {t("tour.expReceiptView")}
       </button>
-      {error && <span className="text-[11px] text-neutral-500">{t("tour.expReceiptLinkError")}</span>}
+      {error && <span className="t2-fs-meta text-[var(--t2-text-soft)]">{t("tour.expReceiptLinkError")}</span>}
     </span>
   );
 }

@@ -19,14 +19,14 @@ function DeadlineRow({ label, date, suffix }: { label: string; date: Date; suffi
   const t = useT();
   const expired = date.getTime() < Date.now();
   return (
-    <div className="flex items-baseline justify-between gap-3 py-1 text-[13px]">
+    <div className="flex items-baseline justify-between gap-3 py-1 t2-fs-body-sm">
       <span className="text-[var(--t2-muted)]">
         {label}
-        {suffix && <span className="ml-1.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">{suffix}</span>}
+        {suffix && <span className="ml-1.5 rounded bg-[var(--t2-warn-surface)] px-1.5 py-0.5 t2-fs-meta font-semibold text-[var(--t2-warn)]">{suffix}</span>}
       </span>
       <span className={expired ? "text-[var(--t2-faint)] line-through" : "font-medium text-[var(--t2-ink)]"}>
         {fmtDeadline(date, locale)}
-        {expired && <span className="ml-1.5 text-[10px] uppercase tracking-wide text-[var(--t2-faint)] no-underline">({t("tour.expired")})</span>}
+        {expired && <span className="ml-1.5 t2-fs-meta uppercase tracking-wide text-[var(--t2-faint)] no-underline">({t("tour.expired")})</span>}
       </span>
     </div>
   );
@@ -57,7 +57,7 @@ export default function TourDeadlineBlock({ tournament: x }: { tournament: TourT
       {/* Junioren: Meldung erst ab 13 (§4). Ohne Geburtsdatum nicht prüfbar — aber benannt,
           nicht verschwiegen, weil das Turnier öffentlich sichtbar ist. */}
       {x.series === "itf_juniors" && (
-        <p className="mt-1 rounded-md bg-amber-50 px-2.5 py-1.5 text-[12px] font-medium text-amber-800 ring-1 ring-amber-200">
+        <p className="mt-1 rounded-lg bg-[var(--t2-warn-surface)] px-2.5 py-1.5 t2-fs-micro font-medium text-[var(--t2-warn)] ring-1 ring-[var(--t2-warn)]">
           {t("tour.juniorsUnder13")}
         </p>
       )}
@@ -66,12 +66,12 @@ export default function TourDeadlineBlock({ tournament: x }: { tournament: TourT
           {dl.entry && <DeadlineRow label={t("tour.entry")} date={dl.entry} />}
           {dl.withdrawal && <DeadlineRow label={t("tour.withdrawal")} date={dl.withdrawal} />}
           {dl.freezeVarianteA && <DeadlineRow label={t("tour.freeze")} date={dl.freezeVarianteA} suffix={freezeUnverified ? t("tour.freezeUnverified") : undefined} />}
-          <p className="mt-2 text-[11px] text-[var(--t2-faint)]">{t("tour.tzHint")}</p>
+          <p className="mt-2 t2-fs-meta text-[var(--t2-faint)]">{t("tour.tzHint")}</p>
         </div>
       ) : (
         <div className="mt-1 rounded-lg bg-[var(--t2-surface)] px-3 py-2.5">
-          <p className="text-[13px] font-semibold text-[var(--t2-ink)]">{t("tour.challengerUnknownTitle")}</p>
-          <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{t("tour.challengerUnknownText")}</p>
+          <p className="t2-fs-body-sm font-semibold text-[var(--t2-ink)]">{t("tour.challengerUnknownTitle")}</p>
+          <p className="mt-0.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{t("tour.challengerUnknownText")}</p>
         </div>
       )}
     </div>

@@ -59,7 +59,7 @@ export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament
   const t = useT();
   const dl = tourDeadlines(new Date(tournament.tournament_monday + "T00:00:00Z"), tournament.series, tournament.category);
   // „lg" für die prominente Anzeige im Turnierdetail (wichtigste Angabe des Reiters).
-  const sz = size === "lg" ? "text-[18px]" : "text-[13px]";
+  const sz = size === "lg" ? "t2-fs-h3" : "t2-fs-body-sm";
 
   if (!dl.known || !dl.entry) {
     return <span className={`${sz} font-semibold text-[var(--t2-muted)]`}>{t("tour.entryUnknownShort")}</span>;
@@ -71,7 +71,7 @@ export function DeadlineCountdown({ tournament, now, size = "sm" }: { tournament
   const days = Math.ceil(ms / DAY);
   const urgent = days <= 7; // wie NextDeadline: drängender in Bernstein, aber kein Rot/Blinken
   return (
-    <span className={`${sz} font-bold tabular-nums ${urgent ? "text-amber-700" : "text-[var(--t2-ink)]"}`}>
+    <span className={`${sz} font-bold tabular-nums ${urgent ? "text-[var(--t2-warn)]" : "text-[var(--t2-ink)]"}`}>
       {t("tour.entryCountdown", { n: days })}
     </span>
   );
@@ -87,10 +87,10 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
   const isChallenger = tournament.series === "challenger";
   const isWta = tournament.series === "wta";
   const link = "block font-semibold text-[var(--t2-accent)] hover:underline";
-  const note = "mt-0.5 text-[11px] leading-relaxed text-[var(--t2-faint)]";
+  const note = "mt-0.5 t2-fs-meta leading-relaxed text-[var(--t2-faint)]";
 
   return (
-    <div className="mt-2 text-[12px]">
+    <div className="mt-2 t2-fs-micro">
       <p className="mb-1 t2-kicker">{t("tour.entryPathTitle")}</p>
 
       {/* Turnierseite — bei ITF-Turnieren die öffentliche itftennis.com-Turnierseite

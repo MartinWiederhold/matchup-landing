@@ -73,7 +73,7 @@ export default function StayRow({
         </div>
         <div className="mt-2 flex items-center gap-3">
           <button type="button" onClick={save} className="t2-cta">{t("tour.schengenEditSave")}</button>
-          <button type="button" onClick={() => setEditing(false)} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.schengenCancel")}</button>
+          <button type="button" onClick={() => setEditing(false)} className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.schengenCancel")}</button>
         </div>
       </div>
     );
@@ -82,11 +82,11 @@ export default function StayRow({
   return (
     <div className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-semibold text-neutral-900">
+        <p className="t2-fs-body font-semibold text-[var(--t2-text)]">
           {countryName(stay.country)}
-          {!isSuggestion && <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">{t("tour.schengenCounts")}</span>}
+          {!isSuggestion && <span className="ml-2 rounded bg-[var(--t2-success-surface)] px-1.5 py-0.5 t2-fs-meta font-semibold text-[var(--t2-success)]">{t("tour.schengenCounts")}</span>}
         </p>
-        <p className="text-[12px] text-[var(--t2-muted)]">
+        <p className="t2-fs-micro text-[var(--t2-muted)]">
           {fmtDate(stay.entry_date, locale)} – {stay.exit_date ? fmtDate(stay.exit_date, locale) : t("tour.schengenRunning")}
           {stay.note ? ` · ${stay.note}` : ""}
         </p>
@@ -95,8 +95,8 @@ export default function StayRow({
         {isSuggestion && onConfirm && (
           <button type="button" onClick={onConfirm} className="t2-cta">{t("tour.schengenConfirm")}</button>
         )}
-        <button type="button" onClick={startEdit} className="text-[12px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.schengenEdit")}</button>
-        <button type="button" onClick={onRemove} className="text-[12px] font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">{t("tour.schengenDelete")}</button>
+        <button type="button" onClick={startEdit} className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.schengenEdit")}</button>
+        <button type="button" onClick={onRemove} className="t2-fs-micro font-semibold text-[var(--t2-faint)] hover:text-[var(--t2-ink)]">{t("tour.schengenDelete")}</button>
       </div>
     </div>
   );

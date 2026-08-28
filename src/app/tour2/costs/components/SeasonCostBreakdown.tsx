@@ -75,10 +75,10 @@ export default function SeasonCostBreakdown({
 
       {/* Hinweise oben: fehlende Nächte / fehlende Sätze — sichtbar, aber unaufgeregt. */}
       {nights == null && (
-        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">{t("tour.costsNightsMissing")}</p>
+        <p className="mt-3 rounded-lg bg-[var(--t2-warn-surface)] px-3 py-2 t2-fs-micro leading-relaxed text-[var(--t2-warn)]">{t("tour.costsNightsMissing")}</p>
       )}
       {missing.length > 0 && (
-        <p className="mt-2 text-[12px] leading-relaxed text-[var(--t2-muted)]">
+        <p className="mt-2 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">
           {t("tour.costsMissingRates", { list: missing.join(", ") })}
         </p>
       )}
@@ -91,24 +91,24 @@ export default function SeasonCostBreakdown({
           return (
             <article key={entries[i].planId} className="t2-panel">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-[15px] font-bold tracking-tight text-neutral-900">
+                <h3 className="t2-fs-body font-bold tracking-tight text-[var(--t2-text)]">
                   {x.city || t("tour.fieldMissing")}
                   <span className="text-[var(--t2-faint)]">, </span>
                   <span className="text-[var(--t2-muted)]">{countryName}</span>
                 </h3>
-                <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}</span>
+                <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.mondayLabel")} {fmtMonday(x.tournament_monday, locale)}</span>
               </div>
 
-              <p className={`mt-1 text-[12px] font-semibold ${st.arrivalCharged ? "text-[var(--t2-muted)]" : "text-emerald-600"}`}>
+              <p className={`mt-1 t2-fs-micro font-semibold ${st.arrivalCharged ? "text-[var(--t2-muted)]" : "text-[var(--t2-success)]"}`}>
                 {st.arrivalCharged ? t("tour.costsStationArrival") : t("tour.costsStationNoArrival")}
               </p>
 
               {/* Einzelposten: bekannt (Betrag) oder unbekannt. */}
-              <ul className="mt-2 space-y-0.5 text-[13px]">
+              <ul className="mt-2 space-y-0.5 t2-fs-body-sm">
                 {st.items.map((it, k) => (
                   <li key={k} className="flex items-baseline justify-between gap-3">
                     <span className="text-[var(--t2-muted)]">{t(`tour.costsItem_${it.code}`)}</span>
-                    <span className={"unknown" in it && it.unknown ? "text-[var(--t2-faint)]" : "font-medium text-neutral-800 tabular-nums"}>
+                    <span className={"unknown" in it && it.unknown ? "text-[var(--t2-faint)]" : "font-medium text-[var(--t2-text-muted)] tabular-nums"}>
                       {"unknown" in it && it.unknown ? t("tour.costsUnknown") : money(it.amount, it.currency)}
                     </span>
                   </li>
@@ -116,9 +116,9 @@ export default function SeasonCostBreakdown({
               </ul>
 
               {Object.keys(st.subtotal).length > 0 && (
-                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-[var(--t2-line)] pt-2 text-[13px]">
+                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-[var(--t2-line)] pt-2 t2-fs-body-sm">
                   <span className="font-semibold text-[var(--t2-muted)]">{t("tour.costsStationSubtotal")}</span>
-                  <span className="flex flex-col items-end font-bold text-neutral-900"><BagLines bag={st.subtotal} /></span>
+                  <span className="flex flex-col items-end font-bold text-[var(--t2-text)]"><BagLines bag={st.subtotal} /></span>
                 </div>
               )}
             </article>
@@ -130,14 +130,14 @@ export default function SeasonCostBreakdown({
       <div className="t2-panel mt-4">
         <div className="flex items-baseline justify-between gap-3">
           <span className="t2-kicker">{t("tour.costsTotal")}</span>
-          <span className="flex flex-col items-end text-[18px] font-extrabold text-neutral-900">
+          <span className="flex flex-col items-end t2-fs-h3 font-extrabold text-[var(--t2-text)]">
             {result.currencies.length > 0 ? <BagLines bag={result.total} /> : <span className="text-[var(--t2-faint)]">{t("tour.costsUnknown")}</span>}
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-[var(--t2-faint)]">{t("tour.costsPerCurrencyNote")}</p>
+        <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.costsPerCurrencyNote")}</p>
 
         {result.arrivalsSaved > 0 && (
-          <p className="mt-3 border-t border-[var(--t2-line)] pt-3 text-[13px] text-[var(--t2-muted)]">
+          <p className="mt-3 border-t border-[var(--t2-line)] pt-3 t2-fs-body-sm text-[var(--t2-muted)]">
             {t("tour.costsSavedArrivals", { n: result.arrivalsSaved })}
             {savedMoney && <span className="text-[var(--t2-faint)]"> · {t("tour.costsSavedArrivalsAmount", { amount: savedMoney })}</span>}
           </p>

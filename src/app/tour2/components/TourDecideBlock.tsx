@@ -57,8 +57,8 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
     <div className="mt-4 border-t border-[var(--t2-line)] pt-3">
       <p className="t2-kicker">{t("tour.decide.title")}</p>
       {/* Ruhige Einordnungszeile + Verlässlichkeit als Wortstufe (keine Prozentzahl) */}
-      <p className="mt-1 text-[14px] font-semibold text-[var(--t2-ink)]">{t(`tour.decide.cls.${decision.classification}`)}</p>
-      <p className="mt-0.5 text-[11px] text-[var(--t2-faint)]">
+      <p className="mt-1 t2-fs-body font-semibold text-[var(--t2-ink)]">{t(`tour.decide.cls.${decision.classification}`)}</p>
+      <p className="mt-0.5 t2-fs-meta text-[var(--t2-faint)]">
         {t("tour.decide.confidenceLabel")}: {t(`tour.decide.${confKey}`)}
       </p>
 
@@ -66,7 +66,7 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
       {decision.reasons.length > 0 && (
         <ul className="mt-2.5 space-y-1">
           {decision.reasons.map((r) => (
-            <li key={r.code} className="flex items-baseline gap-2 text-[12.5px]">
+            <li key={r.code} className="flex items-baseline gap-2 t2-fs-micro">
               <span className={`mt-[5px] h-1 w-1 shrink-0 rounded-full ${dotClass(r.direction)}`} />
               <span className={reasonTextClass(r.direction)}>{t(`tour.decide.reason.${r.code}`)}</span>
             </li>
@@ -77,10 +77,10 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
       {/* Grenzen dieser Einschätzung — sichtbar, aber unaufgeregt (kein Fehler-Look) */}
       {decision.basisLuecken.length > 0 && (
         <div className="mt-2.5">
-          <p className="text-[11px] font-semibold text-[var(--t2-faint)]">{t("tour.decide.lueckenTitle")}</p>
+          <p className="t2-fs-meta font-semibold text-[var(--t2-faint)]">{t("tour.decide.lueckenTitle")}</p>
           <ul className="mt-0.5 space-y-0.5">
             {decision.basisLuecken.map((code) => (
-              <li key={code} className="text-[11px] leading-relaxed text-[var(--t2-faint)]">{t(`tour.decide.luecke.${code}`)}</li>
+              <li key={code} className="t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t(`tour.decide.luecke.${code}`)}</li>
             ))}
           </ul>
         </div>

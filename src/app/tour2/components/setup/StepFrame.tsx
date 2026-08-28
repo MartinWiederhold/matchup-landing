@@ -47,20 +47,20 @@ export default function StepFrame({ state, userId, onSaved }: { state: SetupStat
     <div className="space-y-3">
       <section className="t2-panel">
         <h2 className="t2-kicker">{t("tour.setupFrameTitle")}</h2>
-        <p className="mt-2 text-sm text-[var(--t2-muted)]">{t("tour.setupFrameIntro")}</p>
+        <p className="mt-2 t2-fs-body text-[var(--t2-muted)]">{t("tour.setupFrameIntro")}</p>
 
         <label className="mt-4 block sm:max-w-[16rem]">
-          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.setupBudget")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.setupBudget")}</span>
           <input type="text" inputMode="numeric" value={budget} onChange={(e) => { setBudget(e.target.value); setStatus("idle"); }} placeholder="—" className={inputCls} />
         </label>
-        <p className="mt-2 text-[11px] leading-relaxed text-[var(--t2-faint)]">{t("tour.setupBudgetHint")}</p>
+        <p className="mt-2 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.setupBudgetHint")}</p>
 
         <div className="mt-4 flex items-center gap-3">
           <button type="button" onClick={saveBudget} disabled={busy} className="t2-cta">
             {t("tour.setupSave")}
           </button>
-          {status === "saved" && <span className="text-[12px] text-emerald-600">{t("tour.setupSaved")}</span>}
-          {status === "error" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.setupSaveError")}</span>}
+          {status === "saved" && <span className="t2-fs-micro text-[var(--t2-success)]">{t("tour.setupSaved")}</span>}
+          {status === "error" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.setupSaveError")}</span>}
         </div>
       </section>
 

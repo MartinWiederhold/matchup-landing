@@ -99,18 +99,18 @@ export default function SchengenView() {
   }, [user, reload]);
 
   // ── Auth-Gate (wie SeasonView) ───────────────────────────────────────────
-  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
       <div className="t2-panel mt-10 text-center">
-        <h2 className="text-lg font-bold">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <h2 className="t2-fs-h3 font-bold">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   return (
     <div className="mt-8 space-y-6">
@@ -118,24 +118,24 @@ export default function SchengenView() {
       <section className="t2-panel">
         <h2 className="t2-kicker">{t("tour.schengenUsageTitle")}</h2>
         {confirmed.length === 0 ? (
-          <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.schengenNoConfirmed")}</p>
+          <p className="mt-2 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.schengenNoConfirmed")}</p>
         ) : (
           <>
             <div className="mt-2 flex flex-wrap items-end gap-x-8 gap-y-2">
               <div>
                 <p className="t2-kicker">{t("tour.schengenUsed")}</p>
-                <p className="text-[26px] font-extrabold tracking-tight text-neutral-900">{usage.used} <span className="text-[13px] font-semibold text-[var(--t2-faint)]">/ 90 {t("tour.schengenDaysUnit")}</span></p>
+                <p className="t2-fs-h1 font-extrabold tracking-tight text-[var(--t2-text)]">{usage.used} <span className="t2-fs-body-sm font-semibold text-[var(--t2-faint)]">/ 90 {t("tour.schengenDaysUnit")}</span></p>
               </div>
               <div>
                 <p className="t2-kicker">{t("tour.schengenLeft")}</p>
-                <p className="text-[26px] font-extrabold tracking-tight text-neutral-900">{usage.left} <span className="text-[13px] font-semibold text-[var(--t2-faint)]">{t("tour.schengenDaysUnit")}</span></p>
+                <p className="t2-fs-h1 font-extrabold tracking-tight text-[var(--t2-text)]">{usage.left} <span className="t2-fs-body-sm font-semibold text-[var(--t2-faint)]">{t("tour.schengenDaysUnit")}</span></p>
               </div>
               {usage.peakWindowEnd && (
-                <p className="text-[12px] text-[var(--t2-muted)]">{t("tour.schengenPeak")} {fmtDate(usage.peakWindowEnd, locale)}</p>
+                <p className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenPeak")} {fmtDate(usage.peakWindowEnd, locale)}</p>
               )}
             </div>
             {usage.exceeds && (
-              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-800">
+              <p className="mt-3 rounded-lg bg-[var(--t2-warn-surface)] px-3 py-2 t2-fs-micro leading-relaxed text-[var(--t2-warn)]">
                 {t("tour.schengenExceedNote")}
                 {usage.exceedOn ? ` ${t("tour.schengenExceedOn")} ${fmtDate(usage.exceedOn, locale)}.` : ""}
               </p>
@@ -145,14 +145,14 @@ export default function SchengenView() {
       </section>
 
       {stays.length === 0 && (
-        <p className="rounded-2xl bg-[var(--t2-surface)] px-5 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.schengenEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-5 py-8 text-center t2-fs-body text-[var(--t2-muted)]">{t("tour.schengenEmpty")}</p>
       )}
 
       {/* Bestätigte Aufenthalte */}
       {confirmed.length > 0 && (
         <section>
           <h2 className="t2-kicker">{t("tour.schengenConfirmedTitle")}</h2>
-          {actionError && <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</p>}
+          {actionError && <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</p>}
           <div className="mt-2 divide-y divide-[var(--t2-line)]">
             {confirmed.map((s) => (
               <StayRow key={s.id} stay={s} isSuggestion={false} onSave={(p) => handleSave(s.id, p)} onRemove={() => handleRemove(s.id)} />
@@ -169,11 +169,11 @@ export default function SchengenView() {
             {generating ? t("tour.schengenGenerating") : t("tour.schengenGenerate")}
           </button>
         </div>
-        {genMsg && <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{genMsg}</p>}
-        {warn && <p className="mt-1 text-[12px] text-amber-700">{warn}</p>}
+        {genMsg && <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{genMsg}</p>}
+        {warn && <p className="mt-1 t2-fs-micro text-[var(--t2-warn)]">{warn}</p>}
         {suggestions.length > 0 ? (
           <>
-            <p className="mt-2 text-[12px] text-[var(--t2-muted)]">{t("tour.schengenSuggestionsNote")}</p>
+            <p className="mt-2 t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenSuggestionsNote")}</p>
             <div className="mt-1 divide-y divide-[var(--t2-line)]">
               {suggestions.map((s) => (
                 <StayRow key={s.id} stay={s} isSuggestion onConfirm={() => handleConfirm(s)} onSave={(p) => handleSave(s.id, p)} onRemove={() => handleRemove(s.id)} />
@@ -181,7 +181,7 @@ export default function SchengenView() {
             </div>
           </>
         ) : (
-          <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.schengenGeneratedNone")}</p>
+          <p className="mt-2 t2-fs-micro text-[var(--t2-faint)]">{t("tour.schengenGeneratedNone")}</p>
         )}
       </section>
 

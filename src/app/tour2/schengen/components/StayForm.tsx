@@ -64,30 +64,30 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.schengenCountry")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.schengenCountry")}</span>
           <select value={country} onChange={(e) => { setCountry(e.target.value); setError(""); }} className={inputCls}>
             <option value="">—</option>
             {countries.map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.schengenEntry")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.schengenEntry")}</span>
           <input type="date" value={entry} onChange={(e) => { setEntry(e.target.value); setError(""); }} className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">
             {t("tour.schengenExit")} <span className="font-normal text-[var(--t2-faint)]">({t("tour.schengenExitHint")})</span>
           </span>
           <input type="date" value={exit} onChange={(e) => setExit(e.target.value)} className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-neutral-600">{t("tour.schengenNote")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.schengenNote")}</span>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputCls} />
         </label>
       </div>
 
       {/* Häkchen: zählt für die Rechnung (vorausgewählt, abwählbar) */}
-      <label className="mt-3 flex items-start gap-2 text-[13px] text-neutral-700">
+      <label className="mt-3 flex items-start gap-2 t2-fs-body-sm text-[var(--t2-text-muted)]">
         <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5" />
         <span>{t("tour.schengenConfirmedCheck")}</span>
       </label>
@@ -96,8 +96,8 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
         <button type="button" onClick={save} disabled={busy} className="t2-cta disabled:opacity-50">
           {t("tour.schengenSave")}
         </button>
-        {error === "fields" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.schengenNeedFields")}</span>}
-        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</span>}
+        {error === "fields" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenNeedFields")}</span>}
+        {error === "save" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</span>}
       </div>
     </section>
   );

@@ -75,23 +75,23 @@ export default function WildcardsView({ skipMark = false }: { skipMark?: boolean
     return () => { alive = false; };
   }, [user, reload, skipMark]);
 
-  if (authLoading) return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (authLoading) return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) {
     return (
       <div className="mt-8 t2-panel bg-[var(--t2-surface)] p-6 text-center">
-        <p className="text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
-  if (status === "error") return <p className="mt-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   return (
     <div className="mt-8 space-y-4">
-      <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.wcHint")}</p>
+      <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-3 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.wcHint")}</p>
       {tours.length === 0 ? (
-        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 text-[14px] text-[var(--t2-muted)]">{t("tour.wcEmpty")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.wcEmpty")}</p>
       ) : (
         <div className="space-y-3">
           {tours.map((tour) => {
@@ -140,7 +140,7 @@ function WildcardCard({
 
   const nn = (s: string) => (s.trim() === "" ? null : s.trim());
   const inp = "t2-input";
-  const lbl = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
+  const lbl = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]";
 
   const requested = contact != null && (contact.requested_on != null || contact.outcome != null);
 
@@ -176,15 +176,15 @@ function WildcardCard({
     <div className="t2-panel">
       {/* Kopf: Turniername + Anfragestand + Auf-/Zuklappen. */}
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-        <span className="min-w-0 truncate text-[14px] font-bold text-[var(--t2-ink)]">{tour.name}</span>
+        <span className="min-w-0 truncate t2-fs-body font-bold text-[var(--t2-ink)]">{tour.name}</span>
         <span className="flex shrink-0 items-center gap-2">
           {contact?.wildcard_type && (
-            <span className="rounded-full bg-[var(--t2-surface)] px-2 py-0.5 text-[11px] font-semibold text-[var(--t2-muted)]">{t(`tour.wcType_${contact.wildcard_type}`)}</span>
+            <span className="rounded-full bg-[var(--t2-surface)] px-2 py-0.5 t2-fs-meta font-semibold text-[var(--t2-muted)]">{t(`tour.wcType_${contact.wildcard_type}`)}</span>
           )}
           {contact?.outcome ? (
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${outcomeClass(contact.outcome)}`}>{t(`tour.wcOutcome_${contact.outcome}`)}</span>
+            <span className={`rounded-full px-2 py-0.5 t2-fs-meta font-bold ${outcomeClass(contact.outcome)}`}>{t(`tour.wcOutcome_${contact.outcome}`)}</span>
           ) : (
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${requested ? "bg-amber-50 text-amber-700" : "bg-[var(--t2-surface)] text-[var(--t2-faint)]"}`}>
+            <span className={`rounded-full px-2 py-0.5 t2-fs-meta font-semibold ${requested ? "bg-[var(--t2-warn-surface)] text-[var(--t2-warn)]" : "bg-[var(--t2-surface)] text-[var(--t2-faint)]"}`}>
               {requested ? t("tour.wcStatusRequested") : t("tour.wcStatusNotRequested")}
             </span>
           )}
@@ -228,21 +228,21 @@ function WildcardCard({
           <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
             <h3 className="t2-kicker">{t("tour.wcTimeline")}</h3>
             {!contactId ? (
-              <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.wcSaveContactFirst")}</p>
+              <p className="mt-2 t2-fs-micro text-[var(--t2-faint)]">{t("tour.wcSaveContactFirst")}</p>
             ) : (
               <>
                 {events.length === 0 ? (
-                  <p className="mt-2 text-[12px] text-[var(--t2-faint)]">{t("tour.wcTimelineEmpty")}</p>
+                  <p className="mt-2 t2-fs-micro text-[var(--t2-faint)]">{t("tour.wcTimelineEmpty")}</p>
                 ) : (
                   <ul className="mt-2 space-y-1.5">
                     {events.map((ev) => (
-                      <li key={ev.id} className="flex items-start justify-between gap-2 text-[13px]">
+                      <li key={ev.id} className="flex items-start justify-between gap-2 t2-fs-body-sm">
                         <span className="min-w-0 text-[var(--t2-ink)]">
                           <span className="tabular-nums text-[var(--t2-faint)]">{ev.occurred_on}</span>{" · "}
                           <span className="font-semibold">{t(`tour.wcEvent_${ev.kind}`)}</span>
                           {ev.detail ? <span className="text-[var(--t2-muted)]"> — {ev.detail}</span> : null}
                         </span>
-                        <button type="button" onClick={() => delEvent(ev.id)} aria-label={t("tour.wcDeleteEvent")} className="shrink-0 text-[var(--t2-faint)] transition-colors hover:text-red-500">✕</button>
+                        <button type="button" onClick={() => delEvent(ev.id)} aria-label={t("tour.wcDeleteEvent")} className="shrink-0 text-[var(--t2-faint)] transition-colors hover:text-[var(--t2-danger)]">✕</button>
                       </li>
                     ))}
                   </ul>
@@ -271,7 +271,7 @@ function WildcardCard({
 }
 
 function outcomeClass(o: WildcardOutcome): string {
-  if (o === "granted") return "bg-emerald-50 text-emerald-700";
-  if (o === "declined") return "bg-red-50 text-red-600";
-  return "bg-amber-50 text-amber-700"; // pending
+  if (o === "granted") return "bg-[var(--t2-success-surface)] text-[var(--t2-success)]";
+  if (o === "declined") return "bg-[var(--t2-danger-surface)] text-[var(--t2-danger)]";
+  return "bg-[var(--t2-warn-surface)] text-[var(--t2-warn)]"; // pending
 }

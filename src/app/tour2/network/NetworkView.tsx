@@ -101,10 +101,10 @@ export default function NetworkView() {
   const nextWeek = weeks[0] ?? null;
 
   if (authLoading || (user && state === "loading")) {
-    return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+    return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
   if (!user) return <TourLoginCard />;
-  if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "error") return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
     <>
@@ -117,10 +117,10 @@ export default function NetworkView() {
 
   const aside = (
     <T2AsideBlock title={t("tour.t2netSlots")}>
-      <p className="text-[15px] font-semibold tabular-nums">{slotTotal}</p>
+      <p className="t2-fs-body font-semibold tabular-nums">{slotTotal}</p>
       {weeks.filter((w) => w.slots.length > 0).map((w) => (
-        <p key={w.id} className="mt-1 text-[12px] text-[var(--t2-muted)]">
-          <Link href={tour2PlannerTournamentHref(w.id)} className="font-semibold text-matchup">{w.city}</Link>
+        <p key={w.id} className="mt-1 t2-fs-micro text-[var(--t2-muted)]">
+          <Link href={tour2PlannerTournamentHref(w.id)} className="font-semibold text-[var(--t2-accent)]">{w.city}</Link>
           {" · "}{w.slots.length}
         </p>
       ))}
@@ -132,7 +132,7 @@ export default function NetworkView() {
       <section className="t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netPresence")}</h2>
         {people.length === 0 ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netPresenceEmpty")}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netPresenceEmpty")}</p>
         ) : (
           <ul className="mt-4 divide-y divide-[var(--t2-line)] border-y border-[var(--t2-line)]">
             {people.map((p) => {
@@ -140,13 +140,13 @@ export default function NetworkView() {
               return (
                 <li key={`${p.tournamentId}-${p.user_id}`} className="flex items-baseline justify-between gap-3 py-3">
                   <span>
-                    <span className="block text-[15px] font-semibold">{p.name || t("tour.fieldMissing")}</span>
-                    <span className="mt-0.5 block text-[12px] text-[var(--t2-muted)]">
+                    <span className="block t2-fs-body font-semibold">{p.name || t("tour.fieldMissing")}</span>
+                    <span className="mt-0.5 block t2-fs-micro text-[var(--t2-muted)]">
                       {[p.city, p.nationality ? countryName(p.nationality) : null, p.rank_label, p.looking ? t("tour.wsSeekPartner") : null, p.looking_room ? t("tour.wsSeekRoom") : null].filter(Boolean).join(" · ")}
                     </span>
                   </span>
                   {href && (
-                    <a href={href} className="shrink-0 text-[13px] font-semibold text-matchup">{t("tour.t2netContact")}</a>
+                    <a href={href} className="shrink-0 t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{t("tour.t2netContact")}</a>
                   )}
                 </li>
               );
@@ -158,10 +158,10 @@ export default function NetworkView() {
       <section className="mt-4 t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netSlots")}</h2>
         {!nextWeek ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netSlotsEmpty")}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netSlotsEmpty")}</p>
         ) : (
           <div className="mt-2">
-            <p className="text-[13px] text-[var(--t2-muted)]">{nextWeek.city} · {fmtDate(nextWeek.monday)}</p>
+            <p className="t2-fs-body-sm text-[var(--t2-muted)]">{nextWeek.city} · {fmtDate(nextWeek.monday)}</p>
             <TrainingSlots tournamentId={nextWeek.id} tournamentMonday={nextWeek.monday} viewerId={user.id} viewerContact={null} nowMs={nowMs} />
           </div>
         )}
@@ -170,15 +170,15 @@ export default function NetworkView() {
       <section className="mt-4 t2-dash-card">
         <h2 className="t2-kicker">{t("tour.t2netProv")}</h2>
         {!provCity ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netProvEmptyNone")}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netProvEmptyNone")}</p>
         ) : !providers || providers.length === 0 ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2netProvEmpty", { city: provCity })}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netProvEmpty", { city: provCity })}</p>
         ) : (
           <ul className="mt-4 divide-y divide-[var(--t2-line)] border-y border-[var(--t2-line)]">
             {providers.map((p) => (
               <li key={p.id} className="py-3">
-                <p className="text-[15px] font-semibold">{p.name}</p>
-                <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">
+                <p className="t2-fs-body font-semibold">{p.name}</p>
+                <p className="mt-0.5 t2-fs-micro text-[var(--t2-muted)]">
                   {t(`services.cat_${p.category}`)}
                   {p.city ? ` · ${p.city}` : ""}
                   {` · ${Math.round(p.distance_km)} km`}

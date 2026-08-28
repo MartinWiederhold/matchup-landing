@@ -67,10 +67,10 @@ function Kpi({ label, children, note, extra, compact }: { label: string; childre
     <div className="t2-dash-card">
       <p className="t2-kicker">{label}</p>
       <div className="mt-2 flex items-start justify-between gap-3">
-        <div className={compact ? "min-w-0 flex-1" : "text-[clamp(1.45rem,3vw,1.95rem)] font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
+        <div className={compact ? "min-w-0 flex-1" : "t2-fs-display font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
         {extra}
       </div>
-      {note && <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+      {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
     </div>
   );
 }
@@ -105,7 +105,7 @@ function DistBars({ items }: { items: { key: string; n: number; label: string }[
     <ul className="mt-3 space-y-2">
       {items.map((x) => (
         <li key={x.key}>
-          <div className="flex justify-between text-[12px] font-semibold">
+          <div className="flex justify-between t2-fs-micro font-semibold">
             <span>{x.label}</span>
             <span className="tabular-nums text-[var(--t2-muted)]">{x.n}</span>
           </div>
@@ -487,17 +487,17 @@ export default function HomeView() {
   }, [board.actions]);
   const cpp = finance.costPerPoint?.[cur];
 
-  if (authLoading) return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
-  if (state === "loading") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
-  if (state === "error") return <p className="p-6 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (state === "error") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const needsOnboarding = !!setup && !setup.complete && active.length === 0 && !forceHome;
   if (needsOnboarding) {
     return (
       <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-8">
         <p className={`t2-eyebrow ${homeRise ? "t2-rise t2-rise-1" : ""}`}>Matchup Tour</p>
-        <h1 className={`t2-display ${homeRise ? "t2-rise t2-rise-2" : ""} mt-3 text-[clamp(1.9rem,5.5vw,2.9rem)]`}>{t("tour.t2onbHello")}</h1>
+        <h1 className={`t2-display ${homeRise ? "t2-rise t2-rise-2" : ""} mt-3 t2-fs-display`}>{t("tour.t2onbHello")}</h1>
         <SetupPanel onExit={() => setForceHome(true)} />
       </div>
     );
@@ -512,7 +512,7 @@ export default function HomeView() {
   ];
   const surfRing = dists.surfItems.map((x, i) => ({
     n: x.n,
-    color: ["#4b3bf3", "#0a0a0a", "#a8a29e", "#78716c"][i] ?? "#d6d3d1",
+    color: ["var(--t2-accent)", "var(--t2-text)", "#a8a29e", "#78716c"][i] ?? "#d6d3d1",
   }));
 
   const insights: ReactNode[] = [];
@@ -520,8 +520,8 @@ export default function HomeView() {
     insights.push(
       <div key="cpp">
         <p className="t2-kicker">{t("tour.t2ovCostPerPoint")}</p>
-        <p className="mt-2 text-[18px] font-semibold tabular-nums">{money(cpp)}</p>
-        <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointBasis", { n: finance.tournamentsWithExpenses })}</p>
+        <p className="mt-2 t2-fs-h3 font-semibold tabular-nums">{money(cpp)}</p>
+        <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointBasis", { n: finance.tournamentsWithExpenses })}</p>
       </div>,
     );
   }
@@ -529,14 +529,14 @@ export default function HomeView() {
     if (c.savedMinor == null) continue;
     insights.push(
       <div key={`cl-${c.city}`}>
-        <p className="text-[14px] font-semibold">{t("tour.t2ovCluster", { n: c.n, city: c.city, amount: money(c.savedMinor) })}</p>
+        <p className="t2-fs-body font-semibold">{t("tour.t2ovCluster", { n: c.n, city: c.city, amount: money(c.savedMinor) })}</p>
       </div>,
     );
   }
   if (visaLead.length > 0) {
     const v = visaLead[0];
     insights.push(
-      <div key="visa" className="text-[14px]">
+      <div key="visa" className="t2-fs-body">
         {t("tour.t2ovVisaRisk", { city: v.city || countryName(v.dest), lead: v.leadWeeks, weeks: v.weeksUntil })}
       </div>,
     );
@@ -575,7 +575,7 @@ export default function HomeView() {
     <div className="t2-overview">
       {/* ZONE A — Kopfzeile: Vorname + Saisonjahr, Kennzahlen-Reihe */}
       <header>
-        <h1 className="t2-display text-[clamp(1.9rem,4vw,2.55rem)] tracking-[-0.02em]">{greetTitle}</h1>
+        <h1 className="t2-display t2-fs-display tracking-[-0.02em]">{greetTitle}</h1>
         {headerStats.length > 0 && (
           // Mobil (<768px) stapeln die Kennzahlen einspaltig, ab md nebeneinander
           // mit dezenten vertikalen Trennern zwischen den Items.
@@ -588,13 +588,13 @@ export default function HomeView() {
                 <dd
                   className={
                     s.hero
-                      ? "text-[clamp(2.25rem,5vw,3.25rem)] font-semibold tabular-nums tracking-[-0.04em]"
-                      : "max-w-[16rem] truncate text-[clamp(1.35rem,2.8vw,1.7rem)] font-semibold tabular-nums tracking-[-0.02em]"
+                      ? "t2-fs-display font-semibold tabular-nums tracking-[-0.04em]"
+                      : "max-w-[16rem] truncate t2-fs-display font-semibold tabular-nums tracking-[-0.02em]"
                   }
                 >
                   {s.value}
                 </dd>
-                <dt className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">
+                <dt className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">
                   {s.label}
                 </dt>
               </div>
@@ -606,11 +606,11 @@ export default function HomeView() {
       {/* ZONE B — Saison-Route: dominante Fläche, volle Breite, Höhe */}
       <section className="t2-dash-card mt-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="text-[14px] font-medium text-[var(--t2-ink)]">{t("tour.t2ovRoute")}</h2>
+          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovRoute")}</h2>
         </div>
         {active.length === 0 ? (
           <div className="mt-6 flex min-h-[30vh] flex-col items-start justify-center">
-            <p className="text-[14px] text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
+            <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
             <Link href={T2_SEASON} className="t2-cta mt-6">{t("tour.wsFill")}<span aria-hidden>→</span></Link>
           </div>
         ) : (
@@ -651,23 +651,23 @@ export default function HomeView() {
                     )}
                     <div className={`${isPast ? "opacity-40" : ""} ${missed && !isPast ? "opacity-60" : ""}`}>
                       {showMonth && (
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{fmtMonth(s.tournament.tournament_monday)}</p>
+                        <p className="mb-1 t2-fs-meta font-semibold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{fmtMonth(s.tournament.tournament_monday)}</p>
                       )}
                       <Link
                         href={tour2PlannerTournamentHref(s.tournament.id)}
                         title={missed ? t("tour.t2routeMissed") : undefined}
-                        className={`t2-route-card relative ${clustered ? "is-cluster" : ""} ${isNext ? "ring-2 ring-[var(--t2-accent)] ring-offset-2 ring-offset-[var(--t2-card)]" : ""} ${missed ? "border-red-600/60" : ""}`}
+                        className={`t2-route-card relative ${clustered ? "is-cluster" : ""} ${isNext ? "ring-2 ring-[var(--t2-accent)] ring-offset-2 ring-offset-[var(--t2-card)]" : ""} ${missed ? "border-[var(--t2-state-deadline-missed)]" : ""}`}
                       >
                         {missed && (
                           <span
                             aria-label={t("tour.t2routeMissed")}
-                            className="absolute right-1.5 top-1.5 inline-flex h-2 w-2 rounded-full bg-red-600"
+                            className="absolute right-1.5 top-1.5 inline-flex h-2 w-2 rounded-full bg-[var(--t2-state-deadline-missed)]"
                           />
                         )}
-                        <p className="text-[11px] font-semibold tabular-nums text-[var(--t2-muted)]">{fmtDate(s.tournament.tournament_monday)}</p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{s.tournament.category || "—"}</p>
-                        <p className="mt-1 truncate text-[14px] font-semibold">{displayCity(s.tournament.city) || t("tour.fieldMissing")}</p>
-                        <p className="mt-0.5 truncate text-[12px] text-[var(--t2-muted)]">
+                        <p className="t2-fs-meta font-semibold tabular-nums text-[var(--t2-muted)]">{fmtDate(s.tournament.tournament_monday)}</p>
+                        <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.12em] text-[var(--t2-faint)]">{s.tournament.category || "—"}</p>
+                        <p className="mt-1 truncate t2-fs-body font-semibold">{displayCity(s.tournament.city) || t("tour.fieldMissing")}</p>
+                        <p className="mt-0.5 truncate t2-fs-micro text-[var(--t2-muted)]">
                           {s.tournament.country ? `${flagEmoji(s.tournament.country)} ${countryName(s.tournament.country)}` : ""}
                         </p>
                       </Link>
@@ -686,14 +686,14 @@ export default function HomeView() {
           className="t2-dash-card mt-6 border-l-[3px]"
           style={{ borderLeftColor: "var(--t2-accent)" }}
         >
-          <p className="text-[14px] font-medium text-[var(--t2-ink)]">{t("tour.t2ovActionTitle")}</p>
+          <p className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovActionTitle")}</p>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[clamp(1.05rem,2.2vw,1.35rem)] font-semibold tracking-[-0.02em]">
+              <p className="t2-fs-display font-semibold tracking-[-0.02em]">
                 {t("tour.t2ovActionEntry", { name: displayCity(nextDeadline.tournament.city) || t("tour.fieldMissing") })}
               </p>
               {nextEntryDeadlineMs != null && (
-                <p className="mt-1 text-[13px] text-[var(--t2-muted)]">{countdown(nextEntryDeadlineMs)}</p>
+                <p className="mt-1 t2-fs-body-sm text-[var(--t2-muted)]">{countdown(nextEntryDeadlineMs)}</p>
               )}
             </div>
             <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta">
@@ -707,32 +707,32 @@ export default function HomeView() {
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {/* Links: Punkte & Ranking */}
         <section className="t2-dash-card">
-          <h2 className="text-[14px] font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketPoints")}</h2>
+          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketPoints")}</h2>
           {resultHistory.length === 0 ? (
             // Ruhiger Leerzustand: kein hero-großes „keine Ergebnisse erfasst",
             // stattdessen eine erklärende Zeile + bestehender Erfassungs-Link.
             <>
-              <p className="mt-3 text-[13px] leading-relaxed text-[var(--t2-muted)]">{t("tour.t2ovPointsHollow")}</p>
-              <Link href={T2_RANKING} className="mt-3 inline-block text-[13px] font-semibold text-matchup">
+              <p className="mt-3 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2ovPointsHollow")}</p>
+              <Link href={T2_RANKING} className="mt-3 inline-block t2-fs-body-sm font-semibold text-[var(--t2-accent)]">
                 {t("tour.t2ovPointsEmptyHint")} →
               </Link>
             </>
           ) : (
             <>
               <div className="mt-3 flex items-baseline justify-between gap-4">
-                <div className="text-[clamp(1.75rem,3.5vw,2.35rem)] font-semibold tabular-nums tracking-[-0.03em]">
+                <div className="t2-fs-display font-semibold tabular-nums tracking-[-0.03em]">
                   {pointsNow.countingTotal}
                 </div>
                 {pointsDelta != null && (
-                  <span className={`text-[13px] font-semibold tabular-nums ${pointsDelta > 0 ? "text-emerald-700" : pointsDelta < 0 ? "text-red-700" : "text-[var(--t2-muted)]"}`}>
+                  <span className={`t2-fs-body-sm font-semibold tabular-nums ${pointsDelta > 0 ? "text-[var(--t2-success)]" : pointsDelta < 0 ? "text-[var(--t2-danger)]" : "text-[var(--t2-muted)]"}`}>
                     {deltaArrow} {pointsDelta > 0 ? `+${pointsDelta}` : pointsDelta}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovPoints")}</p>
+              <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovPoints")}</p>
               <div className="mt-5">
-                <p className="text-[13px] font-medium text-[var(--t2-muted)]">{t("tour.t2ovHorizon")}</p>
-                <ul className="mt-2 divide-y divide-[var(--t2-line)] text-[13px]">
+                <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2ovHorizon")}</p>
+                <ul className="mt-2 divide-y divide-[var(--t2-line)] t2-fs-body-sm">
                   {[4, 8, 12].map((w) => (
                     <li key={w} className="flex justify-between py-1.5">
                       <span className="text-[var(--t2-muted)]">{t("tour.t2ovHorizonW", { n: w })}</span>
@@ -743,8 +743,8 @@ export default function HomeView() {
               </div>
               {nextDrop && (
                 <div className="mt-5">
-                  <p className="text-[13px] font-medium text-[var(--t2-muted)]">{t("tour.t2ovDropping")}</p>
-                  <p className="mt-1 text-[14px]">
+                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2ovDropping")}</p>
+                  <p className="mt-1 t2-fs-body">
                     <span className="font-semibold tabular-nums">{nextDrop.points}</span>
                     <span className="ml-2 text-[var(--t2-muted)]">{t("tour.t2ovOn", { date: fmtDate(nextDrop.expiresOn) })}</span>
                   </p>
@@ -754,7 +754,7 @@ export default function HomeView() {
           )}
           {board.actions.length > (nextDeadline ? 1 : 0) && (
             <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
-              <p className="text-[13px] font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
+              <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
               <div className="mt-2">
                 <Tour2ActionList
                   actions={nextDeadline ? board.actions.slice(1) : board.actions}
@@ -769,23 +769,23 @@ export default function HomeView() {
 
         {/* Rechts: Finanzen & Budget */}
         <section className="t2-dash-card">
-          <h2 className="text-[14px] font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketFinance")}</h2>
+          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketFinance")}</h2>
           <div className="mt-3 flex items-start justify-between gap-4">
             <div>
               {budget ? (
                 <>
-                  <div className="text-[clamp(1.75rem,3.5vw,2.35rem)] font-semibold tabular-nums tracking-[-0.03em]">
+                  <div className="t2-fs-display font-semibold tabular-nums tracking-[-0.03em]">
                     {money(budget.amount)}
                   </div>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovBudgetTotal")}</p>
+                  <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovBudgetTotal")}</p>
                 </>
               ) : (
                 // Kein Budget gepflegt → kein Platzhalter, nur die Erklärung.
-                <p className="text-[13px] text-[var(--t2-muted)]">{t("tour.t2budgetNoData")}</p>
+                <p className="t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2budgetNoData")}</p>
               )}
-              {budget && usedMinor == null && <p className="mt-2 text-[13px] text-[var(--t2-muted)]">{t("tour.t2ovBudgetRatesMissing")}</p>}
+              {budget && usedMinor == null && <p className="mt-2 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2ovBudgetRatesMissing")}</p>}
               {leftMinor != null && (
-                <p className={`mt-2 text-[13px] ${leftMinor < 0 ? "text-red-700" : "text-[var(--t2-muted)]"}`}>
+                <p className={`mt-2 t2-fs-body-sm ${leftMinor < 0 ? "text-[var(--t2-danger)]" : "text-[var(--t2-muted)]"}`}>
                   {t("tour.t2ovBudgetLeft", { n: money(leftMinor) })}
                 </p>
               )}
@@ -793,7 +793,7 @@ export default function HomeView() {
             {budget && usedMinor != null && <Donut parts={budgetRing} />}
           </div>
           {usedMinor != null && (
-            <ul className="mt-5 divide-y divide-[var(--t2-line)] text-[13px]">
+            <ul className="mt-5 divide-y divide-[var(--t2-line)] t2-fs-body-sm">
               {(["arrival", "lodging", "food", "coach", "entry"] as ItemCode[]).map((code) => {
                 const n = costByCode[code];
                 if (!n) return null;

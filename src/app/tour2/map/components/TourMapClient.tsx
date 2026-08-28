@@ -12,7 +12,7 @@ import { loadSeason, type SeasonEntry } from "@/lib/tourSeason";
 const TourMapView = dynamic(() => import("./TourMapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[70vh] min-h-[380px] items-center justify-center rounded-2xl border border-[var(--t2-line)] bg-[var(--t2-surface)] text-sm text-[var(--t2-muted)]">
+    <div className="flex h-[70vh] min-h-[380px] items-center justify-center rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] t2-fs-body text-[var(--t2-muted)]">
       …
     </div>
   ),
@@ -50,25 +50,25 @@ export default function TourMapClient() {
   };
 
   // ── Auth-Gate (wie SeasonView) ───────────────────────────────────────────
-  if (authLoading) return <p className="mt-10 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (authLoading) return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (!user) {
     return (
       <div className="mt-10 t2-panel bg-[var(--t2-surface)] px-6 py-10 text-center">
-        <h2 className="t2-h2 text-lg text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
+        <h2 className="t2-h2 t2-fs-h3 text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (state === "loading") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (state === "error") return <p className="mt-8 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+  if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   // Leere Saison → Hinweis + Verweis, keine leere Weltkarte.
   if (entries.length === 0) {
     return (
       <div className="mt-8 t2-panel bg-[var(--t2-surface)] px-6 py-10 text-center">
-        <h2 className="t2-h2 text-lg text-[var(--t2-ink)]">{t("tour.mapEmptyTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-[var(--t2-muted)]">{t("tour.mapEmptyText")}</p>
+        <h2 className="t2-h2 t2-fs-h3 text-[var(--t2-ink)]">{t("tour.mapEmptyTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.mapEmptyText")}</p>
         <Link href="/tour2/finder" className="mt-6 t2-cta">{t("tour.mapEmptyCta")}</Link>
       </div>
     );
@@ -82,22 +82,22 @@ export default function TourMapClient() {
       {withCoords.length > 0 ? (
         <TourMapView entries={withCoords} />
       ) : (
-        <p className="rounded-2xl bg-[var(--t2-surface)] px-5 py-8 text-center text-sm text-[var(--t2-muted)]">{t("tour.mapAllNoCoords")}</p>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-5 py-8 text-center t2-fs-body text-[var(--t2-muted)]">{t("tour.mapAllNoCoords")}</p>
       )}
 
       {/* Turniere ohne Koordinaten: nicht stillschweigend weglassen, sondern listen. */}
       {noCoords.length > 0 && (
         <section>
           <h2 className="t2-kicker">{t("tour.mapNoCoordsTitle")}</h2>
-          <p className="mt-1 text-[12px] text-[var(--t2-muted)]">{t("tour.mapNoCoordsText")}</p>
-          <ul className="mt-2 divide-y divide-[var(--t2-line)] rounded-2xl border border-[var(--t2-line)] bg-[var(--t2-paper)]">
+          <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.mapNoCoordsText")}</p>
+          <ul className="mt-2 divide-y divide-[var(--t2-line)] rounded-xl border border-[var(--t2-line)] bg-[var(--t2-paper)]">
             {noCoords.map((e) => (
               <li key={e.planId} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
-                <span className="text-[14px] font-semibold text-[var(--t2-ink)]">
+                <span className="t2-fs-body font-semibold text-[var(--t2-ink)]">
                   {e.tournament.city || t("tour.fieldMissing")}
                   <span className="text-[var(--t2-muted)]">, {countryName(e.tournament.country)}</span>
                 </span>
-                <span className="text-[12px] text-[var(--t2-muted)]">
+                <span className="t2-fs-micro text-[var(--t2-muted)]">
                   {e.tournament.category || t("tour.fieldMissing")} · {t("tour.mondayLabel")} {fmtMonday(e.tournament.tournament_monday, locale)}
                 </span>
               </li>

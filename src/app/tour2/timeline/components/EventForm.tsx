@@ -104,30 +104,30 @@ export default function EventForm({
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calFieldTitle")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calFieldTitle")}</span>
           <input type="text" value={title} onChange={(e) => { setTitle(e.target.value); setError(""); }} className={inputCls} />
         </label>
         <label className="block">
-          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calDate")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calDate")}</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTime")}</span>
+            <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calTime")}</span>
             <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTimeEnd")}</span>
+            <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calTimeEnd")}</span>
             <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} disabled={time.trim() === ""} className={`${inputCls} disabled:opacity-40`} />
           </label>
         </div>
-        <p className="text-[11px] text-[var(--t2-faint)] sm:col-span-2 -mt-1">{t("tour.calTimeHint")}</p>
+        <p className="t2-fs-meta text-[var(--t2-faint)] sm:col-span-2 -mt-1">{t("tour.calTimeHint")}</p>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calNote")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calNote")}</span>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputCls} />
         </label>
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calTournament")}</span>
+          <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calTournament")}</span>
           <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)} className={inputCls}>
             <option value="">{t("tour.calTournamentNone")}</option>
             {season.map((e) => (
@@ -144,18 +144,18 @@ export default function EventForm({
         <div className="mt-3 space-y-3 rounded-xl border border-[var(--t2-line)] bg-[var(--t2-surface)] p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calRound")}</span>
+              <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calRound")}</span>
               <input type="text" value={round} onChange={(e) => setRound(e.target.value)} placeholder={t("tour.calRoundPlaceholder")} className={inputCls} />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calOpponent")}</span>
+              <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calOpponent")}</span>
               <input type="text" value={opponent} onChange={(e) => setOpponent(e.target.value)} className={inputCls} />
             </label>
           </div>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]">{t("tour.calScore")}</span>
+            <span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]">{t("tour.calScore")}</span>
             <input type="text" value={score} onChange={(e) => setScore(e.target.value)} placeholder={t("tour.calScorePlaceholder")} className={inputCls} />
-            <span className="mt-1 block text-[11px] text-[var(--t2-faint)]">{t("tour.calScoreHint")}</span>
+            <span className="mt-1 block t2-fs-meta text-[var(--t2-faint)]">{t("tour.calScoreHint")}</span>
           </label>
           {/* Sieg/Niederlage/kein Ergebnis — dezent, ohne Ampelfarben */}
           <div className="flex gap-2">
@@ -164,8 +164,8 @@ export default function EventForm({
                 key={k}
                 type="button"
                 onClick={() => setWon(val)}
-                className={`flex-1 rounded-xl py-2 text-[12px] font-semibold transition-colors ${
-                  won === val ? "bg-[var(--t2-ink)] text-white" : "bg-[var(--t2-paper)] text-[var(--t2-muted)] ring-1 ring-[var(--t2-line)]"
+                className={`flex-1 rounded-xl py-2 t2-fs-micro font-semibold transition-colors ${
+                  won === val ? "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]" : "bg-[var(--t2-paper)] text-[var(--t2-muted)] ring-1 ring-[var(--t2-line)]"
                 }`}
               >
                 {t(`tour.${k}`)}
@@ -179,9 +179,9 @@ export default function EventForm({
         <button type="button" onClick={save} disabled={busy} className="t2-cta disabled:opacity-50">
           {t("tour.calSave")}
         </button>
-        <button type="button" onClick={onDone} className="text-[13px] font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.calCancel")}</button>
-        {error === "title" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.calNeedTitle")}</span>}
-        {error === "save" && <span className="text-[12px] text-[var(--t2-muted)]">{t("tour.calSaveError")}</span>}
+        <button type="button" onClick={onDone} className="t2-fs-body-sm font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.calCancel")}</button>
+        {error === "title" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.calNeedTitle")}</span>}
+        {error === "save" && <span className="t2-fs-micro text-[var(--t2-muted)]">{t("tour.calSaveError")}</span>}
       </div>
     </section>
   );

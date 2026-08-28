@@ -15,11 +15,11 @@ import {
 } from "@/lib/tourPlayerMaster";
 
 const inpL = "t2-input";
-const inpD = "w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[13px] text-white placeholder:text-neutral-500 focus:border-white/30 focus:outline-none [color-scheme:dark]";
-const lblL = "mb-1 block text-[12px] font-semibold text-[var(--t2-muted)]";
-const lblD = "mb-1 block text-[12px] font-semibold text-neutral-400";
+const inpD = "w-full rounded-xl border border-[var(--t2-on-accent)]/15 bg-[var(--t2-on-accent)]/[0.04] px-3 py-2 t2-fs-body-sm text-[var(--t2-on-accent)] placeholder:text-[var(--t2-text-soft)] focus:border-[var(--t2-on-accent)]/30 focus:outline-none [color-scheme:dark]";
+const lblL = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-muted)]";
+const lblD = "mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-soft)]";
 const cardL = "t2-panel";
-const cardD = "border border-white/10 bg-black p-4";
+const cardD = "border border-[var(--t2-on-accent)]/10 bg-[var(--t2-text)] p-4";
 const btn = "t2-cta mt-3 disabled:opacity-50";
 
 const emptyDocs: PlayerDocs = {
@@ -76,32 +76,32 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
   const inp = dark ? inpD : inpL;
   const lbl = dark ? lblD : lblL;
   const card = dark ? cardD : cardL;
-  const muted = dark ? "text-neutral-400" : "text-[var(--t2-muted)]";
-  const title = dark ? "text-white" : "text-[var(--t2-ink)]";
-  const checkLbl = dark ? "text-neutral-200" : "text-[var(--t2-ink)]";
+  const muted = dark ? "text-[var(--t2-text-soft)]" : "text-[var(--t2-muted)]";
+  const title = dark ? "text-[var(--t2-on-accent)]" : "text-[var(--t2-ink)]";
+  const checkLbl = dark ? "text-[var(--t2-text-faint)]" : "text-[var(--t2-ink)]";
 
-  if (authLoading) return <p className={`mt-6 text-sm ${muted}`}>{t("tour.loading")}</p>;
+  if (authLoading) return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loading")}</p>;
   if (!user) {
     return (
-      <div className={`mt-6 rounded-2xl p-6 text-center ${dark ? "bg-white/[0.03] ring-1 ring-white/10" : "bg-[var(--t2-surface)]"}`}>
-        <p className={`text-sm ${muted}`}>{t("tour.loginRequiredText")}</p>
+      <div className={`mt-6 rounded-xl p-6 text-center ${dark ? "bg-[var(--t2-on-accent)]/[0.03] ring-1 ring-white/10" : "bg-[var(--t2-surface)]"}`}>
+        <p className={`t2-fs-body ${muted}`}>{t("tour.loginRequiredText")}</p>
         <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
       </div>
     );
   }
-  if (status === "loading") return <p className={`mt-6 text-sm ${muted}`}>{t("tour.loading")}</p>;
-  if (status === "error") return <p className={`mt-6 text-sm ${muted}`}>{t("tour.loadError")}</p>;
+  if (status === "loading") return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loading")}</p>;
+  if (status === "error") return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loadError")}</p>;
 
   return (
     <section className={dark ? "mt-2" : "mt-12"}>
       <h2 className="t2-kicker">{t("tour.pmTitle")}</h2>
-      <p className={`mt-2 max-w-2xl text-[13px] leading-relaxed ${muted}`}>{t("tour.pmIntro")}</p>
+      <p className={`mt-2 max-w-2xl t2-fs-body-sm leading-relaxed ${muted}`}>{t("tour.pmIntro")}</p>
 
       <div className="mt-4 grid gap-4">
         {/* ── Dokumente & Ablauf (owner-only) ─────────────────────────────── */}
         <div className={card}>
-          <h3 className={`text-[13px] font-bold ${title}`}>{t("tour.pmDocsTitle")}</h3>
-          <p className={`mt-1 text-[12px] ${muted}`}>{t("tour.pmDocsHint")}</p>
+          <h3 className={`t2-fs-body-sm font-bold ${title}`}>{t("tour.pmDocsTitle")}</h3>
+          <p className={`mt-1 t2-fs-micro ${muted}`}>{t("tour.pmDocsHint")}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <label className="block"><span className={lbl}>{t("tour.pmPassportCountry")}</span><input value={str(docs.passport_country)} onChange={(e) => setDocs({ ...docs, passport_country: nn(e.target.value.toUpperCase().slice(0, 2)) })} placeholder="DE" className={inp} /></label>
             <label className="block"><span className={lbl}>{t("tour.pmPassportExpiry")}</span><input type="date" value={str(docs.passport_expiry)} onChange={(e) => setDocs({ ...docs, passport_expiry: nn(e.target.value) })} className={inp} /></label>
@@ -112,7 +112,7 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
               <label className="block"><span className={lbl}>{t("tour.pmInsurancePolicy")}</span><input value={str(docs.insurance_policy_no)} onChange={(e) => setDocs({ ...docs, insurance_policy_no: nn(e.target.value) })} className={inp} /></label>
             )}
             <label className="block"><span className={lbl}>{t("tour.pmInsuranceExpiry")}</span><input type="date" value={str(docs.insurance_expiry)} onChange={(e) => setDocs({ ...docs, insurance_expiry: nn(e.target.value) })} className={inp} /></label>
-            <label className="flex items-center gap-2 pt-6"><input type="checkbox" checked={docs.insurance_international === true} onChange={(e) => setDocs({ ...docs, insurance_international: e.target.checked })} className="h-4 w-4" /><span className={`text-[13px] ${checkLbl}`}>{t("tour.pmInsuranceInternational")}</span></label>
+            <label className="flex items-center gap-2 pt-6"><input type="checkbox" checked={docs.insurance_international === true} onChange={(e) => setDocs({ ...docs, insurance_international: e.target.checked })} className="h-4 w-4" /><span className={`t2-fs-body-sm ${checkLbl}`}>{t("tour.pmInsuranceInternational")}</span></label>
             {!hideIds && (
               <>
                 <label className="block"><span className={lbl}>{t("tour.pmIpinId")}</span><input value={str(docs.ipin_id)} onChange={(e) => setDocs({ ...docs, ipin_id: nn(e.target.value) })} className={inp} /></label>
@@ -125,8 +125,8 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
 
         {/* ── Ausrüstung (owner-only; künftig Besaiter) ───────────────────── */}
         <div className={card}>
-          <h3 className={`text-[13px] font-bold ${title}`}>{t("tour.pmEquipTitle")}</h3>
-          <p className={`mt-1 text-[12px] ${muted}`}>{t("tour.pmEquipHint")}</p>
+          <h3 className={`t2-fs-body-sm font-bold ${title}`}>{t("tour.pmEquipTitle")}</h3>
+          <p className={`mt-1 t2-fs-micro ${muted}`}>{t("tour.pmEquipHint")}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block"><span className={lbl}>{t("tour.pmRacket")}</span><input value={str(equip.racket)} onChange={(e) => setEquip({ ...equip, racket: nn(e.target.value) })} className={inp} /></label>
             <label className="block"><span className={lbl}>{t("tour.pmString")}</span><input value={str(equip.string_model)} onChange={(e) => setEquip({ ...equip, string_model: nn(e.target.value) })} className={inp} /></label>
@@ -139,8 +139,8 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
 
         {/* ── Notfallkontakt (owner-only; künftig Coach) ──────────────────── */}
         <div className={card}>
-          <h3 className={`text-[13px] font-bold ${title}`}>{t("tour.pmEmergTitle")}</h3>
-          <p className={`mt-1 text-[12px] ${muted}`}>{t("tour.pmEmergHint")}</p>
+          <h3 className={`t2-fs-body-sm font-bold ${title}`}>{t("tour.pmEmergTitle")}</h3>
+          <p className={`mt-1 t2-fs-micro ${muted}`}>{t("tour.pmEmergHint")}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             <label className="block"><span className={lbl}>{t("tour.pmEmergName")}</span><input value={str(emerg.contact_name)} onChange={(e) => setEmerg({ ...emerg, contact_name: nn(e.target.value) })} className={inp} /></label>
             <label className="block"><span className={lbl}>{t("tour.pmEmergRelationship")}</span><input value={str(emerg.relationship)} onChange={(e) => setEmerg({ ...emerg, relationship: nn(e.target.value) })} className={inp} /></label>

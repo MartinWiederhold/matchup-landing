@@ -142,10 +142,10 @@ export default function DocumentsView() {
   }, [schengenApplies, season, stays, todayISO]);
 
   if (authLoading || (user && state === "loading")) {
-    return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loading")}</p>;
+    return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
   if (!user) return <TourLoginCard />;
-  if (state === "error") return <p className="px-4 py-16 text-sm text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (state === "error") return <p className="px-4 py-16 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const kpis = (
     <>
@@ -162,7 +162,7 @@ export default function DocumentsView() {
         <ul className="space-y-3">
           <li>
             <p className="font-semibold">{passOk ? "✓ " : "○ "}{t("tour.t2docCheckPass")}</p>
-            <p className="mt-0.5 text-[12px] text-[var(--t2-muted)]">{t("tour.t2docCheckPassHint")}</p>
+            <p className="mt-0.5 t2-fs-micro text-[var(--t2-muted)]">{t("tour.t2docCheckPassHint")}</p>
           </li>
           <li className="font-semibold">{visaOk ? "✓ " : "○ "}{t("tour.t2docCheckVisa")}</li>
           <li className="font-semibold">{insOk ? "✓ " : "○ "}{t("tour.t2docCheckIns")}</li>
@@ -189,11 +189,11 @@ export default function DocumentsView() {
   return (
     <Tour2Area title={t("tour.t2navDocs")} lead={t("tour.t2docsLead")} kpis={kpis} aside={aside}>
       {warnings.length > 0 && (
-        <ul className="mb-4 space-y-2 t2-dash-card text-[13px]">
+        <ul className="mb-4 space-y-2 t2-dash-card t2-fs-body-sm">
           {warnings.map((w, i) => (
-            <li key={`${w.kind}-${i}`} className={w.severity === "error" ? "font-semibold text-red-800" : "text-[var(--t2-ink)]"}>
+            <li key={`${w.kind}-${i}`} className={w.severity === "error" ? "font-semibold text-[var(--t2-danger)]" : "text-[var(--t2-ink)]"}>
               {warnText(w)}
-              {w.ruleOfThumb && <span className="mt-0.5 block text-[12px] font-normal text-[var(--t2-muted)]">{t("tour.docWarnRuleOfThumb")}</span>}
+              {w.ruleOfThumb && <span className="mt-0.5 block t2-fs-micro font-normal text-[var(--t2-muted)]">{t("tour.docWarnRuleOfThumb")}</span>}
             </li>
           ))}
         </ul>
@@ -201,18 +201,18 @@ export default function DocumentsView() {
       <section className="t2-dash-card mt-4">
         <h2 className="t2-kicker">{t("tour.t2docTable")}</h2>
         {papers.length === 0 ? (
-          <p className="mt-4 text-[14px] text-[var(--t2-muted)]">{t("tour.t2docNone")}</p>
+          <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2docNone")}</p>
         ) : (
           <ul className="mt-4 divide-y divide-[var(--t2-line)] border-y border-[var(--t2-line)]">
             {papers.map((p) => (
               <li key={p.key} className="flex items-baseline justify-between gap-4 py-3">
                 <span>
-                  <span className="block text-[15px] font-semibold">{p.label}</span>
-                  <span className="mt-0.5 block text-[12px] text-[var(--t2-muted)]">
+                  <span className="block t2-fs-body font-semibold">{p.label}</span>
+                  <span className="mt-0.5 block t2-fs-micro text-[var(--t2-muted)]">
                     {[p.scope ? `${t("tour.t2docScope")} ${p.scope === "SCHENGEN" ? t("tour.tdSchengen") : countryName(p.scope) || p.scope}` : null, p.status ? t(`tour.tdStatus_${p.status}`) : null].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <span className="shrink-0 text-[13px] tabular-nums text-[var(--t2-muted)]">{p.until ? fmtDate(p.until) : "—"}</span>
+                <span className="shrink-0 t2-fs-body-sm tabular-nums text-[var(--t2-muted)]">{p.until ? fmtDate(p.until) : "—"}</span>
               </li>
             ))}
           </ul>
@@ -220,8 +220,8 @@ export default function DocumentsView() {
       </section>
       <PlayerMasterForm tone="light" hideIds />
       <TravelDocsCard tone="light" />
-      <p className="mt-6 text-[13px]">
-        <Link href="/tour2/schengen" className="font-semibold text-matchup">{t("tour.schengenTitle")} →</Link>
+      <p className="mt-6 t2-fs-body-sm">
+        <Link href="/tour2/schengen" className="font-semibold text-[var(--t2-accent)]">{t("tour.schengenTitle")} →</Link>
       </p>
     </Tour2Area>
   );
