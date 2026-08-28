@@ -40,7 +40,7 @@ export async function generateMetadata({
       url: `/events/${event.id}`,
       title: event.title,
       description: desc,
-      images: [event.image_url || "/og-v6.jpg"],
+      images: [event.image_url || "/icon-512.png"],
     },
   };
 }

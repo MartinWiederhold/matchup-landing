@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/compete",
       title: t("landing.competePageTitle"),
       description: t("landing.competePageSubtitle"),
-      images: ["/og-v6.jpg"],
+      images: ["/icon-512.png"],
     },
   };
 }

@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/about",
       title: a.heroTitle,
       description: a.intro[0],
-      images: ["/og-v6.jpg"],
+      images: ["/icon-512.png"],
     },
   };
 }

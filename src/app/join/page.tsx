@@ -15,12 +15,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "https://matchup-app.com/join",
       title: t("seo.homeTitle"),
       description: t("seo.homeDescription"),
-      images: [{ url: "/og-v6.jpg", width: 1200, height: 630, alt: "Matchup" }],
+      images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Matchup", type: "image/png" }],
     },
     twitter: {
       card: "summary_large_image",
       title: t("seo.homeTitle"),
       description: t("seo.homeDescription"),
+      // Twitter/X behält die Landscape-Karte (summary_large_image erwartet 1.91:1).
       images: ["/og-v6.jpg"],
     },
   };

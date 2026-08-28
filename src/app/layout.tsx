@@ -45,7 +45,11 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       url: "/",
       locale: locale === "de" ? "de_CH" : "en_US",
-      images: [{ url: "/og-v6.jpg", width: 1200, height: 630, alt: "Matchup" }],
+      // WhatsApp, Facebook, LinkedIn, iMessage lesen das og:image — hier bewusst
+      // das quadratische Matchup-Logo, damit die Link-Vorschau nur die Marke zeigt
+      // und nicht das alte Landscape-Banner. Twitter/X hat weiterhin einen eigenen
+      // Landscape-Card unten (twitter:image bleibt auf /og-v6.jpg).
+      images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Matchup", type: "image/png" }],
     },
     twitter: {
       card: "summary_large_image",
