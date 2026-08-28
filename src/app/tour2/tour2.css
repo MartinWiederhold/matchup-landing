@@ -815,3 +815,106 @@ a.t2-card:hover, .t2-card--hover:hover {
   padding: 0.9rem 1rem;
   min-width: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* DARK-SCOPE — nur für die neue Overview (.t2-dark).                      */
+/* Bewusst als Overlay-Scope: der Rest von /tour2 bleibt hell und läuft    */
+/* unverändert weiter. `.t2-dark` überschreibt die --t2-*-Tokens innerhalb */
+/* seines Sub-Baums; alle Bausteine, die auf var(--t2-*) verweisen, kippen */
+/* dadurch automatisch in die dunkle Ausprägung.                           */
+/* ═══════════════════════════════════════════════════════════════════════ */
+.t2-dark {
+  /* Flächen */
+  --t2-bg:              #0A0A0F;                        /* Seiten-Grund, tief-schwarz mit Hauch Violett */
+  --t2-surface:         #14141C;                        /* Karten — eine Stufe heller */
+  --t2-surface-muted:   #1B1B26;                        /* Vertiefung — Balken-Untergrund, Tabellenkopf */
+  --t2-on-accent:       #ffffff;
+  /* Text */
+  --t2-text:            #F4F2EE;                        /* primär, warm off-white */
+  --t2-text-muted:      #C8C5BE;                        /* sekundär */
+  --t2-text-soft:       #8F8B84;                        /* Beschriftung / Fließtext-Kontext */
+  --t2-text-faint:      #6B6862;                        /* Metadaten (≥ 4.5:1 auf --t2-bg) */
+  /* Linien */
+  --t2-line:            rgba(255, 255, 255, 0.06);
+  --t2-line-strong:     rgba(255, 255, 255, 0.12);
+  /* Akzent (Matchup-Violett) + leuchtender Halo für den Cockpit-Effekt */
+  --t2-accent:          #6b5bff;                        /* eine Nuance heller als der Light-Ton, damit er auf Schwarz leuchtet */
+  --t2-accent-soft:     rgba(107, 91, 255, 0.16);
+  --t2-accent-glow:     0 0 32px rgba(107, 91, 255, 0.42);
+  --t2-accent-glow-sm:  0 0 16px rgba(107, 91, 255, 0.35);
+  /* Status auf dunklem Grund — kräftig genug, aber nicht grell */
+  --t2-warn:            #F5B547;
+  --t2-warn-surface:    rgba(245, 181, 71, 0.14);
+  --t2-danger:          #FF6B6B;
+  --t2-danger-surface:  rgba(255, 107, 107, 0.14);
+  --t2-success:         #4ADE80;
+  --t2-success-surface: rgba(74, 222, 128, 0.14);
+  --t2-info:            #60A5FA;
+  --t2-info-surface:    rgba(96, 165, 250, 0.14);
+
+  /* Zustands-Tokens neu binden, damit sie auf die Dark-Palette zeigen. */
+  --t2-state-deadline-open:   var(--t2-text-soft);
+  --t2-state-deadline-soon:   var(--t2-warn);
+  --t2-state-deadline-missed: var(--t2-danger);
+  --t2-state-stop-past:       var(--t2-text-faint);
+  --t2-state-stop-current:    var(--t2-accent);
+  --t2-state-stop-planned:    var(--t2-text);
+  --t2-state-done:            var(--t2-success);
+
+  /* Ink/Muted/Faint-Aliase mitziehen. */
+  --t2-paper:           var(--t2-bg);
+  --t2-card:            var(--t2-surface);
+  --t2-ink:             var(--t2-text);
+  --t2-muted:           var(--t2-text-soft);
+  --t2-faint:           var(--t2-text-faint);
+
+  background: var(--t2-bg);
+  color: var(--t2-text);
+  color-scheme: dark;
+}
+
+/* Cockpit-Karten: dunkle Karte mit haarfeiner Kante, ohne Schatten. */
+.t2-dark .t2-dash-card,
+.t2-dark .t2-kpi-card,
+.t2-dark .t2-panel,
+.t2-dark .t2-card {
+  background: var(--t2-surface);
+  border-color: var(--t2-line);
+}
+
+/* Der eine große Handlungs-Slot ("Deine nächste Aufgabe"): leuchtender
+   Akzent-Rand + subtiler Halo. Der Halo ist bewusst schwach, damit er
+   nicht mit dem Kartenbild konkurriert. */
+.t2-dark .t2-cockpit-cta {
+  position: relative;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--t2-accent) 8%, var(--t2-surface)) 0%,
+    var(--t2-surface) 100%);
+  border: 1px solid color-mix(in srgb, var(--t2-accent) 45%, var(--t2-line-strong));
+  box-shadow: var(--t2-accent-glow-sm);
+}
+
+/* Große Anzeigezahl (Ranking) mit dezentem Glow. Kein Text-Shadow-Klotz —
+   nur ein feiner Farb-Nebel unterhalb der Grundlinie. */
+.t2-dark .t2-cockpit-hero {
+  color: var(--t2-text);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--t2-accent) 30%, transparent);
+}
+
+/* Akzent-Buttons auf Dark: kräftig, mit sanftem Glow beim Hover. */
+.t2-dark .t2-cta {
+  background: var(--t2-accent);
+  color: var(--t2-on-accent);
+  border-color: transparent;
+}
+.t2-dark .t2-cta:hover {
+  background: var(--t2-accent);
+  border-color: transparent;
+  box-shadow: var(--t2-accent-glow-sm);
+}
+
+/* Fokus-Ring für Tastaturbedienung im Dark-Scope. */
+.t2-dark :focus-visible {
+  outline: 2px solid var(--t2-accent);
+  outline-offset: 2px;
+}

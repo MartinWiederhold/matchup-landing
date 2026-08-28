@@ -1,0 +1,199 @@
+{
+  "version": 8,
+  "name": "matchup-tour2-cockpit-dark",
+  "metadata": {
+    "matchup:purpose": "Dunkler, farbiger Kartenstil für /tour2 Overview (Cockpit-Design). Tiefer Grund, sattes Wasser, dezent lila-getönte Landflächen, feine Grenzen. Route pumpt in Akzentfarbe. Kein POI, sparsame Beschriftung.",
+    "matchup:source": "OpenMapTiles-Vektorkacheln von OpenFreeMap — kein API-Key, kommerziell frei."
+  },
+  "sources": {
+    "openmaptiles": { "type": "vector", "url": "https://tiles.openfreemap.org/planet" }
+  },
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#0E0E14" }
+    },
+    {
+      "id": "landcover-wood",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "filter": ["==", "class", "wood"],
+      "minzoom": 3,
+      "paint": {
+        "fill-color": "#122019",
+        "fill-opacity": 0.75
+      }
+    },
+    {
+      "id": "landcover-grass",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "filter": ["==", "class", "grass"],
+      "minzoom": 6,
+      "paint": {
+        "fill-color": "#141C17",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "landcover-sand",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "filter": ["==", "class", "sand"],
+      "minzoom": 4,
+      "paint": {
+        "fill-color": "#221E17",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "landuse-residential",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "filter": ["==", "class", "residential"],
+      "minzoom": 9,
+      "paint": {
+        "fill-color": "#181822",
+        "fill-opacity": 0.75
+      }
+    },
+    {
+      "id": "landuse-park",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "filter": ["==", "class", "park"],
+      "minzoom": 8,
+      "paint": {
+        "fill-color": "#0F1A14",
+        "fill-opacity": 0.85
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["!=", "intermittent", 1],
+      "paint": {
+        "fill-color": "#0B1230",
+        "fill-antialias": true
+      }
+    },
+    {
+      "id": "water-glow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["!=", "intermittent", 1],
+      "paint": {
+        "line-color": "#4b3bf3",
+        "line-width": { "stops": [[3, 0.3], [8, 0.6]] },
+        "line-opacity": 0.18,
+        "line-blur": 2
+      }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "waterway",
+      "minzoom": 7,
+      "paint": {
+        "line-color": "#1A2650",
+        "line-width": { "stops": [[7, 0.4], [12, 1.0], [16, 2.0]] }
+      }
+    },
+    {
+      "id": "boundary-country",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", "admin_level", 2], ["!=", "maritime", 1]],
+      "paint": {
+        "line-color": "#4b3bf3",
+        "line-width": { "stops": [[0, 0.5], [6, 0.9], [10, 1.2]] },
+        "line-opacity": 0.55,
+        "line-blur": 0.5
+      }
+    },
+    {
+      "id": "boundary-country-glow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", "admin_level", 2], ["!=", "maritime", 1]],
+      "paint": {
+        "line-color": "#6b5bff",
+        "line-width": { "stops": [[0, 2], [6, 3.5], [10, 5]] },
+        "line-opacity": 0.10,
+        "line-blur": 3
+      }
+    },
+    {
+      "id": "boundary-state",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", "admin_level", 4], ["!=", "maritime", 1]],
+      "minzoom": 5,
+      "paint": {
+        "line-color": "#3A3A55",
+        "line-width": { "stops": [[5, 0.3], [10, 0.6]] },
+        "line-opacity": 0.5,
+        "line-dasharray": [3, 3]
+      }
+    },
+    {
+      "id": "place-country-label",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["==", "class", "country"],
+      "minzoom": 2,
+      "maxzoom": 8,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:de"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": { "stops": [[2, 9], [4, 11], [6, 13]] },
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.16,
+        "text-max-width": 8,
+        "text-padding": 8
+      },
+      "paint": {
+        "text-color": "#C8C5BE",
+        "text-halo-color": "#0E0E14",
+        "text-halo-width": 1.4,
+        "text-opacity": 0.85
+      }
+    },
+    {
+      "id": "place-city-label",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "filter": ["all", ["==", "class", "city"], [">=", "rank", 1], ["<=", "rank", 6]],
+      "minzoom": 5,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:de"], ["get", "name"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": { "stops": [[5, 10], [8, 12]] },
+        "text-max-width": 8,
+        "text-padding": 6
+      },
+      "paint": {
+        "text-color": "#8F8B84",
+        "text-halo-color": "#0E0E14",
+        "text-halo-width": 1.2,
+        "text-opacity": 0.9
+      }
+    }
+  ]
+}

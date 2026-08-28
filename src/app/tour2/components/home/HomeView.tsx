@@ -649,294 +649,300 @@ export default function HomeView() {
     ? t("tour.t2ovGreetName", { name: profile.firstName, year: seasonYear })
     : t("tour.t2ovGreetAnon", { year: seasonYear });
 
+  // ── Cockpit-Redesign: Overview als dunkler, hoch-hierarchischer Screen. ──
+  // Struktur: Kopf → EINE nächste Aufgabe (leuchtend) → Karte → Zeitachse →
+  // Zahlen-Reihe → zwei Spalten unten. Kindfreundliche, direkte Überschriften.
+  const nextActionCity = nextDeadline
+    ? (displayCity(nextDeadline.tournament.city) || nextDeadline.tournament.name || t("tour.fieldMissing"))
+    : null;
+
   return (
-    <div className="t2-overview">
-      {/* ZONE A — Kopfzeile: Vorname + Saisonjahr, Kennzahlen-Reihe */}
-      <header>
-        <h1 className="t2-display t2-fs-display tracking-[-0.02em]">{greetTitle}</h1>
-        {headerStats.length > 0 && (
-          // Mobil (<768px) stapeln die Kennzahlen einspaltig, ab md nebeneinander
-          // mit dezenten vertikalen Trennern zwischen den Items.
-          <dl className="mt-6 flex flex-col gap-y-5 md:flex-row md:flex-wrap md:items-baseline md:gap-y-4">
-            {headerStats.map((s, i) => (
-              <div
-                key={s.key}
-                className={`flex flex-col ${i === 0 ? "md:pr-8" : "md:border-l md:border-[var(--t2-line)] md:px-8"}`}
+    <div className="t2-dark">
+      <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-8 sm:py-12">
+        {/* ── 1. KOPF ──────────────────────────────────────────────── */}
+        <header>
+          <p className="t2-fs-meta font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--t2-text-faint)" }}>
+            {t("tour.t2cpSeasonLabel")} · {seasonYear}
+          </p>
+          <h1 className="mt-2 t2-fs-h1 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+            {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName}.` : t("tour.t2cpHello") + "."}
+          </h1>
+          {profile?.ranking != null && (
+            <div className="mt-6 flex items-baseline gap-4">
+              <p
+                className="t2-cockpit-hero t2-fs-display font-semibold tabular-nums tracking-[-0.04em]"
+                style={{ color: "var(--t2-accent)" }}
               >
-                <dd
-                  className={
-                    s.hero
-                      ? "t2-fs-display font-semibold tabular-nums tracking-[-0.04em]"
-                      : "max-w-[16rem] truncate t2-fs-display font-semibold tabular-nums tracking-[-0.02em]"
-                  }
-                >
-                  {s.value}
-                </dd>
-                <dt className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">
-                  {s.label}
-                </dt>
-              </div>
-            ))}
-          </dl>
-        )}
-      </header>
-
-      {/* ZONE B — Saison-Route: dominante Fläche, volle Breite, Höhe */}
-      <section className="t2-dash-card mt-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovRoute")}</h2>
-        </div>
-        {active.length === 0 ? (
-          <div className="mt-6 flex min-h-[30vh] flex-col items-start justify-center">
-            <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.t2ovRouteEmpty")}</p>
-            <Link href={T2_SEASON} className="t2-cta mt-6">{t("tour.wsFill")}<span aria-hidden>→</span></Link>
-          </div>
-        ) : (
-          <div className="mt-5 space-y-4">
-            {/* Saisonkarte — dominante Fläche mit Route und Kategorie-Markern. */}
-            <SeasonMap
-              stops={mapStops}
-              onMarkerClick={setSelectedStopId}
-              highlightId={hoveredStopId ?? selectedStopId}
-            />
-            {/* Grafische Zeitachse — Hover-verlinkt mit der Karte oben. */}
-            <SeasonTimeline
-              stops={timelineStops}
-              todayISO={todayISO}
-              locale={loc}
-              onSelect={setSelectedStopId}
-              onHover={setHoveredStopId}
-              highlightId={hoveredStopId ?? selectedStopId}
-            />
-            {/* RouteStop-Karten aus dem Baukasten. Auf dem Desktop im Fluss,
-                auf dem Handy horizontal scrollbar. Klick öffnet dieselbe Schublade
-                wie ein Marker auf der Karte. */}
-            <div className="flex gap-3 overflow-x-auto pb-2 md:flex-wrap md:overflow-x-visible">
-              {active.map((s) => (
-                <div key={s.tournament.id} className="shrink-0">
-                  <RouteStop
-                    date={fmtDate(s.tournament.tournament_monday)}
-                    category={s.tournament.category}
-                    city={displayCity(s.tournament.city) || s.tournament.name || t("tour.fieldMissing")}
-                    countryLabel={s.tournament.country ? countryName(s.tournament.country) : null}
-                    state={stateForStop(s.tournament.id, s.tournament.tournament_monday)}
-                    labels={routeStopLabels}
-                    active={selectedStopId === s.tournament.id}
-                    onClick={() => setSelectedStopId(s.tournament.id)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* ZONE C — Nächste Aktion (nur wenn eine offene Meldefrist existiert) */}
-      {nextDeadline && (
-        <section
-          className="t2-dash-card mt-6 border-l-[3px]"
-          style={{ borderLeftColor: "var(--t2-accent)" }}
-        >
-          <p className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovActionTitle")}</p>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="t2-fs-display font-semibold tracking-[-0.02em]">
-                {t("tour.t2ovActionEntry", { name: displayCity(nextDeadline.tournament.city) || t("tour.fieldMissing") })}
+                #{profile.ranking}
               </p>
-              {nextEntryDeadlineMs != null && (
-                <p className="mt-1 t2-fs-body-sm text-[var(--t2-muted)]">{countdown(nextEntryDeadlineMs)}</p>
-              )}
+              <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
+                {t("tour.t2ovGreetRanking")}
+              </p>
             </div>
-            <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta">
-              {t("tour.t2ovActionCTA")}<span aria-hidden>→</span>
-            </Link>
-          </div>
-        </section>
-      )}
+          )}
+        </header>
 
-      {/* ZONE D — Zwei Nebenblöcke: Punkte/Ranking · Finanzen/Budget */}
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {/* Links: Punkte & Ranking */}
-        <section className="t2-dash-card">
-          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketPoints")}</h2>
-          {resultHistory.length === 0 ? (
-            // Etappe 3-Feinschliff (Schritt 5): kein großes Loch in der Spalte
-            // mehr. Zuerst die Aufgabenliste, weil sie den echten Inhalt trägt;
-            // darunter der EmptyState-Baustein als kompakte Erklärung.
-            <>
-              {board.actions.length > (nextDeadline ? 1 : 0) && (
-                <div className="mt-3">
-                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
-                  <div className="mt-2">
-                    <Tour2ActionList
-                      actions={nextDeadline ? board.actions.slice(1) : board.actions}
-                      countryName={countryName}
-                      fmtDate={fmtDate}
-                      money={(minor) => money(minor)}
-                    />
-                  </div>
-                </div>
-              )}
-              <div className={board.actions.length > (nextDeadline ? 1 : 0) ? "mt-5 border-t border-[var(--t2-line)] pt-4" : "mt-3"}>
-                <EmptyState
-                  icon="🎾"
-                  title={t("tour.t2ovPointsEmpty")}
-                  hint={t("tour.t2ovPointsHollow")}
-                  action={<Link href={T2_RANKING} className="t2-fs-body-sm font-semibold text-[var(--t2-accent)]">{t("tour.t2ovPointsEmptyHint")} →</Link>}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="mt-3 flex items-baseline justify-between gap-4">
-                <div className="t2-fs-display font-semibold tabular-nums tracking-[-0.03em]">
-                  {pointsNow.countingTotal}
-                </div>
-                {pointsDelta != null && (
-                  <span className={`t2-fs-body-sm font-semibold tabular-nums ${pointsDelta > 0 ? "text-[var(--t2-success)]" : pointsDelta < 0 ? "text-[var(--t2-danger)]" : "text-[var(--t2-muted)]"}`}>
-                    {deltaArrow} {pointsDelta > 0 ? `+${pointsDelta}` : pointsDelta}
-                  </span>
+        {/* ── 2. WAS DU ALS NÄCHSTES TUN MUSST — glühender Slot ────── */}
+        {nextDeadline && nextActionCity && (
+          <section className="t2-cockpit-cta mt-10 rounded-[var(--t2-radius-md)] p-6 sm:p-8">
+            <p className="t2-fs-meta font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--t2-text-faint)" }}>
+              {t("tour.t2cpNextAction")}
+            </p>
+            <div className="mt-3 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <p className="t2-fs-h1 font-medium tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
+                  {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
+                </p>
+                {nextEntryDeadlineMs != null && (
+                  <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
+                    {countdown(nextEntryDeadlineMs)}
+                  </p>
                 )}
               </div>
-              <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovPoints")}</p>
-              <div className="mt-5">
-                <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2ovHorizon")}</p>
-                <ul className="mt-2 divide-y divide-[var(--t2-line)] t2-fs-body-sm">
-                  {[4, 8, 12].map((w) => (
-                    <li key={w} className="flex justify-between py-1.5">
-                      <span className="text-[var(--t2-muted)]">{t("tour.t2ovHorizonW", { n: w })}</span>
-                      <span className="tabular-nums font-semibold">{step(w)?.total ?? "—"}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {nextDrop && (
-                <div className="mt-5">
-                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2ovDropping")}</p>
-                  <p className="mt-1 t2-fs-body">
-                    <span className="font-semibold tabular-nums">{nextDrop.points}</span>
-                    <span className="ml-2 text-[var(--t2-muted)]">{t("tour.t2ovOn", { date: fmtDate(nextDrop.expiresOn) })}</span>
-                  </p>
-                </div>
-              )}
-              {board.actions.length > (nextDeadline ? 1 : 0) && (
-                <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
-                  <p className="t2-fs-body-sm font-medium text-[var(--t2-muted)]">{t("tour.t2action")}</p>
-                  <div className="mt-2">
-                    <Tour2ActionList
-                      actions={nextDeadline ? board.actions.slice(1) : board.actions}
-                      countryName={countryName}
-                      fmtDate={fmtDate}
-                      money={(minor) => money(minor)}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* Rechts: Finanzen & Budget */}
-        <section className="t2-dash-card">
-          <h2 className="t2-fs-body font-medium text-[var(--t2-ink)]">{t("tour.t2ovBucketFinance")}</h2>
-          <div className="mt-3 flex items-start justify-between gap-4">
-            <div>
-              {budget ? (
-                <>
-                  <div className="t2-fs-display font-semibold tabular-nums tracking-[-0.03em]">
-                    {money(budget.amount)}
-                  </div>
-                  <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em] text-[var(--t2-faint)]">{t("tour.t2ovBudgetTotal")}</p>
-                </>
-              ) : (
-                // Kein Budget gepflegt → kein Platzhalter, nur die Erklärung.
-                <p className="t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2budgetNoData")}</p>
-              )}
-              {budget && usedMinor == null && <p className="mt-2 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.t2ovBudgetRatesMissing")}</p>}
-              {leftMinor != null && (
-                <p className={`mt-2 t2-fs-body-sm ${leftMinor < 0 ? "text-[var(--t2-danger)]" : "text-[var(--t2-muted)]"}`}>
-                  {t("tour.t2ovBudgetLeft", { n: money(leftMinor) })}
-                </p>
-              )}
+              <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta shrink-0">
+                {t("tour.t2cpNextActionCTA", { name: nextActionCity })}<span aria-hidden>→</span>
+              </Link>
             </div>
-            {budget && usedMinor != null && <Donut parts={budgetRing} />}
+          </section>
+        )}
+        {!nextDeadline && active.length > 0 && (
+          <section className="mt-10 rounded-[var(--t2-radius-md)] border p-6" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+            <p className="t2-fs-h3 font-medium" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpNoAction")}</p>
+            <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpNoActionHint")}</p>
+          </section>
+        )}
+
+        {/* ── 3. KARTE — die Saison als Bühne ─────────────────────── */}
+        <section className="mt-10">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+              {t("tour.t2cpMapTitle")}
+            </h2>
+            {active.length > 0 && (
+              <p className="t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpMapHint")}</p>
+            )}
           </div>
-          {usedMinor != null && (
-            <ul className="mt-5 divide-y divide-[var(--t2-line)] t2-fs-body-sm">
-              {(["arrival", "lodging", "food", "coach", "entry"] as ItemCode[]).map((code) => {
-                const n = costByCode[code];
-                if (!n) return null;
-                return (
-                  <li key={code} className="flex justify-between py-1.5">
-                    <span className="text-[var(--t2-muted)]">{t(`tour.costsItem_${code}`)}</span>
-                    <span className="tabular-nums font-semibold">{money(n)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {insights.length > 0 && (
-            <div className="mt-5 space-y-3 border-t border-[var(--t2-line)] pt-4">{insights}</div>
+          {active.length === 0 ? (
+            <div className="mt-4 rounded-[var(--t2-radius-md)] border p-8" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+              <p className="t2-fs-h3 font-medium" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
+              <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
+              <Link href={T2_SEASON} className="t2-cta mt-6">
+                {t("tour.t2cpEmptyRouteCTA")}<span aria-hidden>→</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <SeasonMap
+                stops={mapStops}
+                variant="dark"
+                heightClass="min-h-[40vh] md:min-h-[55vh]"
+                onMarkerClick={setSelectedStopId}
+                highlightId={hoveredStopId ?? selectedStopId}
+              />
+            </div>
           )}
         </section>
-      </div>
 
-      {/* Detailschublade — geöffnet von Kartenmarker, Zeitachse oder RouteStop-Karte. */}
-      {selectedEntry && (
-        <Drawer
-          open
-          onClose={() => setSelectedStopId(null)}
-          title={displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || t("tour.fieldMissing")}
-        >
-          <dl className="space-y-3">
-            {selectedEntry.tournament.category && (
-              <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerCategory")}</dt>
-                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{selectedEntry.tournament.category}</dd>
-              </div>
-            )}
-            <div>
-              <dt className="t2-label">{t("tour.t2ovDrawerDate")}</dt>
-              <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">
-                {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"))}
-              </dd>
+        {/* ── 4. ZEITACHSE ────────────────────────────────────────── */}
+        {active.length > 0 && (
+          <section className="mt-10">
+            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+              {t("tour.t2cpTimelineTitle")}
+            </h2>
+            <div className="mt-4">
+              <SeasonTimeline
+                stops={timelineStops}
+                todayISO={todayISO}
+                locale={loc}
+                onSelect={setSelectedStopId}
+                onHover={setHoveredStopId}
+                highlightId={hoveredStopId ?? selectedStopId}
+              />
             </div>
-            {selectedEntry.tournament.surface && (
+          </section>
+        )}
+
+        {/* ── 5. ZAHLEN AUF EINEN BLICK ───────────────────────────── */}
+        {headerStats.length > 0 && (
+          <section className="mt-10">
+            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+              {t("tour.t2cpStatsTitle")}
+            </h2>
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {headerStats.map((s) => (
+                <div key={s.key} className="rounded-[var(--t2-radius-md)] border p-4"
+                  style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+                  <dt className="t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
+                    {s.label}
+                  </dt>
+                  <dd className="mt-2 truncate t2-fs-h1 font-semibold tabular-nums tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
+                    {s.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {/* ── 6. ZWEI SPALTEN — Fristen · Ausgaben ────────────────── */}
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {/* Fristen */}
+          <section className="rounded-[var(--t2-radius-md)] border p-6"
+            style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+              {t("tour.t2cpDeadlinesTitle")}
+            </h2>
+            {board.actions.length === 0 ? (
+              <p className="mt-4 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpDeadlinesEmpty")}</p>
+            ) : (
+              <div className="mt-4">
+                <Tour2ActionList
+                  actions={board.actions}
+                  countryName={countryName}
+                  fmtDate={fmtDate}
+                  money={(minor) => money(minor)}
+                />
+              </div>
+            )}
+          </section>
+
+          {/* Ausgaben — Budget-Balken + Aufschlüsselung */}
+          <section className="rounded-[var(--t2-radius-md)] border p-6"
+            style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+              {t("tour.t2cpCostsTitle")}
+            </h2>
+            {!budget ? (
+              <>
+                <p className="mt-4 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>
+                  {t("tour.t2cpCostsNoBudget")}
+                </p>
+                <Link href="/tour2/costs" className="mt-4 inline-flex t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>
+                  {t("tour.t2cpCostsSetBudget")} →
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpCostsHint")}</p>
+                {/* Kernzeile: verplant vs Restbudget */}
+                <div className="mt-5 flex items-baseline justify-between gap-4">
+                  <div>
+                    <p className="t2-fs-h1 font-semibold tabular-nums tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
+                      {usedMinor != null ? money(usedMinor) : money(0)}
+                    </p>
+                    <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
+                      {t("tour.t2ovBudgetPlanned", { n: "" }).replace(/{n}/g, "").trim() || "verplant"}
+                    </p>
+                  </div>
+                  {leftMinor != null && (
+                    <div className="text-right">
+                      <p
+                        className="t2-fs-h3 font-semibold tabular-nums"
+                        style={{ color: leftMinor < 0 ? "var(--t2-danger)" : "var(--t2-text)" }}
+                      >
+                        {money(leftMinor)}
+                      </p>
+                      <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
+                        {t("tour.t2ovBudgetLeft", { n: "" }).replace(/{n}/g, "").trim() || "übrig"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {/* Ein Balken — dezent leuchtend im Akzent, danger wenn überzogen */}
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full" style={{ background: "var(--t2-surface-muted)" }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.max(0, Math.min(1, (usedMinor ?? 0) / budget.amount)) * 100}%`,
+                      background: (leftMinor ?? 0) < 0 ? "var(--t2-danger)" : "var(--t2-accent)",
+                      boxShadow: (leftMinor ?? 0) < 0 ? "none" : "var(--t2-accent-glow-sm)",
+                      transition: "width 240ms ease",
+                    }}
+                  />
+                </div>
+                <p className="mt-2 t2-fs-micro" style={{ color: "var(--t2-text-faint)" }}>
+                  {t("tour.t2ovBudgetTotal")} · <span className="tabular-nums">{money(budget.amount)}</span>
+                </p>
+                {/* Aufschlüsselung */}
+                {usedMinor != null && Object.keys(costByCode).length > 0 && (
+                  <ul className="mt-5 divide-y t2-fs-body-sm" style={{ borderColor: "var(--t2-line)" } as React.CSSProperties}>
+                    {(["arrival", "lodging", "food", "coach", "entry"] as ItemCode[]).map((code) => {
+                      const n = costByCode[code];
+                      if (!n) return null;
+                      return (
+                        <li key={code} className="flex justify-between border-t py-2" style={{ borderColor: "var(--t2-line)" }}>
+                          <span style={{ color: "var(--t2-text-soft)" }}>{t(`tour.costsItem_${code}`)}</span>
+                          <span className="tabular-nums font-semibold" style={{ color: "var(--t2-text)" }}>{money(n)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {insights.length > 0 && (
+                  <div className="mt-5 space-y-3 border-t pt-4" style={{ borderColor: "var(--t2-line)" }}>{insights}</div>
+                )}
+              </>
+            )}
+          </section>
+        </div>
+
+        {/* Detailschublade — geöffnet von Kartenmarker oder Zeitachse. */}
+        {selectedEntry && (
+          <Drawer
+            open
+            onClose={() => setSelectedStopId(null)}
+            title={displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || t("tour.fieldMissing")}
+          >
+            <dl className="space-y-4">
+              {selectedEntry.tournament.category && (
+                <div>
+                  <dt className="t2-label">{t("tour.t2ovDrawerCategory")}</dt>
+                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{selectedEntry.tournament.category}</dd>
+                </div>
+              )}
               <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerSurface")}</dt>
-                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">
-                  {t(`tour.surface_${selectedEntry.tournament.surface}`).startsWith("tour.surface_")
-                    ? selectedEntry.tournament.surface
-                    : t(`tour.surface_${selectedEntry.tournament.surface}`)}
+                <dt className="t2-label">{t("tour.t2ovDrawerDate")}</dt>
+                <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>
+                  {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"))}
                 </dd>
               </div>
-            )}
-            {drawerDeadlineMs != null && (
-              <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerDeadline")}</dt>
-                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{countdown(drawerDeadlineMs)}</dd>
-              </div>
-            )}
-            {drawerDistanceKm != null && (
-              <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerDistancePrev")}</dt>
-                <dd className="mt-1 t2-fs-body text-[var(--t2-text)] tabular-nums">
-                  {t("tour.t2legKm", { n: Math.round(drawerDistanceKm) })}
-                </dd>
-              </div>
-            )}
-            {selectedEntry.tournament.country && (
-              <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerCountry")}</dt>
-                <dd className="mt-1 t2-fs-body text-[var(--t2-text)]">{countryName(selectedEntry.tournament.country)}</dd>
-              </div>
-            )}
-          </dl>
-          <Link href={tour2PlannerTournamentHref(selectedEntry.tournament.id)} className="t2-cta mt-6">
-            {t("tour.t2ovActionCTA")}<span aria-hidden>→</span>
-          </Link>
-        </Drawer>
-      )}
+              {selectedEntry.tournament.surface && (
+                <div>
+                  <dt className="t2-label">{t("tour.t2ovDrawerSurface")}</dt>
+                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>
+                    {t(`tour.surface_${selectedEntry.tournament.surface}`).startsWith("tour.surface_")
+                      ? selectedEntry.tournament.surface
+                      : t(`tour.surface_${selectedEntry.tournament.surface}`)}
+                  </dd>
+                </div>
+              )}
+              {drawerDeadlineMs != null && (
+                <div>
+                  <dt className="t2-label">{t("tour.t2ovDrawerDeadline")}</dt>
+                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{countdown(drawerDeadlineMs)}</dd>
+                </div>
+              )}
+              {drawerDistanceKm != null && (
+                <div>
+                  <dt className="t2-label">{t("tour.t2ovDrawerDistancePrev")}</dt>
+                  <dd className="mt-1 t2-fs-body tabular-nums" style={{ color: "var(--t2-text)" }}>
+                    {t("tour.t2legKm", { n: Math.round(drawerDistanceKm) })}
+                  </dd>
+                </div>
+              )}
+              {selectedEntry.tournament.country && (
+                <div>
+                  <dt className="t2-label">{t("tour.t2ovDrawerCountry")}</dt>
+                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{countryName(selectedEntry.tournament.country)}</dd>
+                </div>
+              )}
+            </dl>
+            <Link href={tour2PlannerTournamentHref(selectedEntry.tournament.id)} className="t2-cta mt-6">
+              {t("tour.t2cpDrawerOpen", { name: displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || "" })}<span aria-hidden>→</span>
+            </Link>
+          </Drawer>
+        )}
+      </div>
     </div>
   );
 }
