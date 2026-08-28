@@ -226,7 +226,7 @@ function WildcardCard({
 
           {/* Verlauf — erst nach dem ersten Speichern (Events hängen am Kontakt). */}
           <div className="mt-5 border-t border-[var(--t2-line)] pt-4">
-            <h3 className="t2-kicker">{t("tour.wcTimeline")}</h3>
+            <h3 className="t2-section-title">{t("tour.wcTimeline")}</h3>
             {!contactId ? (
               <p className="mt-2 t2-fs-micro text-[var(--t2-faint)]">{t("tour.wcSaveContactFirst")}</p>
             ) : (

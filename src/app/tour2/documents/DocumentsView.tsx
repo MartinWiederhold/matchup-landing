@@ -199,7 +199,7 @@ export default function DocumentsView() {
         </ul>
       )}
       <section className="t2-dash-card mt-4">
-        <h2 className="t2-kicker">{t("tour.t2docTable")}</h2>
+        <h2 className="t2-section-title">{t("tour.t2docTable")}</h2>
         {papers.length === 0 ? (
           <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2docNone")}</p>
         ) : (

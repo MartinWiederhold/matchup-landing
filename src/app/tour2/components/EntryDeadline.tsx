@@ -91,7 +91,7 @@ export function EntryPath({ tournament }: { tournament: TourTournament }) {
 
   return (
     <div className="mt-2 t2-fs-micro">
-      <p className="mb-1 t2-kicker">{t("tour.entryPathTitle")}</p>
+      <p className="mb-1 t2-section-title">{t("tour.entryPathTitle")}</p>
 
       {/* Turnierseite — bei ITF-Turnieren die öffentliche itftennis.com-Turnierseite
           (in `website` aufgelöst, MU: aus der claim-source_url der ITF-Endpunkt-Claims).

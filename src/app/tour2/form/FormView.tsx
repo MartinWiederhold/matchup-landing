@@ -86,8 +86,8 @@ export default function FormView() {
   const r = rates!;
   const hasUnknownSurface = r.bySurface.some((b) => b.key === "unknown");
   const tile = "border-t border-[var(--t2-line)] py-4";
-  const label = "t2-kicker";
-  const sectionH = "t2-kicker";
+  const label = "t2-label";
+  const sectionH = "t2-section-title";
 
   // Leerstand (heute der Live-Fall: tour_events ist leer) — mit klarem Grund + Weg.
   if (matchCount === 0) {

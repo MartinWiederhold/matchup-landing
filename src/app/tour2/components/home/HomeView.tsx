@@ -65,7 +65,7 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
 function Kpi({ label, children, note, extra, compact }: { label: string; children: ReactNode; note?: ReactNode; extra?: ReactNode; compact?: boolean }) {
   return (
     <div className="t2-dash-card">
-      <p className="t2-kicker">{label}</p>
+      <p className="t2-label">{label}</p>
       <div className="mt-2 flex items-start justify-between gap-3">
         <div className={compact ? "min-w-0 flex-1" : "t2-fs-display font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
         {extra}
@@ -508,18 +508,20 @@ export default function HomeView() {
   const arrivalAmt = rates && costRatesComplete(rates) ? ratesToCostParams(rates).arrival : null;
   const budgetRing = [
     { n: Math.max(0, usedMinor ?? 0), color: "var(--t2-accent)" },
-    { n: Math.max(0, leftMinor ?? 0), color: "#e7e5e4" },
+    { n: Math.max(0, leftMinor ?? 0), color: "var(--t2-chart-5)" },
   ];
+  // Diagramm-Palette aus Etappe 2a: fünf abgestimmte Töne, letzter (chart-5)
+  // dient als Rest/Untergrund. Belag-Verteilung durchläuft chart-1..chart-4.
   const surfRing = dists.surfItems.map((x, i) => ({
     n: x.n,
-    color: ["var(--t2-accent)", "var(--t2-text)", "#a8a29e", "#78716c"][i] ?? "#d6d3d1",
+    color: ["var(--t2-chart-1)", "var(--t2-chart-2)", "var(--t2-chart-3)", "var(--t2-chart-4)"][i] ?? "var(--t2-chart-5)",
   }));
 
   const insights: ReactNode[] = [];
   if (cpp != null && finance.points > 0) {
     insights.push(
       <div key="cpp">
-        <p className="t2-kicker">{t("tour.t2ovCostPerPoint")}</p>
+        <p className="t2-label">{t("tour.t2ovCostPerPoint")}</p>
         <p className="mt-2 t2-fs-h3 font-semibold tabular-nums">{money(cpp)}</p>
         <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointBasis", { n: finance.tournamentsWithExpenses })}</p>
       </div>,

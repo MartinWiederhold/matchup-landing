@@ -130,7 +130,7 @@ export default function NetworkView() {
   return (
     <Tour2Area title={t("tour.t2navNetwork")} lead={t("tour.t2netLead")} kpis={kpis} aside={aside}>
       <section className="t2-dash-card">
-        <h2 className="t2-kicker">{t("tour.t2netPresence")}</h2>
+        <h2 className="t2-section-title">{t("tour.t2netPresence")}</h2>
         {people.length === 0 ? (
           <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netPresenceEmpty")}</p>
         ) : (
@@ -156,7 +156,7 @@ export default function NetworkView() {
       </section>
 
       <section className="mt-4 t2-dash-card">
-        <h2 className="t2-kicker">{t("tour.t2netSlots")}</h2>
+        <h2 className="t2-section-title">{t("tour.t2netSlots")}</h2>
         {!nextWeek ? (
           <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netSlotsEmpty")}</p>
         ) : (
@@ -168,7 +168,7 @@ export default function NetworkView() {
       </section>
 
       <section className="mt-4 t2-dash-card">
-        <h2 className="t2-kicker">{t("tour.t2netProv")}</h2>
+        <h2 className="t2-section-title">{t("tour.t2netProv")}</h2>
         {!provCity ? (
           <p className="mt-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2netProvEmptyNone")}</p>
         ) : !providers || providers.length === 0 ? (

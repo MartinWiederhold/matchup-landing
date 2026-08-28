@@ -25,7 +25,7 @@ export default function StepLimits() {
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">{t("tour.t2onbLimitsTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.t2onbLimitsTitle")}</h2>
       <p className="mt-2 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2onbLimitsIntro")}</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">

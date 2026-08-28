@@ -31,7 +31,7 @@ import type { TourCostRates } from "@/lib/types";
 function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
   return (
     <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-kicker">{label}</p>
+      <p className="t2-label">{label}</p>
       <div className="mt-2 t2-fs-display font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
       {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
     </div>
@@ -142,13 +142,13 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
   const aside = (
     <>
       <section>
-        <h2 className="t2-kicker">{t("tour.t2profOptUsesTitle")}</h2>
+        <h2 className="t2-section-title">{t("tour.t2profOptUsesTitle")}</h2>
         <p className="mt-2 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptUses")}</p>
         <p className="mt-3 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profOptSkip")}</p>
       </section>
       {gaps.length > 0 && (
         <section>
-          <h2 className="t2-kicker">{t("tour.t2profGaps")}</h2>
+          <h2 className="t2-section-title">{t("tour.t2profGaps")}</h2>
           <ul className="mt-2 space-y-1 t2-fs-body-sm text-[var(--t2-muted)]">
             {gaps.map((g) => <li key={g.kind}>{gapText(g)}</li>)}
           </ul>
@@ -171,7 +171,7 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
       <TravelDocsCard tone="light" />
 
       <section className="t2-panel mt-6">
-        <h2 className="t2-kicker">{t("tour.wsRemindersLabel")}</h2>
+        <h2 className="t2-section-title">{t("tour.wsRemindersLabel")}</h2>
         <div className="mt-3 flex items-center justify-between gap-3">
           <p className="t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.wsRemindersHint")}</p>
           <button type="button" role="switch" aria-checked={reminderOn} onClick={() => toggleReminders(!reminderOn)}

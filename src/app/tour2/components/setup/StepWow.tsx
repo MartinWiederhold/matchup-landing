@@ -66,7 +66,7 @@ export default function StepWow({ state }: { state: SetupState }) {
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">{t("tour.t2onbWowTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.t2onbWowTitle")}</h2>
       {phase === "run" ? (
         <p className="mt-4 t2-fs-h3 font-semibold text-[var(--t2-ink)]">{t("tour.t2onbWowWait")}</p>
       ) : (

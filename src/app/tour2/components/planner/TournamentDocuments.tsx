@@ -54,7 +54,7 @@ export default function TournamentDocuments({ tournamentId, viewerId }: { tourna
 
   return (
     <section className="mt-1">
-      <p className="t2-kicker">{t("tour.docTitle")}</p>
+      <p className="t2-section-title">{t("tour.docTitle")}</p>
       <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.docIntro")}</p>
       {err && <p className="mt-2 t2-fs-micro font-semibold text-[var(--t2-danger)]">{err}</p>}
       <input ref={fileRef} type="file" accept={DOC_ACCEPT_MIME.join(",")} onChange={onFile} className="hidden" />

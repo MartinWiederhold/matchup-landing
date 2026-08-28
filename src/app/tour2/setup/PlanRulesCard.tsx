@@ -54,7 +54,7 @@ export default function PlanRulesCard({
 
   return (
     <section className="t2-panel mt-6">
-      <h2 className="t2-kicker">{t("tour.t2profPlan")}</h2>
+      <h2 className="t2-section-title">{t("tour.t2profPlan")}</h2>
       <p className="mt-2 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2profPlanLead")}</p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">

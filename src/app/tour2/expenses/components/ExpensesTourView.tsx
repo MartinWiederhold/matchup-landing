@@ -111,7 +111,7 @@ export default function ExpensesTourView() {
       {/* Summen je Währung */}
       {totals.size > 0 && (
         <section className="t2-panel">
-          <h2 className="t2-kicker">{t("tour.expTotals")}</h2>
+          <h2 className="t2-section-title">{t("tour.expTotals")}</h2>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[...totals.entries()].sort().map(([c, v]) => (
               <span key={c} className="t2-fs-h2 font-extrabold tracking-tight text-[var(--t2-text)] tabular-nums">{money(v, c)}</span>
@@ -124,7 +124,7 @@ export default function ExpensesTourView() {
       {/* Preisgeld / Netto je Turnier (nur eigene Saison) */}
       {season.length > 0 && (
         <section>
-          <h2 className="t2-kicker">{t("tour.expPerTournament")}</h2>
+          <h2 className="t2-section-title">{t("tour.expPerTournament")}</h2>
           <div className="mt-3 space-y-3">
             {season.map((e) => {
               const uuid = e.tournament.id;
@@ -149,7 +149,7 @@ export default function ExpensesTourView() {
 
                   <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-2">
                     <label className="block">
-                      <span className="mb-1 block t2-kicker">{t("tour.expPrize")}</span>
+                      <span className="mb-1 block t2-label">{t("tour.expPrize")}</span>
                       <div className="flex gap-1.5">
                         <input
                           type="text"
@@ -172,7 +172,7 @@ export default function ExpensesTourView() {
                     </label>
 
                     <div>
-                      <span className="mb-1 block t2-kicker">{t("tour.expExpenses")}</span>
+                      <span className="mb-1 block t2-label">{t("tour.expExpenses")}</span>
                       <p className="t2-fs-body font-bold text-[var(--t2-text)]">
                         {cost.size ? [...cost.entries()].sort().map(([c, v]) => money(v, c)).join(" · ") : "—"}
                       </p>
@@ -199,7 +199,7 @@ export default function ExpensesTourView() {
 
       {/* Ausgabenliste */}
       <section>
-        <h2 className="t2-kicker">{t("tour.expListTitle")}</h2>
+        <h2 className="t2-section-title">{t("tour.expListTitle")}</h2>
         {actionError && (
           <p className="mt-2 t2-fs-micro text-[var(--t2-muted)]">
             {actionError === "receipt" ? t("tour.expRemoveReceiptFailed") : t("tour.expRemoveError")}

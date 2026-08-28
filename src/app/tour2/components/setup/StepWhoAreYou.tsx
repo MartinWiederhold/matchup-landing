@@ -96,7 +96,7 @@ export default function StepWhoAreYou({
 
   return (
     <section className={wrap}>
-      <h2 className="t2-kicker">{t("tour.setupWhoTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.setupWhoTitle")}</h2>
       <p className={`mt-2 t2-fs-body ${muted}`}>{t("tour.setupWhoIntro")}</p>
 
       <div className={`mt-4 flex items-center gap-3 ${idWrap}`}>
@@ -116,7 +116,7 @@ export default function StepWhoAreYou({
       </div>
       <p className="mt-1.5 t2-fs-meta leading-relaxed text-[var(--t2-faint)]">{t("tour.setupFromAppNote")}</p>
 
-      <p className="mt-5 t2-kicker">{t("tour.t2profTennis")}</p>
+      <p className="mt-5 t2-section-title">{t("tour.t2profTennis")}</p>
       <div className="mt-2 grid gap-3 sm:grid-cols-2">
         <div className="block">
           <span className={`mb-1 block t2-fs-micro font-semibold ${lbl}`}>{t("tour.wsPassports")}</span>

@@ -116,18 +116,18 @@ export default function SchengenView() {
     <div className="mt-8 space-y-6">
       {/* Auslastung — nur bestätigt, sachlich ohne Alarmfarben */}
       <section className="t2-panel">
-        <h2 className="t2-kicker">{t("tour.schengenUsageTitle")}</h2>
+        <h2 className="t2-section-title">{t("tour.schengenUsageTitle")}</h2>
         {confirmed.length === 0 ? (
           <p className="mt-2 t2-fs-body-sm text-[var(--t2-muted)]">{t("tour.schengenNoConfirmed")}</p>
         ) : (
           <>
             <div className="mt-2 flex flex-wrap items-end gap-x-8 gap-y-2">
               <div>
-                <p className="t2-kicker">{t("tour.schengenUsed")}</p>
+                <p className="t2-label">{t("tour.schengenUsed")}</p>
                 <p className="t2-fs-h1 font-extrabold tracking-tight text-[var(--t2-text)]">{usage.used} <span className="t2-fs-body-sm font-semibold text-[var(--t2-faint)]">/ 90 {t("tour.schengenDaysUnit")}</span></p>
               </div>
               <div>
-                <p className="t2-kicker">{t("tour.schengenLeft")}</p>
+                <p className="t2-label">{t("tour.schengenLeft")}</p>
                 <p className="t2-fs-h1 font-extrabold tracking-tight text-[var(--t2-text)]">{usage.left} <span className="t2-fs-body-sm font-semibold text-[var(--t2-faint)]">{t("tour.schengenDaysUnit")}</span></p>
               </div>
               {usage.peakWindowEnd && (
@@ -151,7 +151,7 @@ export default function SchengenView() {
       {/* Bestätigte Aufenthalte */}
       {confirmed.length > 0 && (
         <section>
-          <h2 className="t2-kicker">{t("tour.schengenConfirmedTitle")}</h2>
+          <h2 className="t2-section-title">{t("tour.schengenConfirmedTitle")}</h2>
           {actionError && <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.schengenSaveError")}</p>}
           <div className="mt-2 divide-y divide-[var(--t2-line)]">
             {confirmed.map((s) => (
@@ -164,7 +164,7 @@ export default function SchengenView() {
       {/* Vorschläge — getrennt, zählen noch nicht */}
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="t2-kicker">{t("tour.schengenSuggestionsTitle")}</h2>
+          <h2 className="t2-section-title">{t("tour.schengenSuggestionsTitle")}</h2>
           <button type="button" onClick={handleGenerate} disabled={generating} className="t2-ghost disabled:opacity-50">
             {generating ? t("tour.schengenGenerating") : t("tour.schengenGenerate")}
           </button>

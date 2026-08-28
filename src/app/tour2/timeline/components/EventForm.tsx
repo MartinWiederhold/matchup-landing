@@ -84,7 +84,7 @@ export default function EventForm({
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">
+      <h2 className="t2-section-title">
         {event ? t("tour.calEditTitle") : t("tour.calAddTitle")}
       </h2>
 

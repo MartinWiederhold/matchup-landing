@@ -71,7 +71,7 @@ export default function SeasonCostBreakdown({
 
   return (
     <section className="mt-8">
-      <h2 className="t2-kicker">{t("tour.costsCalcTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.costsCalcTitle")}</h2>
 
       {/* Hinweise oben: fehlende Nächte / fehlende Sätze — sichtbar, aber unaufgeregt. */}
       {nights == null && (
@@ -129,7 +129,7 @@ export default function SeasonCostBreakdown({
       {/* Gesamt je Währung + Cluster-Effekt */}
       <div className="t2-panel mt-4">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="t2-kicker">{t("tour.costsTotal")}</span>
+          <span className="t2-label">{t("tour.costsTotal")}</span>
           <span className="flex flex-col items-end t2-fs-h3 font-extrabold text-[var(--t2-text)]">
             {result.currencies.length > 0 ? <BagLines bag={result.total} /> : <span className="text-[var(--t2-faint)]">{t("tour.costsUnknown")}</span>}
           </span>

@@ -88,7 +88,7 @@ export default function TourMapClient() {
       {/* Turniere ohne Koordinaten: nicht stillschweigend weglassen, sondern listen. */}
       {noCoords.length > 0 && (
         <section>
-          <h2 className="t2-kicker">{t("tour.mapNoCoordsTitle")}</h2>
+          <h2 className="t2-section-title">{t("tour.mapNoCoordsTitle")}</h2>
           <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.mapNoCoordsText")}</p>
           <ul className="mt-2 divide-y divide-[var(--t2-line)] rounded-xl border border-[var(--t2-line)] bg-[var(--t2-paper)]">
             {noCoords.map((e) => (

@@ -20,7 +20,7 @@ export function T2Kpi({
 }) {
   return (
     <div className="t2-dash-card">
-      <p className="t2-kicker">{label}</p>
+      <p className="t2-label">{label}</p>
       <div className="mt-2 flex items-start justify-between gap-3">
         <div className={compact ? "min-w-0 flex-1" : "t2-fs-display font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
         {extra}
@@ -33,7 +33,7 @@ export function T2Kpi({
 export function T2AsideBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="t2-dash-card">
-      <h2 className="t2-kicker">{title}</h2>
+      <h2 className="t2-section-title">{title}</h2>
       <div className="mt-2 t2-fs-body-sm leading-relaxed">{children}</div>
     </section>
   );

@@ -63,7 +63,7 @@ export default function TrainingSlots({ tournamentId, tournamentMonday, viewerId
 
   return (
     <section className="mt-4">
-      <p className="t2-kicker">{t("tour.tsTitle")}</p>
+      <p className="t2-section-title">{t("tour.tsTitle")}</p>
 
       {/* ── Meine Slots (Editor) ─────────────────────────────────────────────── */}
       <div className="mt-2 rounded-xl border border-[var(--t2-accent)]/20 bg-[var(--t2-accent)]/5 p-3">

@@ -176,7 +176,7 @@ export default function CalendarWeek() {
                 <span className="w-16 shrink-0 t2-fs-body-sm font-semibold tabular-nums text-[var(--t2-muted)]">{e.event_time ? hhmm(e.event_time) : "—"}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block t2-fs-h3 font-semibold tracking-tight">{e.title || t(`tour.calKind_${e.kind}`)}</span>
-                  <span className="mt-0.5 block t2-kicker">{t(`tour.calKind_${e.kind}`)}</span>
+                  <span className="mt-0.5 block t2-label">{t(`tour.calKind_${e.kind}`)}</span>
                 </span>
               </button>
             </li>

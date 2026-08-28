@@ -255,7 +255,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
               className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--t2-on-accent)] px-5 pt-4 pb-[max(6.5rem,calc(5.5rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="t2-kicker">{t("tour.t2more")}</p>
+              <p className="t2-section-title">{t("tour.t2more")}</p>
               <ul className="mt-3 space-y-1">
                 {moreLinks.map((x) => (
                   <li key={x.href}>

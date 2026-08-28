@@ -46,7 +46,7 @@ export default function StepFrame({ state, userId, onSaved }: { state: SetupStat
   return (
     <div className="space-y-3">
       <section className="t2-panel">
-        <h2 className="t2-kicker">{t("tour.setupFrameTitle")}</h2>
+        <h2 className="t2-section-title">{t("tour.setupFrameTitle")}</h2>
         <p className="mt-2 t2-fs-body text-[var(--t2-muted)]">{t("tour.setupFrameIntro")}</p>
 
         <label className="mt-4 block sm:max-w-[16rem]">

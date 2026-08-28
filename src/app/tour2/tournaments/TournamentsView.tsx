@@ -346,7 +346,7 @@ export default function TournamentsView() {
   const filterSheet = (
     <div className="flex h-full flex-col bg-[var(--t2-paper)]">
       <div className="flex items-center justify-between px-5 pt-5 pb-2">
-        <p className="t2-kicker">{t("tour.wsFilters")}{activeFilterN > 0 ? ` · ${activeFilterN}` : ""}</p>
+        <p className="t2-section-title">{t("tour.wsFilters")}{activeFilterN > 0 ? ` · ${activeFilterN}` : ""}</p>
         <div className="flex items-center gap-3">
           {activeFilterN > 0 && (
             <button type="button" onClick={resetFilters} className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsFiltersReset")}</button>
@@ -356,7 +356,7 @@ export default function TournamentsView() {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-10">
         <section className="pt-6">
-          <p className="t2-kicker">{t("tour.t2findQuick")}</p>
+          <p className="t2-section-title">{t("tour.t2findQuick")}</p>
           <div className="mt-3 flex flex-col items-start gap-2.5">
             <button type="button" className={optBtn(next4)} onClick={() => setNext4((v) => !v)}>{t("tour.t2findNext4")}</button>
             <button type="button" className={optBtn(onRoute)} onClick={() => setOnRoute((v) => !v)}>{t("tour.t2findOnRoute")}</button>
@@ -376,7 +376,7 @@ export default function TournamentsView() {
           </div>
         </section>
         <section className="pt-10">
-          <p className="t2-kicker">{t("tour.t2findSerie")}</p>
+          <p className="t2-section-title">{t("tour.t2findSerie")}</p>
           <div className="mt-3 flex flex-col items-start gap-2.5">
             {CIRCUITS.map((c) => (
               <button key={c} type="button" className={optBtn(circuits.has(c))} onClick={() => toggleSet(circuits, c, setCircuits)}>{circuitLabel(c)}</button>
@@ -384,7 +384,7 @@ export default function TournamentsView() {
           </div>
         </section>
         <section className="pt-10">
-          <p className="t2-kicker">{t("tour.t2findSurface")}</p>
+          <p className="t2-section-title">{t("tour.t2findSurface")}</p>
           <div className="mt-3 flex flex-col items-start gap-2.5">
             {SURFACES.map((s) => (
               <button key={s} type="button" className={optBtn(surfaces.has(s))} onClick={() => toggleSet(surfaces, s, setSurfaces)}>{t(`tour.surface_${s}`)}</button>
@@ -392,7 +392,7 @@ export default function TournamentsView() {
           </div>
         </section>
         <section className="pt-10">
-          <p className="t2-kicker">{t("tour.t2findLevel")}</p>
+          <p className="t2-section-title">{t("tour.t2findLevel")}</p>
           <div className="mt-3 flex max-h-48 flex-col items-start gap-2 overflow-y-auto">
             {categoryOpts.map((c) => (
               <button key={c} type="button" className={optBtn(categories.has(c))} onClick={() => toggleSet(categories, c, setCategories)}>{c}</button>
@@ -400,7 +400,7 @@ export default function TournamentsView() {
           </div>
         </section>
         <section className="pt-10">
-          <p className="t2-kicker">{t("tour.filterCountry")}</p>
+          <p className="t2-section-title">{t("tour.filterCountry")}</p>
           <div className="mt-3">
             {regionCountries.map(countryChip)}
             {restSelected.map(countryChip)}
@@ -458,11 +458,11 @@ export default function TournamentsView() {
         <div className="flex flex-wrap items-end gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("tour.t2search")} className="t2-input min-w-[10rem] flex-1" />
           <label className="block">
-            <span className="t2-kicker">{t("tour.t2findDateFrom")}</span>
+            <span className="t2-label">{t("tour.t2findDateFrom")}</span>
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="t2-input mt-1 block w-full max-w-[9.5rem]" />
           </label>
           <label className="block">
-            <span className="t2-kicker">{t("tour.t2findDateTo")}</span>
+            <span className="t2-label">{t("tour.t2findDateTo")}</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="t2-input mt-1 block w-full max-w-[9.5rem]" />
           </label>
           <button
@@ -498,7 +498,7 @@ export default function TournamentsView() {
             <div className="flex h-full min-h-0 flex-col">
               <p className="mb-3 flex shrink-0 items-baseline gap-2">
                 <span className="t2-fs-display font-semibold leading-none tracking-[-0.04em] tabular-nums">{filtered.length}</span>
-                <span className="t2-kicker">{t("tour.t2findHits")}</span>
+                <span className="t2-label">{t("tour.t2findHits")}</span>
               </p>
               {filtered.length === 0 ? (
                 <p className="py-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.empty")}</p>

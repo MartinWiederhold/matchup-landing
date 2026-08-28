@@ -60,7 +60,7 @@ const KIND_BADGE: Record<string, string> = {
   training: "text-[var(--t2-success)] bg-[var(--t2-success-surface)]",
   match: "text-[var(--t2-accent)] bg-[var(--t2-accent)]/10",
   physio: "text-[var(--t2-danger)] bg-[var(--t2-danger)]/10",
-  travel: "text-sky-600 bg-sky-500/10",
+  travel: "text-[var(--t2-info)] bg-[var(--t2-info-surface)]",
   gym: "text-[var(--t2-warn)] bg-[var(--t2-warn-surface)]",
   other: "text-[var(--t2-text-soft)] bg-[var(--t2-text)]/[0.05]",
 };
@@ -250,7 +250,7 @@ export default function TimelineView() {
             return (
               <li key={wk} className="relative">
                 <span className={`absolute -left-[21px] top-1 h-3 w-3 rounded-full ring-2 ring-white ${isNow ? "bg-[var(--t2-accent)]" : "bg-[var(--t2-surface-muted)]"}`} />
-                <p className="t2-kicker">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{isNow ? ` · ${t("tour.tlToday")}` : ""}</p>
+                <p className="t2-label">{fmtShort(wk)} – {fmtShort(wk + 6 * DAY)}{isNow ? ` · ${t("tour.tlToday")}` : ""}</p>
                 {tt && (
                   <button type="button" onClick={() => setSelected(tt.id)} className="mt-1 block w-full rounded-xl bg-[var(--t2-paper)] px-3 py-2 text-left shadow-sm ring-1 ring-[var(--t2-line)]">
                     <span className="flex items-center gap-2 t2-fs-body-sm font-semibold text-[var(--t2-ink)]"><IconBadge k="tournaments" tone={SERIES_BADGE[tt.series] ?? SERIES_BADGE.itf_wtt} />{tt.city || tt.name || t("tour.fieldMissing")}{tt.category ? <span className="text-[var(--t2-muted)]"> · {tt.category}</span> : null}<span className="ml-auto"><Face src={profile?.profileImage ?? null} name={profile?.firstName ?? null} /></span></span>

@@ -55,7 +55,7 @@ export default function TourDecideBlock({ tournament: x, prevPlace }: { tourname
 
   return (
     <div className="mt-4 border-t border-[var(--t2-line)] pt-3">
-      <p className="t2-kicker">{t("tour.decide.title")}</p>
+      <p className="t2-section-title">{t("tour.decide.title")}</p>
       {/* Ruhige Einordnungszeile + Verlässlichkeit als Wortstufe (keine Prozentzahl) */}
       <p className="mt-1 t2-fs-body font-semibold text-[var(--t2-ink)]">{t(`tour.decide.cls.${decision.classification}`)}</p>
       <p className="mt-0.5 t2-fs-meta text-[var(--t2-faint)]">

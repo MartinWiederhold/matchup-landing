@@ -9,8 +9,8 @@
   --t2-raw-paper-muted:     #F1F0EC;   /* gedämpfte Fläche */
   --t2-raw-ink:             #171512;   /* warmes Fast-Schwarz */
   --t2-raw-ink-muted:       #3D3A35;   /* warmer Sekundärtext */
-  --t2-raw-ink-soft:        #78736B;   /* Beschriftungen */
-  --t2-raw-ink-faint:       #A8A29A;   /* Metadaten */
+  --t2-raw-ink-soft:        #78736B;   /* Beschriftungen (4.7:1 auf --t2-bg) */
+  --t2-raw-ink-faint:       #6E6A62;   /* Metadaten (5.1:1 auf --t2-bg) — angehoben von #A8A29A (2.9:1) auf WCAG-AA für Uppercase-Labels */
   --t2-raw-line:            rgba(23, 21, 18, 0.09);
   --t2-raw-line-strong:     rgba(23, 21, 18, 0.16);
   --t2-raw-accent:          #4b3bf3;   /* Matchup-Violett — unverändert */
@@ -22,6 +22,14 @@
   --t2-raw-danger-surface:  #FEE4E2;
   --t2-raw-success:         #067647;
   --t2-raw-success-surface: #DCFAE6;
+  --t2-raw-info:            #175CD3;   /* Blau — im warn/danger/success-Sättigungsbereich */
+  --t2-raw-info-surface:    #DBEAFE;
+  /* Diagramm-Palette: fünf Töne, warm-hell-tauglich, nicht grell. */
+  --t2-raw-chart-1:         #4B3BF3;   /* Akzent-Violett — Hauptdatenreihe */
+  --t2-raw-chart-2:         #0891B2;   /* Petrol/Teal */
+  --t2-raw-chart-3:         #B45309;   /* Warmes Bernstein */
+  --t2-raw-chart-4:         #78736B;   /* Warmes Mittelgrau */
+  --t2-raw-chart-5:         #E4DFD8;   /* Warmes Sehr-Hell (Rest/Untergrund) */
 
   /* ── Schicht 2: Bedeutung (die einzigen Namen im Code) ────────── */
   --t2-bg:              var(--t2-raw-paper);
@@ -41,6 +49,13 @@
   --t2-danger-surface:  var(--t2-raw-danger-surface);
   --t2-success:         var(--t2-raw-success);
   --t2-success-surface: var(--t2-raw-success-surface);
+  --t2-info:            var(--t2-raw-info);
+  --t2-info-surface:    var(--t2-raw-info-surface);
+  --t2-chart-1:         var(--t2-raw-chart-1);
+  --t2-chart-2:         var(--t2-raw-chart-2);
+  --t2-chart-3:         var(--t2-raw-chart-3);
+  --t2-chart-4:         var(--t2-raw-chart-4);
+  --t2-chart-5:         var(--t2-raw-chart-5);
   --t2-on-accent:       #fff;   /* Vordergrund auf accent-Fläche */
 
   /* ── Schicht 3: Zustände ──────────────────────────────────────── */
@@ -126,7 +141,29 @@ html:has(.t2-root) { scroll-behavior: smooth; }
 .t2-fs-meta     { font-size: var(--t2-text-meta);     line-height: 1.4; }
 .t2-num         { font-variant-numeric: tabular-nums; }
 
+/* Etappe 2a — Auflösung der .t2-kicker-Doppelrolle in zwei getrennte Klassen. */
+/* Rolle A: benennt einen Abschnitt oder eine Karte. Normalschreibung, ruhig. */
+.t2-section-title {
+  font-size: var(--t2-text-h3);
+  font-weight: 500;
+  color: var(--t2-text);
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+/* Rolle B: Metadaten-Beschriftung unter oder über einem Wert. */
+.t2-label {
+  font-size: var(--t2-text-meta);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t2-text-faint);
+  line-height: 1.4;
+}
+
 /* ---------- Typografie ---------- */
+/* @deprecated Etappe 2a: .t2-kicker hatte zwei Rollen (Karten-Titel UND Metadaten-Label)
+   und wird durch .t2-section-title (Rolle A) bzw. .t2-label (Rolle B) ersetzt.
+   Bleibt vorerst als Alias, damit noch nicht umgestellte Fundstellen laufen. */
 .t2-kicker {
   font-size: 11px;
   font-weight: 600;

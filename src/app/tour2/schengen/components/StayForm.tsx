@@ -60,7 +60,7 @@ export default function StayForm({ userId, onAdded }: { userId: string; onAdded:
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">{t("tour.schengenAddTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.schengenAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">

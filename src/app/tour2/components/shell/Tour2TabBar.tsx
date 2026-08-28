@@ -53,7 +53,7 @@ export default function Tour2TabBar({
           const inner = (
             <>
               <span
-                className={`pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-matchup to-indigo-500 shadow-lg transition-all duration-300 ease-out ${
+                className={`pointer-events-none absolute inset-0 rounded-full bg-[var(--t2-accent)] transition-all duration-300 ease-out ${
                   on ? "scale-100 opacity-100" : "scale-50 opacity-0"
                 }`}
               />

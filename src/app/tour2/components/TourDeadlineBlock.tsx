@@ -53,7 +53,7 @@ export default function TourDeadlineBlock({ tournament: x }: { tournament: TourT
 
   return (
     <div className="mt-4 border-t border-[var(--t2-line)] pt-3">
-      <p className="t2-kicker">{t("tour.deadlinesTitle")}</p>
+      <p className="t2-section-title">{t("tour.deadlinesTitle")}</p>
       {/* Junioren: Meldung erst ab 13 (§4). Ohne Geburtsdatum nicht prüfbar — aber benannt,
           nicht verschwiegen, weil das Turnier öffentlich sichtbar ist. */}
       {x.series === "itf_juniors" && (

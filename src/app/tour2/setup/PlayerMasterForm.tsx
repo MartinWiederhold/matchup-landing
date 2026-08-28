@@ -94,7 +94,7 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
 
   return (
     <section className={dark ? "mt-2" : "mt-12"}>
-      <h2 className="t2-kicker">{t("tour.pmTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.pmTitle")}</h2>
       <p className={`mt-2 max-w-2xl t2-fs-body-sm leading-relaxed ${muted}`}>{t("tour.pmIntro")}</p>
 
       <div className="mt-4 grid gap-4">

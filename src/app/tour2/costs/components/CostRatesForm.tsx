@@ -112,7 +112,7 @@ export default function CostRatesForm({
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">{t("tour.costsRatesTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.costsRatesTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {field(t("tour.costsArrival"), arrival, setArrival, SUGGEST.arrival)}

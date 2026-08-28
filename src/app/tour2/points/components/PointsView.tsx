@@ -165,7 +165,7 @@ export default function PointsView() {
       )}
 
       <section className="t2-panel mb-10">
-        <h2 className="t2-kicker">{t("tour.pointsCaptureTitle")}</h2>
+        <h2 className="t2-section-title">{t("tour.pointsCaptureTitle")}</h2>
         <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.pointsCaptureHint")}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="block sm:col-span-2 lg:col-span-1"><span className={lbl}>{t("tour.pointsFieldTournament")}</span><input value={fName} onChange={(e) => setFName(e.target.value)} className={inp} /></label>

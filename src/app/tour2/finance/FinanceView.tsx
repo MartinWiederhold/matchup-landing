@@ -126,7 +126,7 @@ export default function FinanceView() {
 
   const m = metrics!;
   const tile = "border-t border-[var(--t2-line)] py-4";
-  const tileLabel = "t2-kicker";
+  const tileLabel = "t2-label";
 
   return (
     <div className="mt-8 space-y-8">
@@ -193,7 +193,7 @@ export default function FinanceView() {
 
       {/* ── Einnahme erfassen + Liste ──────────────────────────────────────── */}
       <section className="t2-panel">
-        <h2 className="t2-kicker">{t("tour.finAddIncome")}</h2>
+        <h2 className="t2-section-title">{t("tour.finAddIncome")}</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block"><span className="mb-1 block t2-fs-micro font-semibold text-[var(--t2-text-muted)]">{t("tour.finKind")}</span>
             <select value={fKind} onChange={(e) => setFKind(e.target.value as IncomeKind)} className={inp}>{INCOME_KINDS.map((k) => <option key={k} value={k}>{t(`tour.income_${k}`)}</option>)}</select>

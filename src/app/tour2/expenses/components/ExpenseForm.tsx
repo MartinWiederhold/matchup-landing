@@ -96,7 +96,7 @@ export default function ExpenseForm({
 
   return (
     <section className="t2-panel">
-      <h2 className="t2-kicker">{t("tour.expAddTitle")}</h2>
+      <h2 className="t2-section-title">{t("tour.expAddTitle")}</h2>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
