@@ -9,6 +9,16 @@ function fmtDay(iso: string, locale: string) {
   }).format(new Date(iso + "T00:00:00Z"));
 }
 
+// Belag → Rollenfarbe (Farbe = Bedeutung). Fallback: neutrale Linie.
+function surfaceToken(surface: string | null): string {
+  const s = (surface || "").toLowerCase();
+  if (s.includes("clay") || s.includes("sand")) return "var(--t2-clay)";
+  if (s.includes("grass") || s.includes("rasen")) return "var(--t2-grass)";
+  if (s.includes("carpet") || s.includes("indoor") || s.includes("halle")) return "var(--t2-indoor)";
+  if (s.includes("hard")) return "var(--t2-hard)";
+  return "var(--t2-line-strong)";
+}
+
 export default function TournamentRow({
   tt,
   countryName,
@@ -38,9 +48,13 @@ export default function TournamentRow({
   const { locale } = useLocale();
   const series = tt.series === "itf_wtt" ? t("tour.seriesItf") : tt.series === "itf_juniors" ? t("tour.seriesJuniors") : tt.series === "wta" ? t("tour.seriesWta") : t("tour.seriesChallenger");
   const surface = tt.surface ? t(`tour.surface_${tt.surface}`) : t("tour.fieldMissing");
+  const surfaceVar = surfaceToken(tt.surface);
 
   return (
-    <div className={`flex h-full items-start gap-2 px-1 py-2 ${selected ? "border-l-2 border-[var(--t2-accent)] bg-[color-mix(in_srgb,var(--t2-accent)_8%,transparent)]" : "border-l-2 border-transparent"}`}>
+    <div
+      className={`flex h-full items-start gap-2 px-1 py-2 border-l-[3px] ${selected ? "bg-[color-mix(in_srgb,var(--t2-accent)_8%,transparent)]" : ""}`}
+      style={{ borderLeftColor: selected ? "var(--t2-accent)" : surfaceVar }}
+    >
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <p className="truncate t2-fs-body font-semibold tracking-tight">
           {tt.city || t("tour.fieldMissing")}
@@ -49,7 +63,11 @@ export default function TournamentRow({
         <p className="t2-fs-meta text-[var(--t2-muted)]">
           {t("tour.t2findColWeek")} {fmtDay(tt.tournament_monday, locale)}–{fmtDay(weekEnd, locale)}
           {" · "}{tt.category || "—"}
-          {" · "}{surface}
+          {" · "}
+          <span className="inline-flex items-center gap-1 align-baseline">
+            <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: surfaceVar }} aria-hidden />
+            {surface}
+          </span>
           {" · "}{series}
         </p>
         <p className="mt-0.5 truncate t2-fs-meta text-[var(--t2-muted)]">
@@ -63,7 +81,7 @@ export default function TournamentRow({
         type="button"
         onClick={onToggle}
         aria-label={inSeason ? t("tour.seasonRemove") : t("tour.addToSeason")}
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center t2-fs-body font-bold ${inSeason ? "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]" : "border border-[var(--t2-line)] text-[var(--t2-ink)]"}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full t2-fs-body font-bold transition-colors ${inSeason ? "bg-[var(--t2-accent)] text-[var(--t2-on-accent)]" : "border border-[var(--t2-line-strong)] text-[var(--t2-text-soft)] hover:border-[var(--t2-accent)] hover:text-[var(--t2-accent)]"}`}
       >
         {inSeason ? "✓" : "+"}
       </button>
