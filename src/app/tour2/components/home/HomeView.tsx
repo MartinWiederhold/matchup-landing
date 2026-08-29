@@ -727,6 +727,20 @@ export default function HomeView() {
         : t(`tour.surface_${nextDeadline.tournament.surface}`))
     : null;
 
+  // ── Onboarding-Checkliste aus ECHTEN Profil-/Saisondaten ────────────────
+  // Fünf konkrete Schritte, jeder verlinkt zur Erledigung. Erledigte Schritte
+  // bleiben als Häkchen sichtbar; ist alles erledigt, verschwindet die Karte.
+  const setupSteps = [
+    { key: "home",   label: t("tour.t2cpSetupHome"),   done: !!profile?.city,                       href: "/tour2/profile" },
+    { key: "pass",   label: t("tour.t2cpSetupPass"),   done: (profile?.passports?.length ?? 0) > 0, href: "/tour2/profile" },
+    { key: "budget", label: t("tour.t2cpSetupBudget"), done: profile?.seasonBudget != null,         href: "/tour2/profile" },
+    { key: "rates",  label: t("tour.t2cpSetupRates"),  done: costRatesComplete(rates),              href: "/tour2/costs" },
+    { key: "season", label: t("tour.t2cpSetupSeason"), done: active.length > 0,                     href: T2_SEASON },
+  ];
+  const setupDoneN = setupSteps.filter((s) => s.done).length;
+  const setupPct = Math.round((setupDoneN / setupSteps.length) * 100);
+  const setupComplete = setupDoneN === setupSteps.length;
+
   return (
     /* Helle, warme Overview — der frühere `.t2-dark`-Wrapper war die Ursache des
        dunklen Screens; entfernt, damit die hellen .t2-root-Tokens greifen. */
@@ -789,6 +803,37 @@ export default function HomeView() {
             </div>
           )}
         </section>
+
+        {/* ── Onboarding-Fortschritt — nur solange etwas fehlt ────── */}
+        {!setupComplete && (
+          <section className="t2-dash-card mt-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpSetupTitle")}</p>
+              <span className="t2-surface-chip is-accent">{t("tour.t2cpSetupProgress", { done: setupDoneN, total: setupSteps.length })}</span>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: "var(--t2-surface-muted)" }}>
+              <div className="h-full rounded-full" style={{ width: `${setupPct}%`, background: "var(--t2-accent)", transition: "width 600ms var(--t2-spring)" }} />
+            </div>
+            <ul className="mt-4 flex flex-col gap-1.5">
+              {setupSteps.map((s) => (
+                <li key={s.key}>
+                  {s.done ? (
+                    <span className="flex items-center gap-2.5 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px]" style={{ background: "var(--t2-success-surface)", color: "var(--t2-success)" }} aria-hidden>✓</span>
+                      <span className="line-through">{s.label}</span>
+                    </span>
+                  ) : (
+                    <Link href={s.href} className="flex items-center gap-2.5 t2-fs-body-sm font-semibold" style={{ color: "var(--t2-text)" }}>
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border" style={{ borderColor: "var(--t2-line-strong)" }} aria-hidden />
+                      <span className="hover:underline">{s.label}</span>
+                      <span aria-hidden style={{ color: "var(--t2-accent)" }}>→</span>
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* ── 2. KACHELN — Kennzahlen mit Belag-/Rollenfarbe ──────── */}
         <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
