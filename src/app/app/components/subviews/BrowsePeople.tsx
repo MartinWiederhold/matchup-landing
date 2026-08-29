@@ -9,6 +9,7 @@ import { SportIcon, FilterIcon, CheckIcon, MapPinIcon } from "../shared/icons";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
+import { notifyConnect } from "@/lib/notifyConnect";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
@@ -103,6 +104,7 @@ export default function BrowsePeople() {
     await supabase.from("likes").upsert({ from_user_id: profile.id, to_user_id: target.id }, { onConflict: "from_user_id,to_user_id" });
     const { data: reverse } = await supabase.from("likes").select("id").eq("from_user_id", target.id).eq("to_user_id", profile.id).maybeSingle();
     if (reverse) { await ensureMatch(profile.id, target.id); setMatchWith(target); }
+    else void notifyConnect(target.id); // E-Mail an den Angefragten (falls nicht abbestellt)
     refreshBadges();
   }
 

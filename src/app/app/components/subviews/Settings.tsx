@@ -24,11 +24,19 @@ export default function Settings() {
     push_reminders: profile.push_reminders,
     push_community: profile.push_community,
   });
+  // E-Mail bei neuer Verbindungsanfrage (Opt-out, Default an).
+  const [emailOnRequest, setEmailOnRequest] = useState(profile.email_on_request ?? true);
 
   async function togglePush(key: PushKey) {
     const next = !push[key];
     setPush((p) => ({ ...p, [key]: next }));
     await supabase.from("profiles").update({ [key]: next }).eq("id", profile.id);
+  }
+
+  async function toggleEmailOnRequest() {
+    const next = !emailOnRequest;
+    setEmailOnRequest(next);
+    await supabase.from("profiles").update({ email_on_request: next }).eq("id", profile.id);
   }
 
   async function pauseAccount() {
@@ -95,6 +103,9 @@ export default function Settings() {
               <Switch value={push[r.key]} onChange={() => togglePush(r.key)} />
             </Row>
           ))}
+          <Row label={t("profile.emailOnRequest")}>
+            <Switch value={emailOnRequest} onChange={toggleEmailOnRequest} />
+          </Row>
         </Group>
 
         <Group title={t("profile.account")}>

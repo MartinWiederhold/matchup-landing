@@ -44,6 +44,7 @@ export interface Profile {
   push_messages: boolean; // default true
   push_reminders: boolean; // default true
   push_community: boolean; // default true
+  email_on_request: boolean; // default true — E-Mail bei neuer Verbindungsanfrage
   public_posts: boolean; // default true, Migration 018
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp

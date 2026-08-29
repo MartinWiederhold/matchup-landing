@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n";
 import { sportLabel } from "@/lib/utils/formatters";
 import { fetchDistances } from "@/lib/utils/distances";
 import { ensureMatch } from "@/lib/matchmaking";
+import { notifyConnect } from "@/lib/notifyConnect";
 import type { Sport, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -60,6 +61,7 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
       .from("likes").select("id")
       .eq("from_user_id", target.id).eq("to_user_id", profile.id).maybeSingle();
     if (reverse) await ensureMatch(profile.id, target.id);
+    else void notifyConnect(target.id); // E-Mail an den Angefragten (falls nicht abbestellt)
     refreshBadges();
   }
 

@@ -765,9 +765,17 @@ export default function MapView() {
       for (const [city, vs] of groups) {
         const lat = vs.reduce((s, v) => s + v.lat!, 0) / vs.length;
         const lng = vs.reduce((s, v) => s + v.lng!, 0) / vs.length;
+        // Klick auf den Stadt-Cluster: auf ALLE Anlagen dieser Stadt einpassen
+        // (flyToBounds) statt fix auf Zoom 13 zu springen. Sonst bleiben bei
+        // weit gestreuten Agglomerationen (Zürich ~13 km) nur die zentralen
+        // Marker im Bild — der Nutzer sah dadurch nur eine Handvoll statt aller.
+        const cb = L.latLngBounds(vs.map((v) => [v.lat as number, v.lng as number] as [number, number]));
         L.marker([lat, lng], { icon: clusterIcon(city, vs.length) })
           .addTo(layer)
-          .on("click", () => map.flyTo([lat, lng], 13, { duration: 0.8 }));
+          .on("click", () => {
+            if (vs.length === 1) map.flyTo([lat, lng], 15, { duration: 0.7 });
+            else map.flyToBounds(cb, { padding: [60, 60], maxZoom: 15, duration: 0.8 });
+          });
       }
     } else {
       for (const v of inView) {
