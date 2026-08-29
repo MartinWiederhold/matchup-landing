@@ -56,13 +56,30 @@ const SVC_UNIT: Record<string, { de: string; en: string }> = {
   hour: { de: "/Std.", en: "/hr" }, session: { de: "/Session", en: "/session" },
   stringing: { de: "/Besp.", en: "/string" }, week: { de: "/Wo.", en: "/wk" }, year: { de: "/Jahr", en: "/yr" },
 };
-function serviceMarkerIcon(p: ServiceProvider, locale: string): L.DivIcon {
-  const price = p.price_from != null ? `${p.currency ?? ""} ${p.price_from}` : (SVC_CAT_LABEL[p.category] ? svcCatLabel(p.category, locale) : "Service");
+// Randfarbe je Anbieter-Kategorie (analog zur Sportfarbe bei Clubs).
+const SVC_COLOR: Record<string, string> = {
+  coach: "#4b3bf3", hitting: "#35b96a", stringer: "#f26b3a", physio: "#2e93f0",
+  sc: "#9b5de5", mental: "#e8930b", nutrition: "#16a34a", tour_companion: "#0891b2",
+};
+// Website → Favicon (wie bei den Verzeichnis-Seeds). Fallback später auf Matchup-Icon.
+function svcFavicon(website?: string | null): string | null {
+  if (!website) return null;
+  try { return `https://icons.duckduckgo.com/ip3/${new URL(website).host}.ico`; } catch { return null; }
+}
+// Anbieter-Marker GENAU wie Club-Marker: weißer Kreis mit Logo + farbigem Rand.
+// Bildquelle: eigenes Logo/Foto (image_url) → Website-Favicon → Matchup-Icon.
+function serviceMarkerIcon(p: ServiceProvider, active: boolean): L.DivIcon {
+  const color = SVC_COLOR[p.category] ?? "#4b3bf3";
+  const src = p.image_url || svcFavicon(p.website) || "/icon-192.png";
+  const shadow = active
+    ? "box-shadow:0 0 0 4px rgba(75,59,243,.30),0 6px 16px rgba(0,0,0,.28);"
+    : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
+  const scale = active ? "transform:scale(1.22);" : "";
   return L.divIcon({
-    className: "mu-fade",
-    iconSize: [1, 1],
-    iconAnchor: [0, 0],
-    html: `<div style="transform:translate(-50%,-100%);white-space:nowrap;display:inline-flex;align-items:center;gap:4px;background:#4b3bf3;color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:9999px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.25);">${price}</div>`,
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;"><img src="${src}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-192.png';" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;" /></div>`,
   });
 }
 
@@ -903,11 +920,11 @@ export default function MapView() {
     layer.clearLayers();
     for (const p of discProviders) {
       if (p.latitude == null || p.longitude == null) continue;
-      L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p, locale), keyboard: false })
+      L.marker([p.latitude, p.longitude], { icon: serviceMarkerIcon(p, selProvider?.id === p.id), keyboard: false })
         .addTo(layer)
         .on("click", () => { setSelProvider(p); map.flyTo([p.latitude!, p.longitude!], 14, { duration: 0.6 }); });
     }
-  }, [ready, tab, discCat, discProviders, locale]);
+  }, [ready, tab, discCat, discProviders, selProvider]);
 
   // Route beim Ändern des Plans/Startpunkts einpassen
   useEffect(() => {
@@ -1282,16 +1299,13 @@ export default function MapView() {
 function SvcCard({ p, onFly, detailed, locale }: { p: ServiceProvider; onFly?: () => void; detailed?: boolean; locale: string }) {
   const tt = (de: string, en: string) => (locale === "de" ? de : en);
   const [req, setReq] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
+  // Bildquelle wie beim Marker: eigenes Logo/Foto → Website-Favicon → Matchup-Icon.
+  const [imgSrc, setImgSrc] = useState(p.image_url || svcFavicon(p.website) || "/icon-192.png");
   return (
     <div className="rounded-2xl border border-neutral-200 p-3">
       <button type="button" onClick={onFly} className="flex w-full gap-3 text-left" disabled={!onFly}>
-        {p.image_url && imgOk ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image_url} alt="" loading="lazy" onError={() => setImgOk(false)} className={`${detailed ? "h-16 w-16" : "h-14 w-14"} shrink-0 rounded-xl bg-neutral-100 object-contain`} />
-        ) : (
-          <span className={`${detailed ? "h-16 w-16" : "h-14 w-14"} flex shrink-0 items-center justify-center rounded-xl bg-matchup/10 text-lg font-bold text-matchup`}>{p.name[0]}</span>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imgSrc} alt="" loading="lazy" onError={() => setImgSrc("/icon-192.png")} className={`${detailed ? "h-16 w-16" : "h-14 w-14"} shrink-0 rounded-xl bg-neutral-100 object-contain`} />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-[14px] font-bold text-neutral-900">{p.name}</span>
