@@ -93,13 +93,6 @@ function readTokens(el: HTMLElement | null): Tokens {
   };
 }
 
-function markerColorsFor(state: SeasonStopState, tokens: Tokens): { bg: string; fg: string; ring: string } {
-  if (state === "missed")  return { bg: tokens.danger,    fg: tokens.onAccent, ring: tokens.bg };
-  if (state === "current") return { bg: tokens.accent,    fg: tokens.onAccent, ring: tokens.bg };
-  if (state === "past")    return { bg: tokens.textFaint, fg: tokens.onAccent, ring: tokens.bg };
-  return { bg: tokens.text, fg: tokens.onAccent, ring: tokens.bg };
-}
-
 export default function SeasonMapView({
   stops,
   heightClass = "min-h-[260px] md:min-h-[380px]",
@@ -110,7 +103,7 @@ export default function SeasonMapView({
 }: SeasonMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Map<string, { marker: maplibregl.Marker; el: HTMLDivElement }>>(new Map());
+  const prevHlRef = useRef<string | null>(null); // zuletzt hervorgehobener Stop (feature-state)
   const clickRef = useRef(onMarkerClick);
   clickRef.current = onMarkerClick;
 
@@ -184,44 +177,121 @@ export default function SeasonMapView({
         }
       }
 
-      // Marker: Kategorie-Kürzel in Pille. Im Dark-Cockpit mit Akzent-Glow.
-      markersRef.current.clear();
-      for (const s of stops) {
-        const c = markerColorsFor(s.state, tokens);
-        const div = document.createElement("div");
-        div.setAttribute("data-stop-id", s.id);
+      // ── Turnier-Stops als geclusterte Quelle ────────────────────────
+      // Statt eines DOM-Markers je Stop eine native GeoJSON-Quelle mit
+      // MapLibres EINGEBAUTEM Clustering: bei geringem Zoom fallen nahe
+      // beieinanderliegende Stops zu EINEM Kreis mit Anzahl zusammen (kein
+      // Aufhäufen mehr), erst beim Hineinzoomen trennen sie sich wieder.
+      map.addSource("season-stops", {
+        type: "geojson",
+        promoteId: "id",   // String-id als feature-id (für feature-state/Highlight)
+        cluster: true,
+        clusterRadius: 44, // px-Radius, ab dem nahe Stops zusammengefasst werden
+        clusterMaxZoom: 6, // ab Zoom 7 steht jeder Stop einzeln
+        data: {
+          type: "FeatureCollection",
+          features: stops.map((s) => ({
+            type: "Feature" as const,
+            id: s.id,
+            properties: { id: s.id, state: s.state, label: categoryAbbr(s.category) || "•" },
+            geometry: { type: "Point" as const, coordinates: [s.longitude, s.latitude] },
+          })),
+        },
+      });
 
-        const isDark = variant === "dark";
-        const isCurrent = s.state === "current";
-        const glow = isDark && isCurrent
-          ? `0 0 0 3px ${tokens.bg}, 0 0 22px ${tokens.accent}`
-          : isDark
-            ? `0 0 0 2px ${tokens.bg}, 0 1px 3px rgba(0,0,0,0.4)`
-            : "0 1px 3px rgba(23,21,18,0.25)";
+      // Cluster-Kreis (Akzent) — Radius wächst in Stufen mit der Anzahl.
+      map.addLayer({
+        id: "stops-cluster",
+        type: "circle",
+        source: "season-stops",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": tokens.accent,
+          "circle-opacity": 0.92,
+          "circle-radius": ["step", ["get", "point_count"], 13, 5, 16, 12, 20],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": tokens.bg,
+        },
+      } as unknown as maplibregl.LayerSpecification);
+      // Anzahl im Cluster.
+      map.addLayer({
+        id: "stops-cluster-count",
+        type: "symbol",
+        source: "season-stops",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": 12,
+        },
+        paint: { "text-color": tokens.onAccent },
+      } as unknown as maplibregl.LayerSpecification);
 
-        div.style.cssText = [
-          "display:flex", "align-items:center", "justify-content:center",
-          "min-width:2.15rem", "height:1.7rem", "padding:0 0.4rem",
-          "border-radius:999px",
-          "font-size:11px", "font-weight:700", "letter-spacing:0.02em",
-          `background:${c.bg}`, `color:${c.fg}`,
-          `border:1px solid ${isDark ? "rgba(255,255,255,0.14)" : c.ring}`,
-          `box-shadow:${glow}`,
-          "cursor:pointer", "user-select:none",
-          "transition:transform 180ms cubic-bezier(0.22,1,0.36,1)",
-        ].join(";");
-        div.textContent = categoryAbbr(s.category) || "•";
-        div.setAttribute("aria-label", `${s.city}${s.category ? " · " + s.category : ""}`);
-        div.setAttribute("role", "button");
-        div.tabIndex = 0;
-        const handle = () => clickRef.current?.(s.id);
-        div.addEventListener("click", handle);
-        div.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); handle(); } });
+      // Einzelner Stop: KLEINER Punkt, Farbe nach Zustand. GENAU vier Farben,
+      // keine weiteren:
+      //   missed  → danger    (verpasster Meldeschluss)
+      //   current → accent    (nächster/aktueller Stop)
+      //   past    → textFaint (gedämpft neutral, bereits gespielt)
+      //   planned → text      (normales Neutral, Default)
+      // Hervorgehobener Stop (Hover/Auswahl) wächst per feature-state „hl".
+      map.addLayer({
+        id: "stops-point",
+        type: "circle",
+        source: "season-stops",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": ["match", ["get", "state"],
+            "missed", tokens.danger,
+            "current", tokens.accent,
+            "past", tokens.textFaint,
+            /* planned + Default */ tokens.text,
+          ],
+          "circle-radius": ["case", ["boolean", ["feature-state", "hl"], false], 8, 5],
+          "circle-stroke-width": ["case", ["boolean", ["feature-state", "hl"], false], 3, 1.5],
+          "circle-stroke-color": tokens.bg,
+        },
+      } as unknown as maplibregl.LayerSpecification);
 
-        const marker = new maplibregl.Marker({ element: div })
-          .setLngLat([s.longitude, s.latitude])
-          .addTo(map);
-        markersRef.current.set(s.id, { marker, el: div });
+      // Kleines Kategorie-Kürzel unter dem Punkt. Kollidierende Labels blendet
+      // MapLibre selbst aus — so bleibt die Karte auch dicht lesbar.
+      map.addLayer({
+        id: "stops-label",
+        type: "symbol",
+        source: "season-stops",
+        filter: ["!", ["has", "point_count"]],
+        layout: {
+          "text-field": ["get", "label"],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": 10,
+          "text-offset": [0, 1.1],
+          "text-anchor": "top",
+        },
+        paint: {
+          "text-color": tokens.text,
+          "text-halo-color": tokens.bg,
+          "text-halo-width": 1.5,
+        },
+      } as unknown as maplibregl.LayerSpecification);
+
+      // Klick auf Cluster → auf die Auflöse-Zoomstufe zoomen (Cluster öffnet sich).
+      map.on("click", "stops-cluster", (e) => {
+        const f = map.queryRenderedFeatures(e.point, { layers: ["stops-cluster"] })[0];
+        const cid = f?.properties?.cluster_id;
+        if (cid == null) return;
+        const src = map.getSource("season-stops") as maplibregl.GeoJSONSource;
+        src.getClusterExpansionZoom(cid).then((z) => {
+          const geo = f.geometry as unknown as { coordinates: [number, number] };
+          map.easeTo({ center: geo.coordinates, zoom: z, duration: 600 });
+        }).catch(() => {});
+      });
+      // Klick auf einzelnen Stop → Drawer der Aufrufer-Seite öffnen.
+      map.on("click", "stops-point", (e) => {
+        const id = e.features?.[0]?.properties?.id;
+        if (id != null) clickRef.current?.(String(id));
+      });
+      for (const lid of ["stops-cluster", "stops-point"]) {
+        map.on("mouseenter", lid, () => { map.getCanvas().style.cursor = "pointer"; });
+        map.on("mouseleave", lid, () => { map.getCanvas().style.cursor = ""; });
       }
 
       // Sanftes Auto-Fit — kein harter Sprung.
@@ -235,7 +305,6 @@ export default function SeasonMapView({
     });
 
     return () => {
-      markersRef.current.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -244,13 +313,18 @@ export default function SeasonMapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stops, variant, styleUrl]);
 
-  // Highlight-Wechsel ohne Karten-Rebuild: nur einen Marker skalieren + Glow.
+  // Highlight-Wechsel ohne Karten-Rebuild: nur den betroffenen Stop per
+  // feature-state „hl" markieren — der Circle-Layer vergrößert ihn dann.
   useEffect(() => {
-    for (const [id, { el }] of markersRef.current) {
-      const on = id === highlightId;
-      el.style.transform = on ? "scale(1.25)" : "scale(1)";
-      el.style.zIndex = on ? "10" : "1";
+    const map = mapRef.current;
+    if (!map || !map.getSource("season-stops")) return;
+    if (prevHlRef.current && prevHlRef.current !== highlightId) {
+      map.setFeatureState({ source: "season-stops", id: prevHlRef.current }, { hl: false });
     }
+    if (highlightId) {
+      map.setFeatureState({ source: "season-stops", id: highlightId }, { hl: true });
+    }
+    prevHlRef.current = highlightId ?? null;
   }, [highlightId]);
 
   return (

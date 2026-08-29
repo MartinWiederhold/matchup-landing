@@ -657,18 +657,20 @@ export default function HomeView() {
     : null;
 
   return (
-    <div className="t2-dark">
+    /* Helle, warme Overview — der frühere `.t2-dark`-Wrapper war die Ursache des
+       dunklen Screens; entfernt, damit die hellen .t2-root-Tokens greifen. */
+    <div>
       <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-8 sm:py-12">
         {/* ── 1. KOPF ──────────────────────────────────────────────── */}
         <header>
-          <p className="t2-fs-meta font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--t2-text-faint)" }}>
+          <p className="t2-fs-meta font-semibold tracking-[0.02em]" style={{ color: "var(--t2-text-faint)" }}>
             {t("tour.t2cpSeasonLabel")} · {seasonYear}
           </p>
           <h1 className="mt-2 t2-fs-h1 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
             {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName}.` : t("tour.t2cpHello") + "."}
           </h1>
           {profile?.ranking != null && (
-            <div className="mt-6 flex items-baseline gap-4">
+            <div className="mt-2 flex items-baseline gap-4">
               <p
                 className="t2-cockpit-hero t2-fs-display font-semibold tabular-nums tracking-[-0.04em]"
                 style={{ color: "var(--t2-accent)" }}
@@ -683,37 +685,38 @@ export default function HomeView() {
         </header>
 
         {/* ── 2. WAS DU ALS NÄCHSTES TUN MUSST — glühender Slot ────── */}
+        {/* Kompakte Handlungsbox — eine Zeile Höhe: Beschriftung + Titel (Frist) + Restzeit
+            links, Knopf rechts. Titel benennt die Frist, der Knopf die Handlung. */}
         {nextDeadline && nextActionCity && (
-          <section className="t2-cockpit-cta mt-10 rounded-[var(--t2-radius-md)] p-6 sm:p-8">
-            <p className="t2-fs-meta font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--t2-text-faint)" }}>
-              {t("tour.t2cpNextAction")}
-            </p>
-            <div className="mt-3 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0">
-                <p className="t2-fs-h1 font-medium tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
-                  {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
-                </p>
+          <section
+            className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[var(--t2-radius-md)] border p-4"
+            style={{ borderColor: "var(--t2-line-strong)", background: "var(--t2-accent-soft)" }}
+          >
+            <div className="min-w-0">
+              <p className="t2-fs-meta font-semibold tracking-[0.02em]" style={{ color: "var(--t2-text-soft)" }}>
+                {t("tour.t2cpNextAction")}
+              </p>
+              <p className="mt-0.5 t2-fs-h3 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+                {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
                 {nextEntryDeadlineMs != null && (
-                  <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
-                    {countdown(nextEntryDeadlineMs)}
-                  </p>
+                  <span className="ml-2 t2-fs-body-sm font-normal" style={{ color: "var(--t2-text-soft)" }}>· {countdown(nextEntryDeadlineMs)}</span>
                 )}
-              </div>
-              <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta shrink-0">
-                {t("tour.t2cpNextActionCTA", { name: nextActionCity })}<span aria-hidden>→</span>
-              </Link>
+              </p>
             </div>
+            <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta shrink-0">
+              {t("tour.t2cpNextActionCTA")}<span aria-hidden>→</span>
+            </Link>
           </section>
         )}
         {!nextDeadline && active.length > 0 && (
-          <section className="mt-10 rounded-[var(--t2-radius-md)] border p-6" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
+          <section className="mt-8 rounded-[var(--t2-radius-md)] border p-6" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
             <p className="t2-fs-h3 font-medium" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpNoAction")}</p>
             <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpNoActionHint")}</p>
           </section>
         )}
 
         {/* ── 3. KARTE — die Saison als Bühne ─────────────────────── */}
-        <section className="mt-10">
+        <section className="mt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpMapTitle")}
@@ -734,8 +737,8 @@ export default function HomeView() {
             <div className="mt-4">
               <SeasonMap
                 stops={mapStops}
-                variant="dark"
-                heightClass="min-h-[40vh] md:min-h-[55vh]"
+                variant="light"
+                heightClass="min-h-[38vh] md:min-h-[50vh]"
                 onMarkerClick={setSelectedStopId}
                 highlightId={hoveredStopId ?? selectedStopId}
               />
@@ -745,7 +748,7 @@ export default function HomeView() {
 
         {/* ── 4. ZEITACHSE ────────────────────────────────────────── */}
         {active.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-8">
             <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpTimelineTitle")}
             </h2>
@@ -764,7 +767,7 @@ export default function HomeView() {
 
         {/* ── 5. ZAHLEN AUF EINEN BLICK ───────────────────────────── */}
         {headerStats.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-8">
             <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpStatsTitle")}
             </h2>
@@ -785,7 +788,7 @@ export default function HomeView() {
         )}
 
         {/* ── 6. ZWEI SPALTEN — Fristen · Ausgaben ────────────────── */}
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
           {/* Fristen */}
           <section className="rounded-[var(--t2-radius-md)] border p-6"
             style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>

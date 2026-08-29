@@ -52,7 +52,7 @@ function LangSwitchRail() {
   const { locale, setLocale } = useLocale();
   const options: Locale[] = ["de", "en"];
   return (
-    <div className="ml-1 inline-flex items-center rounded-full bg-[var(--t2-on-accent)]/10 p-0.5 t2-fs-meta font-bold">
+    <div className="ml-1 inline-flex items-center rounded-full bg-[var(--t2-surface)] p-0.5 t2-fs-meta font-bold">
       {options.map((opt) => (
         <button
           key={opt}
@@ -60,7 +60,7 @@ function LangSwitchRail() {
           onClick={() => setLocale(opt)}
           aria-pressed={locale === opt}
           className={`rounded-full px-1.5 py-0.5 uppercase tracking-wide transition-colors ${
-            locale === opt ? "bg-[var(--t2-on-accent)] text-[color:var(--t2-accent)]" : "text-[var(--t2-on-accent)]/70 hover:text-[var(--t2-on-accent)]"
+            locale === opt ? "bg-[var(--t2-ink)] text-[var(--t2-on-accent)]" : "text-[var(--t2-muted)] hover:text-[var(--t2-ink)]"
           }`}
         >
           {opt}

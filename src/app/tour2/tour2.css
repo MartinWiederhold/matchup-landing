@@ -544,8 +544,11 @@ a.t2-card:hover, .t2-card--hover:hover {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: var(--t2-accent);
-  color: var(--t2-on-accent);
+  /* Ruhiger Neutralton, leicht vom Seitengrund abgesetzt — KEIN Akzent-Feld.
+     Der Akzent erscheint in der Sidebar nur noch als 3px-Aktiv-Balken (.is-on). */
+  background: var(--t2-surface-muted);
+  color: var(--t2-text-soft);
+  border-right: 1px solid var(--t2-line);
 }
 .t2-rail-desk { display: none; }
 @media (min-width: 768px) {
@@ -566,7 +569,7 @@ a.t2-card:hover, .t2-card--hover:hover {
   align-items: center;
   gap: 0.55rem;
   padding: 1.1rem 0.85rem 1rem;
-  color: var(--t2-on-accent);
+  color: var(--t2-text);
   text-decoration: none;
 }
 .t2-rail-mark {
@@ -574,7 +577,9 @@ a.t2-card:hover, .t2-card--hover:hover {
   place-items: center;
   width: 1.7rem;
   height: 1.7rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  /* Logo ohne farbigen Kasten — nur eine haarfeine neutrale Kante. */
+  border: 1.5px solid var(--t2-line-strong);
+  color: var(--t2-text);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -600,17 +605,19 @@ a.t2-card:hover, .t2-card--hover:hover {
   gap: 0.55rem;
   padding: 0.48rem 0.55rem;
   border-radius: var(--t2-radius-sm);
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--t2-text-soft);
   text-decoration: none;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-.t2-rail-item:hover { color: var(--t2-on-accent); background: rgba(255, 255, 255, 0.1); }
+.t2-rail-item:hover { color: var(--t2-text); background: var(--t2-surface); }
+/* Aktiver Eintrag: leicht abgesetzte Fläche + 3px-Balken links in der Akzentfarbe.
+   Keine gefüllte farbige Pille — der Akzent lebt nur im Balken. */
 .t2-rail-item.is-on {
-  color: var(--t2-on-accent);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 3px 0 0 var(--t2-on-accent);
+  color: var(--t2-text);
+  background: var(--t2-surface);
+  box-shadow: inset 3px 0 0 var(--t2-accent);
 }
 .t2-rail-label { min-width: 0; flex: 1; }
 .t2-rail-badge {
@@ -618,8 +625,9 @@ a.t2-card:hover, .t2-card--hover:hover {
   height: 1.15rem;
   padding: 0 0.28rem;
   border-radius: var(--t2-radius-full);
-  background: var(--t2-on-accent);
-  color: var(--t2-accent);
+  /* Neutraler Zähler — kein Akzent in der Sidebar außer dem Aktiv-Balken. */
+  background: var(--t2-text-soft);
+  color: var(--t2-surface);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.15rem;
@@ -627,13 +635,13 @@ a.t2-card:hover, .t2-card--hover:hover {
 }
 .t2-rail-foot {
   padding: 0.75rem 0.7rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid var(--t2-line);
 }
 .t2-rail-who {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--t2-on-accent);
+  color: var(--t2-text);
   text-decoration: none;
 }
 .t2-rail-avatar {
@@ -646,14 +654,15 @@ a.t2-card:hover, .t2-card--hover:hover {
 .t2-rail-avatar-fallback {
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--t2-surface-muted);
+  color: var(--t2-text);
   font-size: 11px;
   font-weight: 700;
 }
 .t2-rail-season {
   margin-top: 0.7rem;
   padding: 0.35rem 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--t2-line-strong);
   border-radius: var(--t2-radius-sm);
   font-size: 12px;
   font-weight: 600;
@@ -669,13 +678,13 @@ a.t2-card:hover, .t2-card--hover:hover {
   place-items: center;
   width: 1.85rem;
   height: 1.85rem;
-  color: var(--t2-on-accent);
+  color: var(--t2-text-soft);
   background: transparent;
   border: 0;
   border-radius: var(--t2-radius-sm);
   cursor: pointer;
 }
-.t2-rail-tool:hover { background: rgba(255, 255, 255, 0.14); }
+.t2-rail-tool:hover { background: var(--t2-surface); color: var(--t2-text); }
 .t2-rail-open {
   position: sticky;
   top: 0;
