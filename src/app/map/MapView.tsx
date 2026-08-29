@@ -1198,7 +1198,7 @@ export default function MapView() {
             </div>
             {tab === "discover" && (
               <>
-                <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 pl-12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 pl-12 pr-12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {discCatChips(true)}
                 </div>
                 {discCat === "courts" ? (
