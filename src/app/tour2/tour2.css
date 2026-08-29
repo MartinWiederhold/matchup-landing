@@ -5,31 +5,38 @@
 .t2-root {
   /* ── Schicht 1: Rohwerte ──────────────────────────────────────── */
   --t2-raw-warm-white:      #FFFFFF;
-  --t2-raw-paper:           #F7F6F3;   /* warmes Hell für Seitenhintergrund */
-  --t2-raw-paper-muted:     #F1F0EC;   /* gedämpfte Fläche */
-  --t2-raw-ink:             #171512;   /* warmes Fast-Schwarz */
-  --t2-raw-ink-muted:       #3D3A35;   /* warmer Sekundärtext */
-  --t2-raw-ink-soft:        #78736B;   /* Beschriftungen (4.7:1 auf --t2-bg) */
-  --t2-raw-ink-faint:       #6E6A62;   /* Metadaten (5.1:1 auf --t2-bg) — angehoben von #A8A29A (2.9:1) auf WCAG-AA für Uppercase-Labels */
-  --t2-raw-line:            rgba(23, 21, 18, 0.09);
-  --t2-raw-line-strong:     rgba(23, 21, 18, 0.16);
-  --t2-raw-accent:          #4b3bf3;   /* Matchup-Violett — unverändert */
-  --t2-raw-accent-hover:    #3b2cd9;
-  --t2-raw-accent-soft:     rgba(75, 59, 243, 0.10);
+  --t2-raw-paper:           #F4F5FB;   /* kühles Hell mit leichtem Violett-Bias */
+  --t2-raw-paper-muted:     #EDEEF7;   /* gedämpfte Fläche */
+  --t2-raw-ink:             #16152A;   /* tiefes Violett-Schwarz */
+  --t2-raw-ink-muted:       #3A3852;   /* Sekundärtext */
+  --t2-raw-ink-soft:        #5E5D74;   /* Beschriftungen (AA auf --t2-bg) */
+  --t2-raw-ink-faint:       #64637B;   /* Metadaten (≥4.5:1 auf --t2-bg für Uppercase-Labels) */
+  --t2-raw-line:            rgba(22, 21, 42, 0.08);
+  --t2-raw-line-strong:     rgba(22, 21, 42, 0.15);
+  --t2-raw-accent:          #5B4BF5;   /* Matchup-Violett — eine Spur heller/frischer */
+  --t2-raw-accent-hover:    #4938E0;
+  --t2-raw-accent-soft:     rgba(91, 75, 245, 0.10);
   --t2-raw-warn:            #B45309;
-  --t2-raw-warn-surface:    #FEF3C7;
-  --t2-raw-danger:          #B42318;
-  --t2-raw-danger-surface:  #FEE4E2;
-  --t2-raw-success:         #067647;
-  --t2-raw-success-surface: #DCFAE6;
-  --t2-raw-info:            #175CD3;   /* Blau — im warn/danger/success-Sättigungsbereich */
-  --t2-raw-info-surface:    #DBEAFE;
-  /* Diagramm-Palette: fünf Töne, warm-hell-tauglich, nicht grell. */
-  --t2-raw-chart-1:         #4B3BF3;   /* Akzent-Violett — Hauptdatenreihe */
-  --t2-raw-chart-2:         #0891B2;   /* Petrol/Teal */
-  --t2-raw-chart-3:         #B45309;   /* Warmes Bernstein */
-  --t2-raw-chart-4:         #78736B;   /* Warmes Mittelgrau */
-  --t2-raw-chart-5:         #E4DFD8;   /* Warmes Sehr-Hell (Rest/Untergrund) */
+  --t2-raw-warn-surface:    #FDF1DD;
+  --t2-raw-danger:          #D5342A;
+  --t2-raw-danger-surface:  #FCE7E5;
+  --t2-raw-success:         #0E8A46;
+  --t2-raw-success-surface: #E4F6EC;
+  --t2-raw-info:            #175CD3;   /* Blau — als Text AA-tauglich auf Hell */
+  --t2-raw-info-surface:    #E6F2FE;
+  /* Belag-Farben als Datenrollen — der verspielte, fachlich begründete Kern:
+     Sand/Hartplatz/Rasen/Halle bekommen je eine feste, fröhliche Farbe. Sie
+     erscheinen NUR in Datenkontexten (Chips, Marker, Charts), nie als Deko. */
+  --t2-raw-clay:            #F26B3A;   --t2-raw-clay-soft:   #FDEDE6;
+  --t2-raw-hard:            #2E93F0;   --t2-raw-hard-soft:   #E6F2FE;
+  --t2-raw-grass:           #35B96A;   --t2-raw-grass-soft:  #E4F6EC;
+  --t2-raw-indoor:          #9B5DE5;   --t2-raw-indoor-soft: #F1E9FC;
+  /* Diagramm-Palette: Aktion + vier Belag-Rollen — fröhlich, aber lesbar. */
+  --t2-raw-chart-1:         #5B4BF5;   /* Akzent-Violett — Hauptdatenreihe */
+  --t2-raw-chart-2:         #2E93F0;   /* Hartplatz-Blau */
+  --t2-raw-chart-3:         #F26B3A;   /* Sand-Orange */
+  --t2-raw-chart-4:         #35B96A;   /* Rasen-Grün */
+  --t2-raw-chart-5:         #9B5DE5;   /* Halle-Lila */
 
   /* ── Schicht 2: Bedeutung (die einzigen Namen im Code) ────────── */
   --t2-bg:              var(--t2-raw-paper);
@@ -57,6 +64,11 @@
   --t2-chart-4:         var(--t2-raw-chart-4);
   --t2-chart-5:         var(--t2-raw-chart-5);
   --t2-on-accent:       #fff;   /* Vordergrund auf accent-Fläche */
+  /* Belag-Datenrollen (Semantik-Namen für den Code). */
+  --t2-clay:            var(--t2-raw-clay);       --t2-clay-soft:   var(--t2-raw-clay-soft);
+  --t2-hard:            var(--t2-raw-hard);       --t2-hard-soft:   var(--t2-raw-hard-soft);
+  --t2-grass:           var(--t2-raw-grass);      --t2-grass-soft:  var(--t2-raw-grass-soft);
+  --t2-indoor:          var(--t2-raw-indoor);     --t2-indoor-soft: var(--t2-raw-indoor-soft);
 
   /* ── Schicht 3: Zustände ──────────────────────────────────────── */
   --t2-state-deadline-open:   var(--t2-text-soft);
@@ -79,21 +91,23 @@
   --t2-faint:         var(--t2-text-faint);
   --t2-accent-hover:  var(--t2-raw-accent-hover);
 
-  /* ── Radien: 3 Stufen ─────────────────────────────────────────── */
-  --t2-radius-sm:   8px;
-  --t2-radius-md:   12px;
+  /* ── Radien: großzügiger für den freundlichen Look ────────────── */
+  --t2-radius-sm:   10px;
+  --t2-radius-md:   16px;
+  --t2-radius-lg:   22px;
   --t2-radius-full: 999px;
-  /* Legacy: alter --t2-radius (16px) und -lg (22px) auf md ummapping. */
   --t2-radius:      var(--t2-radius-md);
-  --t2-radius-lg:   var(--t2-radius-md);
+  --t2-radius-card: 22px;   /* große Bento-Karten */
 
-  /* ── Schatten: nur noch bei Überlagerern ──────────────────────── */
-  --t2-shadow-overlay: 0 20px 50px -18px rgba(23, 21, 18, 0.6);
-  --t2-shadow-drawer:  12px 0 40px rgba(23, 21, 18, 0.25);
-  --t2-shadow-sheet:   0 -12px 40px rgba(23, 21, 18, 0.18);
-  /* Legacy — Karten-Hover-Ebene, nur noch bei .t2-card:hover benutzt */
-  --t2-shadow:        0 1px 2px rgba(23, 21, 18, 0.04), 0 12px 32px -12px rgba(23, 21, 18, 0.12);
-  --t2-shadow-hover:  0 2px 4px rgba(23, 21, 18, 0.05), 0 30px 60px -20px rgba(23, 21, 18, 0.22);
+  /* ── Motion: eine federnde Kurve als Signatur ─────────────────── */
+  --t2-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Schatten: weich, mit leichtem Akzent-Anteil (Soft-UI) ────── */
+  --t2-shadow-overlay: 0 20px 50px -18px rgba(22, 21, 42, 0.55);
+  --t2-shadow-drawer:  12px 0 40px rgba(22, 21, 42, 0.22);
+  --t2-shadow-sheet:   0 -12px 40px rgba(22, 21, 42, 0.16);
+  --t2-shadow:        0 1px 2px rgba(22, 21, 42, 0.05), 0 10px 26px -14px rgba(91, 75, 245, 0.18);
+  --t2-shadow-hover:  0 2px 4px rgba(22, 21, 42, 0.06), 0 22px 46px -18px rgba(91, 75, 245, 0.30);
 
   /* ── Typografie-Skala: 8 Stufen ───────────────────────────────── */
   --t2-text-display:  clamp(2.25rem, 5vw, 3.25rem);   /* Hero-Zahlen, tabular */
@@ -140,6 +154,13 @@ html:has(.t2-root) { scroll-behavior: smooth; }
 .t2-fs-micro    { font-size: var(--t2-text-micro);    line-height: 1.4; }
 .t2-fs-meta     { font-size: var(--t2-text-meta);     line-height: 1.4; }
 .t2-num         { font-variant-numeric: tabular-nums; }
+
+/* Runde, freundliche Display-Schrift (Nunito) für Überschriften und große
+   Zahlen. Body bleibt DM Sans. Fallback im var(): fehlt die Variable, erbt
+   die Regel DM Sans — nichts bricht. */
+.t2-fs-display, .t2-fs-h1, .t2-fs-h2, .t2-display, .t2-h2, .t2-date, .t2-display-font {
+  font-family: var(--font-t2-display, var(--font-dm-sans)), "Helvetica Neue", Arial, sans-serif;
+}
 
 /* Etappe 2a — Auflösung der .t2-kicker-Doppelrolle in zwei getrennte Klassen. */
 /* Rolle A: benennt einen Abschnitt oder eine Karte. Normalschreibung, ruhig. */
@@ -230,24 +251,29 @@ html:has(.t2-root) { scroll-behavior: smooth; }
 .t2-ulink:hover::after { transform: scaleX(1); transform-origin: left; }
 
 /* ---------- Buttons ---------- */
+/* Primär-Knopf: Akzentfläche mit taktilem „3D-Druck" (Duolingo-Muster) — ein
+   Farbbalken sitzt 3px unter dem Knopf, beim Drücken sinkt er ein. */
 .t2-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: var(--t2-ink);
+  background: var(--t2-accent);
   color: var(--t2-on-accent);
-  padding: 0.85rem 1.4rem;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border-radius: var(--t2-radius-full);
-  border: 1px solid var(--t2-ink);
-  transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1), background 0.2s ease, box-shadow 0.3s ease;
+  padding: 0.72rem 1.3rem;
+  font-family: var(--font-t2-display, var(--font-dm-sans)), sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  border-radius: var(--t2-radius-md);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--t2-accent-hover), var(--t2-shadow);
+  transition: transform 0.12s var(--t2-spring), box-shadow 0.12s ease, background 0.2s ease;
 }
-.t2-cta:hover { background: var(--t2-accent); border-color: var(--t2-accent); transform: translateY(-2px); box-shadow: 0 14px 30px -12px rgba(75, 59, 243, 0.55); }
-.t2-cta:active { transform: translateY(0); }
-.t2-cta:disabled { opacity: 0.35; transform: none; box-shadow: none; }
+.t2-cta:hover { background: var(--t2-accent-hover); }
+.t2-cta:active { transform: translateY(3px); box-shadow: 0 0 0 var(--t2-accent-hover), var(--t2-shadow); }
+.t2-cta:disabled { opacity: 0.4; transform: none; box-shadow: none; cursor: default; }
 
 .t2-ghost {
   display: inline-flex;
@@ -269,16 +295,16 @@ html:has(.t2-root) { scroll-behavior: smooth; }
 .t2-card {
   position: relative;
   border: 1px solid var(--t2-line);
-  border-radius: var(--t2-radius);
-  background: var(--t2-paper);
+  border-radius: var(--t2-radius-lg);
+  background: var(--t2-surface);
+  box-shadow: var(--t2-shadow);
   padding: 1.25rem 1.35rem 1.4rem;
-  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), box-shadow 0.5s cubic-bezier(0.19, 1, 0.22, 1), border-color 0.3s ease;
+  transition: transform 0.28s var(--t2-spring), box-shadow 0.28s ease, border-color 0.2s ease;
 }
 a.t2-card:hover, .t2-card--hover:hover {
-  /* Etappe 1: Karten-Hover ist ein Rahmen-Wechsel + subtiler Lift,
-     kein Schwebe-Schatten mehr. */
-  transform: translateY(-4px);
-  border-color: var(--t2-accent);
+  /* Sanfter Auftrieb mit weichem Akzent-Schatten (Soft-UI). */
+  transform: translateY(-3px);
+  box-shadow: var(--t2-shadow-hover);
 }
 .t2-media {
   position: relative;
@@ -396,9 +422,10 @@ a.t2-card:hover, .t2-card--hover:hover {
 
 .t2-panel {
   border: 1px solid var(--t2-line);
-  border-radius: var(--t2-radius);
+  border-radius: var(--t2-radius-lg);
   padding: 1.35rem 1.5rem;
-  background: var(--t2-paper);
+  background: var(--t2-surface);
+  box-shadow: var(--t2-shadow);
 }
 
 .t2-chip {
@@ -537,16 +564,16 @@ a.t2-card:hover, .t2-card--hover:hover {
   display: flex;
   height: 100dvh;
   overflow: hidden;
-  background: var(--t2-surface);
+  background: var(--t2-bg);
 }
 .t2-rail {
   width: 175px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  /* Ruhiger Neutralton, leicht vom Seitengrund abgesetzt — KEIN Akzent-Feld.
-     Der Akzent erscheint in der Sidebar nur noch als 3px-Aktiv-Balken (.is-on). */
-  background: var(--t2-surface-muted);
+  /* Weißes Panel auf getönter Seite (Bento-Look). Der aktive Eintrag ist eine
+     gefüllte Akzent-Pille (.is-on). */
+  background: var(--t2-surface);
   color: var(--t2-text-soft);
   border-right: 1px solid var(--t2-line);
 }
@@ -577,11 +604,13 @@ a.t2-card:hover, .t2-card--hover:hover {
   place-items: center;
   width: 1.7rem;
   height: 1.7rem;
-  /* Logo ohne farbigen Kasten — nur eine haarfeine neutrale Kante. */
-  border: 1.5px solid var(--t2-line-strong);
-  color: var(--t2-text);
+  /* Fröhliche Akzent-Kachel als Logo. */
+  border: none;
+  border-radius: var(--t2-radius-sm);
+  background: var(--t2-accent);
+  color: var(--t2-on-accent);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.04em;
 }
 .t2-rail-word {
@@ -611,13 +640,13 @@ a.t2-card:hover, .t2-card--hover:hover {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-.t2-rail-item:hover { color: var(--t2-text); background: var(--t2-surface); }
-/* Aktiver Eintrag: leicht abgesetzte Fläche + 3px-Balken links in der Akzentfarbe.
-   Keine gefüllte farbige Pille — der Akzent lebt nur im Balken. */
-.t2-rail-item.is-on {
-  color: var(--t2-text);
-  background: var(--t2-surface);
-  box-shadow: inset 3px 0 0 var(--t2-accent);
+.t2-rail-item:hover { color: var(--t2-text); background: var(--t2-surface-muted); }
+/* Aktiver Eintrag: gefüllte Akzent-Pille mit weichem Schatten (Prototyp-Look). */
+.t2-rail-item.is-on,
+.t2-rail-item.is-on:hover {
+  color: var(--t2-on-accent);
+  background: var(--t2-accent);
+  box-shadow: var(--t2-shadow);
 }
 .t2-rail-label { min-width: 0; flex: 1; }
 .t2-rail-badge {
@@ -625,9 +654,9 @@ a.t2-card:hover, .t2-card--hover:hover {
   height: 1.15rem;
   padding: 0 0.28rem;
   border-radius: var(--t2-radius-full);
-  /* Neutraler Zähler — kein Akzent in der Sidebar außer dem Aktiv-Balken. */
-  background: var(--t2-text-soft);
-  color: var(--t2-surface);
+  /* Fröhlicher Zähler in Sand-Orange. */
+  background: var(--t2-clay);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   line-height: 1.15rem;
@@ -704,7 +733,8 @@ a.t2-card:hover, .t2-card--hover:hover {
   min-width: 0;
   min-height: 0;
   flex: 1;
-  background: var(--t2-surface);
+  /* Getönte Seite, damit die weißen Bento-Karten mit Schatten „schweben". */
+  background: var(--t2-bg);
 }
 .t2-workspace-main {
   min-height: 0;
@@ -759,12 +789,13 @@ a.t2-card:hover, .t2-card--hover:hover {
 @media (min-width: 768px) {
   .t2-overview { padding: 1.35rem 1.75rem 2.25rem; }
 }
-/* Karten und Listen im Dashboard: nur Rahmen, kein Schatten (Etappe 1). */
+/* Karten und Listen im Dashboard: weiche Fläche mit leichtem Auftrieb. */
 .t2-dash-card {
   border: 1px solid var(--t2-line);
-  border-radius: var(--t2-radius-md);
-  padding: 0.95rem 1.05rem 1.05rem;
+  border-radius: var(--t2-radius-lg);
+  padding: 1.05rem 1.15rem 1.15rem;
   background: var(--t2-surface);
+  box-shadow: var(--t2-shadow);
 }
 .t2-season-chip {
   display: inline-block;
@@ -777,9 +808,10 @@ a.t2-card:hover, .t2-card--hover:hover {
 }
 .t2-kpi-card {
   border: 1px solid var(--t2-line);
-  border-radius: var(--t2-radius-md);
-  padding: 1rem 1.05rem 1.1rem;
+  border-radius: var(--t2-radius-lg);
+  padding: 1.05rem 1.1rem 1.15rem;
   background: var(--t2-surface);
+  box-shadow: var(--t2-shadow);
 }
 .t2-route-scroll {
   overflow-x: auto;
@@ -824,6 +856,95 @@ a.t2-card:hover, .t2-card--hover:hover {
   padding: 0.9rem 1rem;
   min-width: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* NEUE BAUSTEINE (Redesign) — farbenfroh, verspielt, mobil-first.          */
+/* Werden von der neuen Shell und dem Bento-Home (Etappe 1) genutzt.        */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+/* Bento-Grid: mobil 1 Spalte, ab sm zweispaltig — Hierarchie über Größe. */
+.t2-bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+@media (min-width: 640px) {
+  .t2-bento { grid-template-columns: repeat(2, 1fr); }
+  .t2-bento-2 { grid-column: span 2; }
+}
+
+/* Belag-Chip: weicher Farbgrund + kräftige Rollenfarbe. Die Rolle steckt in
+   der Modifier-Klasse, damit Farbe = Bedeutung bleibt. */
+.t2-surface-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.66rem;
+  border-radius: var(--t2-radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.t2-surface-chip.is-clay   { background: var(--t2-clay-soft);   color: var(--t2-clay); }
+.t2-surface-chip.is-hard   { background: var(--t2-hard-soft);   color: var(--t2-hard); }
+.t2-surface-chip.is-grass  { background: var(--t2-grass-soft);  color: var(--t2-grass); }
+.t2-surface-chip.is-indoor { background: var(--t2-indoor-soft); color: var(--t2-indoor); }
+.t2-surface-chip.is-accent { background: var(--t2-accent-soft); color: var(--t2-accent); }
+.t2-surface-chip.is-success{ background: var(--t2-success-surface); color: var(--t2-success); }
+.t2-surface-chip.is-warn   { background: var(--t2-warn-surface);    color: var(--t2-warn); }
+.t2-surface-chip.is-danger { background: var(--t2-danger-surface);  color: var(--t2-danger); }
+
+/* Sekundär-Knopf: weicher Akzentgrund, ohne 3D-Balken — ruhiger als .t2-cta. */
+.t2-btn-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--t2-accent-soft);
+  color: var(--t2-accent);
+  padding: 0.62rem 1.1rem;
+  font-family: var(--font-t2-display, var(--font-dm-sans)), sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--t2-radius-md);
+  cursor: pointer;
+  transition: transform 0.12s var(--t2-spring), background 0.2s ease;
+}
+.t2-btn-soft:hover { background: color-mix(in srgb, var(--t2-accent) 18%, transparent); }
+.t2-btn-soft:active { transform: translateY(2px); }
+
+/* Anfassbare Karte (Karte, die wie ein Knopf reagiert). */
+.t2-pressable { cursor: pointer; transition: transform 0.16s var(--t2-spring), box-shadow 0.16s ease; }
+.t2-pressable:hover { transform: translateY(-3px); box-shadow: var(--t2-shadow-hover); }
+.t2-pressable:active { transform: translateY(0); }
+
+/* Fortschrittsring-Rahmen: die eigentliche Grafik ist Inline-SVG in der
+   Komponente; hier nur die Zentrierung der Wert-Anzeige. */
+.t2-ring { position: relative; display: inline-grid; place-items: center; }
+.t2-ring > svg { transform: rotate(-90deg); }
+.t2-ring-center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+
+/* Streak-/Belohnungs-Zeile: warmer Grund, Flamme, ermutigender Text. */
+.t2-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--t2-warn-surface);
+  border-radius: var(--t2-radius-md);
+  padding: 0.7rem 0.85rem;
+}
+.t2-streak-flame { font-size: 1.15rem; line-height: 1; }
+
+/* Fröhliche Aktions-Karte (nächste Frist): Akzent-Verlauf statt Dark-Cockpit. */
+.t2-action-card {
+  background: linear-gradient(135deg, var(--t2-accent), var(--t2-accent-hover));
+  color: var(--t2-on-accent);
+  border: none;
+  box-shadow: var(--t2-shadow-hover);
+}
+.t2-action-card .t2-label { color: rgba(255, 255, 255, 0.75); }
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /* DARK-SCOPE — nur für die neue Overview (.t2-dark).                      */

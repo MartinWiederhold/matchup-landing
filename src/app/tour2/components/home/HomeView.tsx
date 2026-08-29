@@ -65,60 +65,75 @@ function groupEventsByPlan(evs: TourEntryEvent[]): Map<string, TourEntryEvent[]>
   return m;
 }
 
-function Kpi({ label, children, note, extra, compact }: { label: string; children: ReactNode; note?: ReactNode; extra?: ReactNode; compact?: boolean }) {
+// ── Präsentations-Bausteine für das Bento-Cockpit ──────────────────────
+// Fortschrittsring: gefüllter Kreisbogen (Akzent) über neutraler Spur.
+function ProgressRing({ pct, size = 104, stroke = 11, children }: { pct: number; size?: number; stroke?: number; children?: ReactNode }) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const off = circ * (1 - Math.max(0, Math.min(100, pct)) / 100);
+  return (
+    <div className="t2-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--t2-line-strong)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--t2-accent)" strokeWidth={stroke}
+          strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off}
+          style={{ transition: "stroke-dashoffset 900ms var(--t2-spring)" }}
+        />
+      </svg>
+      <div className="t2-ring-center">{children}</div>
+    </div>
+  );
+}
+
+// Sparkline: reale Zahlenreihe als Fläche + Linie mit betontem Endpunkt.
+function Sparkline({ series, color = "var(--t2-accent)", w = 220, h = 56 }: { series: number[]; color?: string; w?: number; h?: number }) {
+  if (series.length < 2) return null;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const span = max - min || 1;
+  const stepX = w / (series.length - 1);
+  const pts = series.map((v, i) => [i * stepX, h - 4 - ((v - min) / span) * (h - 10)] as const);
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const area = `${line} L${w},${h} L0,${h} Z`;
+  const last = pts[pts.length - 1];
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden className="block">
+      <defs>
+        <linearGradient id="t2-spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={color} stopOpacity="0.24" />
+          <stop offset="1" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#t2-spark-fill)" />
+      <path d={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={last[0]} cy={last[1]} r="3.2" fill={color} stroke="var(--t2-surface)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+// Kachel: Beschriftung + farbiges Icon + große Zahl + optionale Unterzeile.
+function StatTile({ tint, ink, icon, label, value, cap }: { tint: string; ink: string; icon: ReactNode; label: string; value: ReactNode; cap?: string }) {
   return (
     <div className="t2-dash-card">
-      <p className="t2-label">{label}</p>
-      <div className="mt-2 flex items-start justify-between gap-3">
-        <div className={compact ? "min-w-0 flex-1" : "t2-fs-display font-semibold tracking-[-0.03em] tabular-nums"}>{children}</div>
-        {extra}
+      <div className="flex items-center justify-between gap-2">
+        <p className="t2-label truncate">{label}</p>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[12px] t2-fs-body font-bold" style={{ background: tint, color: ink }} aria-hidden>{icon}</span>
       </div>
-      {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
+      <p className="mt-2 truncate t2-fs-h1 font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{value}</p>
+      {cap && <p className="mt-1 truncate t2-fs-micro" style={{ color: "var(--t2-text-soft)" }}>{cap}</p>}
     </div>
   );
 }
 
-function flagEmoji(cc: string): string {
-  const u = cc.toUpperCase();
-  if (!/^[A-Z]{2}$/.test(u)) return "";
-  return String.fromCodePoint(...[...u].map((c) => 127397 + c.charCodeAt(0)));
-}
-
-function Donut({ parts }: { parts: { n: number; color: string }[] }) {
-  const total = parts.reduce((s, p) => s + p.n, 0);
-  if (total <= 0) return <div className="h-12 w-12 rounded-full border border-[var(--t2-line)]" />;
-  let acc = 0;
-  const stops = parts.filter((p) => p.n > 0).map((p) => {
-    const a = (acc / total) * 100;
-    acc += p.n;
-    const b = (acc / total) * 100;
-    return `${p.color} ${a}% ${b}%`;
-  });
-  return (
-    <div className="relative h-12 w-12 shrink-0" aria-hidden>
-      <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${stops.join(",")})` }} />
-      <div className="absolute inset-[3.5px] rounded-full bg-[var(--t2-card)]" />
-    </div>
-  );
-}
-
-function DistBars({ items }: { items: { key: string; n: number; label: string }[] }) {
-  const max = Math.max(1, ...items.map((x) => x.n));
-  return (
-    <ul className="mt-3 space-y-2">
-      {items.map((x) => (
-        <li key={x.key}>
-          <div className="flex justify-between t2-fs-micro font-semibold">
-            <span>{x.label}</span>
-            <span className="tabular-nums text-[var(--t2-muted)]">{x.n}</span>
-          </div>
-          <div className="mt-1 h-1 bg-[var(--t2-surface)]">
-            <div className="h-1 bg-[var(--t2-ink)]" style={{ width: `${(x.n / max) * 100}%` }} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+// Belag-String → Rollen-Klasse (Farbe = Bedeutung).
+function surfaceChipClass(surface: string | null): string {
+  const s = (surface || "").toLowerCase();
+  if (s.includes("clay") || s.includes("sand")) return "is-clay";
+  if (s.includes("grass") || s.includes("rasen")) return "is-grass";
+  if (s.includes("carpet") || s.includes("indoor") || s.includes("halle") || s.includes("teppich")) return "is-indoor";
+  if (s.includes("hard")) return "is-hard";
+  return "is-accent";
 }
 
 export default function HomeView() {
@@ -292,6 +307,19 @@ export default function HomeView() {
   const pointsDelta = resultHistory.length ? pointsNow.countingTotal - pointsWeekAgo.countingTotal : null;
   const forecast = useMemo(() => pointsForecast(matchResults, todayISO), [matchResults, todayISO]);
   const nextDrop = forecast.schedule[0] ?? null;
+  // Reale Punkte-Zeitreihe für die Sparkline: countingTotal an sechs Monats-
+  // stichtagen bis heute plus der aktuelle Stand. Nutzt scorePoints (keine
+  // erfundenen Werte) — an jedem Stichtag zählen nur die bis dahin gültigen Ergebnisse.
+  const pointsSeries = useMemo(() => {
+    const base = new Date(nowMs);
+    const out: number[] = [];
+    for (let i = 5; i >= 1; i--) {
+      const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - i, 1));
+      out.push(scorePoints(matchResults, d.toISOString().slice(0, 10)).countingTotal);
+    }
+    out.push(pointsNow.countingTotal);
+    return out;
+  }, [matchResults, nowMs, pointsNow.countingTotal]);
 
   const nextDeadline = useMemo(() => {
     let best: { s: SeasonEntry; ms: number } | null = null;
@@ -656,69 +684,159 @@ export default function HomeView() {
     ? (displayCity(nextDeadline.tournament.city) || nextDeadline.tournament.name || t("tour.fieldMissing"))
     : null;
 
+  // ── Gamification-Kennzahlen aus ECHTEN Daten (nichts erfunden) ──────────
+  const plannedTotal = active.length;
+  const playedCount = active.filter((s) => s.tournament.tournament_monday < todayISO).length;
+  const seasonPct = plannedTotal ? Math.round((playedCount / plannedTotal) * 100) : 0;
+  const missedCount = missedEntryIds.size;   // verpasste Meldefristen (aus dem Action-Board)
+  const pointsTotal = pointsNow.countingTotal;
+  const nextSurfaceLabel = nextDeadline?.tournament.surface
+    ? (t(`tour.surface_${nextDeadline.tournament.surface}`).startsWith("tour.surface_")
+        ? nextDeadline.tournament.surface
+        : t(`tour.surface_${nextDeadline.tournament.surface}`))
+    : null;
+
   return (
     /* Helle, warme Overview — der frühere `.t2-dark`-Wrapper war die Ursache des
        dunklen Screens; entfernt, damit die hellen .t2-root-Tokens greifen. */
     <div>
       <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-8 sm:py-12">
-        {/* ── 1. KOPF ──────────────────────────────────────────────── */}
-        <header>
-          <p className="t2-fs-meta font-semibold tracking-[0.02em]" style={{ color: "var(--t2-text-faint)" }}>
-            {t("tour.t2cpSeasonLabel")} · {seasonYear}
-          </p>
-          <h1 className="mt-2 t2-fs-h1 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
-            {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName}.` : t("tour.t2cpHello") + "."}
-          </h1>
-          {profile?.ranking != null && (
-            <div className="mt-2 flex items-baseline gap-4">
-              <p
-                className="t2-cockpit-hero t2-fs-display font-semibold tabular-nums tracking-[-0.04em]"
-                style={{ color: "var(--t2-accent)" }}
-              >
-                #{profile.ranking}
+        {/* ── 1. HERO — Saison-Puls (Gruß, Fortschrittsring, Punkte, Streak) ── */}
+        <section className="t2-dash-card">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="t2-label">{t("tour.t2cpSeasonLabel")} · {seasonYear}</p>
+              <h1 className="mt-1 t2-fs-h1 font-bold" style={{ color: "var(--t2-text)" }}>
+                {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName} ` : `${t("tour.t2cpHello")} `}
+                <span aria-hidden>👋</span>
+              </h1>
+              <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
+                {t("tour.t2cpGreetSub", { year: seasonYear, n: plannedTotal })}
               </p>
-              <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
-                {t("tour.t2ovGreetRanking")}
-              </p>
+              {profile?.ranking != null && (
+                <span className="t2-surface-chip is-accent mt-3">#{profile.ranking} · {t("tour.t2ovGreetRanking")}</span>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-5">
+              <ProgressRing pct={seasonPct}>
+                <div>
+                  <div className="t2-fs-h2 font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{seasonPct}%</div>
+                  <div className="t2-label">{t("tour.t2cpRingLabel")}</div>
+                </div>
+              </ProgressRing>
+              <div>
+                <p className="t2-label">{t("tour.t2cpPointsLabel")}</p>
+                <p className="t2-fs-display font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{pointsTotal}</p>
+                {pointsDelta != null && pointsDelta !== 0 && (
+                  <span
+                    className="t2-surface-chip mt-1"
+                    style={{
+                      color: pointsDelta > 0 ? "var(--t2-success)" : "var(--t2-danger)",
+                      background: pointsDelta > 0 ? "var(--t2-success-surface)" : "var(--t2-danger-surface)",
+                    }}
+                  >
+                    {pointsDelta > 0 ? "▲" : "▼"} {Math.abs(pointsDelta)} · {t("tour.t2cpPointsSince")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Streak/Ermutigung an echter Metrik: keine verpasste Frist = Erfolg. */}
+          {plannedTotal > 0 && (
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <div className="t2-streak">
+                <span className="t2-streak-flame" aria-hidden>{missedCount === 0 ? "🔥" : "🎯"}</span>
+                <span className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-text)" }}>
+                  {missedCount === 0 ? t("tour.t2cpStreakClean") : t("tour.t2cpStreakMissed", { n: missedCount })}
+                </span>
+              </div>
+              <span className="t2-fs-micro" style={{ color: "var(--t2-text-soft)" }}>
+                {t("tour.t2cpProgressCaption", { played: playedCount, total: plannedTotal })}
+              </span>
             </div>
           )}
-        </header>
+        </section>
 
-        {/* ── 2. WAS DU ALS NÄCHSTES TUN MUSST — glühender Slot ────── */}
-        {/* Kompakte Handlungsbox — eine Zeile Höhe: Beschriftung + Titel (Frist) + Restzeit
-            links, Knopf rechts. Titel benennt die Frist, der Knopf die Handlung. */}
-        {nextDeadline && nextActionCity && (
-          <section
-            className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[var(--t2-radius-md)] border p-4"
-            style={{ borderColor: "var(--t2-line-strong)", background: "var(--t2-accent-soft)" }}
-          >
-            <div className="min-w-0">
-              <p className="t2-fs-meta font-semibold tracking-[0.02em]" style={{ color: "var(--t2-text-soft)" }}>
-                {t("tour.t2cpNextAction")}
-              </p>
-              <p className="mt-0.5 t2-fs-h3 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
-                {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
-                {nextEntryDeadlineMs != null && (
-                  <span className="ml-2 t2-fs-body-sm font-normal" style={{ color: "var(--t2-text-soft)" }}>· {countdown(nextEntryDeadlineMs)}</span>
-                )}
-              </p>
+        {/* ── 2. KACHELN — Kennzahlen mit Belag-/Rollenfarbe ──────── */}
+        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {active.length > 0 && (
+            <StatTile
+              tint="var(--t2-hard-soft)" ink="var(--t2-hard)" icon="🎾"
+              label={t("tour.t2ovGreetTournaments")} value={plannedTotal}
+              cap={t("tour.t2cpProgressCaption", { played: playedCount, total: plannedTotal })}
+            />
+          )}
+          {leftMinor != null && budget && (
+            <StatTile
+              tint="var(--t2-grass-soft)" ink="var(--t2-grass)" icon="€"
+              label={t("tour.t2ovGreetBudgetLeft")} value={money(leftMinor)}
+              cap={`${t("tour.t2ovBudgetTotal")} · ${money(budget.amount)}`}
+            />
+          )}
+          {nextStop && (
+            <StatTile
+              tint="var(--t2-clay-soft)" ink="var(--t2-clay)" icon="📍"
+              label={t("tour.t2ovGreetNextStop", { date: fmtDate(nextStop.tournament.tournament_monday) })}
+              value={displayCity(nextStop.tournament.city) || t("tour.fieldMissing")}
+            />
+          )}
+          {resultHistory.length > 0 && (
+            <div className="t2-dash-card">
+              <div className="flex items-center justify-between gap-2">
+                <p className="t2-label truncate">{t("tour.t2cpPointsLabel")}</p>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[12px] t2-fs-body font-bold" style={{ background: "var(--t2-accent-soft)", color: "var(--t2-accent)" }} aria-hidden>↑</span>
+              </div>
+              <p className="mt-2 t2-fs-h1 font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{pointsTotal}</p>
+              <div className="mt-1"><Sparkline series={pointsSeries} /></div>
             </div>
-            <Link href={tour2PlannerTournamentHref(nextDeadline.tournament.id)} className="t2-cta shrink-0">
-              {t("tour.t2cpNextActionCTA")}<span aria-hidden>→</span>
-            </Link>
-          </section>
-        )}
-        {!nextDeadline && active.length > 0 && (
-          <section className="mt-8 rounded-[var(--t2-radius-md)] border p-6" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
-            <p className="t2-fs-h3 font-medium" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpNoAction")}</p>
-            <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpNoActionHint")}</p>
-          </section>
-        )}
+          )}
+        </div>
 
-        {/* ── 3. KARTE — die Saison als Bühne ─────────────────────── */}
-        <section className="mt-8">
+        {/* ── 3. NÄCHSTE FRIST — fröhliche Aktionskarte (Akzent-Verlauf) ── */}
+        {nextDeadline && nextActionCity ? (
+          <section className="t2-dash-card t2-action-card mt-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="t2-label">{t("tour.t2cpNextAction")}</p>
+                <p className="mt-1 t2-fs-h2 font-bold" style={{ color: "#fff" }}>
+                  {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {nextEntryDeadlineMs != null && (
+                    <span className="t2-fs-body-sm font-semibold" style={{ color: "rgba(255,255,255,0.92)" }}>
+                      {countdown(nextEntryDeadlineMs)}
+                    </span>
+                  )}
+                  {nextSurfaceLabel && (
+                    <span className="t2-surface-chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}>{nextSurfaceLabel}</span>
+                  )}
+                  {nextDeadline.tournament.category && (
+                    <span className="t2-surface-chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}>{nextDeadline.tournament.category}</span>
+                  )}
+                </div>
+              </div>
+              <Link
+                href={tour2PlannerTournamentHref(nextDeadline.tournament.id)}
+                className="t2-cta shrink-0"
+                style={{ background: "#fff", color: "var(--t2-accent)", boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}
+              >
+                {t("tour.t2cpNextActionCTA")}<span aria-hidden>→</span>
+              </Link>
+            </div>
+          </section>
+        ) : active.length > 0 ? (
+          <section className="t2-dash-card mt-4">
+            <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpNoAction")}</p>
+            <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpNoActionHint")}</p>
+          </section>
+        ) : null}
+
+        {/* ── 4. KARTE — die Saison als Bühne ─────────────────────── */}
+        <section className="mt-4">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpMapTitle")}
             </h2>
             {active.length > 0 && (
@@ -726,10 +844,10 @@ export default function HomeView() {
             )}
           </div>
           {active.length === 0 ? (
-            <div className="mt-4 rounded-[var(--t2-radius-md)] border p-8" style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
-              <p className="t2-fs-h3 font-medium" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
-              <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
-              <Link href={T2_SEASON} className="t2-cta mt-6">
+            <div className="t2-dash-card mt-3">
+              <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
+              <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
+              <Link href={T2_SEASON} className="t2-cta mt-4">
                 {t("tour.t2cpEmptyRouteCTA")}<span aria-hidden>→</span>
               </Link>
             </div>
@@ -746,13 +864,13 @@ export default function HomeView() {
           )}
         </section>
 
-        {/* ── 4. ZEITACHSE ────────────────────────────────────────── */}
+        {/* ── 5. ZEITACHSE ────────────────────────────────────────── */}
         {active.length > 0 && (
-          <section className="mt-8">
-            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+          <section className="mt-4">
+            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpTimelineTitle")}
             </h2>
-            <div className="mt-4">
+            <div className="mt-3">
               <SeasonTimeline
                 stops={timelineStops}
                 todayISO={todayISO}
@@ -765,34 +883,23 @@ export default function HomeView() {
           </section>
         )}
 
-        {/* ── 5. ZAHLEN AUF EINEN BLICK ───────────────────────────── */}
-        {headerStats.length > 0 && (
-          <section className="mt-8">
-            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
-              {t("tour.t2cpStatsTitle")}
-            </h2>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {headerStats.map((s) => (
-                <div key={s.key} className="rounded-[var(--t2-radius-md)] border p-4"
-                  style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
-                  <dt className="t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
-                    {s.label}
-                  </dt>
-                  <dd className="mt-2 truncate t2-fs-h1 font-semibold tabular-nums tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
-                    {s.value}
-                  </dd>
-                </div>
+        {/* ── 6. BELÄGE — bunte Verteilung (Farbe = Belag) ────────── */}
+        {dists.surfItems.length > 0 && (
+          <section className="t2-dash-card mt-4">
+            <p className="t2-label">{t("tour.t2cpSurfacesTitle")}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {dists.surfItems.map((x) => (
+                <span key={x.key} className={`t2-surface-chip ${surfaceChipClass(x.key)}`}>{x.label} · {x.n}</span>
               ))}
-            </dl>
+            </div>
           </section>
         )}
 
-        {/* ── 6. ZWEI SPALTEN — Fristen · Ausgaben ────────────────── */}
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
+        {/* ── 7. ZWEI SPALTEN — Fristen · Ausgaben ────────────────── */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           {/* Fristen */}
-          <section className="rounded-[var(--t2-radius-md)] border p-6"
-            style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
-            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+          <section className="t2-dash-card">
+            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpDeadlinesTitle")}
             </h2>
             {board.actions.length === 0 ? (
@@ -810,9 +917,8 @@ export default function HomeView() {
           </section>
 
           {/* Ausgaben — Budget-Balken + Aufschlüsselung */}
-          <section className="rounded-[var(--t2-radius-md)] border p-6"
-            style={{ borderColor: "var(--t2-line)", background: "var(--t2-surface)" }}>
-            <h2 className="t2-fs-h2 font-medium tracking-[-0.01em]" style={{ color: "var(--t2-text)" }}>
+          <section className="t2-dash-card">
+            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
               {t("tour.t2cpCostsTitle")}
             </h2>
             {!budget ? (
@@ -858,7 +964,7 @@ export default function HomeView() {
                     style={{
                       width: `${Math.max(0, Math.min(1, (usedMinor ?? 0) / budget.amount)) * 100}%`,
                       background: (leftMinor ?? 0) < 0 ? "var(--t2-danger)" : "var(--t2-accent)",
-                      boxShadow: (leftMinor ?? 0) < 0 ? "none" : "var(--t2-accent-glow-sm)",
+                      boxShadow: "none",
                       transition: "width 240ms ease",
                     }}
                   />
