@@ -6,12 +6,12 @@
  * kein Rangverlauf, kein Geburtsdatum.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area from "@/app/tour2/components/Tour2Area";
+import Tour2Area, { T2Kpi } from "@/app/tour2/components/Tour2Area";
 import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { loadPlayerDocs } from "@/lib/tourPlayerMaster";
 import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
@@ -27,16 +27,6 @@ import PlayerMasterForm from "./PlayerMasterForm";
 import TravelDocsCard from "./TravelDocsCard";
 import { t2markArea } from "@/app/tour2/t2mark";
 import type { TourCostRates } from "@/lib/types";
-
-function Kpi({ label, children, note }: { label: string; children: ReactNode; note?: ReactNode }) {
-  return (
-    <div className="border-t border-[var(--t2-line)] py-4 md:border-t-0 md:border-l md:px-4 md:py-0 md:first:border-l-0 md:first:pl-0">
-      <p className="t2-label">{label}</p>
-      <div className="mt-2 t2-fs-display font-semibold tracking-[-0.03em] tabular-nums">{children}</div>
-      {note && <div className="mt-1.5 t2-fs-micro leading-relaxed text-[var(--t2-muted)]">{note}</div>}
-    </div>
-  );
-}
 
 export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 | 4 }) {
   const { user, loading: authLoading } = useAuth();
@@ -131,12 +121,16 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
   const ratesOk = costRatesComplete(rates ?? setup.rates);
 
   const kpis = (
-    <div className="grid gap-0 md:grid-cols-4">
-      <Kpi label={t("tour.plBudget")}>{setup.seasonBudget != null ? money(setup.seasonBudget) : "—"}</Kpi>
-      <Kpi label={t("tour.t2profRates")}>{ratesOk ? t("tour.t2profRatesReady") : t("tour.t2profRatesNeed")}</Kpi>
-      <Kpi label={t("tour.costsNights")}>{prefs.nights || "—"}</Kpi>
-      <Kpi label={t("tour.wsRemindersLabel")}>{reminderOn ? t("tour.t2profRemindOn") : t("tour.t2profRemindOff")}</Kpi>
-    </div>
+    <>
+      <T2Kpi label={t("tour.plBudget")}>{setup.seasonBudget != null ? money(setup.seasonBudget) : "—"}</T2Kpi>
+      <T2Kpi label={t("tour.t2profRates")} compact>
+        <span className="t2-fs-h3 font-bold" style={{ color: ratesOk ? "var(--t2-success)" : "var(--t2-warn)" }}>{ratesOk ? t("tour.t2profRatesReady") : t("tour.t2profRatesNeed")}</span>
+      </T2Kpi>
+      <T2Kpi label={t("tour.costsNights")}>{prefs.nights || "—"}</T2Kpi>
+      <T2Kpi label={t("tour.wsRemindersLabel")} compact>
+        <span className="t2-fs-h3 font-bold" style={{ color: reminderOn ? "var(--t2-success)" : "var(--t2-text-soft)" }}>{reminderOn ? t("tour.t2profRemindOn") : t("tour.t2profRemindOff")}</span>
+      </T2Kpi>
+    </>
   );
 
   const aside = (
@@ -149,8 +143,13 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
       {gaps.length > 0 && (
         <section>
           <h2 className="t2-section-title">{t("tour.t2profGaps")}</h2>
-          <ul className="mt-2 space-y-1 t2-fs-body-sm text-[var(--t2-muted)]">
-            {gaps.map((g) => <li key={g.kind}>{gapText(g)}</li>)}
+          <ul className="mt-2 space-y-1.5 t2-fs-body-sm text-[var(--t2-muted)]">
+            {gaps.map((g) => (
+              <li key={g.kind} className="flex items-start gap-2">
+                <span className="mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--t2-warn)" }} aria-hidden />
+                <span>{gapText(g)}</span>
+              </li>
+            ))}
           </ul>
         </section>
       )}
