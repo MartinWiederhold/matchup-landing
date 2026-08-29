@@ -1,46 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useT } from "@/lib/i18n";
-import { COMPETE_EARLY_ACCESS_OPEN } from "@/lib/tour";
-import WaitlistScreen from "../WaitlistScreen";
+import { useEffect } from "react";
 
 /**
- * Earth-/Weltkarte-Tab: noch nicht freigeschaltet → Vollbild-Warteliste.
- * Code 50805080 statt E-Mail → freischalten (localStorage) und weiter zur /map.
+ * Play-Modus „Welt"-Tab (Globus): öffnet direkt die Weltkarte (/map).
+ *
+ * Die frühere Vorstart-Warteliste entfällt — die Karte ist im Play-Modus für
+ * alle eingeloggten Nutzer freigegeben. EarthTab wird ausschließlich im
+ * Play-Modus gerendert (AppShell: `isTour ? <CompeteMap /> : <EarthTab />`),
+ * der Compete-Modus nutzt weiterhin die separat gegatete CompeteMap.
  */
 export default function EarthTab() {
-  const t = useT();
-
-  // Freischalt-Entscheidung SYNCHRON beim ersten Render treffen. Vorher wurde
-  // die Warteliste bedingungslos gerendert und erst im useEffect (nach dem
-  // Paint) auf /map umgeleitet — dadurch blitzte die Warteliste bei bereits
-  // freigeschalteten Nutzern für ~0,5 s auf. Der useState-Initializer läuft
-  // clientseitig beim Mount (EarthTab mountet erst nach Tab-Klick), das
-  // localStorage ist da verfügbar; try/catch fängt jeden Edge-Fall ab.
-  const [redirecting] = useState<boolean>(() => {
-    if (COMPETE_EARLY_ACCESS_OPEN) return true;
-    try { return localStorage.getItem("mu_earth_unlocked") === "1"; } catch { return false; }
-  });
-
   useEffect(() => {
-    if (redirecting) window.location.href = "/map";
-  }, [redirecting]);
+    window.location.href = "/map";
+  }, []);
 
-  // Während der Weiterleitung KEIN Warteliste-Flackern — nur ein neutraler,
-  // blockierender Platzhalter im App-Hintergrund, bis /map lädt.
-  if (redirecting) {
-    return <div className="min-h-[100dvh] bg-black" aria-hidden />;
-  }
-
-  return (
-    <WaitlistScreen
-      feature={t("app.earthFeature")}
-      featureKey="Earth"
-      onUnlock={() => {
-        try { localStorage.setItem("mu_earth_unlocked", "1"); } catch { /* ignore */ }
-        window.location.href = "/map";
-      }}
-    />
-  );
+  // Neutraler Platzhalter im App-Hintergrund während der Weiterleitung — keine
+  // Warteliste mehr.
+  return <div className="min-h-[100dvh] bg-black" aria-hidden />;
 }
