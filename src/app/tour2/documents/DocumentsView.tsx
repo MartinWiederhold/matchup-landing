@@ -64,6 +64,15 @@ export default function DocumentsView() {
 
   const fmtDate = (iso: string) => new Intl.DateTimeFormat(loc, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(iso + "T00:00:00Z"));
   const countryName = (c: string | null) => (c && !t(`tour.country.${c}`).startsWith("tour.country.") ? t(`tour.country.${c}`) : (c ?? ""));
+  // Dringlichkeitsfarbe nach Ablaufdatum (Farbe = Bedeutung): vergangen=Gefahr,
+  // innerhalb 60 Tagen=Warnung, sonst=OK.
+  const expiryColor = (until: string | null): string => {
+    if (!until) return "var(--t2-text-faint)";
+    const days = Math.ceil((Date.parse(until + "T00:00:00Z") - Date.parse(todayISO + "T00:00:00Z")) / DAY);
+    if (days < 0) return "var(--t2-danger)";
+    if (days <= 60) return "var(--t2-warn)";
+    return "var(--t2-success)";
+  };
 
   const nextTrip = useMemo(() => {
     const upcoming = [...season.filter((s) => !s.tournamentInactive && s.tournament.tournament_monday >= todayISO)]
@@ -161,11 +170,17 @@ export default function DocumentsView() {
       <T2AsideBlock title={t("tour.t2docCheck")}>
         <ul className="space-y-3">
           <li>
-            <p className="font-semibold">{passOk ? "✓ " : "○ "}{t("tour.t2docCheckPass")}</p>
+            <p className="font-semibold">
+              <span style={{ color: passOk ? "var(--t2-success)" : "var(--t2-text-faint)" }}>{passOk ? "✓" : "○"}</span> {t("tour.t2docCheckPass")}
+            </p>
             <p className="mt-0.5 t2-fs-micro text-[var(--t2-muted)]">{t("tour.t2docCheckPassHint")}</p>
           </li>
-          <li className="font-semibold">{visaOk ? "✓ " : "○ "}{t("tour.t2docCheckVisa")}</li>
-          <li className="font-semibold">{insOk ? "✓ " : "○ "}{t("tour.t2docCheckIns")}</li>
+          <li className="font-semibold">
+            <span style={{ color: visaOk ? "var(--t2-success)" : "var(--t2-text-faint)" }}>{visaOk ? "✓" : "○"}</span> {t("tour.t2docCheckVisa")}
+          </li>
+          <li className="font-semibold">
+            <span style={{ color: insOk ? "var(--t2-success)" : "var(--t2-text-faint)" }}>{insOk ? "✓" : "○"}</span> {t("tour.t2docCheckIns")}
+          </li>
         </ul>
       </T2AsideBlock>
       <T2AsideBlock title={t("tour.t2docNext")}>
@@ -212,7 +227,10 @@ export default function DocumentsView() {
                     {[p.scope ? `${t("tour.t2docScope")} ${p.scope === "SCHENGEN" ? t("tour.tdSchengen") : countryName(p.scope) || p.scope}` : null, p.status ? t(`tour.tdStatus_${p.status}`) : null].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <span className="shrink-0 t2-fs-body-sm tabular-nums text-[var(--t2-muted)]">{p.until ? fmtDate(p.until) : "—"}</span>
+                <span className="flex shrink-0 items-center gap-2 t2-fs-body-sm tabular-nums text-[var(--t2-muted)]">
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: expiryColor(p.until) }} aria-hidden />
+                  {p.until ? fmtDate(p.until) : "—"}
+                </span>
               </li>
             ))}
           </ul>

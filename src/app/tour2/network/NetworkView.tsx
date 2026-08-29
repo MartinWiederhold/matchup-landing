@@ -139,11 +139,22 @@ export default function NetworkView() {
             {people.map((p) => {
               const href = p.contact ? contactHref(p.contact) : null;
               return (
-                <li key={`${p.tournamentId}-${p.user_id}`} className="flex items-baseline justify-between gap-3 py-3">
-                  <span>
-                    <span className="block t2-fs-body font-semibold">{p.name || t("tour.fieldMissing")}</span>
-                    <span className="mt-0.5 block t2-fs-micro text-[var(--t2-muted)]">
-                      {[p.city, p.nationality ? countryName(p.nationality) : null, p.rank_label, p.looking ? t("tour.wsSeekPartner") : null, p.looking_room ? t("tour.wsSeekRoom") : null].filter(Boolean).join(" · ")}
+                <li key={`${p.tournamentId}-${p.user_id}`} className="flex items-center justify-between gap-3 py-3">
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full t2-fs-body-sm font-bold" style={{ background: "var(--t2-accent-soft)", color: "var(--t2-accent)" }} aria-hidden>
+                      {(p.name || "?").slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate t2-fs-body font-semibold">{p.name || t("tour.fieldMissing")}</span>
+                      <span className="mt-0.5 block truncate t2-fs-micro text-[var(--t2-muted)]">
+                        {[p.city, p.nationality ? countryName(p.nationality) : null, p.rank_label].filter(Boolean).join(" · ")}
+                      </span>
+                      {(p.looking || p.looking_room) && (
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {p.looking && <span className="t2-surface-chip is-accent">{t("tour.wsSeekPartner")}</span>}
+                          {p.looking_room && <span className="t2-surface-chip is-grass">{t("tour.wsSeekRoom")}</span>}
+                        </span>
+                      )}
                     </span>
                   </span>
                   {href && (
