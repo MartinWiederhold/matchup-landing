@@ -28,6 +28,7 @@ import TournamentDetail from "../components/planner/TournamentDetail";
 import TournamentRow from "./TournamentRow";
 import WindowedList from "../components/WindowedList";
 import { t2markArea } from "../t2mark";
+import { burstConfetti } from "../confetti";
 
 const NIGHTS_KEY = "mu_tour_nights";
 const SURFACES = ["clay", "hard", "grass", "carpet"] as const;
@@ -206,6 +207,7 @@ export default function TournamentsView() {
     const next = new Set(seasonIds);
     if (inSeason) next.delete(id); else next.add(id);
     setSeasonIds(next);
+    if (!inSeason) burstConfetti(); // Belohnungs-Moment beim Aufnehmen in die Saison
     (inSeason ? removeFromSeason(id) : addToSeason(user.id, id))
       .then(() => reloadEntries())
       .catch(() => setSeasonIds((cur) => { const rb = new Set(cur); if (inSeason) rb.add(id); else rb.delete(id); return rb; }));

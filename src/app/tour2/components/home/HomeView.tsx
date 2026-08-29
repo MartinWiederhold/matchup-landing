@@ -136,6 +136,37 @@ function surfaceChipClass(surface: string | null): string {
   return "is-accent";
 }
 
+// Skeleton-Balken für den Ladezustand (statt Spinner) — hält den Layout-Rhythmus.
+function SkelBar({ w, h = "h-4" }: { w: string; h?: string }) {
+  return <div className={`${h} ${w} rounded-full`} style={{ background: "var(--t2-surface-muted)" }} />;
+}
+function HomeSkeleton() {
+  return (
+    <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-8 sm:py-9" aria-hidden>
+      <div className="t2-dash-card">
+        <div className="flex animate-pulse flex-col gap-3">
+          <SkelBar w="w-40" h="h-3" />
+          <SkelBar w="w-56" />
+          <SkelBar w="w-28" h="h-3" />
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="t2-dash-card">
+            <div className="flex animate-pulse flex-col gap-3">
+              <SkelBar w="w-16" h="h-3" />
+              <SkelBar w="w-20" h="h-6" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 t2-dash-card">
+        <div className="h-40 animate-pulse rounded-[var(--t2-radius-md)]" style={{ background: "var(--t2-surface-muted)" }} />
+      </div>
+    </div>
+  );
+}
+
 export default function HomeView() {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
@@ -593,7 +624,7 @@ export default function HomeView() {
 
   if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
   if (!user) return <TourLoginCard />;
-  if (state === "loading") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2dataLoading")}</p>;
+  if (state === "loading") return <HomeSkeleton />;
   if (state === "error") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const needsOnboarding = !!setup && !setup.complete && active.length === 0 && !forceHome;
