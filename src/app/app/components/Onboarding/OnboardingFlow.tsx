@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState, type ComponentType } from "react";
 import { useAuth } from "@/lib/auth";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/utils/imageCompress";
 import {
@@ -121,6 +121,7 @@ function cityFromResult(r: NominatimResult): string {
 export default function OnboardingFlow() {
   const { user, refreshProfile, signOut } = useAuth();
   const t = useT();
+  const { locale } = useLocale();
   // Fortschritt aus sessionStorage wiederherstellen → ein (versehentlicher) Remount
   // wirft den Nutzer nicht mehr auf Schritt 1 zurück. Fotos (File[]) sind nicht
   // serialisierbar und werden bewusst nicht persistiert.
@@ -436,7 +437,7 @@ export default function OnboardingFlow() {
               Authorization: `Bearer ${session.access_token}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ firstName: state.first_name }),
+            body: JSON.stringify({ firstName: state.first_name, locale }),
           }).catch(() => {});
         }
       } catch {
