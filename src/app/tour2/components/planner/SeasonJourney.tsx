@@ -9,6 +9,16 @@ import { useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n";
 import { displayCity } from "@/domain/tour/displayCity";
 
+// Belag → Rollenfarbe (Farbe = Bedeutung). Fallback: neutrale Linie.
+function surfaceToken(surface: string | null): string {
+  const s = (surface || "").toLowerCase();
+  if (s.includes("clay") || s.includes("sand")) return "var(--t2-clay)";
+  if (s.includes("grass") || s.includes("rasen")) return "var(--t2-grass)";
+  if (s.includes("carpet") || s.includes("indoor") || s.includes("halle")) return "var(--t2-indoor)";
+  if (s.includes("hard")) return "var(--t2-hard)";
+  return "var(--t2-line-strong)";
+}
+
 export type JourneyLeg = {
   km: number | null;
   restDays: number;
@@ -25,6 +35,7 @@ export type JourneyStop = {
   date: string;
   month: string;
   category: string;
+  surface: string | null;
   pill: React.ReactNode;
   deadline: string | null;
   cost: string | null;
@@ -91,8 +102,11 @@ export default function SeasonJourney({
                 )}
               </div>
             )}
-            <div className={`flex items-start gap-2 border-l px-2 py-2 ${sel ? "border-[var(--t2-accent)]" : "border-transparent"}`}>
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center bg-[var(--t2-accent)] t2-fs-meta font-bold text-[var(--t2-on-accent)]">{s.order}</span>
+            <div
+              className="flex items-start gap-2 border-l-[3px] px-2 py-2"
+              style={{ borderLeftColor: sel ? "var(--t2-accent)" : surfaceToken(s.surface) }}
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--t2-accent)] t2-fs-meta font-bold text-[var(--t2-on-accent)]">{s.order}</span>
               <button type="button" onClick={() => onSelect(s.id)} className="min-w-0 flex-1 text-left">
                 <p className="truncate t2-fs-body font-semibold tracking-tight">{displayCity(s.city)}<span className="text-[var(--t2-muted)]">, {s.country}</span></p>
                 <p className="t2-fs-meta text-[var(--t2-muted)]">{s.date} · {s.category}</p>

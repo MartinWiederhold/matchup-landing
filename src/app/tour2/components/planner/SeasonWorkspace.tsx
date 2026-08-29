@@ -915,6 +915,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
       date: fmtDay(tt.tournament_monday),
       month: monthFmt.format(new Date(tt.tournament_monday + "T00:00:00Z")),
       category: tt.category || "—",
+      surface: tt.surface ?? null,
       pill: entryPill(tt),
       deadline,
       cost: costText,
