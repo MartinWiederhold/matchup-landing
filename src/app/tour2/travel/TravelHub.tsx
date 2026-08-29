@@ -29,6 +29,26 @@ import type { TourCostRates } from "@/lib/types";
 const NIGHTS_KEY = "mu_tour_nights";
 const DAY = 86_400_000;
 
+// Belag → Rollenfarbe (Farbe = Bedeutung).
+function surfaceToken(surface: string | null): string {
+  const s = (surface || "").toLowerCase();
+  if (s.includes("clay") || s.includes("sand")) return "var(--t2-clay)";
+  if (s.includes("grass") || s.includes("rasen")) return "var(--t2-grass)";
+  if (s.includes("carpet") || s.includes("indoor") || s.includes("halle")) return "var(--t2-indoor)";
+  if (s.includes("hard")) return "var(--t2-hard)";
+  return "var(--t2-line-strong)";
+}
+// Kostenart/Ausgabenkategorie → feste Rollenfarbe (Farbe = Bedeutung).
+function catColor(code: string): string {
+  const c = code.toLowerCase();
+  if (c.includes("arrival") || c.includes("travel") || c.includes("flight") || c.includes("transport")) return "var(--t2-hard)";
+  if (c.includes("lodg") || c.includes("hotel") || c.includes("accom")) return "var(--t2-indoor)";
+  if (c.includes("food") || c.includes("meal")) return "var(--t2-clay)";
+  if (c.includes("coach") || c.includes("train")) return "var(--t2-grass)";
+  if (c.includes("entry") || c.includes("fee")) return "var(--t2-accent)";
+  return "var(--t2-text-faint)";
+}
+
 export default function TravelHub() {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
@@ -221,7 +241,10 @@ export default function TravelHub() {
             <li>—</li>
           ) : (
             Object.entries(plannedByCode).map(([code, bag]) => (
-              <li key={code}>{t(`tour.costsItem_${code}`)} · {fmtBag(bag)}</li>
+              <li key={code} className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: catColor(code) }} aria-hidden />
+                <span>{t(`tour.costsItem_${code}`)} · {fmtBag(bag)}</span>
+              </li>
             ))
           )}
         </ul>
@@ -231,7 +254,10 @@ export default function TravelHub() {
             <li>—</li>
           ) : (
             Object.entries(recordedByCat).map(([cat, bag]) => (
-              <li key={cat}>{t(`tour.expCat_${cat}`)} · {fmtBag(bag)}</li>
+              <li key={cat} className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: catColor(cat) }} aria-hidden />
+                <span>{t(`tour.expCat_${cat}`)} · {fmtBag(bag)}</span>
+              </li>
             ))
           )}
         </ul>
@@ -286,7 +312,10 @@ export default function TravelHub() {
                   )}
                   <Link href={tour2PlannerTournamentHref(s.tournament.id)} className="t2-row group">
                     <span>
-                      <span className="t2-row-city block t2-fs-body font-semibold">{s.tournament.city || s.tournament.name}</span>
+                      <span className="t2-row-city block t2-fs-body font-semibold">
+                        <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ background: surfaceToken(s.tournament.surface) }} aria-hidden />
+                        {s.tournament.city || s.tournament.name}
+                      </span>
                       <span className="mt-0.5 block t2-fs-micro text-[var(--t2-muted)]">
                         {fmtDate(s.tournament.tournament_monday)} · {t(`tour.status_${s.status}`)}
                       </span>
