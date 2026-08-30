@@ -395,7 +395,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   // Kein Compete-Modus → kein Saison-Tab; einen offenen Saison-Tab auf Discover zurückholen.
   useEffect(() => { if (modeLoaded && !isCompete && tab !== "discover") setTab("discover"); }, [modeLoaded, isCompete, tab]);
   const [dark, setDark] = useState(false);
-  const tileRef = useRef<L.TileLayer | null>(null);
+  const tileRef = useRef<L.LayerGroup | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
@@ -735,10 +735,21 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
     const map = mapRef.current;
     if (!map || !ready) return;
     if (tileRef.current) map.removeLayer(tileRef.current);
-    const variant = dark ? "dark_all" : "light_all";
-    tileRef.current = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}{r}.png`, {
-      subdomains: "abcd", maxZoom: 20, attribution: "© OpenStreetMap · CARTO",
-    }).addTo(map);
+    // Esri Gray Canvas: schlüssellos + gedämpft, damit die Marker hervortreten.
+    // CARTOs schlüssellose Basemaps (basemaps.cartocdn.com) sind abgekündigt und liefern
+    // seither "API KEY REQUIRED"-Kacheln aus. Base = grauer Grund, Reference = Beschriftung
+    // (getrennte Ebene, transparent). maxNativeZoom 16, darüber skaliert Leaflet hoch.
+    const style = dark ? "Dark" : "Light";
+    const opts = { maxZoom: 19, maxNativeZoom: 16 } as const;
+    const base = L.tileLayer(
+      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+      { ...opts, attribution: "© Esri · © OpenStreetMap" },
+    );
+    const labels = L.tileLayer(
+      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+      opts,
+    );
+    tileRef.current = L.layerGroup([base, labels]).addTo(map);
     try { localStorage.setItem("mu-map-dark", dark ? "1" : "0"); } catch { /* ignore */ }
   }, [ready, dark]);
 
