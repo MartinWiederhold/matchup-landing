@@ -156,6 +156,8 @@ export interface Message {
   read_at: string | null; // Migration 007
   client_message_id: string | null; // Dedup-Key
   created_at: string;
+  reactions?: Record<string, string> | null; // { "<user_id>": "<emoji>" } — Reaktionen im 1:1-Chat
+  edited_at?: string | null; // gesetzt, wenn der Absender die Nachricht nachträglich geändert hat
 }
 
 // ============================================================

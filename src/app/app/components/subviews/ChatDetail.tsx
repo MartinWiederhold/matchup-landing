@@ -9,6 +9,9 @@ import { useAppNav } from "../appNav";
 import Avatar from "../shared/Avatar";
 import { SendIcon } from "../shared/icons";
 
+// Schnell-Reaktionen (Doppeltipp setzt ❤️, das Halte-Menü bietet alle an).
+const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
+
 export default function ChatDetail({ matchId }: { matchId: string }) {
   const t = useT();
   const { profile, openSubView, closeSubView } = useAppNav();
@@ -21,6 +24,11 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
   const [action, setAction] = useState<null | "unmatch" | "block" | "report">(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  // Nachricht bearbeiten (id) bzw. gedrückt-halten-Menü für eine Nachricht.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sheetMsg, setSheetMsg] = useState<Message | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pressTimer = useRef<number | undefined>(undefined);
 
   const REPORT_REASONS = [
     t("matches.reasonHarass"),
@@ -111,24 +119,35 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "web",
           table: "messages",
           filter: `match_id=eq.${matchId}`,
         },
         (payload) => {
-          const newMsg = payload.new as Message;
+          if (payload.eventType === "DELETE") {
+            const oldId = (payload.old as { id?: string }).id;
+            if (oldId) setMessages((prev) => prev.filter((m) => m.id !== oldId));
+            return;
+          }
+          const row = payload.new as Message;
+          if (payload.eventType === "UPDATE") {
+            // Bearbeitung/Reaktion/Lesestatus — Zeile an Ort und Stelle ersetzen.
+            setMessages((prev) => prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)));
+            return;
+          }
+          // INSERT
           setMessages((prev) => {
             if (
-              newMsg.client_message_id &&
-              prev.some((m) => m.client_message_id === newMsg.client_message_id)
+              row.client_message_id &&
+              prev.some((m) => m.client_message_id === row.client_message_id)
             )
               return prev.map((m) =>
-                m.client_message_id === newMsg.client_message_id ? newMsg : m,
+                m.client_message_id === row.client_message_id ? row : m,
               );
-            return [...prev, newMsg];
+            return [...prev, row];
           });
-          if (newMsg.sender_id !== profile.id) markAsRead();
+          if (row.sender_id !== profile.id) markAsRead();
         },
       )
       .on("broadcast", { event: "typing" }, ({ payload }) => {
@@ -166,28 +185,111 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
     }
   }
 
+  // Textfeld wächst mit dem Inhalt (mehrzeilig, bis max. ~140px, dann scrollt es).
+  function adjustHeight() {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+  }
+  function resetInputHeight() {
+    if (inputRef.current) inputRef.current.style.height = "auto";
+  }
+
   async function send() {
-    if (!text.trim()) return;
+    const body = text.trim();
+    if (!body) return;
+    // Bearbeitungs-Modus: bestehende eigene Nachricht ändern statt neue senden.
+    if (editingId) {
+      const id = editingId;
+      const now = new Date().toISOString();
+      setEditingId(null);
+      setText("");
+      resetInputHeight();
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, content: body, edited_at: now } : m)),
+      );
+      await supabase
+        .from("messages")
+        .update({ content: body, edited_at: now })
+        .eq("id", id)
+        .eq("sender_id", profile.id);
+      return;
+    }
     const clientId = crypto.randomUUID();
     const optimistic: Message = {
       id: clientId,
       match_id: matchId,
       sender_id: profile.id,
-      content: text.trim(),
+      content: body,
       is_read: false,
       client_message_id: clientId,
       created_at: new Date().toISOString(),
       delivered_at: null,
       read_at: null,
+      reactions: {},
+      edited_at: null,
     };
     setMessages((prev) => [...prev, optimistic]);
     setText("");
+    resetInputHeight();
     await supabase.from("messages").insert({
       match_id: matchId,
       sender_id: profile.id,
       content: optimistic.content,
       client_message_id: clientId,
     });
+  }
+
+  // Reaktion umschalten: eigener Eintrag im jsonb-Feld { userId: emoji }.
+  async function toggleReaction(m: Message, emoji: string) {
+    const next = { ...(m.reactions ?? {}) };
+    if (next[profile.id] === emoji) delete next[profile.id];
+    else next[profile.id] = emoji;
+    setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, reactions: next } : x)));
+    setSheetMsg(null);
+    await supabase.from("messages").update({ reactions: next }).eq("id", m.id);
+  }
+
+  // Eigene Nachricht bearbeiten: Inhalt ins Eingabefeld laden, Bearbeitungs-Modus an.
+  function startEdit(m: Message) {
+    setSheetMsg(null);
+    setEditingId(m.id);
+    setText(m.content);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      adjustHeight();
+    });
+  }
+
+  async function deleteMsg(m: Message) {
+    setSheetMsg(null);
+    if (!window.confirm(t("matches.msgDeleteConfirm"))) return;
+    setMessages((prev) => prev.filter((x) => x.id !== m.id));
+    if (editingId === m.id) {
+      setEditingId(null);
+      setText("");
+      resetInputHeight();
+    }
+    await supabase.from("messages").delete().eq("id", m.id).eq("sender_id", profile.id);
+  }
+
+  async function copyMsg(m: Message) {
+    setSheetMsg(null);
+    try {
+      await navigator.clipboard.writeText(m.content);
+    } catch {
+      /* Zwischenablage nicht verfügbar — still ignorieren */
+    }
+  }
+
+  // Gedrückt-halten (~480ms) öffnet das Aktionsmenü; Scrollen/Loslassen bricht ab.
+  function startPress(m: Message) {
+    window.clearTimeout(pressTimer.current);
+    pressTimer.current = window.setTimeout(() => setSheetMsg(m), 480);
+  }
+  function cancelPress() {
+    window.clearTimeout(pressTimer.current);
   }
 
   return (
@@ -377,23 +479,48 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
         {messages.map((m) => {
           const mine = m.sender_id === profile.id;
+          const reactions = Object.values(m.reactions ?? {});
           return (
             <div
               key={m.id}
               className={`flex ${mine ? "justify-end" : "justify-start"}`}
             >
-              <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                  mine
-                    ? "rounded-tr-sm bg-matchup text-white"
-                    : "rounded-tl-sm bg-black/[0.05] text-neutral-800"
-                }`}
-              >
-                {m.content}
-                {mine && (
-                  <span className="ml-2 text-[10px] opacity-70">
-                    {m.read_at ? "✓✓" : "✓"}
-                  </span>
+              <div className={`flex max-w-[78%] flex-col ${mine ? "items-end" : "items-start"}`}>
+                <div
+                  onPointerDown={() => startPress(m)}
+                  onPointerUp={cancelPress}
+                  onPointerLeave={cancelPress}
+                  onPointerMove={cancelPress}
+                  onPointerCancel={cancelPress}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDoubleClick={() => toggleReaction(m, "❤️")}
+                  className={`select-none whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${
+                    mine
+                      ? "rounded-tr-sm bg-matchup text-white"
+                      : "rounded-tl-sm bg-black/[0.05] text-neutral-800"
+                  }`}
+                >
+                  {m.content}
+                  {m.edited_at && (
+                    <span className="ml-2 text-[10px] opacity-60">{t("matches.msgEdited")}</span>
+                  )}
+                  {mine && (
+                    <span className="ml-2 text-[10px] opacity-70">
+                      {m.read_at ? "✓✓" : "✓"}
+                    </span>
+                  )}
+                </div>
+                {reactions.length > 0 && (
+                  <div className={`-mt-1.5 flex gap-0.5 ${mine ? "pr-2" : "pl-2"}`}>
+                    {reactions.map((emoji, i) => (
+                      <span
+                        key={i}
+                        className="rounded-full bg-white px-1.5 py-0.5 text-xs shadow-sm ring-1 ring-black/10"
+                      >
+                        {emoji}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -417,24 +544,119 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
       </div>
 
       {active && (
-        <div className="flex shrink-0 items-center gap-2 border-t border-black/10 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <input
-            value={text}
-            onChange={(e) => onType(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder={t("matches.messagePlaceholder")}
-            className="min-w-0 flex-1 rounded-full bg-neutral-100 px-4 py-2.5 text-base text-neutral-900 outline-none placeholder:text-neutral-400"
-          />
-          {text.trim() && (
-            <button
-              type="button"
-              onClick={send}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-matchup text-white"
-              aria-label={t("common.send")}
-            >
-              <SendIcon size={18} className="text-white" />
-            </button>
+        <div className="shrink-0 border-t border-black/10 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          {editingId && (
+            <div className="flex items-center justify-between px-2 pb-1.5 text-xs font-medium text-neutral-500">
+              <span className="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                {t("matches.msgEditingBanner")}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setText("");
+                  resetInputHeight();
+                }}
+                className="font-semibold text-neutral-500"
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
           )}
+          <div className="flex items-end gap-2">
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={text}
+              onChange={(e) => {
+                onType(e.target.value);
+                adjustHeight();
+              }}
+              onKeyDown={(e) => {
+                // Auf Zeigern mit grobem Raster (Touch) fügt Enter eine neue Zeile ein;
+                // am Desktop sendet Enter, Shift+Enter macht eine neue Zeile.
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !window.matchMedia("(pointer: coarse)").matches
+                ) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={t("matches.messagePlaceholder")}
+              className="min-w-0 flex-1 resize-none rounded-3xl bg-neutral-100 px-4 py-2.5 text-base leading-snug text-neutral-900 outline-none placeholder:text-neutral-400"
+              style={{ maxHeight: 140 }}
+            />
+            {text.trim() && (
+              <button
+                type="button"
+                onClick={send}
+                className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-matchup text-white"
+                aria-label={t("common.send")}
+              >
+                <SendIcon size={18} className="text-white" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {sheetMsg && (
+        <div
+          onClick={() => setSheetMsg(null)}
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-3xl bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-neutral-900 ring-1 ring-black/10 sm:rounded-3xl"
+          >
+            <div className="flex items-center justify-around gap-1 pb-1">
+              {REACTION_EMOJIS.map((emoji) => {
+                const on = sheetMsg.reactions?.[profile.id] === emoji;
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => toggleReaction(sheetMsg, emoji)}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full text-2xl transition-colors ${
+                      on ? "bg-matchup/15" : "hover:bg-black/5"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-1 space-y-1 border-t border-black/10 pt-2">
+              <button
+                type="button"
+                onClick={() => copyMsg(sheetMsg)}
+                className="block w-full rounded-xl px-4 py-3 text-left text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+              >
+                {t("matches.msgCopy")}
+              </button>
+              {sheetMsg.sender_id === profile.id && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(sheetMsg)}
+                    className="block w-full rounded-xl px-4 py-3 text-left text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+                  >
+                    {t("matches.msgEdit")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteMsg(sheetMsg)}
+                    className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    {t("matches.msgDelete")}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
