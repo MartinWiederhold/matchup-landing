@@ -46,6 +46,11 @@ function slamLogo(name: string): string | null {
   else return null;
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 }
+/** Kurzes Startdatum, z. B. „30. August" — für kommende Turniere ohne Live-Feed. */
+function fmtStartDe(iso: string): string {
+  const p = iso.split("-").map(Number);
+  return `${p[2]}. ${MON[(p[1] ?? 1) - 1]}`;
+}
 function fmtRange(a: string | null, b: string | null): string {
   if (!a || !b) return "";
   const da = new Date(a), db = new Date(b);
@@ -155,12 +160,40 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
   const t = data?.tournament;
   const liveAny = cats.some((c) => c.matches.some((m) => m.state === "in"));
 
+  // Fallback aus der DB: läuft oder kommt ein Grand Slam, den ESPN (noch) nicht als
+  // Live-Feed liefert (z. B. am Tag vor dem Start) → dann wenigstens Name + Start
+  // anzeigen ("US Open · Startet am 30. August"). Das Live-Aussehen bleibt unverändert.
+  const [dbSlam, setDbSlam] = useState<{ name: string; start: string; end: string; live: boolean } | null>(null);
+  useEffect(() => {
+    if (data?.tournament) { setDbSlam(null); return; } // ESPN hat ein Turnier → kein Fallback nötig
+    let alive = true;
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const sel = "name,start_date,end_date";
+      let live = true;
+      let { data: rows } = await supabase.from("tournaments").select(sel).eq("tier", "GS").lte("start_date", today).gte("end_date", today).limit(1);
+      if (!rows?.length) {
+        live = false;
+        const r = await supabase.from("tournaments").select(sel).eq("tier", "GS").gt("start_date", today).order("start_date").limit(1);
+        rows = r.data;
+      }
+      if (!alive) return;
+      const g = rows?.[0] as { name: string; start_date: string; end_date: string } | undefined;
+      setDbSlam(g ? { name: g.name, start: g.start_date, end: g.end_date, live } : null);
+    })();
+    return () => { alive = false; };
+  }, [data?.tournament]);
+
+  // Effektives Turnier fürs Kopf-Label: ESPN-Turnier, sonst der DB-Fallback.
+  const eff = t ?? (dbSlam ? { name: dbSlam.name, startDate: dbSlam.start, endDate: dbSlam.end } : null);
+  const effUpcoming = !t && !!dbSlam && !dbSlam.live; // kommt erst noch (kein Live-Feed)
+
   // Turnier-Logo automatisch: erst Slam-Fallback, dann echte Domain aus web.tournaments
   // (Namensabgleich) → Google-Favicon. Fällt bei Fehler auf das generische Icon zurück.
   const [logo, setLogo] = useState<string | null>(null);
   const [logoOk, setLogoOk] = useState(true);
   useEffect(() => {
-    const name = t?.name;
+    const name = eff?.name;
     setLogoOk(true);
     if (!name) { setLogo(null); return; }
     let alive = true;
@@ -172,7 +205,7 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
         if (url) { try { setLogo(`https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`); setLogoOk(true); } catch { /* ignore */ } }
       });
     return () => { alive = false; };
-  }, [t?.name]);
+  }, [eff?.name]);
 
   return (
     <div className={`mt-4 overflow-hidden rounded-[24px] ${cx.ring} ${cx.outer}`}>
@@ -190,8 +223,12 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-[19px] font-bold leading-tight text-neutral-900">{t?.name || "Grand Slam"}</h3>
-            {t?.startDate && <p className="text-[13px] text-neutral-500">{fmtRange(t.startDate, t.endDate)}</p>}
+            <h3 className="truncate text-[19px] font-bold leading-tight text-neutral-900">{eff?.name || "Grand Slam"}</h3>
+            {eff?.startDate && (
+              <p className="text-[13px] text-neutral-500">
+                {effUpcoming ? `Startet am ${fmtStartDe(eff.startDate)}` : fmtRange(eff.startDate, eff.endDate)}
+              </p>
+            )}
           </div>
           {liveAny && (
             <span className="flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-neutral-900">
@@ -248,7 +285,15 @@ export default function WimbledonWidget({ theme = "dark" }: { theme?: "dark" | "
         {/* Matches */}
         <div className={`divide-y ${cx.divide}`}>
           {status === "loading" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Lädt Live-Daten …</p>}
-          {status === "empty" && <p className={`py-8 text-center text-sm ${cx.empty}`}>Aktuell keine Daten im Feed.</p>}
+          {status === "empty" && (
+            <p className={`py-8 text-center text-sm ${cx.empty}`}>
+              {effUpcoming && dbSlam
+                ? `${dbSlam.name} startet am ${fmtStartDe(dbSlam.start)}. Ergebnisse erscheinen hier, sobald es losgeht.`
+                : dbSlam?.live
+                  ? "Ergebnisse erscheinen in Kürze."
+                  : "Aktuell keine Daten im Feed."}
+            </p>
+          )}
           {status === "ok" && shown.length === 0 && <p className={`py-8 text-center text-sm ${cx.empty}`}>Keine Partien an diesem Tag.</p>}
           {shown.map((m, i) => (
             <MatchRow key={i} m={m} cx={cx} />
