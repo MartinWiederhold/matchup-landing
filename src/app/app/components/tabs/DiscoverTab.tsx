@@ -8,7 +8,8 @@ import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 import Avatar from "../shared/Avatar";
-import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, PostComposerCard, LiveTennisCard } from "../home/HomeSections";
+import { SportGroups, NextGameCard, CommunityCard, NewsSection, SeedStoryRow, PostComposerCard } from "../home/HomeSections";
+import WimbledonWidget from "../../mockup/WimbledonWidget";
 import ModeToggle from "../home/ModeToggle";
 import TourHome from "../home/TourHome";
 import TourGate from "../home/TourGate";
@@ -241,9 +242,10 @@ export default function DiscoverTab() {
         {/* Beitrag verfassen (wie mockup2 Home) */}
         <PostComposerCard onCompose={() => setComposerOpen(true)} />
 
-        {/* Live/nächster Grand Slam — DB-getrieben: läuft ein GS → „live", sonst
-            automatisch der nächste. Tippen öffnet die Ergebnisse (ESPN-Livedaten). */}
-        <LiveTennisCard onOpen={() => openSubView({ type: "tennis-live" })} />
+        {/* Live im Profitennis — Google-Style-Widget mit Ergebnissen (wie mockup2) */}
+        <div className="mt-6 px-4">
+          <WimbledonWidget theme="light" />
+        </div>
 
         {/* Für dich — kuratierte Demo-Profile (Anzeige); „Finden" öffnet echte Suche */}
         <SeedStoryRow onFind={() => openSubView({ type: "select-profile" })} />
