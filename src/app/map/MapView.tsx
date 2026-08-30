@@ -365,6 +365,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const [query, setQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false); // mobiles Typ-Filter-Sheet
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
@@ -700,6 +701,8 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       ".leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:22px!important;font-weight:500!important;color:#1f2937!important;background:#fff!important;border:none!important;transition:background .15s}" +
       ".leaflet-control-zoom a:first-child{border-bottom:1px solid #f0f0f0!important}" +
       ".leaflet-control-zoom a:hover{background:#f6f6f7!important;color:#4b3bf3!important}" +
+      // Am Handy sind Zoom-Buttons überflüssig (Pinch-to-Zoom) und verdecken Marker.
+      "@media (max-width:767px){.leaflet-control-zoom{display:none!important}}" +
       // dezente Attribution ohne Flagge
       ".leaflet-control-attribution{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(4px);font-size:9px!important;color:#9ca3af!important;padding:1px 6px!important;border-radius:8px 0 0 0!important}" +
       ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}" +
@@ -1216,20 +1219,36 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
                 </div>
                 {discCat === "courts" ? (
                   <>
-                    <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                      <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
-                      <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
-                        className="h-11 w-full bg-transparent text-sm outline-none"
-                      />
-                      <span className="shrink-0 text-xs font-semibold text-neutral-400">{listSource.length}</span>
+                    {/* Suche + Filter-Knopf in einer Zeile (Typ/Kategorie steckt im Sheet) */}
+                    <div className="flex items-center gap-2">
+                      <div className="pointer-events-auto flex flex-1 items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                        <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+                        <input
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
+                          className="h-11 w-full min-w-0 bg-transparent text-sm outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFilterOpen(true)}
+                        aria-label={tt("Filter", "Filters")}
+                        className="pointer-events-auto relative flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-white/95 px-4 text-sm font-semibold text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+                        {tt("Filter", "Filters")}
+                        {catFilter && <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-matchup text-[10px] font-bold text-white">1</span>}
+                      </button>
                     </div>
-                    <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      {sportChips(true)}
-                      <span className="shrink-0 self-center text-neutral-300">·</span>
-                      {catChips(true)}
+                    {/* Sport-Chips + beschriftete Ergebniszahl */}
+                    <div className="flex items-center gap-2">
+                      <div className="pointer-events-auto flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {sportChips(true)}
+                      </div>
+                      <span className="pointer-events-none shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-neutral-500 shadow-sm ring-1 ring-neutral-200 backdrop-blur">
+                        {listSource.length} {tt("Orte", "places")}
+                      </span>
                     </div>
                   </>
                 ) : (
@@ -1239,6 +1258,37 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {/* Mobile: Typ-Filter als Bottom-Sheet (aus dem Filter-Knopf) */}
+        {filterOpen && tab === "discover" && discCat === "courts" && (
+          <div
+            onClick={() => setFilterOpen(false)}
+            className="absolute inset-0 z-[610] flex items-end bg-black/40 backdrop-blur-sm md:hidden"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mu-sheet w-full rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5"
+            >
+              <div className="mb-3 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-base font-bold tracking-tight">{tt("Typ", "Type")}</h3>
+                {catFilter && (
+                  <button type="button" onClick={() => setCatFilter(null)} className="text-sm font-semibold text-matchup">
+                    {tt("Zurücksetzen", "Reset")}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">{catChips(true)}</div>
+              <button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="mt-5 w-full rounded-full bg-matchup py-3 text-sm font-bold text-white"
+              >
+                {tt("Fertig", "Done")}
+              </button>
+            </div>
           </div>
         )}
 
