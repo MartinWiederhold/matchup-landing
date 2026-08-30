@@ -63,7 +63,7 @@ export async function GET(req: Request) {
   type Cand = { userId: string; tour: TourRow; kind: ReminderKind };
   const cands: Cand[] = [];
   for (const p of planRows) {
-    if (settingsByUser.get(p.user_id)?.enabled === false) continue; // abbestellt; fehlende Zeile = an (Vorgabe)
+    if (settingsByUser.get(p.user_id)?.enabled !== true) continue; // Opt-in: nur senden, wenn der Nutzer die Fristen-Erinnerungen ausdrücklich aktiviert hat (fehlende Zeile = aus)
     const t = tourById.get(p.tournament_id);
     if (!t) continue;
     const dl = tourDeadlines(new Date(t.tournament_monday + "T00:00:00Z"), t.series, t.category);
