@@ -15,9 +15,17 @@ import TourProfileTab from "./tabs/TourProfileTab";
 import CompeteInbox from "./tabs/CompeteInbox";
 import CompeteMap from "./tabs/CompeteMap";
 import CompeteRanking from "./tabs/CompeteRanking";
-import EarthTab from "./tabs/EarthTab";
+import dynamic from "next/dynamic";
+import AppLoader from "./AppLoader";
 import SubViewRenderer from "./SubViewRenderer";
 import TabBar, { type TabDef } from "./TabBar";
+
+// Weltkarte (Play) als eingebetteter Tab — nur im Browser (Leaflet, kein SSR),
+// mit weißem Tennisball-Loader statt schwarzem „Lädt…"-Screen.
+const MapEmbed = dynamic(() => import("@/app/map/MapView"), {
+  ssr: false,
+  loading: () => <AppLoader label="Karte lädt …" />,
+});
 
 // Design wie /app/mockup2: home · chat · earth · stats · people.
 const TAB_DEFS: { key: TabKey; labelKey: string; icon: string }[] = [
@@ -326,11 +334,23 @@ export default function AppShell({ profile }: { profile: Profile }) {
             {/* Compete: Home · Inbox · Map(Mitte) · Trophy · Profil.
                 Play: Discover · Matches · Earth · Games · Profil. */}
             {activeTab === "discover" && <DiscoverTab />}
-            {activeTab === "earth" && (isTour ? <CompeteMap /> : <EarthTab />)}
+            {activeTab === "earth" && isTour && <CompeteMap />}
             {activeTab === "matches" && (isTour ? <CompeteInbox /> : <MatchesTab />)}
             {activeTab === "games" && (isTour ? <CompeteRanking /> : <GamesTab />)}
             {activeTab === "profile" && (isTour ? <TourProfileTab /> : <ProfileTab />)}
           </div>
+
+          {/* Play-Weltkarte: eingebettet, füllt den Bereich ÜBER der Tab-Leiste
+              (bottom lässt Platz für die Leiste), damit diese sichtbar bleibt.
+              z-0 kapselt die hohen Map-Z-Indizes → die Tab-Leiste (z-30) bleibt oben. */}
+          {activeTab === "earth" && !isTour && (
+            <div
+              className="absolute inset-x-0 top-0 z-0 overflow-hidden bg-white"
+              style={{ bottom: "calc(74px + env(safe-area-inset-bottom))" }}
+            >
+              <MapEmbed embedded />
+            </div>
+          )}
 
           <TabBar
             tabs={tabs}

@@ -353,7 +353,7 @@ function NavIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export default function MapView() {
+export default function MapView({ embedded = false }: { embedded?: boolean } = {}) {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
@@ -1032,7 +1032,7 @@ export default function MapView() {
   );
 
   return (
-    <div className={`relative flex h-dvh w-full overflow-hidden bg-white text-neutral-900 ${dark ? "map-dark" : ""}`}>
+    <div className={`relative flex ${embedded ? "h-full" : "h-dvh"} w-full overflow-hidden bg-white text-neutral-900 ${dark ? "map-dark" : ""}`}>
       {/* Desktop: Sidebar (Liste bzw. Detail) */}
       <aside className="hidden w-full max-w-sm shrink-0 flex-col border-r border-neutral-200 bg-white md:flex">
         <div className="shrink-0 border-b border-neutral-200 p-3">
@@ -1161,15 +1161,17 @@ export default function MapView() {
       <div className="relative flex-1 bg-neutral-100">
         <div ref={mapEl} className="absolute inset-0 z-0" />
 
-        {/* Zurück zur App (Tab-Ansicht) — /map ist eine eigene Vollbild-Route,
-            ohne diesen Knopf käme man nur per Browser-Zurück heraus. */}
-        <a
-          href="/app"
-          aria-label={tt("Zurück zur App", "Back to app")}
-          className="absolute left-3 top-3 z-[560] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur md:left-4 md:top-4"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-        </a>
+        {/* Zurück zur App (Tab-Ansicht) — nur auf der eigenständigen /map-Route;
+            als eingebetteter Tab ist die Tab-Leiste da, kein Zurück-Knopf nötig. */}
+        {!embedded && (
+          <a
+            href="/app"
+            aria-label={tt("Zurück zur App", "Back to app")}
+            className="absolute left-3 top-3 z-[560] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur md:left-4 md:top-4"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </a>
+        )}
 
         {/* Dark-Mode-Umschalter */}
         <button

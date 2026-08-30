@@ -1,15 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import AppLoader from "@/app/app/components/AppLoader";
 
 // Leaflet nutzt window/document → nur im Browser laden (kein SSR).
+// Weißer Tennisball-Loader statt schwarzem „Lädt…"-Screen.
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-dvh items-center justify-center bg-neutral-950 text-sm text-white/50">
-      Karte wird geladen…
-    </div>
-  ),
+  loading: () => <AppLoader label="Karte lädt …" className="h-dvh" />,
 });
 
 export default function MapClient() {
