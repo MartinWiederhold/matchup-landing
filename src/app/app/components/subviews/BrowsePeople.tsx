@@ -100,6 +100,13 @@ export default function BrowsePeople() {
   useEffect(() => { load(); }, [load]);
 
   async function connect(target: Profile) {
+    if (requested.has(target.id)) {
+      // Anfrage zurückziehen: eigenen Like löschen (danach beliebig oft neu sendbar).
+      setRequested((prev) => { const n = new Set(prev); n.delete(target.id); return n; });
+      await supabase.from("likes").delete().eq("from_user_id", profile.id).eq("to_user_id", target.id);
+      refreshBadges();
+      return;
+    }
     setRequested((prev) => new Set(prev).add(target.id));
     await supabase.from("likes").upsert({ from_user_id: profile.id, to_user_id: target.id }, { onConflict: "from_user_id,to_user_id" });
     const { data: reverse } = await supabase.from("likes").select("id").eq("from_user_id", target.id).eq("to_user_id", profile.id).maybeSingle();
@@ -150,7 +157,7 @@ export default function BrowsePeople() {
                     </div>
                   </button>
                   <div className="p-1.5">
-                    <button type="button" onClick={() => connect(p)} disabled={req} className={`flex w-full items-center justify-center gap-1 rounded-full py-1.5 text-[11px] font-bold transition-colors ${req ? "bg-black/[0.06] text-neutral-400" : "bg-matchup text-white hover:bg-matchup-hover"}`}>
+                    <button type="button" onClick={() => connect(p)} className={`flex w-full items-center justify-center gap-1 rounded-full py-1.5 text-[11px] font-bold transition-colors ${req ? "bg-black/[0.06] text-neutral-400" : "bg-matchup text-white hover:bg-matchup-hover"}`}>
                       <CheckIcon size={13} /> {req ? t("discover.requested") : t("discover.connect")}
                     </button>
                   </div>

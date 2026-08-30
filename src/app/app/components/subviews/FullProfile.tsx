@@ -17,6 +17,7 @@ import {
 } from "../shared/icons";
 import type { Profile, PlayerStats } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
+import { notifyConnect } from "@/lib/notifyConnect";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 
@@ -104,6 +105,13 @@ export default function FullProfile({
   }
 
   async function connect() {
+    if (sent) {
+      // Anfrage zurückziehen: eigenen Like löschen — danach wieder sendbar.
+      setSent(false);
+      await supabase.from("likes").delete().eq("from_user_id", me.id).eq("to_user_id", userId);
+      refreshBadges();
+      return;
+    }
     setSent(true);
     await supabase
       .from("likes")
@@ -130,6 +138,7 @@ export default function FullProfile({
       if (m) openSubView({ type: "chat", matchId: m.id });
       return;
     }
+    void notifyConnect(userId); // E-Mail an den Angefragten (falls nicht abbestellt)
     refreshBadges();
   }
 
@@ -316,7 +325,6 @@ export default function FullProfile({
           <button
             type="button"
             onClick={connect}
-            disabled={sent}
             className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold transition-colors ${
               sent ? "bg-neutral-100 text-neutral-400" : "bg-matchup text-white hover:bg-matchup-hover"
             }`}

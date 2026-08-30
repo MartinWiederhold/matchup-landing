@@ -49,9 +49,17 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
       .then(({ data }) => setRequested(new Set((data ?? []).map((l) => l.to_user_id as string))));
   }, [profile.id]);
 
-  // Echte Verbindungs-Anfrage: schreibt in likes (der andere sieht sie), bei
-  // Gegen-Like entsteht ein Match. Optimistisch, damit der Button sofort umspringt.
+  // Verbinden-Toggle: erneutes Tippen zieht die Anfrage zurück, danach kann man
+  // sie beliebig oft wieder senden. Bei Gegen-Like entsteht ein Match.
+  // Optimistisch, damit der Button sofort umspringt.
   async function connect(target: Row) {
+    if (requested.has(target.id)) {
+      // Anfrage zurückziehen: eigenen Like löschen (RLS: from_user_id = auth.uid()).
+      setRequested((prev) => { const n = new Set(prev); n.delete(target.id); return n; });
+      await supabase.from("likes").delete().eq("from_user_id", profile.id).eq("to_user_id", target.id);
+      refreshBadges();
+      return;
+    }
     setRequested((prev) => new Set(prev).add(target.id));
     await supabase.from("likes").upsert(
       { from_user_id: profile.id, to_user_id: target.id },
@@ -256,8 +264,7 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
                     return (
                       <button
                         type="button"
-                        onClick={() => { if (!isReq) void connect(sel); }}
-                        disabled={isReq}
+                        onClick={() => void connect(sel)}
                         className={`flex-1 rounded-full py-3.5 text-[15px] font-bold transition-all duration-300 active:scale-[0.97] ${isReq ? "bg-emerald-500/20 text-emerald-300" : "bg-white text-neutral-900"}`}
                       >
                         <span className="inline-flex items-center justify-center gap-1.5">
