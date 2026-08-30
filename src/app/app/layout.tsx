@@ -8,13 +8,16 @@ export const metadata: Metadata = {
 };
 
 // Verhindert das iOS-Auto-Zoom beim Fokussieren von Eingabefeldern (App-Bereich).
+// themeColor WEISS: Der App-Bereich ist hell → Safari malt den Bereich hinter der
+// Status-Leiste weiss (statt schwarz) und stellt die Status-Symbole dunkel dar.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#000000",
+  interactiveWidget: "resizes-content",
+  themeColor: "#ffffff",
 };
 
 export default function AppLayout({
