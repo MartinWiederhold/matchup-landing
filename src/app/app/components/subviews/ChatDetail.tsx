@@ -12,13 +12,20 @@ import { SendIcon } from "../shared/icons";
 // Schnell-Reaktionen (Doppeltipp setzt ❤️, das Halte-Menü bietet alle an).
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
+// Entwurf pro Match lokal sichern, damit getippter (noch nicht gesendeter) Text
+// beim Verlassen des Chats, App-Wechsel oder ohne Internet nicht verloren geht.
+const draftKey = (matchId: string) => `mu_chat_draft_${matchId}`;
+
 export default function ChatDetail({ matchId }: { matchId: string }) {
   const t = useT();
   const { profile, openSubView, closeSubView } = useAppNav();
   const [partner, setPartner] = useState<Profile | null>(null);
   const [active, setActive] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [text, setText] = useState("");
+  // Beim Öffnen einen zuvor gesicherten Entwurf wiederherstellen.
+  const [text, setText] = useState<string>(() => {
+    try { return localStorage.getItem(draftKey(matchId)) ?? ""; } catch { return ""; }
+  });
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [action, setAction] = useState<null | "unmatch" | "block" | "report">(null);
@@ -29,6 +36,21 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
   const [sheetMsg, setSheetMsg] = useState<Message | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pressTimer = useRef<number | undefined>(undefined);
+
+  // Entwurf laufend sichern (nur für neue Nachrichten, nicht während des Bearbeitens).
+  useEffect(() => {
+    if (editingId) return;
+    try {
+      if (text.trim()) localStorage.setItem(draftKey(matchId), text);
+      else localStorage.removeItem(draftKey(matchId));
+    } catch { /* ignore */ }
+  }, [text, editingId, matchId]);
+
+  // Wiederhergestellten (mehrzeiligen) Entwurf beim Öffnen direkt aufwachsen lassen.
+  useEffect(() => {
+    requestAnimationFrame(adjustHeight);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const REPORT_REASONS = [
     t("matches.reasonHarass"),
@@ -233,12 +255,19 @@ export default function ChatDetail({ matchId }: { matchId: string }) {
     setMessages((prev) => [...prev, optimistic]);
     setText("");
     resetInputHeight();
-    await supabase.from("messages").insert({
+    const { error } = await supabase.from("messages").insert({
       match_id: matchId,
       sender_id: profile.id,
       content: optimistic.content,
       client_message_id: clientId,
     });
+    if (error) {
+      // Senden fehlgeschlagen (z. B. offline): optimistische Nachricht entfernen und
+      // den Text zurück ins Feld holen (Entwurf bleibt gesichert), statt ihn zu verlieren.
+      setMessages((prev) => prev.filter((m) => m.client_message_id !== clientId));
+      setText((cur) => (cur.trim() ? cur : body));
+      requestAnimationFrame(adjustHeight);
+    }
   }
 
   // Reaktion umschalten: eigener Eintrag im jsonb-Feld { userId: emoji }.
