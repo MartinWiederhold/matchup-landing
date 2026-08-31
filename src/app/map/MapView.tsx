@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import { supabase } from "@/lib/supabase";
 import { useLocale } from "@/lib/i18n";
 import {
@@ -357,6 +359,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
+  const venueClusterRef = useRef<L.MarkerClusterGroup | null>(null); // Court-Marker gruppiert (markercluster)
   const [ready, setReady] = useState(false);
   const [zoom, setZoom] = useState(12);
   const [moveTick, setMoveTick] = useState(0); // bumpt bei jedem Pan/Zoom-Ende → Viewport neu berechnen
@@ -367,6 +370,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false); // mobiles Typ-Filter-Sheet
   const [discPickerOpen, setDiscPickerOpen] = useState(false); // mobiler Kategorie-Selector
+  const [expanded, setExpanded] = useState(false); // Venue-Sheet aufgezogen (volles Detail) statt kompakter Vorschau
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
@@ -672,9 +676,14 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
     return best ? hubFor(best.city, "de") : null;
   }, [venues, ready, moveTick]);
   const regionLabel = mapRegion ?? "Zürich";
+  // Weit draussen (≤ CLUSTER_ZOOM) → Stadt-Cluster; näher dran → markercluster.
+  // Als Modus-Bool (statt rohem zoom) in den Marker-Effekt, damit markercluster
+  // Zoomschritte selbst animiert und nicht bei jedem Rad-Tick neu gebaut wird.
+  const farZoom = zoom <= CLUSTER_ZOOM;
 
   const focus = useCallback((v: Venue) => {
     setSelectedId(v.id);
+    setExpanded(false); // neue Auswahl beginnt immer mit der kompakten Vorschau
     const map = mapRef.current;
     if (!map || v.lat == null || v.lng == null) return;
     const mobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -782,10 +791,12 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   useEffect(() => {
     const map = mapRef.current;
     const layer = layerRef.current;
+    // Cluster-Gruppe zuerst immer abräumen (auch bei Moduswechsel Season/Anbieter).
+    if (venueClusterRef.current) { map?.removeLayer(venueClusterRef.current); venueClusterRef.current = null; }
     if (!map || !layer || !ready || tab !== "discover" || discCat !== "courts") return;
     layer.clearLayers();
 
-    if (zoom <= CLUSTER_ZOOM) {
+    if (farZoom) {
       const groups = new Map<string, Venue[]>();
       for (const v of visible) {
         const c = hubFor(v.city, locale);
@@ -807,14 +818,38 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
           });
       }
     } else {
-      for (const v of inView) {
-        L.marker([v.lat!, v.lng!], { icon: markerIcon(v, v.id === selectedId), keyboard: false })
-          .addTo(layer)
+      // Näher dran: dichte Court-Marker per markercluster gruppieren (löst die
+      // Überladung in Städten). Beim Reinzoomen/Cluster-Klick gehen sie automatisch
+      // auf — es geht KEIN Marker und keine Venue-Info verloren, nur die Anzeige
+      // wird gebündelt. Auswahl-Marker bleibt unclustered oben (disableClusteringAtZoom).
+      const cg = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        removeOutsideVisibleBounds: true,
+        chunkedLoading: true,
+        iconCreateFunction: (cluster) => {
+          const n = cluster.getChildCount();
+          const size = n >= 100 ? 50 : n >= 20 ? 44 : 38;
+          return L.divIcon({
+            className: "",
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size / 2],
+            html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:#4b3bf3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${n >= 100 ? 13 : 14}px;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.28);">${n}</div>`,
+          });
+        },
+      });
+      for (const v of visible) {
+        if (v.lat == null || v.lng == null) continue;
+        L.marker([v.lat, v.lng], { icon: markerIcon(v, v.id === selectedId), keyboard: false })
           .on("click", () => focus(v))
-          .setZIndexOffset(v.id === selectedId ? 1000 : 0);
+          .setZIndexOffset(v.id === selectedId ? 1000 : 0)
+          .addTo(cg);
       }
+      venueClusterRef.current = cg;
+      map.addLayer(cg);
     }
-  }, [visible, inView, ready, zoom, selectedId, focus, tab, discCat, locale]);
+  }, [visible, farZoom, ready, selectedId, focus, tab, discCat, locale]);
 
   // Saison-Modus: Turnier-Marker + animierte Reiseroute vom Startpunkt durch alle Stops
   useEffect(() => {
@@ -1325,8 +1360,11 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
           </div>
         )}
 
-        {/* Mobile: Club-Detail als Bottom-Sheet */}
-        {tab === "discover" && sel && (
+        {/* Mobile: erst kompakte Vorschau, Antippen/„Öffnen" zieht das volle Detail auf */}
+        {tab === "discover" && sel && !expanded && (
+          <VenuePreview venue={sel} locale={locale} onOpen={() => setExpanded(true)} onClose={backToList} />
+        )}
+        {tab === "discover" && sel && expanded && (
           <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] h-[66%] overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 md:hidden">
             <VenueDetail venue={sel} onBack={backToList} locale={locale} sheet />
           </div>
@@ -1471,6 +1509,55 @@ function TabBtn({
     >
       {children}
     </button>
+  );
+}
+
+/* Kompakte Venue-Vorschau (mobil): Marker-Tap zeigt zuerst das Wesentliche;
+   Antippen bzw. „Öffnen" zieht das volle VenueDetail-Sheet auf. Nur echte Daten. */
+function VenuePreview({
+  venue: v,
+  locale,
+  onOpen,
+  onClose,
+}: {
+  venue: Venue;
+  locale: string;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
+  const tt = (de: string, en: string) => (locale === "de" ? de : en);
+  const color = SPORT_COLOR[primarySport(v)] ?? SPORT_COLOR.tennis;
+  const courts = (v.courts_indoor ?? 0) + (v.courts_outdoor ?? 0) || null;
+  const sportsLabel = v.sports.map((s) => SPORT_LABEL[s] ?? s).join(" · ");
+  const catLabel = tt(CAT_LABEL[v.category] ?? v.category, CAT_LABEL_EN[v.category] ?? CAT_LABEL[v.category] ?? v.category);
+  return (
+    <div className="mu-sheet absolute inset-x-0 bottom-0 z-[600] rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-black/5 md:hidden">
+      <div className="mb-2 flex justify-center"><span className="h-1.5 w-10 rounded-full bg-neutral-300" /></div>
+      <button type="button" onClick={onClose} aria-label={tt("Schliessen", "Close")} className="absolute right-4 top-3 text-lg text-neutral-400">✕</button>
+      <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 text-left">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-sm font-extrabold text-neutral-900 shadow-sm" style={{ border: `2.5px solid ${color}` }}>
+          {v.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={v.logo_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          ) : (
+            initials(v.name)
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-bold text-neutral-900">{v.name}</span>
+          <span className="block truncate text-xs text-neutral-500">{sportsLabel} · {catLabel}{v.city ? ` · ${v.city}` : ""}</span>
+          {courts && (
+            <span className="mt-0.5 block text-[11px] text-neutral-400">
+              {courts} {tt("Plätze", "courts")}{v.courts_indoor ? ` · ${v.courts_indoor} ${tt("Halle", "indoor")}` : ""}
+            </span>
+          )}
+        </span>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+      <button type="button" onClick={onOpen} className="mt-3 w-full rounded-full bg-matchup py-2.5 text-sm font-bold text-white">
+        {tt("Öffnen", "Open")} →
+      </button>
+    </div>
   );
 }
 
