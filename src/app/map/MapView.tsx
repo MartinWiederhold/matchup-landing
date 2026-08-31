@@ -402,7 +402,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   // Kein Compete-Modus → kein Saison-Tab; einen offenen Saison-Tab auf Discover zurückholen.
   useEffect(() => { if (modeLoaded && !isCompete && tab !== "discover") setTab("discover"); }, [modeLoaded, isCompete, tab]);
   const [dark, setDark] = useState(false);
-  const tileRef = useRef<L.TileLayer | null>(null);
+  const tileRef = useRef<L.LayerGroup | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
@@ -722,10 +722,6 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}" +
       // ── Dark-Mode: scoped Overrides für die (durchgehend hellen) Map-Utilities ──
       ".map-dark{background:#0b0b0f!important}" +
-      // Karte schwarz-weiss (Graustufen auf der Kachel-Ebene) — Marker-Logos bleiben farbig
-      // und heben sich ab. Dark-Mode: zusätzlich invertiert/abgedunkelt.
-      ".leaflet-tile-pane{filter:grayscale(1)}" +
-      ".map-dark .leaflet-tile-pane{filter:grayscale(1) invert(1) brightness(.95) contrast(.9)}" +
       ".map-dark .bg-white,.map-dark .bg-white\\/95{background:#15151c!important}" +
       ".map-dark .bg-neutral-50{background:#101016!important}" +
       ".map-dark .bg-neutral-100{background:#1c1c24!important}" +
@@ -756,13 +752,21 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
     const map = mapRef.current;
     if (!map || !ready) return;
     if (tileRef.current) map.removeLayer(tileRef.current);
-    // Bunte OpenStreetMap-Standardkacheln (schlüssellos, zuverlässig). CARTOs schlüssellose
-    // Basemaps sind abgekündigt (lieferten "API KEY REQUIRED"). Dark-Mode entsteht über einen
-    // CSS-Filter auf der Kachel-Ebene (.map-dark .leaflet-tile-pane), damit die Karte bunt
-    // bleibt und nur abgedunkelt wird — die Marker liegen in eigenen Panes, unberührt.
-    tileRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      subdomains: "abc", maxZoom: 19, attribution: "© OpenStreetMap",
-    }).addTo(map);
+    // Ursprünglicher Look war CARTO Positron (hell, sauber, minimal) — dessen schlüssellose
+    // Kacheln sind abgekündigt (alle Endpunkte liefern "API KEY REQUIRED"). Getreue schlüssellose
+    // Entsprechung: Esri Gray Canvas (Base = heller Grund, Reference = Beschriftung; Light/Dark).
+    // maxNativeZoom 16, darüber skaliert Leaflet hoch.
+    const style = dark ? "Dark" : "Light";
+    const opts = { maxZoom: 19, maxNativeZoom: 16 } as const;
+    const base = L.tileLayer(
+      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+      { ...opts, attribution: "© Esri · © OpenStreetMap" },
+    );
+    const labels = L.tileLayer(
+      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+      opts,
+    );
+    tileRef.current = L.layerGroup([base, labels]).addTo(map);
     try { localStorage.setItem("mu-map-dark", dark ? "1" : "0"); } catch { /* ignore */ }
   }, [ready, dark]);
 
