@@ -76,7 +76,7 @@ function serviceMarkerIcon(p: ServiceProvider, active: boolean): L.DivIcon {
     : "box-shadow:0 4px 12px rgba(0,0,0,.18);";
   const scale = active ? "transform:scale(1.22);" : "";
   return L.divIcon({
-    className: "",
+    className: active ? "mu-sel" : "",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;"><img src="${src}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-192.png';" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;" /></div>`,
@@ -235,7 +235,7 @@ function markerIcon(v: Venue, active: boolean): L.DivIcon {
     ? `<img src="${v.logo_url}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:9999px;" />`
     : `<span style="font-weight:800;font-size:11px;color:#111;">${initials(v.name)}</span>`;
   return L.divIcon({
-    className: "",
+    className: active ? "mu-sel" : "",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     html: `<div style="width:34px;height:34px;border-radius:9999px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:3px solid ${color};${shadow}${scale}transition:transform .15s;">${inner}</div>`,
@@ -366,6 +366,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const [sportFilter, setSportFilter] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false); // mobiles Typ-Filter-Sheet
+  const [discPickerOpen, setDiscPickerOpen] = useState(false); // mobiler Kategorie-Selector
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Saison-planen-Tab (ATP/Challenger/ITF) + Services-Layer
@@ -396,7 +397,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   // Kein Compete-Modus → kein Saison-Tab; einen offenen Saison-Tab auf Discover zurückholen.
   useEffect(() => { if (modeLoaded && !isCompete && tab !== "discover") setTab("discover"); }, [modeLoaded, isCompete, tab]);
   const [dark, setDark] = useState(false);
-  const tileRef = useRef<L.LayerGroup | null>(null);
+  const tileRef = useRef<L.TileLayer | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
@@ -703,11 +704,16 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       ".leaflet-control-zoom a:hover{background:#f6f6f7!important;color:#4b3bf3!important}" +
       // Am Handy sind Zoom-Buttons überflüssig (Pinch-to-Zoom) und verdecken Marker.
       "@media (max-width:767px){.leaflet-control-zoom{display:none!important}}" +
+      // Ausgewählter Marker dominiert, die übrigen treten zurück
+      ".leaflet-marker-icon{transition:opacity .2s}" +
+      ".mu-has-sel .leaflet-marker-icon:not(.mu-sel){opacity:.4}" +
       // dezente Attribution ohne Flagge
       ".leaflet-control-attribution{background:rgba(255,255,255,.65)!important;backdrop-filter:blur(4px);font-size:9px!important;color:#9ca3af!important;padding:1px 6px!important;border-radius:8px 0 0 0!important}" +
       ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}" +
       // ── Dark-Mode: scoped Overrides für die (durchgehend hellen) Map-Utilities ──
       ".map-dark{background:#0b0b0f!important}" +
+      // Karte bleibt bunt, wird im Dark-Mode nur invertiert/abgedunkelt (nur Kachel-Ebene).
+      ".map-dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9)}" +
       ".map-dark .bg-white,.map-dark .bg-white\\/95{background:#15151c!important}" +
       ".map-dark .bg-neutral-50{background:#101016!important}" +
       ".map-dark .bg-neutral-100{background:#1c1c24!important}" +
@@ -738,21 +744,13 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
     const map = mapRef.current;
     if (!map || !ready) return;
     if (tileRef.current) map.removeLayer(tileRef.current);
-    // Esri Gray Canvas: schlüssellos + gedämpft, damit die Marker hervortreten.
-    // CARTOs schlüssellose Basemaps (basemaps.cartocdn.com) sind abgekündigt und liefern
-    // seither "API KEY REQUIRED"-Kacheln aus. Base = grauer Grund, Reference = Beschriftung
-    // (getrennte Ebene, transparent). maxNativeZoom 16, darüber skaliert Leaflet hoch.
-    const style = dark ? "Dark" : "Light";
-    const opts = { maxZoom: 19, maxNativeZoom: 16 } as const;
-    const base = L.tileLayer(
-      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
-      { ...opts, attribution: "© Esri · © OpenStreetMap" },
-    );
-    const labels = L.tileLayer(
-      `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${style}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
-      opts,
-    );
-    tileRef.current = L.layerGroup([base, labels]).addTo(map);
+    // Bunte OpenStreetMap-Standardkacheln (schlüssellos, zuverlässig). CARTOs schlüssellose
+    // Basemaps sind abgekündigt (lieferten "API KEY REQUIRED"). Dark-Mode entsteht über einen
+    // CSS-Filter auf der Kachel-Ebene (.map-dark .leaflet-tile-pane), damit die Karte bunt
+    // bleibt und nur abgedunkelt wird — die Marker liegen in eigenen Panes, unberührt.
+    tileRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      subdomains: "abc", maxZoom: 19, attribution: "© OpenStreetMap",
+    }).addTo(map);
     try { localStorage.setItem("mu-map-dark", dark ? "1" : "0"); } catch { /* ignore */ }
   }, [ready, dark]);
 
@@ -1172,7 +1170,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       </aside>
 
       {/* Karte (mobil Vollbild, desktop rechts) */}
-      <div className="relative flex-1 bg-neutral-100">
+      <div className={`relative flex-1 bg-neutral-100 ${sel || selProvider ? "mu-has-sel" : ""}`}>
         <div ref={mapEl} className="absolute inset-0 z-0" />
 
         {/* Zurück zur App (Tab-Ansicht) — nur auf der eigenständigen /map-Route;
@@ -1214,41 +1212,76 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
             </div>
             {tab === "discover" && (
               <>
-                <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-0.5 pl-12 pr-12 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {discCatChips(true)}
+                {/* Kompakter Kategorie-Selector statt vier breiter Pills */}
+                <div className={!embedded ? "pl-12" : ""}>
+                  <div className="pointer-events-auto relative inline-block">
+                    <button
+                      type="button"
+                      onClick={() => setDiscPickerOpen((v) => !v)}
+                      aria-expanded={discPickerOpen}
+                      className="flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-sm font-bold text-neutral-800 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
+                    >
+                      {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)}
+                      <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 text-neutral-400 transition-transform ${discPickerOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    {discPickerOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[605]" onClick={() => setDiscPickerOpen(false)} />
+                        <div className="absolute left-0 top-11 z-[606] w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-black/10">
+                          {DISC_CAT_ORDER.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => { setDiscCat(c); setDiscPickerOpen(false); }}
+                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold ${discCat === c ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-50"}`}
+                            >
+                              {tt(DISC_CAT_LABEL[c].de, DISC_CAT_LABEL[c].en)}
+                              {discCat === c && <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
                 {discCat === "courts" ? (
                   <>
-                    {/* Suche + Filter-Knopf in einer Zeile (Typ/Kategorie steckt im Sheet) */}
-                    <div className="flex items-center gap-2">
-                      <div className="pointer-events-auto flex flex-1 items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                        <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
-                        <input
-                          value={query}
-                          onChange={(e) => setQuery(e.target.value)}
-                          placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
-                          className="h-11 w-full min-w-0 bg-transparent text-sm outline-none"
-                        />
+                    {/* Nur Suche — die Karte ist der Hauptinhalt */}
+                    <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                      <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+                      <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
+                        className="h-11 w-full min-w-0 bg-transparent text-sm outline-none"
+                      />
+                    </div>
+                    {/* Kompakte Sport-Chips (kein permanentes „Alle" — leer = alle) + kleiner Filter-Knopf */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="pointer-events-auto flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {["tennis", "padel", "pickleball"].map((s) => {
+                          const on = sportFilter === s;
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setSportFilter(on ? null : s)}
+                              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-semibold transition-colors ${on ? "bg-matchup text-white shadow-sm" : "bg-white/90 text-neutral-600 shadow-sm ring-1 ring-neutral-200 backdrop-blur"}`}
+                            >
+                              {SPORT_LABEL[s]}
+                            </button>
+                          );
+                        })}
                       </div>
                       <button
                         type="button"
                         onClick={() => setFilterOpen(true)}
                         aria-label={tt("Filter", "Filters")}
-                        className="pointer-events-auto relative flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-white/95 px-4 text-sm font-semibold text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
+                        className="pointer-events-auto relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/95 text-neutral-600 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
                       >
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-                        {tt("Filter", "Filters")}
-                        {catFilter && <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-matchup text-[10px] font-bold text-white">1</span>}
+                        {catFilter && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-matchup ring-2 ring-white" />}
                       </button>
-                    </div>
-                    {/* Sport-Chips + beschriftete Ergebniszahl */}
-                    <div className="flex items-center gap-2">
-                      <div className="pointer-events-auto flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {sportChips(true)}
-                      </div>
-                      <span className="pointer-events-none shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-neutral-500 shadow-sm ring-1 ring-neutral-200 backdrop-blur">
-                        {listSource.length} {tt("Orte", "places")}
-                      </span>
                     </div>
                   </>
                 ) : (
