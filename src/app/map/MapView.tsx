@@ -370,6 +370,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false); // mobiles Typ-Filter-Sheet
   const [discPickerOpen, setDiscPickerOpen] = useState(false); // mobiler Kategorie-Selector
+  const [sportPickerOpen, setSportPickerOpen] = useState(false); // mobiler Sportart-Selector
   const [expanded, setExpanded] = useState(false); // Venue-Sheet aufgezogen (volles Detail) statt kompakter Vorschau
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -721,8 +722,10 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       ".leaflet-control-attribution a{color:#9ca3af!important;text-decoration:none}" +
       // ── Dark-Mode: scoped Overrides für die (durchgehend hellen) Map-Utilities ──
       ".map-dark{background:#0b0b0f!important}" +
-      // Karte bleibt bunt, wird im Dark-Mode nur invertiert/abgedunkelt (nur Kachel-Ebene).
-      ".map-dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9)}" +
+      // Karte schwarz-weiss (Graustufen auf der Kachel-Ebene) — Marker-Logos bleiben farbig
+      // und heben sich ab. Dark-Mode: zusätzlich invertiert/abgedunkelt.
+      ".leaflet-tile-pane{filter:grayscale(1)}" +
+      ".map-dark .leaflet-tile-pane{filter:grayscale(1) invert(1) brightness(.95) contrast(.9)}" +
       ".map-dark .bg-white,.map-dark .bg-white\\/95{background:#15151c!important}" +
       ".map-dark .bg-neutral-50{background:#101016!important}" +
       ".map-dark .bg-neutral-100{background:#1c1c24!important}" +
@@ -1077,6 +1080,65 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
       })}
     </>
   );
+  // Mobile Dropdown-Filter (unter der Suchleiste): Kategorie (Courts/Coaches/…) und Sportart.
+  const ddBtn = "flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-2 text-[13px] font-bold text-neutral-800 shadow-lg ring-1 ring-neutral-200 backdrop-blur";
+  const ddChevron = (open: boolean) => (
+    <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+  );
+  const ddCheck = <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>;
+  const discCatDropdown = () => (
+    <div className="pointer-events-auto relative">
+      <button type="button" onClick={() => setDiscPickerOpen((v) => !v)} aria-expanded={discPickerOpen} className={ddBtn}>
+        {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)}
+        {ddChevron(discPickerOpen)}
+      </button>
+      {discPickerOpen && (
+        <>
+          <div className="fixed inset-0 z-[605]" onClick={() => setDiscPickerOpen(false)} />
+          <div className="absolute left-0 top-11 z-[606] w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-black/10">
+            {DISC_CAT_ORDER.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { setDiscCat(c); setDiscPickerOpen(false); }}
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold ${discCat === c ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-50"}`}
+              >
+                {tt(DISC_CAT_LABEL[c].de, DISC_CAT_LABEL[c].en)}
+                {discCat === c && ddCheck}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+  const SPORT_OPTS: (string | null)[] = [null, "tennis", "padel", "pickleball"];
+  const sportDropdown = () => (
+    <div className="pointer-events-auto relative">
+      <button type="button" onClick={() => setSportPickerOpen((v) => !v)} aria-expanded={sportPickerOpen} className={ddBtn}>
+        {sportFilter ? SPORT_LABEL[sportFilter] : tt("Alle Sportarten", "All sports")}
+        {ddChevron(sportPickerOpen)}
+      </button>
+      {sportPickerOpen && (
+        <>
+          <div className="fixed inset-0 z-[605]" onClick={() => setSportPickerOpen(false)} />
+          <div className="absolute left-0 top-11 z-[606] w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-black/10">
+            {SPORT_OPTS.map((s) => (
+              <button
+                key={s ?? "all"}
+                type="button"
+                onClick={() => { setSportFilter(s); setSportPickerOpen(false); }}
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold ${sportFilter === s ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-50"}`}
+              >
+                {s ? SPORT_LABEL[s] : tt("Alle Sportarten", "All sports")}
+                {sportFilter === s && ddCheck}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div className={`relative flex ${embedded ? "h-full" : "h-dvh"} w-full overflow-hidden bg-white text-neutral-900 ${dark ? "map-dark" : ""}`}>
@@ -1247,72 +1309,29 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
             </div>
             {tab === "discover" && (
               <>
-                {/* Kompakter Kategorie-Selector statt vier breiter Pills */}
-                <div className={!embedded ? "pl-12" : ""}>
-                  <div className="pointer-events-auto relative inline-block">
-                    <button
-                      type="button"
-                      onClick={() => setDiscPickerOpen((v) => !v)}
-                      aria-expanded={discPickerOpen}
-                      className="flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-sm font-bold text-neutral-800 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
-                    >
-                      {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)}
-                      <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 text-neutral-400 transition-transform ${discPickerOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-                    </button>
-                    {discPickerOpen && (
-                      <>
-                        <div className="fixed inset-0 z-[605]" onClick={() => setDiscPickerOpen(false)} />
-                        <div className="absolute left-0 top-11 z-[606] w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-black/10">
-                          {DISC_CAT_ORDER.map((c) => (
-                            <button
-                              key={c}
-                              type="button"
-                              onClick={() => { setDiscCat(c); setDiscPickerOpen(false); }}
-                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold ${discCat === c ? "bg-matchup/10 text-matchup" : "text-neutral-700 hover:bg-neutral-50"}`}
-                            >
-                              {tt(DISC_CAT_LABEL[c].de, DISC_CAT_LABEL[c].en)}
-                              {discCat === c && <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
                 {discCat === "courts" ? (
                   <>
-                    {/* Nur Suche — die Karte ist der Hauptinhalt */}
-                    <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                      <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
-                      <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
-                        className="h-11 w-full min-w-0 bg-transparent text-sm outline-none"
-                      />
-                    </div>
-                    {/* Kompakte Sport-Chips (kein permanentes „Alle" — leer = alle) + kleiner Filter-Knopf */}
-                    <div className="flex items-center gap-1.5">
-                      <div className="pointer-events-auto flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {["tennis", "padel", "pickleball"].map((s) => {
-                          const on = sportFilter === s;
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => setSportFilter(on ? null : s)}
-                              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-semibold transition-colors ${on ? "bg-matchup text-white shadow-sm" : "bg-white/90 text-neutral-600 shadow-sm ring-1 ring-neutral-200 backdrop-blur"}`}
-                            >
-                              {SPORT_LABEL[s]}
-                            </button>
-                          );
-                        })}
+                    {/* Suche zuerst — die Karte ist der Hauptinhalt */}
+                    <div className={`${!embedded ? "pl-12 " : ""}pr-12`}>
+                      <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                        <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
+                        <input
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          placeholder={tt("Club oder Ort suchen…", "Search club or place…")}
+                          className="h-11 w-full min-w-0 bg-transparent text-sm outline-none"
+                        />
                       </div>
+                    </div>
+                    {/* Darunter: Kategorie-Dropdown + Sportart-Dropdown + Typ-Filter */}
+                    <div className="flex items-center gap-1.5">
+                      {discCatDropdown()}
+                      {sportDropdown()}
                       <button
                         type="button"
                         onClick={() => setFilterOpen(true)}
                         aria-label={tt("Filter", "Filters")}
-                        className="pointer-events-auto relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/95 text-neutral-600 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
+                        className="pointer-events-auto relative ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/95 text-neutral-600 shadow-lg ring-1 ring-neutral-200 backdrop-blur"
                       >
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
                         {catFilter && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-matchup ring-2 ring-white" />}
@@ -1320,9 +1339,12 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
                     </div>
                   </>
                 ) : (
-                  <div className="pointer-events-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-neutral-500 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
-                    <span className="text-matchup">{discProviders.length}</span> {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)} · {tt("Pin antippen", "Tap a pin")}
-                  </div>
+                  <>
+                    <div className={!embedded ? "pl-12" : ""}>{discCatDropdown()}</div>
+                    <div className="pointer-events-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-neutral-500 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
+                      <span className="text-matchup">{discProviders.length}</span> {tt(DISC_CAT_LABEL[discCat].de, DISC_CAT_LABEL[discCat].en)} · {tt("Pin antippen", "Tap a pin")}
+                    </div>
+                  </>
                 )}
               </>
             )}
