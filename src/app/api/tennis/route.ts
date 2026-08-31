@@ -15,7 +15,10 @@ export const maxDuration = 20;
  * Reine Spielstände (Fakten), Anzeige mit Quelle ESPN. Hinweis: ESPN liefert KEINE
  * Live-Game-Punkte (15/30/40) und keinen Aufschlag → der aktuelle Satz wird hervorgehoben.
  */
-const UA = { "User-Agent": "MatchupMap/1.0 (wiederhold.martin@web.de)" };
+// ESPN blockt fast alle User-Agents mit HTTP 403 (auch "Mozilla/…", "node", leer) —
+// einzig ein curl-artiger UA wird zuverlässig mit 200 beantwortet (getestet 31.08.2026).
+// Ohne diesen UA kamen KEINE Ergebnisse an, obwohl das Turnier lief (US Open).
+const UA = { "User-Agent": "curl/8.7.1" };
 type Espn = { events?: EspnEvent[] };
 type EspnEvent = { name?: string; shortName?: string; major?: boolean; date?: string; endDate?: string; season?: { year?: number }; competitions?: EspnComp[]; groupings?: EspnGrouping[] };
 type EspnGrouping = { grouping?: { displayName?: string }; competitions?: EspnComp[] };
