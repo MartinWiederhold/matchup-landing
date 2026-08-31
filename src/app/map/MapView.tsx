@@ -401,7 +401,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
   const isCompete = mode === "tour" && unlocked;
   // Kein Compete-Modus → kein Saison-Tab; einen offenen Saison-Tab auf Discover zurückholen.
   useEffect(() => { if (modeLoaded && !isCompete && tab !== "discover") setTab("discover"); }, [modeLoaded, isCompete, tab]);
-  const [dark, setDark] = useState(false);
+  const [dark] = useState(false); // Karte immer im hellen Look (Umschalter entfernt)
   const tileRef = useRef<L.LayerGroup | null>(null);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [selProvider, setSelProvider] = useState<ServiceProvider | null>(null);
@@ -740,11 +740,6 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
     return () => {
       el.remove();
     };
-  }, []);
-
-  // Dark-Mode-Präferenz laden
-  useEffect(() => {
-    try { setDark(localStorage.getItem("mu-map-dark") === "1"); } catch { /* ignore */ }
   }, []);
 
   // Tile-Layer je nach Theme (wechselt beim Umschalten)
@@ -1286,20 +1281,6 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
           </a>
         )}
 
-        {/* Dark-Mode-Umschalter */}
-        <button
-          type="button"
-          onClick={() => setDark((d) => !d)}
-          aria-label={dark ? "Light Mode" : "Dark Mode"}
-          className="absolute right-3 top-3 z-[560] flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-lg ring-1 ring-neutral-200 backdrop-blur md:right-4 md:top-4"
-        >
-          {dark ? (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
-          )}
-        </button>
-
         {/* Mobile: Tab-Umschalter + (nur Entdecken) Suche/Filter oben */}
         {!(tab === "discover" && sel) && (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[550] space-y-2 p-3 md:hidden">
@@ -1316,7 +1297,7 @@ export default function MapView({ embedded = false }: { embedded?: boolean } = {
                 {discCat === "courts" ? (
                   <>
                     {/* Suche zuerst — die Karte ist der Hauptinhalt */}
-                    <div className={`${!embedded ? "pl-12 " : ""}pr-12`}>
+                    <div className={!embedded ? "pl-12" : ""}>
                       <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 px-4 shadow-lg ring-1 ring-neutral-200 backdrop-blur">
                         <PinIcon className="h-4 w-4 shrink-0 text-matchup" />
                         <input
