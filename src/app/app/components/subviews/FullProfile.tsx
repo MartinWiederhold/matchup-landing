@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
+import { PROFILE_COLUMNS } from "@/lib/profileColumns";
 import { skillLabel, sportLabel, formatDistance } from "@/lib/utils/formatters";
 import { fetchDistances } from "@/lib/utils/distances";
 import {
@@ -61,7 +62,7 @@ export default function FullProfile({
   useEffect(() => {
     supabase
       .from("profiles")
-      .select("*")
+      .select(PROFILE_COLUMNS)
       .eq("id", userId)
       .maybeSingle()
       .then(({ data }) => setP(data as Profile | null));

@@ -16,17 +16,13 @@ export function getServiceClient() {
 }
 
 function adminEmails(): string[] {
-  // ADMIN_EMAILS (server-only) ist die Quelle. NEXT_PUBLIC_ADMIN_EMAILS nur ÜBERGANGS-
-  // WEISE als Ersatz, damit die Env-Umbenennung ohne Fenster ohne gültige Allowlist
-  // läuft (Punkt 2, Sicherheitsaudit 2026-08). NACH dem Löschen von NEXT_PUBLIC_ADMIN_
-  // EMAILS diese Ersatz-Zeile entfernen — die Adresse gehört nicht ins Client-Bundle.
-  const raw = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const fromEnv = raw
+  // Einzige Quelle: ADMIN_EMAILS (server-only, in Vercel gesetzt). Kein NEXT_PUBLIC-
+  // Fallback (gehörte nicht ins Client-Bundle) und keine hartkodierte Adresse mehr
+  // (Sicherheitsaudit 09/2026). Weitere Admins → einfach in ADMIN_EMAILS ergänzen.
+  return (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  // eingebauter server-seitiger Fallback
-  return Array.from(new Set([...fromEnv, "wiederhold.martin@web.de"]));
 }
 
 /**

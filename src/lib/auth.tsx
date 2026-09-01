@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { PROFILE_COLUMNS } from "./profileColumns";
 import type { Profile } from "./types";
 
 interface AuthContextType {
@@ -87,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(userId: string) {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(PROFILE_COLUMNS)
       .eq("id", userId)
       .maybeSingle();
 

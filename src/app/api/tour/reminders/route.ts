@@ -21,7 +21,7 @@ export const maxDuration = 60;
  */
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  if (!secret) return false; // fail-closed: ohne gesetztes Secret NICHT freigeben
   if (req.headers.get("authorization") === `Bearer ${secret}`) return true;
   return new URL(req.url).searchParams.get("secret") === secret;
 }

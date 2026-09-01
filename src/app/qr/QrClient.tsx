@@ -1,8 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Stats = { total: number; today: number; week: number };
+
+// Admin-Session-Token für /api/qr (GET/POST sind seit dem Audit admin-only).
+async function authHeader(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const tok = data.session?.access_token;
+  return tok ? { Authorization: `Bearer ${tok}` } : {};
+}
 
 export default function QrClient() {
   const [tab, setTab] = useState<"qr" | "stats">("qr");
@@ -103,15 +111,15 @@ function StatsTab() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch("/api/qr", { cache: "no-store" });
-      setStats(await r.json());
+      const r = await fetch("/api/qr", { cache: "no-store", headers: await authHeader() });
+      if (r.status === 403) { setStats(null); setMsg("Nur für Admins (bitte als Admin einloggen)."); }
+      else setStats(await r.json());
     } catch {
       setStats(null);
     }
@@ -128,12 +136,10 @@ function StatsTab() {
     try {
       const r = await fetch("/api/qr", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
       });
       if (r.ok) {
         setResetOpen(false);
-        setCode("");
         setMsg("Scans zurückgesetzt.");
         await load();
       } else {
@@ -178,7 +184,7 @@ function StatsTab() {
       <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <p className="text-sm font-semibold">Scans zurücksetzen</p>
         <p className="mt-1 text-xs text-neutral-500">
-          Setzt den Zähler auf 0. Zur Bestätigung Code eingeben.
+          Setzt den Zähler auf 0. Nur als Admin möglich.
         </p>
 
         {!resetOpen ? (
@@ -193,34 +199,22 @@ function StatsTab() {
             Scans zurücksetzen
           </button>
         ) : (
-          <div className="mt-3 space-y-2">
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              inputMode="numeric"
-              placeholder="Bestätigungscode"
-              className="h-11 w-full rounded-full border border-neutral-300 px-4 text-center text-sm tracking-widest outline-none focus:border-matchup"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setResetOpen(false);
-                  setCode("");
-                }}
-                className="flex-1 rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-600"
-              >
-                Abbrechen
-              </button>
-              <button
-                type="button"
-                onClick={doReset}
-                disabled={busy || !code}
-                className="flex-1 rounded-full bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-              >
-                {busy ? "…" : "Bestätigen"}
-              </button>
-            </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setResetOpen(false)}
+              className="flex-1 rounded-full border border-neutral-300 py-2.5 text-sm font-semibold text-neutral-600"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="button"
+              onClick={doReset}
+              disabled={busy}
+              className="flex-1 rounded-full bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {busy ? "…" : "Wirklich zurücksetzen"}
+            </button>
           </div>
         )}
       </div>

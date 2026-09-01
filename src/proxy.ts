@@ -10,8 +10,8 @@ import { LOCALE_COOKIE, localeForCountry } from "@/lib/i18n/config";
  * (src/lib/tour.ts, Code 50805080) — das ist hier bewusst NICHT angefasst.
  *
  * Die Middleware setzt jetzt nur noch das Sprach-Cookie anhand des Landes.
- * Der frühere Lock-Screen (/locked) und /api/unlock bleiben ungenutzt im Repo;
- * ein git-Revert dieses Commits reaktiviert das Gate vollständig.
+ * Der frühere Lock-Screen (/locked) und /api/unlock wurden entfernt
+ * (Sicherheitsaudit 09/2026, hartkodierte Gate-Defaults). Gate-Historie via git.
  */
 
 /**

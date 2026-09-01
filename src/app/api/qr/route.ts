@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServiceClient } from "@/lib/adminClient";
+import { getServiceClient, verifyAdmin, bearerToken } from "@/lib/adminClient";
 
 export const dynamic = "force-dynamic";
 
-/** Scan-Statistik: Gesamt / Heute / letzte 7 Tage. */
-export async function GET() {
+/** Scan-Statistik: Gesamt / Heute / letzte 7 Tage. Nur Admin. */
+export async function GET(request: Request) {
+  if (!(await verifyAdmin(bearerToken(request)))) {
+    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 403 });
+  }
   const svc = getServiceClient();
   const now = new Date();
   const startToday = new Date(
@@ -27,16 +30,10 @@ export async function GET() {
   });
 }
 
-/** Scans zurücksetzen – nur mit Bestätigungscode 5080. */
+/** Scans zurücksetzen – nur Admin (Bearer-Token + Allowlist). */
 export async function POST(request: Request) {
-  let body: { code?: string } = {};
-  try {
-    body = await request.json();
-  } catch {
-    // leerer Body
-  }
-  if (String(body.code ?? "") !== "5080") {
-    return NextResponse.json({ error: "Falscher Code" }, { status: 403 });
+  if (!(await verifyAdmin(bearerToken(request)))) {
+    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 403 });
   }
   const svc = getServiceClient();
   const { error } = await svc.from("qr_scans").delete().not("id", "is", null);
