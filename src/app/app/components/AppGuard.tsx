@@ -8,6 +8,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import AuthScreen from "./AuthScreen";
 import OnboardingFlow from "./Onboarding/OnboardingFlow";
 import AppShell from "./AppShell";
+import PhotoGate from "./PhotoGate";
 import type { Warning } from "@/lib/types";
 
 function Spinner() {
@@ -114,6 +115,19 @@ export default function AppGuard() {
           {t("app.reactivateAccount")}
         </button>
       </CenteredMessage>
+    );
+  }
+
+  // Foto-Pflicht: ohne echtes Profilbild geht es nicht weiter (Altfälle oder nachdem
+  // ein Admin das Bild entfernt hat). Neue Nutzer haben es via Onboarding immer.
+  if (!profile.profile_image) {
+    return (
+      <PhotoGate
+        userId={profile.id}
+        title={t("app.photoRequiredTitle")}
+        subtitle={t("app.photoRequiredHint")}
+        onUploaded={refreshProfile}
+      />
     );
   }
 

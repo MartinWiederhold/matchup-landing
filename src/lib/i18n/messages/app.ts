@@ -19,6 +19,12 @@ export const app = {
     accountBannedHint: "Bei Fragen wende dich an den Support: hello@matchup.ch",
     accountPaused: "Dein Konto ist pausiert.",
     reactivateAccount: "Konto reaktivieren",
+    // Foto-Pflicht (PhotoGate)
+    photoRequiredTitle: "Bitte lade ein Foto von dir hoch",
+    photoRequiredHint: "Damit dich andere Spieler erkennen, brauchst du ein echtes Profilbild. Ohne Foto geht es leider nicht weiter.",
+    photoPausedHint: "Dein Profil wurde pausiert, weil ein echtes Foto von dir fehlt. Lade eins hoch, um sofort wieder freigeschaltet zu werden.",
+    uploadPhoto: "Foto hochladen",
+    photoUploading: "Wird hochgeladen …",
     // shared/ui
     somethingWentWrong: "Etwas ist schiefgelaufen.",
     back: "Zurück",
@@ -63,6 +69,11 @@ export const app = {
     accountBannedHint: "If you have questions, contact support: hello@matchup.ch",
     accountPaused: "Your account is paused.",
     reactivateAccount: "Reactivate account",
+    photoRequiredTitle: "Please upload a photo of yourself",
+    photoRequiredHint: "So other players recognise you, you need a real profile picture. Without a photo you can't continue.",
+    photoPausedHint: "Your profile was paused because a real photo of you is missing. Upload one to be unlocked again right away.",
+    uploadPhoto: "Upload photo",
+    photoUploading: "Uploading …",
     // shared/ui
     somethingWentWrong: "Something went wrong.",
     back: "Back",

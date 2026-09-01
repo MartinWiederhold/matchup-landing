@@ -222,6 +222,8 @@ export default function EditProfile() {
   }
 
   function removePhoto(index: number) {
+    // Das Hauptbild (Index 0) wird nie gelöscht — nur ersetzt. So bleibt immer ein Foto.
+    if (index === 0) return;
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
@@ -239,7 +241,8 @@ export default function EditProfile() {
     await supabase
       .from("profiles")
       .update({
-        profile_image: photos[0] ?? null,
+        // Hauptbild darf nie leer werden (Foto-Pflicht) — im Notfall altes behalten.
+        profile_image: photos[0] ?? profile.profile_image ?? null,
         additional_images: photos.slice(1),
         bio: bio || null,
         sports,
@@ -310,13 +313,17 @@ export default function EditProfile() {
                       {t("profile.makeMain")}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(i)}
-                    className="flex-1 py-1.5 text-neutral-700"
-                  >
-                    {t("profile.deletePhoto")}
-                  </button>
+                  {/* Hauptbild (Slot 0) lässt sich nur ERSETZEN, nicht löschen — so bleibt
+                      immer mindestens ein Foto. Zusatzbilder sind löschbar. */}
+                  {i !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="flex-1 py-1.5 text-neutral-700"
+                    >
+                      {t("profile.deletePhoto")}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
