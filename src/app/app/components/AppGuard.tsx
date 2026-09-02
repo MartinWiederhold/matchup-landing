@@ -95,6 +95,27 @@ export default function AppGuard() {
     );
   }
 
+  // Foto-Moderation: Admin hat pausiert und ein echtes Foto verlangt. Freischalten NUR
+  // durch Foto-Upload (Flag ist user-seitig gesperrt → Aufhebung serverseitig).
+  if (profile.pause_requires_photo) {
+    return (
+      <PhotoGate
+        userId={profile.id}
+        title={t("app.accountPaused")}
+        subtitle={t("app.photoPausedHint")}
+        onUploaded={async () => {
+          const { data } = await supabase.auth.getSession();
+          const tok = data.session?.access_token;
+          await fetch("/api/profile/clear-photo-pause", {
+            method: "POST",
+            headers: tok ? { Authorization: `Bearer ${tok}` } : {},
+          });
+          await refreshProfile();
+        }}
+      />
+    );
+  }
+
   if (profile.is_paused) {
     return (
       <CenteredMessage

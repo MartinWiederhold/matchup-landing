@@ -35,6 +35,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      // Pausieren mit Auflage „echtes Foto hochladen". Der Nutzer sieht die Foto-Sperre
+      // und wird erst nach einem echten Foto-Upload wieder freigeschaltet (Flag ist für
+      // ihn gesperrt, Freischaltung via /api/profile/clear-photo-pause). on=false hebt auf.
+      case "requirePhoto": {
+        const id = String(body.id);
+        const on = body.on !== false;
+        const { error } = await svc
+          .from("profiles")
+          .update({ is_paused: on, pause_requires_photo: on })
+          .eq("id", id);
+        if (error) throw error;
+        await svc
+          .from("profiles_private")
+          .update({ pause_reason: on ? "Bitte lade ein echtes Foto von dir hoch." : null })
+          .eq("user_id", id);
+        return NextResponse.json({ ok: true });
+      }
+
       case "banUser": {
         const id = String(body.id);
         const banned = Boolean(body.banned);

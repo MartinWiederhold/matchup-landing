@@ -32,6 +32,7 @@ export interface Profile {
   visibility_age_min: number; // default 18
   visibility_age_max: number; // default 99
   is_paused: boolean; // default false
+  pause_requires_photo?: boolean; // default false — Admin verlangt ein echtes Foto zum Freischalten
   is_verified: boolean; // default false
   is_banned: boolean; // default false
   is_seed: boolean; // default false, Migration 021

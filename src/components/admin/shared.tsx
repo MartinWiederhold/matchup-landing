@@ -19,6 +19,7 @@ export type Profile = {
   additional_images?: string[] | null;
   is_seed?: boolean | null;
   is_paused?: boolean | null;
+  pause_requires_photo?: boolean | null;
   is_banned?: boolean | null;
   banned_at?: string | null;
   pause_reason?: string | null;

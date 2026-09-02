@@ -91,6 +91,23 @@ export default function UserDetailPage() {
     }
   }
 
+  async function requirePhoto() {
+    if (!profile) return;
+    const on = !profile.pause_requires_photo;
+    if (on && !confirm("Profil pausieren und ein echtes Foto verlangen? Der Nutzer wird erst nach einem Foto-Upload wieder freigeschaltet.")) return;
+    if (!on && !confirm("Foto-Auflage aufheben?")) return;
+    setBusy(true);
+    try {
+      await adminAction("requirePhoto", { id, on });
+      showToast(on ? "Foto verlangt (Profil pausiert)" : "Foto-Auflage aufgehoben");
+      await load();
+    } catch (e) {
+      alert("Fehler: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function toggleBan() {
     if (!profile) return;
     const next = !profile.is_banned;
@@ -233,6 +250,18 @@ export default function UserDetailPage() {
               }`}
             >
               {profile.is_paused ? "Pausierung aufheben" : "Profil pausieren"}
+            </button>
+
+            <button
+              onClick={requirePhoto}
+              disabled={busy}
+              className={`w-full py-3 rounded-2xl text-sm font-semibold transition-colors disabled:opacity-60 ${
+                profile.pause_requires_photo
+                  ? "bg-white text-violet-600 border border-violet-500 hover:bg-violet-50"
+                  : "bg-violet-500 text-white hover:bg-violet-600"
+              }`}
+            >
+              {profile.pause_requires_photo ? "Foto-Auflage aufheben" : "Echtes Foto verlangen"}
             </button>
 
             <button
