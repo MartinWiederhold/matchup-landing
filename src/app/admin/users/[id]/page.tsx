@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { adminAction, fetchModeration, type ModerationRow } from "@/lib/adminAction";
+import { adminAction, adminActionJson, fetchModeration, type ModerationRow } from "@/lib/adminAction";
 import {
   type Profile,
   type ReportRow,
@@ -29,6 +29,22 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [busy, setBusy] = useState(false);
+  // „Matchup Team"-Chat mit diesem Nutzer
+  type TeamMsg = { id: string; sender_id: string; content: string; created_at: string };
+  const [teamMsgs, setTeamMsgs] = useState<TeamMsg[]>([]);
+  const [teamId, setTeamId] = useState<string>("");
+  const [teamText, setTeamText] = useState("");
+  const [teamBusy, setTeamBusy] = useState(false);
+
+  const loadTeamChat = useCallback(async () => {
+    try {
+      const j = await adminActionJson<{ messages: TeamMsg[]; teamId: string }>("getTeamChat", { id });
+      setTeamMsgs(j.messages ?? []);
+      setTeamId(j.teamId ?? "");
+    } catch {
+      /* still */
+    }
+  }, [id]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,7 +83,38 @@ export default function UserDetailPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    loadTeamChat();
+  }, [load, loadTeamChat]);
+
+  async function sendTeamMsg() {
+    const text = teamText.trim();
+    if (!text) return;
+    setTeamBusy(true);
+    try {
+      await adminAction("messageUser", { id, text });
+      setTeamText("");
+      await loadTeamChat();
+      showToast("Nachricht gesendet");
+    } catch (e) {
+      alert("Fehler: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setTeamBusy(false);
+    }
+  }
+
+  async function removeTeamChat() {
+    if (!confirm("Diesen Matchup-Team-Chat entfernen? (Betrifft NUR diese Konversation, keine anderen Chats.)")) return;
+    setTeamBusy(true);
+    try {
+      await adminAction("deleteTeamChat", { id });
+      await loadTeamChat();
+      showToast("Team-Chat entfernt");
+    } catch (e) {
+      alert("Fehler: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setTeamBusy(false);
+    }
+  }
 
   function showToast(msg: string) {
     setToast(msg);
@@ -288,6 +335,66 @@ export default function UserDetailPage() {
               Login-Konto — unwiderruflich.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">
+            Matchup-Team-Chat
+          </h3>
+          {teamMsgs.length > 0 && (
+            <button
+              onClick={removeTeamChat}
+              disabled={teamBusy}
+              className="text-xs font-semibold text-red-500 hover:text-red-600 disabled:opacity-50"
+            >
+              Chat entfernen
+            </button>
+          )}
+        </div>
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {teamMsgs.length === 0 && (
+              <p className="text-sm text-neutral-400">
+                Noch keine Nachrichten. Schreib dem Nutzer als „Matchup Team".
+              </p>
+            )}
+            {teamMsgs.map((m) => {
+              const fromTeam = m.sender_id === teamId;
+              return (
+                <div key={m.id} className={`flex ${fromTeam ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${
+                      fromTeam ? "bg-violet-600 text-white" : "bg-neutral-100 text-neutral-800"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex items-end gap-2">
+            <textarea
+              value={teamText}
+              onChange={(e) => setTeamText(e.target.value)}
+              rows={2}
+              placeholder="Nachricht an den Nutzer …"
+              className="flex-1 resize-none rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-violet-500"
+            />
+            <button
+              onClick={sendTeamMsg}
+              disabled={teamBusy || !teamText.trim()}
+              className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {teamBusy ? "…" : "Senden"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-neutral-400">
+            Erscheint beim Nutzer als normaler Chat von „Matchup Team". Er kann antworten
+            (Antworten erscheinen hier). „Chat entfernen" löscht NUR diese Konversation.
+          </p>
         </div>
       </div>
 

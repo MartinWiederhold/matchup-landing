@@ -27,6 +27,26 @@ export async function adminAction(
   if (!res.ok) throw new Error(json.error || `Fehler (${res.status})`);
 }
 
+/** Wie adminAction, gibt aber die JSON-Antwort zurück (z. B. für getTeamChat). */
+export async function adminActionJson<T = unknown>(
+  action: string,
+  payload: Record<string, unknown> = {},
+): Promise<T> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error("Nicht eingeloggt");
+  const res = await fetch("/api/admin/action", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((json as { error?: string }).error || `Fehler (${res.status})`);
+  return json as T;
+}
+
 export type ModerationRow = {
   user_id: string;
   report_count: number;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceClient, verifyAdmin, bearerToken } from "@/lib/adminClient";
+import { MATCHUP_TEAM_ID } from "@/lib/team";
 
 /**
  * Gesicherter Endpoint für alle schreibenden Admin-Aktionen.
@@ -50,6 +51,65 @@ export async function POST(request: Request) {
           .from("profiles_private")
           .update({ pause_reason: on ? "Bitte lade ein echtes Foto von dir hoch." : null })
           .eq("user_id", id);
+        return NextResponse.json({ ok: true });
+      }
+
+      // ── „Matchup Team"-Chat: rein additiv. Nachricht an einen Nutzer senden.
+      // Legt bei Bedarf die Team↔Nutzer-Konversation an (nur diese) und fügt eine
+      // Nachricht hinzu — fasst KEINE bestehenden Chats/Matches/Profile an.
+      case "messageUser": {
+        const id = String(body.id);
+        const text = String(body.text ?? "").trim();
+        if (!text) return NextResponse.json({ error: "Leere Nachricht" }, { status: 400 });
+        const [u1, u2] = [MATCHUP_TEAM_ID, id].sort();
+        let matchId: string;
+        const { data: m } = await svc.from("matches").select("id").eq("user1_id", u1).eq("user2_id", u2).maybeSingle();
+        if (m) {
+          matchId = (m as { id: string }).id;
+          await svc.from("matches").update({ is_active: true }).eq("id", matchId);
+        } else {
+          const ins = await svc.from("matches").insert({ user1_id: u1, user2_id: u2, is_active: true }).select("id").single();
+          if (ins.error) throw ins.error;
+          matchId = (ins.data as { id: string }).id;
+        }
+        const { error } = await svc.from("messages").insert({ match_id: matchId, sender_id: MATCHUP_TEAM_ID, content: text });
+        if (error) throw error;
+        return NextResponse.json({ ok: true });
+      }
+
+      // Team↔Nutzer-Verlauf lesen (nur Anzeige im Admin).
+      case "getTeamChat": {
+        const id = String(body.id);
+        const [u1, u2] = [MATCHUP_TEAM_ID, id].sort();
+        const { data: m } = await svc.from("matches").select("id").eq("user1_id", u1).eq("user2_id", u2).maybeSingle();
+        if (!m) return NextResponse.json({ messages: [], teamId: MATCHUP_TEAM_ID });
+        const { data: msgs } = await svc
+          .from("messages")
+          .select("id, sender_id, content, created_at")
+          .eq("match_id", (m as { id: string }).id)
+          .order("created_at", { ascending: true });
+        return NextResponse.json({ messages: msgs ?? [], teamId: MATCHUP_TEAM_ID });
+      }
+
+      // NUR die Team↔Nutzer-Konversation entfernen. Gezielt über deren Match-ID, mit
+      // Rück-Prüfung „ein Teilnehmer = Matchup Team". Nutzer↔Nutzer-Daten sind technisch
+      // ausgeschlossen (kein breites Delete).
+      case "deleteTeamChat": {
+        const id = String(body.id);
+        const [u1, u2] = [MATCHUP_TEAM_ID, id].sort();
+        const { data: m } = await svc
+          .from("matches")
+          .select("id, user1_id, user2_id")
+          .eq("user1_id", u1)
+          .eq("user2_id", u2)
+          .maybeSingle();
+        if (!m) return NextResponse.json({ ok: true });
+        const row = m as { id: string; user1_id: string; user2_id: string };
+        if (row.user1_id !== MATCHUP_TEAM_ID && row.user2_id !== MATCHUP_TEAM_ID) {
+          return NextResponse.json({ error: "Kein Team-Chat" }, { status: 400 });
+        }
+        await svc.from("messages").delete().eq("match_id", row.id);
+        await svc.from("matches").delete().eq("id", row.id);
         return NextResponse.json({ ok: true });
       }
 
