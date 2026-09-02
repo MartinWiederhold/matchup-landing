@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -81,14 +82,7 @@ export default function PlayerMasterForm({ tone = "light", hideIds = false }: { 
   const checkLbl = dark ? "text-[var(--t2-text-faint)]" : "text-[var(--t2-ink)]";
 
   if (authLoading) return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loading")}</p>;
-  if (!user) {
-    return (
-      <div className={`mt-6 rounded-xl p-6 text-center ${dark ? "bg-[var(--t2-on-accent)]/[0.03] ring-1 ring-white/10" : "bg-[var(--t2-surface)]"}`}>
-        <p className={`t2-fs-body ${muted}`}>{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
+  if (!user) return <TourLoginCard />;
   if (status === "loading") return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loading")}</p>;
   if (status === "error") return <p className={`mt-6 t2-fs-body ${muted}`}>{t("tour.loadError")}</p>;
 

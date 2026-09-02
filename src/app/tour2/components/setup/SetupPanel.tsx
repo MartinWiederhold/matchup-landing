@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -58,15 +59,7 @@ export default function SetupPanel({ initialStep, onExit }: { initialStep?: Setu
   };
 
   if (authLoading || load === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (!user) {
-    return (
-      <div className="mt-8 t2-panel text-center">
-        <h2 className="t2-fs-h3 font-bold text-[var(--t2-ink)]">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 t2-cta">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
+  if (!user) return <TourLoginCard />;
   if (load === "error" || !state) return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const done = (n: SetupStep) => (n === 1 ? state.step1Done : n === 2 ? state.step2Done : n < step);

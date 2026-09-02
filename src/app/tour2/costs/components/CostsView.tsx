@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -65,17 +66,7 @@ export default function CostsView() {
   if (authLoading) {
     return <p className="mt-10 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   }
-  if (!user) {
-    return (
-      <div className="t2-panel mt-10 text-center">
-        <h2 className="t2-fs-h3 font-bold">{t("tour.loginRequiredTitle")}</h2>
-        <p className="mx-auto mt-2 max-w-sm t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-6 t2-cta">
-          {t("tour.loginCta")}
-        </Link>
-      </div>
-    );
-  }
+  if (!user) return <TourLoginCard />;
 
   if (state === "loading") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (state === "error") return <p className="mt-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;

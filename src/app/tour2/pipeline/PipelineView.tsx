@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -110,14 +111,7 @@ export default function PipelineView() {
 
   // ── Auth-/Ladegate ─────────────────────────────────────────────────────────
   if (authLoading) return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (!user) {
-    return (
-      <div className="mt-8 t2-panel bg-[var(--t2-surface)] p-6 text-center">
-        <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
+  if (!user) return <TourLoginCard />;
   if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
   if (weeks.length === 0) return <p className="mt-8 rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.pipeEmpty")}</p>;

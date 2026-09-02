@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -72,14 +73,7 @@ export default function FormView() {
   const basis = (tl: Tally) => (tl.decided === 0 ? t("tour.formNoBasis") : t("tour.formBasis", { n: tl.decided }));
 
   if (authLoading) return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
-  if (!user) {
-    return (
-      <div className="mt-8 t2-panel bg-[var(--t2-surface)] p-6 text-center">
-        <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loginRequiredText")}</p>
-        <Link href="/app" className="mt-3 t2-cta">{t("tour.loginCta")}</Link>
-      </div>
-    );
-  }
+  if (!user) return <TourLoginCard />;
   if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 

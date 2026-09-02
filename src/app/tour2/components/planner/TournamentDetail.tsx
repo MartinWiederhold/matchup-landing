@@ -1125,7 +1125,7 @@ export default function TournamentDetail({
         <section>
           <p className="t2-fs-body-sm font-bold uppercase tracking-[0.14em] text-[var(--t2-faint)]">{t("tour.wsBookTitle")}</p>
           <div className="mt-2 space-y-1.5">
-            <a href={flightUrl(stop, originCity || undefined)} target="_blank" rel="noopener noreferrer" className={link}><span>✈ {t("tour.wsBookFlights")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
+            <a href={flightUrl(stop, originCity || undefined)} target="_blank" rel="noopener noreferrer" className={link}><span>✈ {t("tour.wsBookFlights")}{flightPrice != null && <span className="ml-1.5 font-bold text-[var(--t2-accent)]">{t("tour.svcFrom")} {fmtEUR(flightPrice)}</span>}</span><span className="text-[var(--t2-faint)]">↗</span></a>
             <a href={hotelUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🏨 {t("tour.wsBookHotels")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
             <a href={carUrl(stop)} target="_blank" rel="noopener noreferrer" className={link}><span>🚗 {t("tour.wsBookCars")}</span><span className="text-[var(--t2-faint)]">↗</span></a>
           </div>
