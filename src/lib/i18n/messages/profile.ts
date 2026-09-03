@@ -3,6 +3,7 @@ export const profile = {
     // ProfileTab
     verified: "✓ Verifiziert",
     verifiedPlain: "Verifiziert",
+    officialAccount: "Offizielles Matchup-Konto",
     matchScore: "MatchScore",
     matchScoreProvisional: "vorläufig",
     leaderboard: "Rangliste",
@@ -132,6 +133,7 @@ export const profile = {
     // ProfileTab
     verified: "✓ Verified",
     verifiedPlain: "Verified",
+    officialAccount: "Official Matchup account",
     matchScore: "MatchScore",
     matchScoreProvisional: "provisional",
     leaderboard: "Leaderboard",

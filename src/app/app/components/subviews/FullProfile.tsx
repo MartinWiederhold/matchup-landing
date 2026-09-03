@@ -19,6 +19,7 @@ import {
 import type { Profile, PlayerStats } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
 import { notifyConnect } from "@/lib/notifyConnect";
+import { MATCHUP_TEAM_ID } from "@/lib/team";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
 
@@ -77,6 +78,9 @@ export default function FullProfile({
   }, [userId]);
 
   if (!p) return <FullLoading />;
+  // System-Konto „Matchup Team": keine Spieler-Daten (Alter/Level/Matchscore) — es ist
+  // kein Spieler, sondern der offizielle Chat-Absender.
+  const isTeam = userId === MATCHUP_TEAM_ID;
 
   const images = [p.profile_image, ...(p.additional_images ?? [])].filter(
     Boolean,
@@ -228,7 +232,7 @@ export default function FullProfile({
           {/* Name / Ort / Distanz */}
           <div className="absolute inset-x-0 bottom-0 p-5">
             <div className="flex items-center gap-2">
-              <h1 className="text-[28px] font-extrabold leading-none text-white">{p.first_name}, {p.age}</h1>
+              <h1 className="text-[28px] font-extrabold leading-none text-white">{p.first_name}{isTeam ? "" : `, ${p.age}`}</h1>
               {online && <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white/60" />}
             </div>
             {(p.city || dist) && (
@@ -240,25 +244,32 @@ export default function FullProfile({
         </div>
 
         <div className="space-y-6 p-5">
-          {/* Sportarten / Level / Rating / Verifiziert */}
+          {/* Sportarten / Level / Rating / Verifiziert — für das System-Konto nur ein Badge */}
           <div className="flex flex-wrap gap-2">
-            {p.sports.map((sp) => (
-              <span key={sp} className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3.5 py-1.5 text-[13px] font-semibold text-matchup">
-                <SportIcon sport={sp} size={14} /> {sportLabel(sp)}
-              </span>
-            ))}
-            <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{skillLabel(p.skill_level)}</span>
-            {p.official_rating && (
-              <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{p.official_rating}</span>
-            )}
-            {p.is_verified && (
-              <span className="flex items-center gap-1 rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-matchup">
-                <CheckIcon size={13} /> {t("profile.verifiedPlain")}
-              </span>
+            {isTeam ? (
+              <span className="rounded-full bg-matchup/10 px-3.5 py-1.5 text-[13px] font-semibold text-matchup">{t("profile.officialAccount")}</span>
+            ) : (
+              <>
+                {p.sports.map((sp) => (
+                  <span key={sp} className="flex items-center gap-1.5 rounded-full bg-matchup/10 px-3.5 py-1.5 text-[13px] font-semibold text-matchup">
+                    <SportIcon sport={sp} size={14} /> {sportLabel(sp)}
+                  </span>
+                ))}
+                <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{skillLabel(p.skill_level)}</span>
+                {p.official_rating && (
+                  <span className="rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-neutral-700">{p.official_rating}</span>
+                )}
+                {p.is_verified && (
+                  <span className="flex items-center gap-1 rounded-full bg-black/[0.05] px-3.5 py-1.5 text-[13px] font-semibold text-matchup">
+                    <CheckIcon size={13} /> {t("profile.verifiedPlain")}
+                  </span>
+                )}
+              </>
             )}
           </div>
 
-          {/* Statistik (nur echte Werte) */}
+          {/* Statistik (nur echte Werte) — nicht für das System-Konto */}
+          {!isTeam && (
           <div className="grid grid-cols-3 gap-3">
             {[
               { v: String(p.match_score ?? 1000), l: t("profile.matchScore") },
@@ -271,6 +282,7 @@ export default function FullProfile({
               </div>
             ))}
           </div>
+          )}
 
           {/* Über */}
           {p.bio && (
