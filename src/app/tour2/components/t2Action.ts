@@ -18,7 +18,7 @@ export function tour2ActionHref(href: string): string {
   if (path === "setup") return `/tour2/profile${qs}`;
   if (path === "browse" || path === "map") return `${T2_FINDER}${qs}`;
   if (path === "wildcards") return `/tour2/network${qs}`;
-  if (path === "finance") return `/tour2/travel${qs}`;
+  if (path === "finance") return `/tour2/finance${qs}`;
   if (path === "points") return `${T2_RANKING}${qs}`;
   return `/tour2/${rest}`;
 }

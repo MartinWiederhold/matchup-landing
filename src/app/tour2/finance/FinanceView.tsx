@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -123,7 +124,8 @@ export default function FinanceView() {
   const tileLabel = "t2-label";
 
   return (
-    <div className="mt-8 space-y-8">
+    <Tour2Area title={t("tour.financeTitle")} lead={t("tour.financeSubtitle")}>
+      <div className="space-y-8">
       {/* ── Kennzahlen ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <div className={tile}>
@@ -233,6 +235,7 @@ export default function FinanceView() {
           </ul>
         )}
       </section>
-    </div>
+      </div>
+    </Tour2Area>
   );
 }

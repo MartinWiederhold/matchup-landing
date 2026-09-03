@@ -272,6 +272,7 @@ export default function TravelHub() {
         <ul className="space-y-2">
           <li><Link href="/tour2/costs" className="font-semibold text-[var(--t2-accent)]">{t("tour.costsTitle")} →</Link></li>
           <li><Link href="/tour2/expenses" className="font-semibold text-[var(--t2-accent)]">{t("tour.expTitle")} →</Link></li>
+          <li><Link href="/tour2/finance" className="font-semibold text-[var(--t2-accent)]">{t("tour.financeTitle")} →</Link></li>
         </ul>
       </T2AsideBlock>
     </>
