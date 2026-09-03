@@ -6,15 +6,16 @@ import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import type { TFunction } from "@/lib/i18n/core";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
 import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { getTourCatalog } from "@/lib/tourCatalogCache";
-import { loadTourOptPrefs, saveTourOptPrefs, parseCap, blockedRangesFrom } from "@/lib/tourOptPrefs";
+import { loadTourOptPrefs, saveTourOptPrefs, parseCap, blockedRangesFrom, SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, clearSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
 import { alternateTrend } from "@/domain/tour/entryTrend";
 import { loadReminderSettings, saveReminderSettings } from "@/lib/tourReminders";
-import { saveWhoAmI, saveSeasonBudget } from "@/lib/tourSetup";
+import { saveWhoAmI, saveSeasonBudget, loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { loadCostRates, type CostRatesPatch } from "@/lib/tourCosts";
 import { loadStays } from "@/lib/tourStays";
 import { hasSchengenPassport } from "@/lib/visa";
@@ -89,6 +90,10 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const [profile, setProfile] = useState<PlannerProfile | null>(null);
   const [tours, setTours] = useState<TourTournament[]>([]);
   const [seasonIds, setSeasonIds] = useState<Set<string>>(new Set());
+  // Geführter Erststart (gleicher 4-Schritt-Wizard wie auf Home): leere Saison + Setup
+  // nicht komplett → SetupPanel zeigen, statt den verwirrenden leeren Planer.
+  const [setup, setSetup] = useState<SetupState | null>(null);
+  const [forceHome, setForceHome] = useState(false);
   const [banned, setBanned] = useState<Set<string>>(new Set());
   // Dokument-Stammdaten (Pass-/Versicherungs-Ablauf) für die Ablaufwarnungen im Fristen-Block.
   const [docs, setDocs] = useState<PlayerDocs | null>(null);
@@ -103,6 +108,13 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [mapOpen, setMapOpen] = useState(false); // Handy: Karte aufklappbar; Desktop immer sichtbar
   useEffect(() => { if (initialSelectedId) setSelectedId(initialSelectedId); }, [initialSelectedId]);
+
+  // Setup-Stand für den geführten Erststart laden; „Überspringen" (SETUP_SKIP_KEY) respektieren.
+  useEffect(() => {
+    if (!user) return;
+    try { if (localStorage.getItem(SETUP_SKIP_KEY) === "1") setForceHome(true); } catch { /* egal */ }
+    loadSetupState(user.id).then(setSetup).catch(() => { /* Stand bleibt */ });
+  }, [user]);
 
   // Profil (aufklappbar) + Ranking-Bearbeitung.
   const [profileOpen, setProfileOpen] = useState(false);
@@ -736,6 +748,19 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   // Anmeldemaske direkt in /tour (dieselbe Supabase-Anmeldung → geteilte Sitzung), statt
   // nach /app zu verweisen. Das Weiterleiten wirkte wie eine Sackgasse.
   if (!user) return <TourLoginCard />;
+
+  // Geführter Erststart auf der Season-Seite — identisch zu Home: leere Saison + Setup
+  // nicht abgeschlossen → den 4-Schritt-Wizard zeigen (kein verwirrender leerer Planer,
+  // keine /app-Weiterleitung). „Überspringen" (onExit) zeigt danach den normalen Planer.
+  if (setup && !setup.complete && seasonIds.size === 0 && !forceHome) {
+    return (
+      <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-8">
+        <p className="t2-eyebrow">Matchup Tour</p>
+        <h1 className="t2-display mt-3 t2-fs-display">{t("tour.t2onbHello")}</h1>
+        <SetupPanel onExit={() => setForceHome(true)} />
+      </div>
+    );
+  }
 
   const inp = "t2-input";
   const filt = (on: boolean) => `t2-chip ${on ? "is-on" : ""}`;
