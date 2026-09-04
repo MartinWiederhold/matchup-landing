@@ -48,6 +48,9 @@ export type SeasonMetrics = {
   costPerTournament: Money;        // {} wenn keine erfassten Turniere
   costPerWeek: Money;
   prizeToCost: Record<string, number>; // Preisgeld/Kosten je Währung (nur wo Kosten > 0)
+  // Saisonweite Ausgaben je Kategorie (Money je Währung), absteigend nach Gesamthöhe.
+  // Für die „Wohin geht mein Geld?"-Aufschlüsselung auf der Bilanz-Seite.
+  expensesByCategory: { category: string; byCurrency: Money }[];
 };
 
 export type FinanceInput = {
@@ -135,10 +138,24 @@ export function seasonMetrics(input: FinanceInput): SeasonMetrics {
   for (const c of Object.keys(expensesTotal)) if (expensesTotal[c] > 0 && prizeTotal[c] != null) prizeToCost[c] = prizeTotal[c] / expensesTotal[c];
 
   const currencies = [...new Set([...Object.keys(expensesTotal), ...Object.keys(incomeTotal)])].sort();
+
+  // Ausgaben je Kategorie zusammenzählen (je Währung), dann absteigend nach Gesamthöhe.
+  const catMap = new Map<string, Money>();
+  for (const e of input.expenses) {
+    const m = catMap.get(e.category) ?? {};
+    m[e.currency] = (m[e.currency] ?? 0) + e.amountMinor;
+    catMap.set(e.category, m);
+  }
+  const sumMoney = (m: Money): number => Object.values(m).reduce((s, v) => s + v, 0);
+  const expensesByCategory = [...catMap.entries()]
+    .map(([category, byCurrency]) => ({ category, byCurrency }))
+    .sort((a, b) => sumMoney(b.byCurrency) - sumMoney(a.byCurrency));
+
   return {
     currencies, expensesTotal, prizeTotal, incomeTotal, balance,
     tournamentsWithExpenses: nT, weeksWithExpenses: nW,
     points: input.points, hasResults: input.hasResults,
     costPerPoint, costPerTournament: perScalar(expensesTotal, nT), costPerWeek: perScalar(expensesTotal, nW), prizeToCost,
+    expensesByCategory,
   };
 }

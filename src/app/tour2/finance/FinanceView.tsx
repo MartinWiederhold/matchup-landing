@@ -122,6 +122,11 @@ export default function FinanceView() {
   const m = metrics!;
   const tile = "border-t border-[var(--t2-line)] py-4";
   const tileLabel = "t2-label";
+  // „Wohin geht mein Geld?" — Balkenanteile relativ zur größten Kategorie (Summe über alle
+  // Währungen NUR für die Balkenbreite; die angezeigten Beträge bleiben je Währung getrennt).
+  const catSum = (money: Money) => Object.values(money).reduce((s, v) => s + v, 0);
+  const maxCat = m.expensesByCategory.length ? (catSum(m.expensesByCategory[0].byCurrency) || 1) : 1;
+  const catLabel = (c: string) => { const l = t(`tour.expCat_${c}`); return l.startsWith("tour.") ? c : l; };
 
   return (
     <Tour2Area title={t("tour.financeTitle")} lead={t("tour.financeSubtitle")}>
@@ -159,6 +164,29 @@ export default function FinanceView() {
           <p className="mt-1 t2-fs-meta text-[var(--t2-faint)]">{t("tour.finPrize")}: {fmtMoney(m.prizeTotal)}</p>
         </div>
       </div>
+
+      {/* ── Wohin geht mein Geld? (Ausgaben je Kategorie) ─────────────────────── */}
+      {m.expensesByCategory.length > 0 && (
+        <section>
+          <p className={tileLabel}>{t("tour.finByCategory")}</p>
+          <div className="mt-3 space-y-2.5">
+            {m.expensesByCategory.map((c) => {
+              const pct = Math.round((catSum(c.byCurrency) / maxCat) * 100);
+              return (
+                <div key={c.category}>
+                  <div className="flex items-center justify-between t2-fs-body-sm">
+                    <span className="font-semibold text-[var(--t2-ink)]">{catLabel(c.category)}</span>
+                    <span className="tabular-nums font-semibold text-[var(--t2-muted)]">{fmtMoney(c.byCurrency)}</span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[var(--t2-surface)]">
+                    <div className="h-full rounded-full bg-[var(--t2-accent)]" style={{ width: `${Math.max(pct, 3)}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ── Bilanz je Turnier ──────────────────────────────────────────────── */}
       {balances.length === 0 ? (

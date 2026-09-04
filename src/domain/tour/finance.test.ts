@@ -67,6 +67,20 @@ describe("seasonMetrics – Kennzahlen", () => {
     expect(seasonMetrics(base({ expenses: [e("A", 1000, "EUR", "food")] })).hasResults).toBe(false);
   });
 
+  it("expensesByCategory: je Kategorie summiert (je Währung), absteigend nach Gesamthöhe", () => {
+    const m = seasonMetrics(base({
+      expenses: [
+        e("A", 30000, "EUR", "flight"), e("B", 20000, "EUR", "flight"), // flight 50000
+        e("A", 40000, "EUR", "hotel"),                                   // hotel 40000
+        e(null, 5000, "CHF", "food"),                                    // food (andere Währung)
+      ],
+    }));
+    expect(m.expensesByCategory.map((c) => c.category)).toEqual(["flight", "hotel", "food"]);
+    expect(m.expensesByCategory[0].byCurrency).toEqual({ EUR: 50000 });
+    expect(m.expensesByCategory[1].byCurrency).toEqual({ EUR: 40000 });
+    expect(m.expensesByCategory[2].byCurrency).toEqual({ CHF: 5000 });
+  });
+
   it("Preisgeld/Kosten je Währung; ohne Kosten kein Verhältnis", () => {
     const m = seasonMetrics(base({ expenses: [e("A", 40000, "EUR", "flight")], prizes: [p("A", 20000, "EUR")] }));
     expect(m.prizeToCost).toEqual({ EUR: 0.5 });
