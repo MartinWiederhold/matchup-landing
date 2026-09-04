@@ -13,11 +13,13 @@ describe("tour2ActionHref", () => {
     expect(tour2ActionHref("/tour/wildcards")).toBe("/tour2/network");
     expect(tour2ActionHref("/tour/calendar")).toBe("/tour2/calendar");
     expect(tour2ActionHref("/tour/timeline")).toBe("/tour2/timeline");
+    expect(tour2ActionHref("/tour/finance")).toBe("/tour2/finance");
+    expect(tour2ActionHref("/tour/pipeline")).toBe("/tour2/pipeline");
   });
 
-  it("leitet pipeline auf den Saison-Planer", () => {
-    expect(tour2ActionHref("/tour/pipeline")).toBe("/tour2/season");
+  it("leitet die Saison-Wurzel auf den Planer", () => {
     expect(tour2ActionHref("/tour/")).toBe("/tour2/season");
+    expect(tour2ActionHref("/tour/season")).toBe("/tour2/season");
   });
 
   it("lässt /tour2 und fremde Pfade unverändert", () => {
