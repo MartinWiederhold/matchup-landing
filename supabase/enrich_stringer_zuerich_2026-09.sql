@@ -58,3 +58,16 @@ where category='stringer' and name='Smash Tennistraining Zürich';
 
 -- Nicht-Stringer entfernt: Radical Sports (Ski/Snowboard), Ochsner Hockey Pro Shop (Hockey)
 delete from web.service_providers where category='stringer' and name in ('Radical Sports','Ochsner Hockey Pro Shop Zürich');
+
+-- Verifikations-Pass 09/2026: Preise direkt von den Anbieterseiten (WebFetch) gegengeprüft.
+-- Dabei 3 Fehlwerte korrigiert (Quelle jeweils die Service-Seite des Anbieters):
+--   racketshop.ch → Fr. 30.00 (eigenes Racket)      [war 25]
+--   TenString     → CHF 30 (+ Saite; +5 Fremdsaite)  [war 35]
+--   Tennis Factory→ CHF 50, Saite SEPARAT/mitbringen  [Bio "inkl. Material" war falsch]
+-- Bestätigt unverändert: Ochsner 29.95, InsideOut 35, Smash 30, Tennis-Point 25.
+-- Decathlon: bestätigt KEIN publizierter Fixpreis (Seite nennt keinen) → bleibt NULL.
+update web.service_providers set price_from=30, updated_at=now() where category='stringer' and name='racketshop.ch';
+update web.service_providers set price_from=30, updated_at=now() where category='stringer' and name like 'TenString%';
+update web.service_providers set bio='Bespannung ab CHF 50 (Saite separat / eigene Saite möglich).',
+  contact_email=coalesce(contact_email,'info@tennisfactory.ch'), updated_at=now()
+where category='stringer' and name='Tennis Factory';
