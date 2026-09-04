@@ -1259,11 +1259,21 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                   onSelect={setSelectedId}
                   onRemove={toggle}
                   empty={
-                    <div className="border border-[var(--t2-line)] px-4 py-8 text-center">
-                      <p className="t2-fs-body font-bold">{t("tour.t2noSeason")}</p>
-                      <p className="mt-2 t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2seasonEmptyLead")}</p>
-                      <button type="button" onClick={() => { if (!ratesDone) { openFillSheet(); setCostOpen(true); } else void smartFill(); }} className="t2-cta mt-4">{t("tour.wsFill")}</button>
-                      <Link href="/tour2/finder" className="mt-3 block t2-fs-micro font-semibold text-[var(--t2-accent)]">{t("tour.t2browseAdd")} →</Link>
+                    <div className="border border-[var(--t2-line)] px-4 py-9 text-center">
+                      <p className="t2-eyebrow">{t("tour.wsGenEyebrow")}</p>
+                      <p className="mt-2 t2-fs-h3 font-extrabold text-[var(--t2-text)]">{t("tour.wsGenTitle")}</p>
+                      <p className="mx-auto mt-2 max-w-md t2-fs-body-sm leading-relaxed text-[var(--t2-muted)]">{t("tour.t2seasonEmptyLead")}</p>
+                      {/* Ziel direkt hier wählen — „sag dein Ziel, wir bauen die Saison" */}
+                      <div className="mt-4 flex items-center justify-center gap-1.5">
+                        {([["most_tournaments", "wsObjTournaments"], ["most_points", "wsObjPoints"]] as const).map(([v, key]) => (
+                          <button key={v} type="button" onClick={() => chooseObjective(v)} className={filt(objective === v)}>{t(`tour.${key}`)}</button>
+                        ))}
+                      </div>
+                      <button type="button" disabled={filling || applying} onClick={() => { if (!ratesDone) { openFillSheet(); setCostOpen(true); } else void smartFill(); }} className="t2-cta mt-4 disabled:opacity-50">{filling ? t("tour.wsFilling") : t("tour.wsGenCta")}</button>
+                      <div className="mt-3 flex items-center justify-center gap-3">
+                        <button type="button" onClick={openFillSheet} className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsGenTweak")}</button>
+                        <Link href="/tour2/finder" className="t2-fs-micro font-semibold text-[var(--t2-accent)]">{t("tour.t2browseAdd")} →</Link>
+                      </div>
                     </div>
                   }
                 />
