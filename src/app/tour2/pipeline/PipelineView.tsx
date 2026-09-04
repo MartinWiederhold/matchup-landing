@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
@@ -114,10 +115,17 @@ export default function PipelineView() {
   if (!user) return <TourLoginCard />;
   if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
-  if (weeks.length === 0) return <p className="mt-8 rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.pipeEmpty")}</p>;
+  if (weeks.length === 0) {
+    return (
+      <Tour2Area title={t("tour.pipelineTitle")} lead={t("tour.pipelineSubtitle")}>
+        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.pipeEmpty")}</p>
+      </Tour2Area>
+    );
+  }
 
   return (
-    <div className="mt-8">
+    <Tour2Area title={t("tour.pipelineTitle")} lead={t("tour.pipelineSubtitle")}>
+    <div>
       {/* Breit: echte Tabelle */}
       <div className="hidden overflow-hidden rounded-xl border border-[var(--t2-line)] md:block">
         <table className="w-full border-collapse text-left t2-fs-body-sm">
@@ -177,5 +185,6 @@ export default function PipelineView() {
         ))}
       </div>
     </div>
+    </Tour2Area>
   );
 }

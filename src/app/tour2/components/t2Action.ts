@@ -14,7 +14,8 @@ export function tour2ActionHref(href: string): string {
   const rest = href.slice("/tour/".length);
   const path = rest.split("?")[0];
   const qs = rest.slice(path.length);
-  if (path === "pipeline" || path === "season" || path === "") return `${T2_SEASON}${qs}`;
+  if (path === "pipeline") return `/tour2/pipeline${qs}`;
+  if (path === "season" || path === "") return `${T2_SEASON}${qs}`;
   if (path === "setup") return `/tour2/profile${qs}`;
   if (path === "browse" || path === "map") return `${T2_FINDER}${qs}`;
   if (path === "wildcards") return `/tour2/network${qs}`;

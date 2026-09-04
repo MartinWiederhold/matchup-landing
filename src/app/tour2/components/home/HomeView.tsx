@@ -943,9 +943,14 @@ export default function HomeView() {
         {/* ── 5. ZEITACHSE ────────────────────────────────────────── */}
         {active.length > 0 && (
           <section className="mt-4">
-            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
-              {t("tour.t2cpTimelineTitle")}
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
+                {t("tour.t2cpTimelineTitle")}
+              </h2>
+              <Link href="/tour2/pipeline" className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>
+                {t("tour.pipelineTitle")} →
+              </Link>
+            </div>
             <div className="mt-3">
               <SeasonTimeline
                 stops={timelineStops}
