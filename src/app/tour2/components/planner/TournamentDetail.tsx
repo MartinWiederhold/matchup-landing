@@ -27,6 +27,7 @@ import type { TourTravelDocument } from "@/lib/types";
 import { setEntryStatus, setFeePaid, logEntryEvent, deleteEntryEvent } from "@/lib/tourSeason";
 import { entryHistory } from "@/domain/tour/entryTrend";
 import { expectedPoints, toPointsCategory, type PointsRound } from "@/domain/tour/points";
+import { drawChance } from "@/domain/tour/drawChance";
 import { restDaysBetween } from "@/domain/tour/travelBuffer";
 import { schengenUsage, isSchengenCode, type Stay } from "@/domain/tour/schengen";
 import { isBestRecordedSurface, type PerfMatch } from "@/domain/tour/performance";
@@ -535,6 +536,9 @@ export default function TournamentDetail({
 
   const ptsCat = toPointsCategory(tt.category);
   const expPts = ptsCat ? expectedPoints(tt.category, "R16", start).points : null;
+  // Draw-Chance (Richtwert): Ranking (#123 → 123) gegen typische Cutoff-Bänder der Kategorie.
+  const rankNum = viewerRank ? (parseInt(viewerRank.replace(/\D/g, ""), 10) || null) : null;
+  const draw = drawChance(tt.category, rankNum);
   const prevStop = useMemo(() => {
     const before = seasonStops.filter((s) => s.id !== tt.id && s.monday < start).sort((a, b) => a.monday.localeCompare(b.monday));
     return before[before.length - 1] ?? null;
@@ -595,6 +599,19 @@ export default function TournamentDetail({
                 <div className={fitRow}>
                   <span className="text-[var(--t2-muted)]">{t("tour.t2expPoints")}</span>
                   <span className="text-right font-semibold tabular-nums text-[var(--t2-ink)]">{t("tour.t2fitPts", { n: expPts })} <span className="font-normal text-[var(--t2-muted)]">· {t("tour.t2pointsAssume", { round: t("tour.round_R16") })}</span></span>
+                </div>
+              )}
+              {draw.status !== "unknown" && (
+                <div className={fitRow}>
+                  <span className="text-[var(--t2-muted)]">{t("tour.drawLabel")}</span>
+                  <span className="text-right">
+                    <span className={`font-semibold ${draw.status === "main" ? "text-[var(--t2-success)]" : draw.status === "quali" ? "text-[var(--t2-warn)]" : "text-[var(--t2-danger)]"}`}>
+                      {draw.status === "main" ? t("tour.drawMain") : draw.status === "quali" ? t("tour.drawQuali") : t("tour.drawUnlikely")}
+                    </span>
+                    {draw.band && rankNum != null && (
+                      <span className="block t2-fs-meta font-normal text-[var(--t2-faint)]">{t("tour.drawHint", { rank: rankNum, main: draw.band.main, quali: draw.band.quali })}</span>
+                    )}
+                  </span>
                 </div>
               )}
               {ratesDone && (
