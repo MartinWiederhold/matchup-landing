@@ -23,6 +23,7 @@ import StepWhoAreYou from "@/app/tour2/components/setup/StepWhoAreYou";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
 import PlanRulesCard from "./PlanRulesCard";
 import CostRatesForm from "@/app/tour2/costs/components/CostRatesForm";
+import ShareSeasonCard from "./ShareSeasonCard";
 import PlayerMasterForm from "./PlayerMasterForm";
 import TravelDocsCard from "./TravelDocsCard";
 import { t2markArea } from "@/app/tour2/t2mark";
@@ -179,6 +180,8 @@ export default function ProfileView({ initialStep }: { initialStep?: 1 | 2 | 3 |
           </button>
         </div>
       </section>
+
+      <ShareSeasonCard userId={user.id} />
 
       <section className="mt-8">
         <button
