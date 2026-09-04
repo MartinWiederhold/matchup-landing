@@ -8,6 +8,7 @@ import { sportLabel } from "@/lib/utils/formatters";
 import { fetchDistances } from "@/lib/utils/distances";
 import { ensureMatch } from "@/lib/matchmaking";
 import { notifyConnect } from "@/lib/notifyConnect";
+import { MATCHUP_TEAM_ID } from "@/lib/team";
 import type { Sport, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { useAppNav } from "../appNav";
@@ -120,9 +121,9 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
       // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
       .from("profiles")
       .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender")
-      // is_seed=false blendet Seed-/System-Konten aus (z. B. das „Matchup Team"-Chatkonto) —
-      // wie in BrowsePeople/DiscoverTab. System-Konten sind keine Spieler zum Verbinden.
-      .eq("is_paused", false).eq("is_banned", false).eq("is_seed", false).neq("id", profile.id)
+      // Nur das „Matchup Team"-Systemkonto ausblenden (per ID) — NICHT alle Seeds:
+      // Demo-/Seed-Spieler sollen die Auswahl weiter füllen (wie in DiscoverTab, App populated).
+      .eq("is_paused", false).eq("is_banned", false).neq("id", MATCHUP_TEAM_ID).neq("id", profile.id)
       .not("profile_image", "is", null);
     if (filters.sports.length) q = q.overlaps("sports", filters.sports);
     if (filters.skillLevels.length) q = q.in("skill_level", filters.skillLevels);

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
+import { MATCHUP_TEAM_ID } from "@/lib/team";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading } from "../shared/ui";
@@ -138,6 +139,8 @@ export default function DiscoverTab() {
       .eq("is_paused", false)
       .eq("is_banned", false)
       // Seed-/Demo-Profile bleiben sichtbar (App populated); Admin trennt sie über is_seed.
+      // Nur das „Matchup Team"-Systemkonto per ID ausblenden (kein Spieler zum Verbinden).
+      .neq("id", MATCHUP_TEAM_ID)
       .order("last_active", { ascending: false })
       .limit(200);
 

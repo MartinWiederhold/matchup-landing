@@ -63,10 +63,11 @@ const SVC_COLOR: Record<string, string> = {
   coach: "#4b3bf3", hitting: "#35b96a", stringer: "#f26b3a", physio: "#2e93f0",
   sc: "#9b5de5", mental: "#e8930b", nutrition: "#16a34a", tour_companion: "#0891b2",
 };
-// Website → Favicon (wie bei den Verzeichnis-Seeds). Fallback später auf Matchup-Icon.
+// Website → Firmen-/Website-Logo. Google-Favicon in 128px (wie WimbledonWidget/tournaments.ts) —
+// scharf und je Domain unterschiedlich, statt der 16px-DuckDuckGo-Variante (verwaschen, sah oft gleich aus).
 function svcFavicon(website?: string | null): string | null {
   if (!website) return null;
-  try { return `https://icons.duckduckgo.com/ip3/${new URL(website).host}.ico`; } catch { return null; }
+  try { return `https://www.google.com/s2/favicons?domain=${new URL(website).hostname}&sz=128`; } catch { return null; }
 }
 // Anbieter-Marker GENAU wie Club-Marker: weißer Kreis mit Logo + farbigem Rand.
 // Bildquelle: eigenes Logo/Foto (image_url) → Website-Favicon → Matchup-Icon.

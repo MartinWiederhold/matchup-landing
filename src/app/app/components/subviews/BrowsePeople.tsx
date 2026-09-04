@@ -10,6 +10,7 @@ import type { Profile, FilterState } from "@/lib/types";
 import { defaultFilters } from "@/lib/types";
 import { ensureMatch } from "@/lib/matchmaking";
 import { notifyConnect } from "@/lib/notifyConnect";
+import { MATCHUP_TEAM_ID } from "@/lib/team";
 import { useT } from "@/lib/i18n";
 import { useAppNav } from "../appNav";
 import { FullLoading, EmptyState, SubViewHeader } from "../shared/ui";
@@ -59,7 +60,8 @@ export default function BrowsePeople() {
     const { data: raw } = await supabase
       // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
       .from("profiles").select("id, first_name, display_name, username, age, gender, sports, skill_level, profile_image, club_id, last_active")
-      .eq("is_paused", false).eq("is_banned", false).eq("is_seed", false)
+      // Nur das „Matchup Team"-Systemkonto ausblenden (per ID) — Demo-/Seed-Spieler füllen die Suche (wie DiscoverTab).
+      .eq("is_paused", false).eq("is_banned", false).neq("id", MATCHUP_TEAM_ID)
       .order("last_active", { ascending: false }).limit(300);
 
     const effectiveSports = filters.sports.length ? filters.sports : profile.sports;
