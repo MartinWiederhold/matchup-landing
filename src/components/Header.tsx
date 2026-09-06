@@ -52,19 +52,16 @@ export default function Header() {
     { label: t("header.compete"), href: "/compete" },
   ];
 
-  // Unter „Mehr"-Dropdown: Events (Link), dann Shop & Advice (Coming soon).
+  // Unter „Mehr"-Dropdown: Events (Link), Shop & Advice (Coming soon), About.
   const moreItems: NavFeature[] = [
     { label: t("header.events"), href: "/events" },
     { label: t("header.shop"), href: "/shop", waitlist: true },
     { label: t("header.beratung"), href: "/beratung", waitlist: true },
-  ];
-
-  // Im Hamburger alles flach + „About".
-  const mobileNavItems: NavFeature[] = [
-    ...primaryItems,
-    ...moreItems,
     { label: t("header.about"), href: "/about" },
   ];
+
+  // Im Hamburger alles flach (About steckt bereits in moreItems).
+  const mobileNavItems: NavFeature[] = [...primaryItems, ...moreItems];
 
   function openWaitlist(item: NavFeature) {
     setOpen(false);
