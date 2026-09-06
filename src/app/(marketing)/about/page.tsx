@@ -63,19 +63,67 @@ export default async function AboutPage() {
 
   return (
     <>
-      {/* HERO — dunkel mit Matchup-Glow, nicht bildschirmfüllend */}
-      <section className="relative overflow-hidden bg-neutral-950 px-4 py-24 text-white sm:px-6 sm:py-28 lg:px-12">
+      {/* HERO — animierte Matchup-Welt in Markenfarbe (#4b3bf3) statt Titelbild */}
+      <section className="relative isolate overflow-hidden px-4 py-28 text-white sm:px-6 sm:py-36 lg:px-12">
+        {/* Verlauf in Markenfarbe */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(91,75,255,0.55) 0%, transparent 70%)" }}
+          className="absolute inset-0 -z-20"
+          style={{ background: "linear-gradient(135deg,#5b4bff 0%,#4b3bf3 46%,#2a1f9e 100%)" }}
         />
-        <div className="relative mx-auto max-w-3xl text-center">
+        {/* feines Punktraster */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 opacity-[0.18]"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px,#fff 1px,transparent 0)", backgroundSize: "22px 22px" }}
+        />
+        {/* schwebende, weiche Orbs */}
+        <div aria-hidden className="anim-float absolute -left-24 top-6 -z-10 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
+        <div
+          aria-hidden
+          className="anim-float absolute -right-16 -bottom-10 -z-10 h-80 w-80 rounded-full blur-3xl"
+          style={{ background: "rgba(139,123,255,0.45)", animationDelay: "1.6s" }}
+        />
+
+        {/* „Match"-Netzwerk: pulsierende Knoten + fliessende Verbindungslinien */}
+        <svg
+          aria-hidden
+          viewBox="0 0 400 220"
+          preserveAspectRatio="xMidYMid slice"
+          className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-60"
+        >
+          {[
+            [58, 52, 150, 34], [150, 34, 250, 74], [250, 74, 344, 44],
+            [58, 52, 116, 150], [150, 34, 210, 128], [250, 74, 210, 128],
+            [210, 128, 306, 156], [116, 150, 210, 128],
+          ].map(([x1, y1, x2, y2], i) => (
+            <line
+              key={i}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="rgba(255,255,255,0.45)"
+              strokeWidth="1.2"
+              strokeDasharray="5 7"
+              strokeLinecap="round"
+              className="anim-dashflow"
+              style={{ animationDelay: `${i * 0.25}s` }}
+            />
+          ))}
+          {[
+            [58, 52], [150, 34], [250, 74], [344, 44], [116, 150], [210, 128], [306, 156],
+          ].map(([cx, cy], i) => (
+            <g key={i} className="anim-softpulse" style={{ transformOrigin: `${cx}px ${cy}px`, animationDelay: `${i * 0.35}s` }}>
+              <circle cx={cx} cy={cy} r="6.5" fill="rgba(255,255,255,0.18)" />
+              <circle cx={cx} cy={cy} r="3.2" fill="#fff" />
+            </g>
+          ))}
+        </svg>
+
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
           <Eyebrow dark>{a.heroEyebrow}</Eyebrow>
-          <h1 className="mt-5 text-4xl font-bold leading-[1.03] tracking-tight sm:text-6xl">
+          <h1 className="mt-5 text-4xl font-bold leading-[1.03] tracking-tight drop-shadow-sm sm:text-6xl">
             {a.heroTitle}
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
             {a.heroSubtitle}
           </p>
         </div>
@@ -86,17 +134,15 @@ export default async function AboutPage() {
         <div className="mx-auto grid max-w-[1100px] items-center gap-12 lg:grid-cols-[minmax(0,420px)_1fr]">
           {/* Portrait */}
           <div className="mx-auto w-full max-w-sm">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-matchup/15 via-neutral-100 to-neutral-200 p-6 ring-1 ring-black/5 sm:p-8">
-              <div className="relative h-full w-full">
-                <Image
-                  src="/about/martin.png"
-                  alt={a.portraitAlt}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 90vw, 420px"
-                  className="object-contain"
-                />
-              </div>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-sm ring-1 ring-black/5">
+              <Image
+                src="/about/martin.png"
+                alt={a.portraitAlt}
+                fill
+                priority
+                sizes="(max-width: 1024px) 90vw, 420px"
+                className="object-cover"
+              />
             </div>
             <div className="mt-4 flex items-baseline justify-center gap-2 text-center">
               <span className="text-lg font-bold tracking-tight">{a.name}</span>
