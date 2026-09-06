@@ -63,69 +63,30 @@ export default async function AboutPage() {
 
   return (
     <>
-      {/* HERO — animierte Matchup-Welt in Markenfarbe (#4b3bf3) statt Titelbild */}
-      <section className="relative isolate overflow-hidden px-4 py-28 text-white sm:px-6 sm:py-36 lg:px-12">
-        {/* Verlauf in Markenfarbe */}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-20"
-          style={{ background: "linear-gradient(135deg,#5b4bff 0%,#4b3bf3 46%,#2a1f9e 100%)" }}
-        />
-        {/* feines Punktraster */}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 opacity-[0.18]"
-          style={{ backgroundImage: "radial-gradient(circle at 1px 1px,#fff 1px,transparent 0)", backgroundSize: "22px 22px" }}
-        />
-        {/* schwebende, weiche Orbs */}
-        <div aria-hidden className="anim-float absolute -left-24 top-6 -z-10 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
-        <div
-          aria-hidden
-          className="anim-float absolute -right-16 -bottom-10 -z-10 h-80 w-80 rounded-full blur-3xl"
-          style={{ background: "rgba(139,123,255,0.45)", animationDelay: "1.6s" }}
-        />
-
-        {/* „Match"-Netzwerk: pulsierende Knoten + fliessende Verbindungslinien */}
-        <svg
-          aria-hidden
-          viewBox="0 0 400 220"
-          preserveAspectRatio="xMidYMid slice"
-          className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-60"
-        >
-          {[
-            [58, 52, 150, 34], [150, 34, 250, 74], [250, 74, 344, 44],
-            [58, 52, 116, 150], [150, 34, 210, 128], [250, 74, 210, 128],
-            [210, 128, 306, 156], [116, 150, 210, 128],
-          ].map(([x1, y1, x2, y2], i) => (
-            <line
-              key={i}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="rgba(255,255,255,0.45)"
-              strokeWidth="1.2"
-              strokeDasharray="5 7"
-              strokeLinecap="round"
-              className="anim-dashflow"
-              style={{ animationDelay: `${i * 0.25}s` }}
-            />
-          ))}
-          {[
-            [58, 52], [150, 34], [250, 74], [344, 44], [116, 150], [210, 128], [306, 156],
-          ].map(([cx, cy], i) => (
-            <g key={i} className="anim-softpulse" style={{ transformOrigin: `${cx}px ${cy}px`, animationDelay: `${i * 0.35}s` }}>
-              <circle cx={cx} cy={cy} r="6.5" fill="rgba(255,255,255,0.18)" />
-              <circle cx={cx} cy={cy} r="3.2" fill="#fff" />
-            </g>
-          ))}
-        </svg>
-
-        <div className="relative z-10 mx-auto max-w-3xl text-center">
-          <Eyebrow dark>{a.heroEyebrow}</Eyebrow>
-          <h1 className="mt-5 text-4xl font-bold leading-[1.03] tracking-tight drop-shadow-sm sm:text-6xl">
-            {a.heroTitle}
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
-            {a.heroSubtitle}
-          </p>
+      {/* HERO — Titelbild mit Titel-Overlay */}
+      <section className="relative overflow-hidden">
+        <div className="relative min-h-[52svh] w-full sm:min-h-[62svh]">
+          <Image
+            src="/about/hero.png"
+            alt={a.heroTitle}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          {/* Verlauf für Lesbarkeit des Titels */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20" />
+          <div className="absolute inset-0 flex items-end sm:items-center">
+            <div className="mx-auto w-full max-w-3xl px-4 pb-10 text-center text-white sm:px-6 sm:pb-0 lg:px-12">
+              <Eyebrow dark>{a.heroEyebrow}</Eyebrow>
+              <h1 className="mt-5 text-4xl font-bold leading-[1.03] tracking-tight drop-shadow-lg sm:text-6xl">
+                {a.heroTitle}
+              </h1>
+              <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/90 drop-shadow sm:text-lg">
+                {a.heroSubtitle}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
