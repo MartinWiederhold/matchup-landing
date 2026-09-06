@@ -28,6 +28,9 @@ export const header = {
     otherHowToPre: "Öffne das Browser-Menü und wähle ",
     otherHowToBold: "„App installieren\" bzw. „Zum Startbildschirm hinzufügen\"",
     openInBrowser: "Im Browser öffnen",
+    storeApple: "Im App Store laden",
+    storeSoon: "Bald im App Store",
+    storeOr: "oder direkt als Web-App:",
   },
   en: {
     findPartner: "Find a Partner",
@@ -57,5 +60,8 @@ export const header = {
     otherHowToPre: "Open the browser menu and choose ",
     otherHowToBold: "\"Install app\" or \"Add to home screen\"",
     openInBrowser: "Open in browser",
+    storeApple: "Download on the App Store",
+    storeSoon: "Coming soon to the App Store",
+    storeOr: "or use it straight as a web app:",
   },
 };

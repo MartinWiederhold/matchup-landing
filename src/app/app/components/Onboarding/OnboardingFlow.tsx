@@ -147,6 +147,9 @@ export default function OnboardingFlow() {
   const [tourOk, setTourOk] = useState(() => (typeof window !== "undefined" ? tourUnlocked() : false));
   const [tourGate, setTourGate] = useState(false);
   const [openInfo, setOpenInfo] = useState<string | null>(null); // Info-Popover im Passport-Screen
+  // Anzeige-Spiegel der Grösse: aktualisiert bei JEDER Slider-Bewegung sofort die
+  // sichtbare Zahl (Bugfix — vorher wirkte die Zahl „eingefroren"). Schreibt zusätzlich in den Reducer.
+  const [heightDraft, setHeightDraft] = useState<number>(() => state.height_cm ?? 178);
 
   // Fortschritt bei jeder Änderung sichern (ohne File-Objekte).
   useEffect(() => {
@@ -1137,16 +1140,18 @@ export default function OnboardingFlow() {
             subtitle={t("onboarding.heightSubtitle")}
           >
             <div className="text-center text-2xl font-bold text-matchup">
-              {state.height_cm ?? 178} cm
+              {heightDraft} cm
             </div>
             <input
               type="range"
               min={140}
               max={220}
-              value={state.height_cm ?? 178}
-              onChange={(e) =>
-                dispatch({ type: "SET_HEIGHT", payload: Number(e.target.value) })
-              }
+              value={heightDraft}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setHeightDraft(v);
+                dispatch({ type: "SET_HEIGHT", payload: v });
+              }}
               className="w-full accent-matchup"
             />
             <button

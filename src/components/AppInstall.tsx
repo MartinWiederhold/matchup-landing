@@ -8,6 +8,18 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+// Echte Apple-App-Store-URL hier eintragen, sobald die native App gelistet ist.
+// Solange leer, zeigt der Button „Bald im App Store" (KEIN toter Link).
+const APP_STORE_URL = "";
+
+function AppleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 384 512" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+    </svg>
+  );
+}
+
 /**
  * "App"-Eintrag im mobilen Menü.
  * Öffnet auf Mobilgeräten ein Sheet, über das man Matchup als App auf den
@@ -26,18 +38,13 @@ export default function AppInstall({
   const t = useT();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
     const ua = window.navigator.userAgent || "";
     const ios = /iphone|ipad|ipod/i.test(ua);
-    const android = /android/i.test(ua);
-    const mobile =
-      ios || android || window.matchMedia("(max-width: 768px)").matches;
     setIsIOS(ios);
-    setIsMobile(mobile);
     setStandalone(
       window.matchMedia("(display-mode: standalone)").matches ||
         // iOS Safari
@@ -56,8 +63,9 @@ export default function AppInstall({
   }, []);
 
   function handleClick(e: React.MouseEvent) {
-    // Nur auf Mobilgeräten (und wenn nicht schon installiert) das Sheet zeigen.
-    if (!isMobile || standalone) return; // -> normaler Link zu /app
+    // Schon als App installiert -> direkt zur Web-App. Sonst Sheet mit
+    // App-Store-Download + Web-App-Optionen zeigen (Mobile UND Desktop).
+    if (standalone) return;
     e.preventDefault();
     setOpen(true);
   }
@@ -112,6 +120,28 @@ export default function AppInstall({
             </div>
 
             <div className="mt-6 space-y-3">
+              {/* Nativer Download im App Store (Apple). Live, sobald APP_STORE_URL gesetzt ist. */}
+              {APP_STORE_URL ? (
+                <a
+                  href={APP_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2.5 rounded-full bg-black py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                >
+                  <AppleLogo className="h-4 w-4" />
+                  {t("header.storeApple")}
+                </a>
+              ) : (
+                <div className="flex w-full items-center justify-center gap-2.5 rounded-full bg-neutral-100 py-3.5 text-sm font-bold text-neutral-400">
+                  <AppleLogo className="h-4 w-4" />
+                  {t("header.storeSoon")}
+                </div>
+              )}
+
+              <p className="pt-1 text-center text-xs font-medium text-neutral-400">
+                {t("header.storeOr")}
+              </p>
+
               {deferred ? (
                 <button
                   type="button"
