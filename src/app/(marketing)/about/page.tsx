@@ -65,7 +65,7 @@ export default async function AboutPage() {
     <>
       {/* HERO — Titelbild mit Titel-Overlay */}
       <section className="relative overflow-hidden">
-        <div className="relative min-h-[52svh] w-full sm:min-h-[62svh]">
+        <div className="relative min-h-[32svh] w-full sm:min-h-[40svh]">
           <Image
             src="/about/hero.png"
             alt={a.heroTitle}
