@@ -8,9 +8,8 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-// Echte Apple-App-Store-URL hier eintragen, sobald die native App gelistet ist.
-// Solange leer, zeigt der Button „Bald im App Store" (KEIN toter Link).
-const APP_STORE_URL = "";
+// Apple App Store: Matchup – Spielpartner finden.
+const APP_STORE_URL = "https://apps.apple.com/ch/app/matchup-spielpartner-finden/id6764099315?l=de-DE";
 
 function AppleLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (
