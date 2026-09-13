@@ -116,34 +116,50 @@ export default function SelectProfileBrowse({ sport }: { sport?: Sport }) {
   }
 
   useEffect(() => {
+    let cancelled = false;
     setRows(null);
-    let q = supabase
-      // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
-      .from("profiles")
-      .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender")
-      // Nur das „Matchup Team"-Systemkonto ausblenden (per ID) — NICHT alle Seeds:
-      // Demo-/Seed-Spieler sollen die Auswahl weiter füllen (wie in DiscoverTab, App populated).
-      .eq("is_paused", false).eq("is_banned", false).neq("id", MATCHUP_TEAM_ID).neq("id", profile.id)
-      .not("profile_image", "is", null);
-    if (filters.sports.length) q = q.overlaps("sports", filters.sports);
-    if (filters.skillLevels.length) q = q.in("skill_level", filters.skillLevels);
-    if (filters.gender) q = q.eq("gender", filters.gender);
-    q = q.gte("age", filters.ageMin).lte("age", filters.ageMax);
-    q.order("last_active", { ascending: false })
-      .limit(60)
-      .then(async ({ data }) => {
-        let list = (data as Row[]) ?? [];
-        // 201 = „weltweit" → kein Radiuslimit. Sonst: Distanz serverseitig; unbekannte
-        // Distanz (eigener/fremder Ort fehlt) bleibt DRIN (kein stiller Ausfall).
-        if (filters.radius < 201) {
-          const distMap = await fetchDistances(list.map((r) => r.id));
-          list = list.filter((r) => {
-            const km = distMap.get(r.id);
-            return km == null || km <= filters.radius;
-          });
-        }
-        setRows(list.slice(0, 40));
-      });
+    (async () => {
+      // Bereits Verbundene/Geblockte/kürzlich Übersprungene ausschliessen — analog
+      // DiscoverTab/BrowsePeople. Wer gematcht ist, chattet bereits und darf NICHT
+      // mehr in der Suche auftauchen (löst man den Chat/Match, erscheint man wieder).
+      const since = new Date(Date.now() - 14 * 86400000).toISOString();
+      const [blocksRes, matchesRes, skipsRes] = await Promise.all([
+        supabase.from("blocks").select("blocked_id, blocker_id").or(`blocker_id.eq.${profile.id},blocked_id.eq.${profile.id}`),
+        supabase.from("matches").select("user1_id, user2_id").or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`),
+        supabase.from("skips").select("skipped_user_id").eq("user_id", profile.id).gte("skipped_at", since),
+      ]);
+      const exclude = new Set<string>([profile.id]);
+      (blocksRes.data ?? []).forEach((b) => { exclude.add(b.blocked_id); exclude.add(b.blocker_id); });
+      (matchesRes.data ?? []).forEach((m) => exclude.add(m.user1_id === profile.id ? m.user2_id : m.user1_id));
+      (skipsRes.data ?? []).forEach((s) => exclude.add(s.skipped_user_id));
+
+      let q = supabase
+        // Keine Koordinaten mehr (Sicherheitsaudit 2026-08); Distanz kommt aus der RPC.
+        .from("profiles")
+        .select("id,first_name,age,city,skill_level,sports,bio,profile_image,additional_images,match_score,height_cm,gender")
+        // Nur das „Matchup Team"-Systemkonto ausblenden (per ID) — NICHT alle Seeds:
+        // Demo-/Seed-Spieler sollen die Auswahl weiter füllen (wie in DiscoverTab, App populated).
+        .eq("is_paused", false).eq("is_banned", false).neq("id", MATCHUP_TEAM_ID).neq("id", profile.id)
+        .not("profile_image", "is", null);
+      if (filters.sports.length) q = q.overlaps("sports", filters.sports);
+      if (filters.skillLevels.length) q = q.in("skill_level", filters.skillLevels);
+      if (filters.gender) q = q.eq("gender", filters.gender);
+      q = q.gte("age", filters.ageMin).lte("age", filters.ageMax);
+
+      const { data } = await q.order("last_active", { ascending: false }).limit(80);
+      let list = ((data as Row[]) ?? []).filter((r) => !exclude.has(r.id));
+      // 201 = „weltweit" → kein Radiuslimit. Sonst: Distanz serverseitig; unbekannte
+      // Distanz (eigener/fremder Ort fehlt) bleibt DRIN (kein stiller Ausfall).
+      if (filters.radius < 201) {
+        const distMap = await fetchDistances(list.map((r) => r.id));
+        list = list.filter((r) => {
+          const km = distMap.get(r.id);
+          return km == null || km <= filters.radius;
+        });
+      }
+      if (!cancelled) setRows(list.slice(0, 40));
+    })();
+    return () => { cancelled = true; };
   }, [profile.id, filters]);
 
   const levelLabel = (s: string | null) => (s ? SKILL[s] ?? s : "");
