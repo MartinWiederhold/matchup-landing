@@ -16,8 +16,11 @@ begin
     array['padel']::text[], 'intermediate',
     array['fun','regular','social']::text[],
     'Padel nach der Arbeit, am liebsten Doppel. Suche regelmaessige Mitspielerinnen und Mitspieler in Zuerich.',
-    'https://matchup-app.com/seed/pa5.jpg',
-    array['https://matchup-app.com/seed/pa5b.jpg', 'https://matchup-app.com/seed/pa5c.jpg']::text[],
+    'https://dqeroewcdclgxujhubht.supabase.co/storage/v1/object/public/web-avatars/2c9f4a18-6e7b-4d21-a8c3-91f05e4b7d62/pa5.jpg',
+    array[
+      'https://dqeroewcdclgxujhubht.supabase.co/storage/v1/object/public/web-avatars/2c9f4a18-6e7b-4d21-a8c3-91f05e4b7d62/pa5b.jpg',
+      'https://dqeroewcdclgxujhubht.supabase.co/storage/v1/object/public/web-avatars/2c9f4a18-6e7b-4d21-a8c3-91f05e4b7d62/pa5c.jpg'
+    ]::text[],
     true, false, false, 'play', now()
   )
   on conflict (id) do update set
