@@ -25,7 +25,7 @@ const DAY = 86_400_000;
  * sichtbare Lücke (Erholung). Breit als Tabelle, schmal als Karten (kein Querscrollen).
  * Das Wochen-Raster kommt aus der reinen Domain-Funktion buildPipeline.
  */
-export default function PipelineView() {
+export default function PipelineView({ embedded = false }: { embedded?: boolean }) {
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const { locale } = useLocale();
@@ -115,16 +115,9 @@ export default function PipelineView() {
   if (!user) return <TourLoginCard />;
   if (status === "loading") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loading")}</p>;
   if (status === "error") return <p className="mt-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
-  if (weeks.length === 0) {
-    return (
-      <Tour2Area title={t("tour.pipelineTitle")} lead={t("tour.pipelineSubtitle")}>
-        <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.pipeEmpty")}</p>
-      </Tour2Area>
-    );
-  }
-
-  return (
-    <Tour2Area title={t("tour.pipelineTitle")} lead={t("tour.pipelineSubtitle")}>
+  const body = weeks.length === 0 ? (
+    <p className="rounded-xl bg-[var(--t2-surface)] px-4 py-4 t2-fs-body text-[var(--t2-muted)]">{t("tour.pipeEmpty")}</p>
+  ) : (
     <div>
       {/* Breit: echte Tabelle */}
       <div className="hidden overflow-hidden rounded-xl border border-[var(--t2-line)] md:block">
@@ -185,6 +178,12 @@ export default function PipelineView() {
         ))}
       </div>
     </div>
+  );
+
+  if (embedded) return body;
+  return (
+    <Tour2Area title={t("tour.pipelineTitle")} lead={t("tour.pipelineSubtitle")}>
+      {body}
     </Tour2Area>
   );
 }

@@ -133,20 +133,6 @@ export default function TravelHub() {
     });
   }, [expenses, season, cur]);
 
-  const kmTotal = useMemo(() => {
-    let sum = 0;
-    let unknown = false;
-    for (let i = 1; i < active.length; i++) {
-      const a = active[i - 1].tournament;
-      const b = active[i].tournament;
-      const same = placeKey(a.country, a.city) != null && placeKey(a.country, a.city) === placeKey(b.country, b.city);
-      if (same) continue;
-      if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) { unknown = true; continue; }
-      sum += haversineKm(a.latitude, a.longitude, b.latitude, b.longitude);
-    }
-    return { sum, unknown };
-  }, [active]);
-
   const plannedByCode = useMemo(() => {
     const bag: Record<string, Money> = {};
     if (!planned) return bag;
@@ -222,12 +208,6 @@ export default function TravelHub() {
       </T2Kpi>
       <T2Kpi label={t("tour.t2trRecorded")} note={t("tour.t2trRecordedHint")}>
         {fmtBag(recorded.expensesTotal)}
-      </T2Kpi>
-      <T2Kpi label={t("tour.t2trKm")} note={kmTotal.unknown ? t("tour.t2ovLegUnknownKm") : undefined}>
-        {active.length === 0 ? "—" : t("tour.t2legKm", { n: Math.round(kmTotal.sum) })}
-      </T2Kpi>
-      <T2Kpi label={t("tour.t2trPerTour")} note={t("tour.t2trPerTourHint")}>
-        {recorded.tournamentsWithExpenses ? fmtBag(recorded.costPerTournament) : "—"}
       </T2Kpi>
     </>
   );

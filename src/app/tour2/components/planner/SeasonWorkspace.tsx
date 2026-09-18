@@ -7,7 +7,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import type { TFunction } from "@/lib/i18n/core";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
-import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
 import { COUNTRY_CODES } from "@/lib/i18n/messages/tour";
 import { loadPlannerProfile, placeKey, ratesToCostParams, budgetMoney, buildSeasonCandidates, costRatesComplete, saveHome, type PlannerProfile, type Frame } from "@/lib/tourPlanner";
 import { getTourCatalog } from "@/lib/tourCatalogCache";
@@ -49,6 +49,11 @@ import { haversineKm } from "@/lib/utils/haversine";
 import SeasonHealthBar from "./SeasonHealthBar";
 import SeasonJourney, { type JourneyLeg, type JourneyStop } from "./SeasonJourney";
 import { t2markArea } from "../../t2mark";
+import { useSearchParams } from "next/navigation";
+import PipelineView from "@/app/tour2/pipeline/PipelineView";
+import CalendarWeek from "@/app/tour2/calendar/components/CalendarWeek";
+import TimelineView from "@/app/tour2/timeline/components/TimelineView";
+import SeasonViewBar, { parseSeasonView, type SeasonView } from "./SeasonViewBar";
 
 const DAY = 86_400_000;
 const RECENT_KEY = "mu_tour_recent_starts";
@@ -85,6 +90,15 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
   const { user, loading: authLoading } = useAuth();
   const t = useT();
   const { locale } = useLocale();
+  const searchParams = useSearchParams();
+  const seasonView: SeasonView = parseSeasonView(searchParams.get("view"));
+  const seasonHref = (v: SeasonView) => {
+    const p = new URLSearchParams(searchParams.toString());
+    if (v === "chain") p.delete("view");
+    else p.set("view", v);
+    const qs = p.toString();
+    return qs ? `/tour2/season?${qs}` : "/tour2/season";
+  };
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [profile, setProfile] = useState<PlannerProfile | null>(null);
@@ -1166,32 +1180,25 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
 
   return (
     <Tour2Area
-      fill
+      fill={seasonView === "chain"}
       title={t("tour.t2navPlanner")}
-      lead={t("tour.plSubtitle")}
-      kpis={
+      status={
         <>
-          <T2Kpi label={t("tour.t2count")}>{seasonOrdered.length}</T2Kpi>
-          <T2Kpi label={t("tour.t2budget")}>{budgetText ?? t("tour.t2budgetNoData")}</T2Kpi>
-          <T2Kpi label={t("tour.t2expPoints")} note={t("tour.t2pointsAssume", { round: t("tour.round_R16") })}>{healthPoints ?? "—"}</T2Kpi>
-          <T2Kpi label={t("tour.t2tightShort")}>{tightMap.size}</T2Kpi>
-        </>
-      }
-      aside={
-        <>
-          <T2AsideBlock title={t("tour.t2ovAsideTravel")}>
-            {schengenApplies && schengen
-              ? t("tour.t2ovSchengen", { used: schengen.used, left: schengen.left })
-              : profile && profile.passports.length > 0
-                ? t("tour.t2ovSchengenSkip")
-                : <Link href="/tour2/documents" className="font-semibold text-[var(--t2-accent)]">{t("tour.t2ovPassportGo")} →</Link>}
-          </T2AsideBlock>
-          <T2AsideBlock title={t("tour.t2navFinder")}>
-            <Link href="/tour2/finder" className="font-semibold text-[var(--t2-accent)]">{t("tour.t2browseAdd")} →</Link>
-          </T2AsideBlock>
+          <p>
+            {t("tour.t2seasonStatus", {
+              n: seasonOrdered.length,
+              budget: budgetText ?? t("tour.t2seasonStatusNoBudget"),
+              tight: tightMap.size,
+            })}
+          </p>
+          <SeasonViewBar view={seasonView} hrefFor={seasonHref} />
         </>
       }
     >
+    {seasonView === "weeks" ? <PipelineView embedded /> : null}
+    {seasonView === "calendar" ? <CalendarWeek /> : null}
+    {seasonView === "timeline" ? <TimelineView /> : null}
+    {seasonView === "chain" ? (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)] text-[var(--t2-ink)]">
       <SeasonHealthBar
         count={seasonOrdered.length}
@@ -1279,7 +1286,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
                 />
                 <div className="mt-6 flex items-center gap-3">
                   <Link href="/tour2/finder" className="t2-fs-micro font-semibold text-[var(--t2-accent)]">{t("tour.t2browseAdd")} →</Link>
-                  <Link href="/tour2/calendar" className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsViewCalendar")}</Link>
+                  <Link href="/tour2/season?view=calendar" className="t2-fs-micro font-semibold text-[var(--t2-muted)] hover:text-[var(--t2-ink)]">{t("tour.wsViewCalendar")}</Link>
                 </div>
                 {seasonOrdered.length > 0 && (
                   confirmReset ? (
@@ -1394,6 +1401,7 @@ export default function SeasonWorkspace({ initialSelectedId = null }: { initialS
         </div>
       )}
     </div>
+    ) : null}
     </Tour2Area>
   );
 }

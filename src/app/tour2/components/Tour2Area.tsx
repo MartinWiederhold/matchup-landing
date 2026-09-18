@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * Dashboard-Gerüst der sieben Flächen — wie Overview: Titel, Kennzahlen-Karten,
- * Hauptspalte, rechte Kontextspalte 260px.
+ * Flächen-Gerüst: Titel + Lead, optionale Kennzahlen, optionale Kontextspalte.
+ * Seite (page): fließt mit. Workspace: füllt die Shell-Höhe.
  */
 
 export function T2Kpi({
@@ -42,13 +42,15 @@ export function T2AsideBlock({ title, children }: { title: string; children: Rea
 export default function Tour2Area({
   title,
   lead,
+  status,
   kpis,
   aside,
   children,
   fill,
 }: {
   title: string;
-  lead: string;
+  lead?: string;
+  status?: ReactNode;
   kpis?: ReactNode;
   aside?: ReactNode;
   children: ReactNode;
@@ -59,14 +61,22 @@ export default function Tour2Area({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="t2-display t2-fs-display">{title}</h1>
-          <p className="t2-lead mt-1.5 max-w-xl">{lead}</p>
+          {status ? (
+            <div className="mt-1.5 max-w-2xl t2-fs-body-sm text-[var(--t2-muted)]">{status}</div>
+          ) : lead ? (
+            <p className="t2-lead mt-1.5 max-w-xl">{lead}</p>
+          ) : null}
         </div>
       </header>
-      {kpis && <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{kpis}</div>}
-      <div className={`mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px] ${fill ? "xl:min-h-0 xl:flex-1 xl:grid-rows-1 xl:items-stretch" : ""}`}>
-        <div className={`min-w-0 ${fill ? "max-xl:min-h-[520px] xl:flex xl:min-h-0 xl:flex-col" : ""}`}>{children}</div>
-        {aside && <aside className="space-y-3 xl:w-[260px]">{aside}</aside>}
-      </div>
+      {kpis && <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{kpis}</div>}
+      {aside ? (
+        <div className={`mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_260px] ${fill ? "xl:min-h-0 xl:flex-1 xl:grid-rows-1 xl:items-stretch" : ""}`}>
+          <div className={`min-w-0 ${fill ? "max-xl:min-h-[520px] xl:flex xl:min-h-0 xl:flex-col" : ""}`}>{children}</div>
+          <aside className="space-y-3 xl:w-[260px]">{aside}</aside>
+        </div>
+      ) : (
+        <div className={`mt-5 min-w-0 ${fill ? "flex min-h-0 flex-1 flex-col max-xl:min-h-[520px]" : ""}`}>{children}</div>
+      )}
     </div>
   );
 }

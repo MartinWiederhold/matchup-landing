@@ -39,7 +39,7 @@ export default function DayGlance({
     <section className="t2-dash-card">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="t2-fs-body font-semibold tracking-tight">{t("tour.t2ovGlance")}</h2>
-        <Link href="/tour2/calendar" className="t2-cta">
+        <Link href="/tour2/season?view=calendar" className="t2-cta">
           {t("tour.t2ovGlanceCal")}<span aria-hidden>→</span>
         </Link>
       </div>

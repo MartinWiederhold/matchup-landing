@@ -27,6 +27,11 @@ const CAT_OPTIONS: { code: string; label: string }[] = [
   { code: "challenger_50", label: "Challenger 50" },
   { code: "m25", label: "M25" },
   { code: "m15", label: "M15" },
+  { code: "w100", label: "W100" },
+  { code: "w75", label: "W75" },
+  { code: "w50", label: "W50" },
+  { code: "w35", label: "W35" },
+  { code: "w15", label: "W15" },
 ];
 const ROUND_OPTIONS = ["W", "F", "SF", "QF", "R16", "R32", "Q", "Q2"];
 

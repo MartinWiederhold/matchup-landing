@@ -110,7 +110,6 @@ export default function NetworkView() {
   const kpis = (
     <>
       <T2Kpi label={t("tour.t2netPeople")}>{uniqueOnTour}</T2Kpi>
-      <T2Kpi label={t("tour.t2netOnTour")}>{uniqueOnTour}</T2Kpi>
       <T2Kpi label={t("tour.t2netLooking")}>{lookingN}</T2Kpi>
       <T2Kpi label={t("tour.t2netRequests")}>{requests}</T2Kpi>
     </>

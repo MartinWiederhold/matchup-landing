@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getT } from "@/lib/i18n/server";
 import SeasonWorkspace from "../components/planner/SeasonWorkspace";
 
@@ -15,5 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Tour2SeasonPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const sp = await searchParams;
   const id = typeof sp.id === "string" && sp.id.length > 0 ? sp.id : null;
-  return <SeasonWorkspace initialSelectedId={id} />;
+  return (
+    <Suspense>
+      <SeasonWorkspace initialSelectedId={id} />
+    </Suspense>
+  );
 }

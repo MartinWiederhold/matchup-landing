@@ -136,13 +136,13 @@ test("/tour2 Live-Check Tagesblick Finder Kalender", async ({ page }) => {
     notes.push(withName > 0 || hasAcceptedSlot ? `Zusage-UI ${withName} REST-accepted=${hasAcceptedSlot}` : "keine Slot-Zusage mit Namen");
 
     await cal.click();
-    await expect(page).toHaveURL(/\/tour2\/calendar/, { timeout: 20_000 });
-    notes.push("→ /tour2/calendar");
+    await expect(page).toHaveURL(/\/tour2\/season\?view=calendar/, { timeout: 20_000 });
+    notes.push("→ /tour2/season?view=calendar");
 
     await page.getByRole("link", { name: /Zeitstrahl|Timeline/ }).first().click();
-    await expect(page).toHaveURL(/\/tour2\/timeline/, { timeout: 20_000 });
+    await expect(page).toHaveURL(/\/tour2\/season\?view=timeline/, { timeout: 20_000 });
     await expect(page.getByText(/Zeitstrahl|Timeline|Spur/i).first()).toBeVisible({ timeout: 20_000 });
-    notes.push("→ /tour2/timeline");
+    notes.push("→ /tour2/season?view=timeline");
 
     await page.goto("/tour2/travel", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/Geplante Kosten|Planned costs/i).first()).toBeVisible({ timeout: 30_000 });

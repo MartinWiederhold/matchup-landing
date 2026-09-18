@@ -196,7 +196,7 @@ export default function CalendarWeek() {
           <h1 className="t2-display mt-2 t2-fs-display leading-[0.9]">{monthTitle}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href="/tour2/timeline" title={t("tour.calGanttHint")} className="px-3 py-2 t2-fs-micro font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">
+          <Link href="/tour2/season?view=timeline" title={t("tour.calGanttHint")} className="px-3 py-2 t2-fs-micro font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">
             {t("tour.calGantt")}
           </Link>
           <button type="button" onClick={goToday} className="px-3 py-2 t2-fs-micro font-semibold uppercase tracking-[0.14em] ring-1 ring-[var(--t2-line-strong)] hover:bg-[var(--t2-ink)] hover:text-[var(--t2-on-accent)]">{t("tour.calGoToday")}</button>

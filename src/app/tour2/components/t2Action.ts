@@ -6,15 +6,18 @@
 export const T2_FINDER = "/tour2/finder";
 export const T2_SEASON = "/tour2/season";
 export const T2_RANKING = "/tour2/ranking";
-export const T2_CALENDAR = "/tour2/calendar";
-export const T2_TIMELINE = "/tour2/timeline";
+export const T2_CALENDAR = "/tour2/season?view=calendar";
+export const T2_TIMELINE = "/tour2/season?view=timeline";
+export const T2_WEEKS = "/tour2/season?view=weeks";
 
 export function tour2ActionHref(href: string): string {
   if (!href.startsWith("/tour/") || href.startsWith("/tour2/")) return href;
   const rest = href.slice("/tour/".length);
   const path = rest.split("?")[0];
   const qs = rest.slice(path.length);
-  if (path === "pipeline") return `/tour2/pipeline${qs}`;
+  if (path === "pipeline") return `${T2_WEEKS}${qs ? `&${qs.slice(1)}` : ""}`;
+  if (path === "calendar") return `${T2_CALENDAR}${qs ? `&${qs.slice(1)}` : ""}`;
+  if (path === "timeline") return `${T2_TIMELINE}${qs ? `&${qs.slice(1)}` : ""}`;
   if (path === "season" || path === "") return `${T2_SEASON}${qs}`;
   if (path === "setup") return `/tour2/profile${qs}`;
   if (path === "browse" || path === "map") return `${T2_FINDER}${qs}`;

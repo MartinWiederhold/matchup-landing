@@ -158,10 +158,9 @@ export default function DocumentsView() {
 
   const kpis = (
     <>
-      <T2Kpi label={t("tour.t2docValid")}>{validN}</T2Kpi>
-      <T2Kpi label={t("tour.t2docSoon")}>{soonN}</T2Kpi>
       <T2Kpi label={t("tour.t2docAction")}>{actionN}</T2Kpi>
-      <T2Kpi label={t("tour.t2docTotal")}>{papers.length}</T2Kpi>
+      <T2Kpi label={t("tour.t2docSoon")}>{soonN}</T2Kpi>
+      <T2Kpi label={t("tour.t2docValid")}>{validN}</T2Kpi>
     </>
   );
 

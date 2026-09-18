@@ -6,11 +6,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useT, useLocale } from "@/lib/i18n";
 import TourLoginCard from "@/app/tour2/components/TourLoginCard";
-import Tour2Area, { T2Kpi, T2AsideBlock } from "@/app/tour2/components/Tour2Area";
+import Tour2Area from "@/app/tour2/components/Tour2Area";
 import { loadPlannerProfile, type PlannerProfile, costRatesComplete } from "@/lib/tourPlanner";
 import { getTourCatalog } from "@/lib/tourCatalogCache";
 import { loadSeasonTournamentIds, addToSeason, removeFromSeason, loadSeasonPlanRows, loadAllEntryEvents } from "@/lib/tourSeason";
@@ -418,42 +417,11 @@ export default function TournamentsView() {
     </div>
   );
 
-  const openDlN = filtered.filter((x) => isDeadlineOpen(x, nowMs)).length;
-
   return (
     <Tour2Area
       fill
       title={t("tour.t2navFinder")}
-      lead={t("tour.t2findLead")}
-      kpis={
-        <>
-          <T2Kpi label={t("tour.t2findHits")}>{status === "ready" ? filtered.length : "—"}</T2Kpi>
-          <T2Kpi label={t("tour.t2findInSeason")}>{seasonIds.size}</T2Kpi>
-          <T2Kpi label={t("tour.t2findCatalog")}>{upcoming.length}</T2Kpi>
-          <T2Kpi label={t("tour.t2findOpenDl")}>{status === "ready" ? openDlN : "—"}</T2Kpi>
-        </>
-      }
-      aside={
-        <>
-          <T2AsideBlock title={t("tour.t2navFinder")}>
-            {selectedTt ? (
-              <p>
-                <span className="block t2-fs-body font-semibold">{selectedTt.city || selectedTt.name}</span>
-                <span className="mt-1 block t2-fs-micro text-[var(--t2-muted)]">
-                  {[selectedTt.category, catName(selectedTt.country), seasonIds.has(selectedTt.id) ? t("tour.t2findInSeason") : null].filter(Boolean).join(" · ")}
-                </span>
-              </p>
-            ) : (
-              <p className="text-[var(--t2-muted)]">{t("tour.t2findPick")}</p>
-            )}
-          </T2AsideBlock>
-          {!hasPassports && (
-            <T2AsideBlock title={t("tour.t2navDocs")}>
-              <Link href="/tour2/documents" className="font-semibold text-[var(--t2-accent)]">{t("tour.t2ovPassportGo")} →</Link>
-            </T2AsideBlock>
-          )}
-        </>
-      }
+      status={status === "ready" ? t("tour.t2findHitsNote", { n: filtered.length }) : t("tour.t2findLead")}
     >
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-[var(--t2-line)] bg-[var(--t2-card)]">
       <div className="shrink-0 px-4 pt-3 sm:px-6">
@@ -498,10 +466,6 @@ export default function TournamentsView() {
           {status === "error" && <p className="t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>}
           {status === "ready" && (
             <div className="flex h-full min-h-0 flex-col">
-              <p className="mb-3 flex shrink-0 items-baseline gap-2">
-                <span className="t2-fs-display font-semibold leading-none tracking-[-0.04em] tabular-nums">{filtered.length}</span>
-                <span className="t2-label">{t("tour.t2findHits")}</span>
-              </p>
               {filtered.length === 0 ? (
                 <p className="py-8 t2-fs-body text-[var(--t2-muted)]">{t("tour.empty")}</p>
               ) : (

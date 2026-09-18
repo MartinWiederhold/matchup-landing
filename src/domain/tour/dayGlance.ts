@@ -143,7 +143,7 @@ export function buildDayGlance(input: {
       block: null,
       personName: opponent,
       city: null,
-      href: "/tour2/calendar",
+      href: "/tour2/season?view=calendar",
     };
     row.sort = sortKey(row);
     bucket(e.event_date)?.rows.push(row);

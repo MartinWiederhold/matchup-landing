@@ -1,17 +1,5 @@
-import type { Metadata } from "next";
-import { getT } from "@/lib/i18n/server";
-import CalendarWeek from "./components/CalendarWeek";
+import { redirect } from "next/navigation";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getT();
-  return {
-    title: t("tour.calTitle"),
-    description: t("tour.calSubtitle"),
-    alternates: { canonical: "/tour2/calendar" },
-    robots: { index: false, follow: false },
-  };
-}
-
-export default function CalendarPage() {
-  return <CalendarWeek />;
+export default function CalendarRedirect() {
+  redirect("/tour2/season?view=calendar");
 }

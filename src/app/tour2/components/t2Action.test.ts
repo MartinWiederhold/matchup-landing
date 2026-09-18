@@ -11,10 +11,10 @@ describe("tour2ActionHref", () => {
     expect(tour2ActionHref("/tour/schengen")).toBe("/tour2/schengen");
     expect(tour2ActionHref("/tour/points")).toBe("/tour2/ranking");
     expect(tour2ActionHref("/tour/wildcards")).toBe("/tour2/network");
-    expect(tour2ActionHref("/tour/calendar")).toBe("/tour2/calendar");
-    expect(tour2ActionHref("/tour/timeline")).toBe("/tour2/timeline");
+    expect(tour2ActionHref("/tour/calendar")).toBe("/tour2/season?view=calendar");
+    expect(tour2ActionHref("/tour/timeline")).toBe("/tour2/season?view=timeline");
     expect(tour2ActionHref("/tour/finance")).toBe("/tour2/finance");
-    expect(tour2ActionHref("/tour/pipeline")).toBe("/tour2/pipeline");
+    expect(tour2ActionHref("/tour/pipeline")).toBe("/tour2/season?view=weeks");
   });
 
   it("leitet die Saison-Wurzel auf den Planer", () => {

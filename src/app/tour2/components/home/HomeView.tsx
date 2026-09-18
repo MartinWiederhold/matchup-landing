@@ -33,7 +33,7 @@ import { deadlineCountdown } from "@/domain/tour/deadlineCountdown";
 import { displayCity } from "@/domain/tour/displayCity";
 import { seasonMetrics } from "@/domain/tour/finance";
 import { haversineKm } from "@/lib/utils/haversine";
-import { tour2PlannerTournamentHref, T2_SEASON, T2_RANKING } from "@/app/tour2/components/t2Action";
+import { tour2PlannerTournamentHref, T2_FINDER, T2_SEASON } from "@/app/tour2/components/t2Action";
 import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
@@ -638,98 +638,10 @@ export default function HomeView() {
     );
   }
 
-  const step = (w: number) => forecast.steps.find((x) => x.weeks === w);
   const seasonYear = active[0]?.tournament.tournament_monday.slice(0, 4) ?? String(new Date(nowMs).getUTCFullYear());
-  const arrivalAmt = rates && costRatesComplete(rates) ? ratesToCostParams(rates).arrival : null;
-  const budgetRing = [
-    { n: Math.max(0, usedMinor ?? 0), color: "var(--t2-accent)" },
-    { n: Math.max(0, leftMinor ?? 0), color: "var(--t2-chart-5)" },
-  ];
-  // Diagramm-Palette aus Etappe 2a: fünf abgestimmte Töne, letzter (chart-5)
-  // dient als Rest/Untergrund. Belag-Verteilung durchläuft chart-1..chart-4.
-  const surfRing = dists.surfItems.map((x, i) => ({
-    n: x.n,
-    color: ["var(--t2-chart-1)", "var(--t2-chart-2)", "var(--t2-chart-3)", "var(--t2-chart-4)"][i] ?? "var(--t2-chart-5)",
-  }));
-
-  const insights: ReactNode[] = [];
-  if (cpp != null && finance.points > 0) {
-    insights.push(
-      <div key="cpp">
-        <p className="t2-label">{t("tour.t2ovCostPerPoint")}</p>
-        <p className="mt-2 t2-fs-h3 font-semibold tabular-nums">{money(cpp)}</p>
-        <p className="mt-1 t2-fs-micro text-[var(--t2-muted)]">{t("tour.t2ovCostPerPointBasis", { n: finance.tournamentsWithExpenses })}</p>
-      </div>,
-    );
-  }
-  for (const c of clusters) {
-    if (c.savedMinor == null) continue;
-    insights.push(
-      <div key={`cl-${c.city}`}>
-        <p className="t2-fs-body font-semibold">{t("tour.t2ovCluster", { n: c.n, city: c.city, amount: money(c.savedMinor) })}</p>
-      </div>,
-    );
-  }
-  if (visaLead.length > 0) {
-    const v = visaLead[0];
-    insights.push(
-      <div key="visa" className="t2-fs-body">
-        {t("tour.t2ovVisaRisk", { city: v.city || countryName(v.dest), lead: v.leadWeeks, weeks: v.weeksUntil })}
-      </div>,
-    );
-  }
-
-  const deltaArrow = pointsDelta == null || pointsDelta === 0 ? "→" : pointsDelta > 0 ? "↑" : "↓";
-
-  // ── Zone A: Kopfzeilen-Kennzahlen ────────────────────────────────────────
-  // Nur Werte, die die Datenlage liefert. Fehlende Felder werden komplett
-  // weggelassen, kein Platzhalter, kein „—". Ranking ist Hero, die übrigen
-  // Kennzahlen sind untergeordnete Titelgrößen.
-  type HeaderStat = { key: string; value: ReactNode; label: string; hero?: boolean };
-  const headerStats: HeaderStat[] = [];
-  if (profile?.ranking != null) {
-    // Ranking mit „#" prefixieren — signalisiert visuell einen Rangplatz statt einer Menge.
-    headerStats.push({ key: "rank", value: `#${profile.ranking}`, label: t("tour.t2ovGreetRanking"), hero: true });
-  }
-  if (active.length > 0) {
-    headerStats.push({ key: "count", value: active.length, label: t("tour.t2ovGreetTournaments") });
-  }
-  if (leftMinor != null) {
-    headerStats.push({ key: "budget", value: money(leftMinor), label: t("tour.t2ovGreetBudgetLeft") });
-  }
-  if (nextStop) {
-    headerStats.push({
-      key: "next",
-      value: displayCity(nextStop.tournament.city) || t("tour.fieldMissing"),
-      label: t("tour.t2ovGreetNextStop", { date: fmtDate(nextStop.tournament.tournament_monday) }),
-    });
-  }
-  const greetTitle = profile?.firstName
-    ? t("tour.t2ovGreetName", { name: profile.firstName, year: seasonYear })
-    : t("tour.t2ovGreetAnon", { year: seasonYear });
-
-  // ── Cockpit-Redesign: Overview als dunkler, hoch-hierarchischer Screen. ──
-  // Struktur: Kopf → EINE nächste Aufgabe (leuchtend) → Karte → Zeitachse →
-  // Zahlen-Reihe → zwei Spalten unten. Kindfreundliche, direkte Überschriften.
   const nextActionCity = nextDeadline
     ? (displayCity(nextDeadline.tournament.city) || nextDeadline.tournament.name || t("tour.fieldMissing"))
     : null;
-
-  // ── Gamification-Kennzahlen aus ECHTEN Daten (nichts erfunden) ──────────
-  const plannedTotal = active.length;
-  const playedCount = active.filter((s) => s.tournament.tournament_monday < todayISO).length;
-  const seasonPct = plannedTotal ? Math.round((playedCount / plannedTotal) * 100) : 0;
-  const missedCount = missedEntryIds.size;   // verpasste Meldefristen (aus dem Action-Board)
-  const pointsTotal = pointsNow.countingTotal;
-  const nextSurfaceLabel = nextDeadline?.tournament.surface
-    ? (t(`tour.surface_${nextDeadline.tournament.surface}`).startsWith("tour.surface_")
-        ? nextDeadline.tournament.surface
-        : t(`tour.surface_${nextDeadline.tournament.surface}`))
-    : null;
-
-  // ── Onboarding-Checkliste aus ECHTEN Profil-/Saisondaten ────────────────
-  // Fünf konkrete Schritte, jeder verlinkt zur Erledigung. Erledigte Schritte
-  // bleiben als Häkchen sichtbar; ist alles erledigt, verschwindet die Karte.
   const setupSteps = [
     { key: "home",   label: t("tour.t2cpSetupHome"),   done: !!profile?.city,                       href: "/tour2/profile" },
     { key: "pass",   label: t("tour.t2cpSetupPass"),   done: (profile?.passports?.length ?? 0) > 0, href: "/tour2/profile" },
@@ -740,79 +652,35 @@ export default function HomeView() {
   const setupDoneN = setupSteps.filter((s) => s.done).length;
   const setupPct = Math.round((setupDoneN / setupSteps.length) * 100);
   const setupComplete = setupDoneN === setupSteps.length;
+  const statusLine = nextDeadline && nextActionCity && nextEntryDeadlineMs != null
+    ? t("tour.t2homeNextDl", { city: nextActionCity, when: countdown(nextEntryDeadlineMs) })
+    : nextStop
+      ? t("tour.t2homeNextStop", { city: displayCity(nextStop.tournament.city) || t("tour.fieldMissing"), date: fmtDate(nextStop.tournament.tournament_monday) })
+      : t("tour.t2homeNoSeason");
 
   return (
-    /* Helle, warme Overview — der frühere `.t2-dark`-Wrapper war die Ursache des
-       dunklen Screens; entfernt, damit die hellen .t2-root-Tokens greifen. */
     <div>
-      <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-8 sm:py-12">
-        {/* ── 1. HERO — Saison-Puls (Gruß, Fortschrittsring, Punkte, Streak) ── */}
-        <section className="t2-dash-card">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="t2-label">{t("tour.t2cpSeasonLabel")} · {seasonYear}</p>
-              <h1 className="mt-1 t2-fs-h1 font-bold" style={{ color: "var(--t2-text)" }}>
-                {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName} ` : `${t("tour.t2cpHello")} `}
-                <span aria-hidden>👋</span>
-              </h1>
-              <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
-                {t("tour.t2cpGreetSub", { year: seasonYear, n: plannedTotal })}
-              </p>
-              {profile?.ranking != null && (
-                <span className="t2-surface-chip is-accent mt-3">#{profile.ranking} · {t("tour.t2ovGreetRanking")}</span>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-5">
-              <ProgressRing pct={seasonPct}>
-                <div>
-                  <div className="t2-fs-h2 font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{seasonPct}%</div>
-                  <div className="t2-label">{t("tour.t2cpRingLabel")}</div>
-                </div>
-              </ProgressRing>
-              <div>
-                <p className="t2-label">{t("tour.t2cpPointsLabel")}</p>
-                <p className="t2-fs-display font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{pointsTotal}</p>
-                {pointsDelta != null && pointsDelta !== 0 && (
-                  <span
-                    className="t2-surface-chip mt-1"
-                    style={{
-                      color: pointsDelta > 0 ? "var(--t2-success)" : "var(--t2-danger)",
-                      background: pointsDelta > 0 ? "var(--t2-success-surface)" : "var(--t2-danger-surface)",
-                    }}
-                  >
-                    {pointsDelta > 0 ? "▲" : "▼"} {Math.abs(pointsDelta)} · {t("tour.t2cpPointsSince")}
-                  </span>
-                )}
-              </div>
-            </div>
+      <div className="mx-auto max-w-[800px] px-4 py-8 sm:px-8">
+        <header>
+          <p className="t2-label">{t("tour.t2navToday")} · {seasonYear}</p>
+          <h1 className="mt-1 t2-fs-h1 font-bold" style={{ color: "var(--t2-text)" }}>
+            {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName}` : t("tour.t2cpHello")}
+          </h1>
+          <p className="mt-2 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>{statusLine}</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link href={T2_FINDER} className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>{t("tour.t2homeGoFind")} →</Link>
+            <Link href={T2_SEASON} className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>{t("tour.t2homeGoSeason")} →</Link>
           </div>
+        </header>
 
-          {/* Streak/Ermutigung an echter Metrik: keine verpasste Frist = Erfolg. */}
-          {plannedTotal > 0 && (
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <div className="t2-streak">
-                <span className="t2-streak-flame" aria-hidden>{missedCount === 0 ? "🔥" : "🎯"}</span>
-                <span className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-text)" }}>
-                  {missedCount === 0 ? t("tour.t2cpStreakClean") : t("tour.t2cpStreakMissed", { n: missedCount })}
-                </span>
-              </div>
-              <span className="t2-fs-micro" style={{ color: "var(--t2-text-soft)" }}>
-                {t("tour.t2cpProgressCaption", { played: playedCount, total: plannedTotal })}
-              </span>
-            </div>
-          )}
-        </section>
-
-        {/* ── Onboarding-Fortschritt — nur solange etwas fehlt ────── */}
         {!setupComplete && (
-          <section className="t2-dash-card mt-4">
+          <section className="t2-dash-card mt-6">
             <div className="flex items-center justify-between gap-3">
               <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpSetupTitle")}</p>
               <span className="t2-surface-chip is-accent">{t("tour.t2cpSetupProgress", { done: setupDoneN, total: setupSteps.length })}</span>
             </div>
             <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: "var(--t2-surface-muted)" }}>
-              <div className="h-full rounded-full" style={{ width: `${setupPct}%`, background: "var(--t2-accent)", transition: "width 600ms var(--t2-spring)" }} />
+              <div className="h-full rounded-full" style={{ width: `${setupPct}%`, background: "var(--t2-accent)" }} />
             </div>
             <ul className="mt-4 flex flex-col gap-1.5">
               {setupSteps.map((s) => (
@@ -826,7 +694,6 @@ export default function HomeView() {
                     <Link href={s.href} className="flex items-center gap-2.5 t2-fs-body-sm font-semibold" style={{ color: "var(--t2-text)" }}>
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border" style={{ borderColor: "var(--t2-line-strong)" }} aria-hidden />
                       <span className="hover:underline">{s.label}</span>
-                      <span aria-hidden style={{ color: "var(--t2-accent)" }}>→</span>
                     </Link>
                   )}
                 </li>
@@ -835,248 +702,43 @@ export default function HomeView() {
           </section>
         )}
 
-        {/* ── 2. KACHELN — Kennzahlen mit Belag-/Rollenfarbe ──────── */}
-        <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {active.length > 0 && (
-            <StatTile
-              tint="var(--t2-hard-soft)" ink="var(--t2-hard)" icon="🎾"
-              label={t("tour.t2ovGreetTournaments")} value={plannedTotal}
-              cap={t("tour.t2cpProgressCaption", { played: playedCount, total: plannedTotal })}
-            />
-          )}
-          {leftMinor != null && budget && (
-            <StatTile
-              tint="var(--t2-grass-soft)" ink="var(--t2-grass)" icon="€"
-              label={t("tour.t2ovGreetBudgetLeft")} value={money(leftMinor)}
-              cap={`${t("tour.t2ovBudgetTotal")} · ${money(budget.amount)}`}
-            />
-          )}
-          {nextStop && (
-            <StatTile
-              tint="var(--t2-clay-soft)" ink="var(--t2-clay)" icon="📍"
-              label={t("tour.t2ovGreetNextStop", { date: fmtDate(nextStop.tournament.tournament_monday) })}
-              value={displayCity(nextStop.tournament.city) || t("tour.fieldMissing")}
-            />
-          )}
-          {resultHistory.length > 0 && (
-            <div className="t2-dash-card">
-              <div className="flex items-center justify-between gap-2">
-                <p className="t2-label truncate">{t("tour.t2cpPointsLabel")}</p>
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[12px] t2-fs-body font-bold" style={{ background: "var(--t2-accent-soft)", color: "var(--t2-accent)" }} aria-hidden>↑</span>
-              </div>
-              <p className="mt-2 t2-fs-h1 font-bold tabular-nums" style={{ color: "var(--t2-text)" }}>{pointsTotal}</p>
-              <div className="mt-1"><Sparkline series={pointsSeries} /></div>
-            </div>
-          )}
+        <section id="t2-actions" className="t2-dash-card mt-6">
+          <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2action")}</h2>
+          <Tour2ActionList
+            actions={board.actions}
+            countryName={countryName}
+            fmtDate={fmtDate}
+            money={(minor) => money(minor)}
+          />
+        </section>
+
+        <div className="mt-6">
+          <DayGlance todayISO={todayISO} groups={glance} />
         </div>
 
-        {/* ── 3. NÄCHSTE FRIST — fröhliche Aktionskarte (Akzent-Verlauf) ── */}
-        {nextDeadline && nextActionCity ? (
-          <section className="t2-dash-card t2-action-card mt-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="t2-label">{t("tour.t2cpNextAction")}</p>
-                <p className="mt-1 t2-fs-h2 font-bold" style={{ color: "#fff" }}>
-                  {t("tour.t2cpNextActionEntry", { name: nextActionCity })}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  {nextEntryDeadlineMs != null && (
-                    <span className="t2-fs-body-sm font-semibold" style={{ color: "rgba(255,255,255,0.92)" }}>
-                      {countdown(nextEntryDeadlineMs)}
-                    </span>
-                  )}
-                  {nextSurfaceLabel && (
-                    <span className="t2-surface-chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}>{nextSurfaceLabel}</span>
-                  )}
-                  {nextDeadline.tournament.category && (
-                    <span className="t2-surface-chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}>{nextDeadline.tournament.category}</span>
-                  )}
-                </div>
-              </div>
-              <Link
-                href={tour2PlannerTournamentHref(nextDeadline.tournament.id)}
-                className="t2-cta shrink-0"
-                style={{ background: "#fff", color: "var(--t2-accent)", boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}
-              >
-                {t("tour.t2cpNextActionCTA")}<span aria-hidden>→</span>
-              </Link>
-            </div>
-          </section>
-        ) : active.length > 0 ? (
-          <section className="t2-dash-card mt-4">
-            <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpNoAction")}</p>
-            <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpNoActionHint")}</p>
-          </section>
-        ) : null}
-
-        {/* ── 4. KARTE — die Saison als Bühne ─────────────────────── */}
-        <section className="mt-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
-              {t("tour.t2cpMapTitle")}
-            </h2>
-            {active.length > 0 && (
-              <p className="t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpMapHint")}</p>
-            )}
+        {active.length === 0 && (
+          <div className="t2-dash-card mt-6">
+            <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
+            <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
+            <Link href={T2_SEASON} className="t2-cta mt-4">{t("tour.t2cpEmptyRouteCTA")}<span aria-hidden>→</span></Link>
           </div>
-          {active.length === 0 ? (
-            <div className="t2-dash-card mt-3">
-              <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
-              <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
-              <Link href={T2_SEASON} className="t2-cta mt-4">
-                {t("tour.t2cpEmptyRouteCTA")}<span aria-hidden>→</span>
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-4">
+        )}
+
+        {mapStops.length > 0 && (
+          <section className="mt-6">
+            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpMapTitle")}</h2>
+            <div className="mt-3">
               <SeasonMap
                 stops={mapStops}
                 variant="light"
-                heightClass="min-h-[38vh] md:min-h-[50vh]"
+                heightClass="min-h-[28vh] md:min-h-[36vh]"
                 onMarkerClick={setSelectedStopId}
                 highlightId={hoveredStopId ?? selectedStopId}
               />
             </div>
-          )}
-        </section>
-
-        {/* ── 5. ZEITACHSE ────────────────────────────────────────── */}
-        {active.length > 0 && (
-          <section className="mt-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
-                {t("tour.t2cpTimelineTitle")}
-              </h2>
-              <Link href="/tour2/pipeline" className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>
-                {t("tour.pipelineTitle")} →
-              </Link>
-            </div>
-            <div className="mt-3">
-              <SeasonTimeline
-                stops={timelineStops}
-                todayISO={todayISO}
-                locale={loc}
-                onSelect={setSelectedStopId}
-                onHover={setHoveredStopId}
-                highlightId={hoveredStopId ?? selectedStopId}
-              />
-            </div>
           </section>
         )}
 
-        {/* ── 6. BELÄGE — bunte Verteilung (Farbe = Belag) ────────── */}
-        {dists.surfItems.length > 0 && (
-          <section className="t2-dash-card mt-4">
-            <p className="t2-label">{t("tour.t2cpSurfacesTitle")}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {dists.surfItems.map((x) => (
-                <span key={x.key} className={`t2-surface-chip ${surfaceChipClass(x.key)}`}>{x.label} · {x.n}</span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── 7. ZWEI SPALTEN — Fristen · Ausgaben ────────────────── */}
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {/* Fristen */}
-          <section className="t2-dash-card">
-            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
-              {t("tour.t2cpDeadlinesTitle")}
-            </h2>
-            {board.actions.length === 0 ? (
-              <p className="mt-4 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpDeadlinesEmpty")}</p>
-            ) : (
-              <div className="mt-4">
-                <Tour2ActionList
-                  actions={board.actions}
-                  countryName={countryName}
-                  fmtDate={fmtDate}
-                  money={(minor) => money(minor)}
-                />
-              </div>
-            )}
-          </section>
-
-          {/* Ausgaben — Budget-Balken + Aufschlüsselung */}
-          <section className="t2-dash-card">
-            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>
-              {t("tour.t2cpCostsTitle")}
-            </h2>
-            {!budget ? (
-              <>
-                <p className="mt-4 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>
-                  {t("tour.t2cpCostsNoBudget")}
-                </p>
-                <Link href="/tour2/costs" className="mt-4 inline-flex t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>
-                  {t("tour.t2cpCostsSetBudget")} →
-                </Link>
-              </>
-            ) : (
-              <>
-                <p className="mt-2 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpCostsHint")}</p>
-                {/* Kernzeile: verplant vs Restbudget */}
-                <div className="mt-5 flex items-baseline justify-between gap-4">
-                  <div>
-                    <p className="t2-fs-h1 font-semibold tabular-nums tracking-[-0.02em]" style={{ color: "var(--t2-text)" }}>
-                      {usedMinor != null ? money(usedMinor) : money(0)}
-                    </p>
-                    <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
-                      {t("tour.t2ovBudgetPlanned", { n: "" }).replace(/{n}/g, "").trim() || "verplant"}
-                    </p>
-                  </div>
-                  {leftMinor != null && (
-                    <div className="text-right">
-                      <p
-                        className="t2-fs-h3 font-semibold tabular-nums"
-                        style={{ color: leftMinor < 0 ? "var(--t2-danger)" : "var(--t2-text)" }}
-                      >
-                        {money(leftMinor)}
-                      </p>
-                      <p className="mt-1 t2-fs-meta font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--t2-text-faint)" }}>
-                        {t("tour.t2ovBudgetLeft", { n: "" }).replace(/{n}/g, "").trim() || "übrig"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                {/* Ein Balken — dezent leuchtend im Akzent, danger wenn überzogen */}
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full" style={{ background: "var(--t2-surface-muted)" }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.max(0, Math.min(1, (usedMinor ?? 0) / budget.amount)) * 100}%`,
-                      background: (leftMinor ?? 0) < 0 ? "var(--t2-danger)" : "var(--t2-accent)",
-                      boxShadow: "none",
-                      transition: "width 240ms ease",
-                    }}
-                  />
-                </div>
-                <p className="mt-2 t2-fs-micro" style={{ color: "var(--t2-text-faint)" }}>
-                  {t("tour.t2ovBudgetTotal")} · <span className="tabular-nums">{money(budget.amount)}</span>
-                </p>
-                {/* Aufschlüsselung */}
-                {usedMinor != null && Object.keys(costByCode).length > 0 && (
-                  <ul className="mt-5 divide-y t2-fs-body-sm" style={{ borderColor: "var(--t2-line)" } as React.CSSProperties}>
-                    {(["arrival", "lodging", "food", "coach", "entry"] as ItemCode[]).map((code) => {
-                      const n = costByCode[code];
-                      if (!n) return null;
-                      return (
-                        <li key={code} className="flex justify-between border-t py-2" style={{ borderColor: "var(--t2-line)" }}>
-                          <span style={{ color: "var(--t2-text-soft)" }}>{t(`tour.costsItem_${code}`)}</span>
-                          <span className="tabular-nums font-semibold" style={{ color: "var(--t2-text)" }}>{money(n)}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                {insights.length > 0 && (
-                  <div className="mt-5 space-y-3 border-t pt-4" style={{ borderColor: "var(--t2-line)" }}>{insights}</div>
-                )}
-              </>
-            )}
-          </section>
-        </div>
-
-        {/* Detailschublade — geöffnet von Kartenmarker oder Zeitachse. */}
         {selectedEntry && (
           <Drawer
             open
@@ -1087,43 +749,19 @@ export default function HomeView() {
               {selectedEntry.tournament.category && (
                 <div>
                   <dt className="t2-label">{t("tour.t2ovDrawerCategory")}</dt>
-                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{selectedEntry.tournament.category}</dd>
+                  <dd className="mt-1 t2-fs-body">{selectedEntry.tournament.category}</dd>
                 </div>
               )}
               <div>
                 <dt className="t2-label">{t("tour.t2ovDrawerDate")}</dt>
-                <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>
+                <dd className="mt-1 t2-fs-body">
                   {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"))}
                 </dd>
               </div>
-              {selectedEntry.tournament.surface && (
-                <div>
-                  <dt className="t2-label">{t("tour.t2ovDrawerSurface")}</dt>
-                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>
-                    {t(`tour.surface_${selectedEntry.tournament.surface}`).startsWith("tour.surface_")
-                      ? selectedEntry.tournament.surface
-                      : t(`tour.surface_${selectedEntry.tournament.surface}`)}
-                  </dd>
-                </div>
-              )}
               {drawerDeadlineMs != null && (
                 <div>
                   <dt className="t2-label">{t("tour.t2ovDrawerDeadline")}</dt>
-                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{countdown(drawerDeadlineMs)}</dd>
-                </div>
-              )}
-              {drawerDistanceKm != null && (
-                <div>
-                  <dt className="t2-label">{t("tour.t2ovDrawerDistancePrev")}</dt>
-                  <dd className="mt-1 t2-fs-body tabular-nums" style={{ color: "var(--t2-text)" }}>
-                    {t("tour.t2legKm", { n: Math.round(drawerDistanceKm) })}
-                  </dd>
-                </div>
-              )}
-              {selectedEntry.tournament.country && (
-                <div>
-                  <dt className="t2-label">{t("tour.t2ovDrawerCountry")}</dt>
-                  <dd className="mt-1 t2-fs-body" style={{ color: "var(--t2-text)" }}>{countryName(selectedEntry.tournament.country)}</dd>
+                  <dd className="mt-1 t2-fs-body">{countdown(drawerDeadlineMs)}</dd>
                 </div>
               )}
             </dl>
