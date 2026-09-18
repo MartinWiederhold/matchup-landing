@@ -61,6 +61,8 @@ export default function FullProfile({
   const touchX = useRef<number | null>(null);
 
   useEffect(() => {
+    setP(null);
+    setImgIndex(0);
     supabase
       .from("profiles")
       .select(PROFILE_COLUMNS)
@@ -82,9 +84,11 @@ export default function FullProfile({
   // kein Spieler, sondern der offizielle Chat-Absender.
   const isTeam = userId === MATCHUP_TEAM_ID;
 
-  const images = [p.profile_image, ...(p.additional_images ?? [])].filter(
-    Boolean,
-  ) as string[];
+  // Hauptbild + Galerie; jsonb kommt als Array, ältere Zeilen können null sein.
+  const extra = Array.isArray(p.additional_images) ? p.additional_images : [];
+  const images = [p.profile_image, ...extra].filter(
+    (u, i, arr): u is string => !!u && arr.indexOf(u) === i,
+  );
 
   const next = () => setImgIndex((i) => (i + 1) % images.length);
   const prev = () => setImgIndex((i) => (i - 1 + images.length) % images.length);
@@ -178,6 +182,22 @@ export default function FullProfile({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={images[imgIndex]} alt={p.first_name} className="h-[440px] w-full object-cover" draggable={false} />
           )}
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label={t("common.back")}
+                onClick={prev}
+                className="absolute inset-y-0 left-0 z-[5] w-1/3"
+              />
+              <button
+                type="button"
+                aria-label={t("common.next")}
+                onClick={next}
+                className="absolute inset-y-0 right-0 z-[5] w-1/3"
+              />
+            </>
+          )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
 
           {/* Zurück */}
@@ -185,13 +205,13 @@ export default function FullProfile({
             type="button"
             onClick={closeSubView}
             aria-label={t("profile.back")}
-            className="absolute left-4 top-[max(16px,env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur"
+            className="absolute left-4 top-[max(16px,env(safe-area-inset-top))] z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur"
           >
             <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
 
           {/* Drei-Punkte-Menü: Melden / Blockieren */}
-          <div className="absolute right-4 top-[max(16px,env(safe-area-inset-top))]">
+          <div className="absolute right-4 top-[max(16px,env(safe-area-inset-top))] z-20">
             <button
               type="button"
               onClick={() => setMenuOpen((o) => !o)}
@@ -215,22 +235,21 @@ export default function FullProfile({
             )}
           </div>
 
-          {images.length > 1 && (
-            <div className="absolute bottom-[76px] left-1/2 flex -translate-x-1/2 gap-1.5">
-              {images.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`${i + 1}`}
-                  onClick={() => setImgIndex(i)}
-                  className={`h-1.5 rounded-full transition-all ${i === imgIndex ? "w-4 bg-white" : "w-1.5 bg-white/50"}`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Name / Ort / Distanz */}
-          <div className="absolute inset-x-0 bottom-0 p-5">
+          {/* Name / Ort / Distanz — Punkte liegen DARÜBER, nicht hinter dem Text. */}
+          <div className="absolute inset-x-0 bottom-0 z-10 p-5">
+            {images.length > 1 && (
+              <div className="mb-3 flex gap-1.5">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={`${i + 1}`}
+                    onClick={() => setImgIndex(i)}
+                    className={`h-1 rounded-full transition-all ${i === imgIndex ? "flex-1 bg-white" : "flex-1 bg-white/35"}`}
+                  />
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <h1 className="text-[28px] font-extrabold leading-none text-white">{p.first_name}{isTeam ? "" : `, ${p.age}`}</h1>
               {online && <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white/60" />}
@@ -244,6 +263,25 @@ export default function FullProfile({
         </div>
 
         <div className="space-y-6 p-5">
+          {/* Alle Fotos direkt unter dem Hero — nicht erst nach Bio/Stats. */}
+          {images.length > 1 && (
+            <div className="-mx-1 flex gap-2 overflow-x-auto pb-1">
+              {images.map((src, i) => (
+                <button
+                  key={`${src}-${i}`}
+                  type="button"
+                  onClick={() => setImgIndex(i)}
+                  className={`h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl ring-2 ${
+                    i === imgIndex ? "ring-matchup" : "ring-transparent"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Sportarten / Level / Rating / Verifiziert — für das System-Konto nur ein Badge */}
           <div className="flex flex-wrap gap-2">
             {isTeam ? (
@@ -318,7 +356,7 @@ export default function FullProfile({
               <div className="grid grid-cols-2 gap-2.5">
                 {images.slice(1).map((src, i) => (
                   <button
-                    key={i}
+                    key={`g-${src}-${i}`}
                     type="button"
                     onClick={() => setImgIndex(i + 1)}
                     className="aspect-square overflow-hidden rounded-2xl bg-black/[0.05]"
