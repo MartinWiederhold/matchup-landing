@@ -785,6 +785,10 @@ a.t2-card:hover, .t2-card--hover:hover {
   backdrop-filter: blur(18px);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
+.t2-place-card.is-slim {
+  max-width: 20rem;
+  padding: 0.75rem 0.9rem 0.85rem;
+}
 .t2-place-cta {
   display: inline-flex;
   align-items: center;
@@ -848,22 +852,50 @@ a.t2-card:hover, .t2-card--hover:hover {
   gap: 0.35rem 1.25rem;
   margin-top: 0.45rem;
 }
+.t2-world-enter { animation: t2-world-in 0.28s ease-out; }
+@keyframes t2-world-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .t2-world-pin {
   position: absolute;
   left: 0;
   top: 0;
   transform: translate(-50%, -120%);
   border-radius: 999px;
-  padding: 0.28rem 0.65rem;
-  background: rgba(12, 12, 14, 0.72);
-  color: #fff;
+  padding: 0.28rem 0.7rem;
+  background: #fff;
+  color: #1a1a1a;
   font-size: var(--t2-text-micro);
   font-weight: 700;
   white-space: nowrap;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(16, 24, 32, 0.14);
   pointer-events: auto;
 }
-.t2-world-pin.is-on { background: #fff; color: #111; }
+.t2-world-pin.is-on { background: #1e4bb8; color: #fff; }
+.t2-world-pin.is-amenity {
+  min-width: 1.7rem;
+  padding: 0.18rem 0.42rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+}
+.t2-world-pin.is-restroom { background: #2b6bff; color: #fff; }
+.t2-world-pin.is-firstaid { background: #e24b4b; color: #fff; }
+.t2-world-pin.is-water { background: #2a9bb8; color: #fff; }
+.t2-world-pin.is-info { background: #1c1c1e; color: #fff; }
+.t2-world-pin.is-access { background: #5a46d6; color: #fff; }
+.t2-world-pin.is-baggage { background: #6a5340; color: #fff; }
+.t2-world-pin.is-lostfound { background: #c47a14; color: #fff; }
+.t2-world-pin.is-atm { background: #1a7a4c; color: #fff; }
+.t2-world-pin.is-charger { background: #0b6e99; color: #fff; }
+.t2-world-pin.is-boxoffice { background: #1c1c1e; color: #fff; }
+.t2-world-pin.is-courtnum {
+  min-width: 1.55rem;
+  padding: 0.18rem 0.42rem;
+  background: #1a46b0;
+  color: #fff;
+  font-size: 0.72rem;
+}
 .t2-world-around {
   display: flex;
   width: 100%;

@@ -1,6 +1,7 @@
 /**
  * Eine Turnier-Welt: handgezeichnetes Gelände + benannte Knoten.
- * Keine erfundenen Gehminuten, keine Court-Zuteilung, kein Wetter.
+ * Keine erfundenen Gehminuten, keine Court-Zuteilung.
+ * Wetter liegt in siteWeather: aktuelles Open-Meteo am Ursprung, keine 2027-Vorhersage.
  * Eine Welt greift nur, wenn der Matcher am Turnier anschlägt oder die
  * Welt ausdrücklich gewählt wird.
  */
@@ -13,7 +14,45 @@ export type SiteNodeKind =
   | "player"
   | "gate"
   | "transit"
-  | "landmark";
+  | "landmark"
+  | "restroom"
+  | "firstaid"
+  | "water"
+  | "info"
+  | "access"
+  | "baggage"
+  | "lostfound"
+  | "atm"
+  | "charger"
+  | "boxoffice";
+
+export const AMENITY_KINDS: ReadonlySet<SiteNodeKind> = new Set([
+  "restroom",
+  "firstaid",
+  "water",
+  "info",
+  "access",
+  "baggage",
+  "lostfound",
+  "atm",
+  "charger",
+  "boxoffice",
+]);
+
+export const SERVICE_KINDS: ReadonlySet<SiteNodeKind> = new Set([
+  "info",
+  "baggage",
+  "lostfound",
+  "atm",
+  "charger",
+  "boxoffice",
+]);
+
+export function isAmenityKind(kind: SiteNodeKind): boolean {
+  return AMENITY_KINDS.has(kind);
+}
+
+export type SiteNodeFlag = "accessible" | "nursing" | "wheelchairSeating";
 
 export type SiteNode = {
   id: string;
@@ -27,7 +66,12 @@ export type SiteNode = {
   lng?: number;
   source: string;
   sourceUrl?: string;
+  flags?: SiteNodeFlag[];
 };
+
+export function nodeHasFlag(node: SiteNode, flag: SiteNodeFlag): boolean {
+  return node.flags?.includes(flag) === true;
+}
 
 export type SitePath = { from: string; to: string };
 

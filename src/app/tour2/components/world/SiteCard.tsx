@@ -31,10 +31,17 @@ export default function SiteCard({
   const kindLabel = t(kindKey).startsWith("tour.t2worldKind_") ? node.kind : t(kindKey);
 
   return (
-    <div className="t2-place-card max-w-md">
+    <div className="t2-place-card is-slim">
       <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-white/55">{t("tour.t2worldTitle", { title: world.title, year: world.year })}</p>
       <h1 className="mt-1 t2-fs-h2 font-bold text-white">{node.name}</h1>
       <p className="mt-1 t2-fs-body-sm text-white/70">{kindLabel}</p>
+      {node.flags && node.flags.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {node.flags.map((f) => (
+            <p key={f} className="t2-place-pill is-soft">{t(`tour.t2worldFlag_${f}`)}</p>
+          ))}
+        </div>
+      )}
 
       {node.kind === "stringer" && (
         <div className="mt-3 space-y-1 t2-fs-body-sm text-white/85">
@@ -67,13 +74,11 @@ export default function SiteCard({
         )}
       </div>
 
-      <div className="mt-4">
-        <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-white/55">{t("tour.t2worldAround")}</p>
-        {around.length === 0 ? (
-          <p className="mt-1 t2-fs-body-sm text-white/70">{t("tour.t2worldNoAround")}</p>
-        ) : (
+      {around.length > 0 && (
+        <div className="mt-3">
+          <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-white/55">{t("tour.t2worldAround")}</p>
           <ul className="mt-2 space-y-1.5">
-            {around.slice(0, 5).map((h) => (
+            {around.slice(0, 2).map((h) => (
               <li key={`${h.kind}-${h.name}-${h.lat}`}>
                 <button type="button" className="t2-world-around" onClick={() => onPickAround?.(h)}>
                   <span className="truncate">{h.name}</span>
@@ -82,8 +87,8 @@ export default function SiteCard({
               </li>
             ))}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

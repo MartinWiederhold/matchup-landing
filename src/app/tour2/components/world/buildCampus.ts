@@ -1,37 +1,32 @@
 /**
- * Spiel-Geometrie für das US-Open-Gelände. Kein CAD: Wege, Plätze, Outer Courts
- * und Bäume sind stilisiert nach dem öffentlichen Campus-Schnitt
- * (Stadien nördlich, Practice weiter nördlich, Willets westlich, Park südlich).
+ * Gelände nach der US-Open-Grounds-Map: helles Gras, weiße Plaza,
+ * Hexagon um Ashe, Instanced-Bäume und -Lampen. Wege sind Plaza, kein Asphalt.
  */
 
 import * as THREE from "three";
 import type { SiteWorld } from "@/domain/tour/siteWorld";
 import { nodeById } from "@/domain/tour/siteWorld";
 
-const GRASS = "#3f6b38";
-const GRASS_DARK = "#345a30";
-const PARK = "#4a7a42";
-const PAVING = "#c9c2b4";
-const ROAD = "#5c5a56";
-const ROAD_LINE = "#d8d2c4";
-const COURT = "#2a4a92";
-const COURT_LINE = "#e6d27a";
-const PLAZA = "#d7cfc0";
-const WATER = "#3d6f86";
+const GRASS = "#46ad3e";
+const GRASS_DARK = "#359635";
+const PLAZA = "#f4f2eb";
+const WALK = "#efece4";
+const STREET = "#d8d6d0";
+const ROUTE = "#2b6bff";
+const SKY = "#dce8d6";
 
-function mat(color: string, roughness = 0.85): THREE.MeshStandardMaterial {
+function mat(color: string, roughness = 0.88): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({ color, roughness });
 }
 
 export function disk(r: number, color: string, y = 0.02): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.CircleGeometry(r, 72), mat(color, 0.92));
+  const m = new THREE.Mesh(new THREE.CircleGeometry(r, 72), mat(color, 0.94));
   m.rotation.x = -Math.PI / 2;
   m.position.y = y;
   m.receiveShadow = true;
   return m;
 }
 
-/** Wegstück von A nach B (Meter), auf dem Boden. */
 export function strip(
   ax: number,
   az: number,
@@ -44,7 +39,7 @@ export function strip(
   const dx = bx - ax;
   const dz = bz - az;
   const len = Math.hypot(dx, dz) || 1;
-  const m = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, len + 0.4), mat(color, 0.8));
+  const m = new THREE.Mesh(new THREE.BoxGeometry(width, 0.1, len + 0.4), mat(color, 0.8));
   m.position.set((ax + bx) / 2, y, (az + bz) / 2);
   m.rotation.y = Math.atan2(dx, dz);
   m.receiveShadow = true;
@@ -52,301 +47,255 @@ export function strip(
 }
 
 export function pad(x: number, z: number, w: number, d: number, color: string, y = 0.06): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.1, d), mat(color, 0.88));
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.1, d), mat(color, 0.86));
   m.position.set(x, y, z);
   m.receiveShadow = true;
   return m;
 }
 
-function lamp(x: number, z: number): THREE.Group {
-  const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 7.2, 6), mat("#3a3a38", 0.5));
-  pole.position.y = 3.6;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 6), new THREE.MeshStandardMaterial({
-    color: "#f4e8b8", emissive: "#c9b56a", emissiveIntensity: 0.35, roughness: 0.4,
-  }));
-  head.position.y = 7.2;
-  g.add(pole, head);
-  g.position.set(x, 0, z);
-  return g;
-}
-
-function tree(x: number, z: number, scale = 1): THREE.Group {
-  const g = new THREE.Group();
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4 * scale, 0.55 * scale, 4 * scale, 6), mat("#5a3a22", 0.9));
-  trunk.position.y = 2 * scale;
-  const crown = new THREE.Mesh(new THREE.SphereGeometry(3.1 * scale, 9, 7), mat("#2c5830", 0.92));
-  crown.position.y = 5.8 * scale;
-  trunk.castShadow = true;
-  crown.castShadow = true;
-  g.add(trunk, crown);
-  g.position.set(x, 0, z);
-  return g;
-}
-
-function courtTile(x: number, z: number, rot = 0): THREE.Group {
-  const g = new THREE.Group();
-  const padM = new THREE.Mesh(new THREE.BoxGeometry(11.2, 0.22, 23.6), mat(COURT, 0.5));
-  padM.position.y = 0.14;
-  const ink = mat(COURT_LINE, 0.35);
-  const bar = (w: number, d: number, px: number, pz: number) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.24, d), ink);
-    m.position.set(px, 0.16, pz);
-    g.add(m);
-  };
-  bar(0.22, 21.2, 0, 0);
-  bar(8.4, 0.22, 0, 0);
-  bar(8.4, 0.22, 0, 4.2);
-  bar(8.4, 0.22, 0, -4.2);
-  bar(0.18, 8.4, 2.6, 0);
-  bar(0.18, 8.4, -2.6, 0);
-  g.add(padM);
-  g.position.set(x, 0, z);
-  g.rotation.y = rot;
-  g.traverse((c) => { c.receiveShadow = true; });
-  return g;
-}
-
-function hedge(x: number, z: number, w: number, d: number): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.6, d), mat("#2a4d2c", 0.95));
-  m.position.set(x, 0.8, z);
-  m.castShadow = true;
+function hexPad(r: number, y: number): THREE.Mesh {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + Math.PI / 2;
+    const x = Math.cos(a) * r;
+    const yy = Math.sin(a) * r;
+    if (i === 0) shape.moveTo(x, yy);
+    else shape.lineTo(x, yy);
+  }
+  shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.12, bevelEnabled: false });
+  const m = new THREE.Mesh(geo, mat(PLAZA, 0.84));
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = y;
+  m.receiveShadow = true;
   return m;
 }
 
-function fence(x: number, z: number, w: number, d: number): THREE.Group {
-  const g = new THREE.Group();
-  const mesh = mat("#8a9088", 0.45);
-  const post = (px: number, pz: number) => {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 3.4, 5), mesh);
-    p.position.set(px, 1.7, pz);
-    g.add(p);
-  };
-  const rail = (ww: number, dd: number, px: number, pz: number) => {
-    const r = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.08, dd), mesh);
-    r.position.set(px, 3.2, pz);
-    g.add(r);
-  };
-  post(-w / 2, -d / 2);
-  post(w / 2, -d / 2);
-  post(-w / 2, d / 2);
-  post(w / 2, d / 2);
-  rail(w, 0.08, 0, -d / 2);
-  rail(w, 0.08, 0, d / 2);
-  rail(0.08, d, -w / 2, 0);
-  rail(0.08, d, w / 2, 0);
-  g.position.set(x, 0, z);
-  return g;
-}
-
-function flag(x: number, z: number, color: string): THREE.Group {
-  const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 9, 6), mat("#4a4a46", 0.5));
-  pole.position.y = 4.5;
-  const cloth = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.5, 0.08), mat(color, 0.55));
-  cloth.position.set(1.3, 8.1, 0);
-  g.add(pole, cloth);
-  g.position.set(x, 0, z);
-  return g;
-}
-
-function car(x: number, z: number, rot: number, color: string): THREE.Group {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.4), mat(color, 0.5));
-  body.position.y = 0.55;
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.55, 2.1), mat("#2a3340", 0.4));
-  cabin.position.set(0, 1.15, -0.3);
-  g.add(body, cabin);
-  g.position.set(x, 0, z);
-  g.rotation.y = rot;
-  return g;
-}
-
-function bleachers(x: number, z: number, rot = 0): THREE.Group {
-  const g = new THREE.Group();
-  for (let i = 0; i < 4; i++) {
-    const step = new THREE.Mesh(new THREE.BoxGeometry(18, 0.7, 1.8), mat(i % 2 ? "#4a4e56" : "#3a3e44", 0.7));
-    step.position.set(0, 0.4 + i * 0.7, i * 1.15);
-    step.castShadow = true;
-    g.add(step);
+/** Straßenname auf dem Belag — wie auf der offiziellen Grounds Map, nur belegte Namen. */
+function streetSign(text: string, x: number, z: number, rotY: number): THREE.Mesh {
+  const c = document.createElement("canvas");
+  c.width = 1280;
+  c.height = 160;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.clearRect(0, 0, 1280, 160);
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.fillRect(0, 28, 1280, 104);
+    ctx.fillStyle = "#2a2a2a";
+    ctx.font = "800 72px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 640, 84);
   }
-  g.position.set(x, 0, z);
-  g.rotation.y = rot;
-  return g;
-}
-
-function scoreboard(x: number, z: number): THREE.Group {
-  const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.BoxGeometry(1.2, 8, 1.2), mat("#2c2c2e", 0.5));
-  pole.position.y = 4;
-  const board = new THREE.Mesh(new THREE.BoxGeometry(14, 5.2, 0.6), mat("#1a1c22", 0.4));
-  board.position.set(0, 8.4, 0);
-  const face = new THREE.Mesh(
-    new THREE.BoxGeometry(12.6, 3.8, 0.2),
-    new THREE.MeshStandardMaterial({ color: "#1f3d2a", emissive: "#1a4a28", emissiveIntensity: 0.25 }),
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(Math.min(118, 22 + text.length * 2.35), 6.4),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }),
   );
-  face.position.set(0, 8.4, 0.35);
-  g.add(pole, board, face);
-  g.position.set(x, 0, z);
-  return g;
+  m.rotation.x = -Math.PI / 2;
+  m.rotation.z = rotY;
+  m.position.set(x, 0.2, z);
+  return m;
 }
 
-function stall(x: number, z: number, color: string): THREE.Group {
+/** Aufrechter Wegweiser an Kreuzungen — kein GPS, nur offizielle Straßennamen. */
+function wayTotem(lines: string[], x: number, z: number): THREE.Group {
   const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.1, 4.2), mat(color, 0.62));
-  body.position.y = 1.55;
-  body.castShadow = true;
-  const awn = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.25, 4.8), mat("#c43b3b", 0.5));
-  awn.position.y = 3.3;
-  g.add(body, awn);
+  const pole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.16, 5.2, 6),
+    mat("#c8c4ba", 0.45),
+  );
+  pole.position.y = 2.6;
+  g.add(pole);
+  const c = document.createElement("canvas");
+  c.width = 512;
+  c.height = 220;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#1a46b0";
+    ctx.fillRect(0, 0, 512, 220);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 36px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    lines.forEach((line, i) => ctx.fillText(line, 256, 70 + i * 48));
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const plate = new THREE.Mesh(
+    new THREE.PlaneGeometry(7.6, 3.3),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }),
+  );
+  plate.position.set(0, 5.1, 0);
+  g.add(plate);
   g.position.set(x, 0, z);
   return g;
 }
 
-/** Baut das Gelände (nicht pickable). Pick-Gebäude bleiben in SiteWorld. */
+function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): void {
+  const crownGeo = new THREE.SphereGeometry(1.85, 8, 6);
+  const crownMat = mat("#22822c", 0.92);
+  const trunkGeo = new THREE.CylinderGeometry(0.18, 0.24, 1.6, 6);
+  const trunkMat = mat("#6a5340", 0.88);
+  const crowns = new THREE.InstancedMesh(crownGeo, crownMat, spots.length);
+  const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, spots.length);
+  crowns.castShadow = true;
+  const dummy = new THREE.Object3D();
+  spots.forEach(([x, z, s], i) => {
+    const sc = s ?? 1;
+    dummy.position.set(x, 0.8 * sc, z);
+    dummy.scale.set(sc, sc, sc);
+    dummy.updateMatrix();
+    trunks.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(x, 2.05 * sc, z);
+    dummy.updateMatrix();
+    crowns.setMatrixAt(i, dummy.matrix);
+  });
+  scene.add(trunks, crowns);
+}
+
+function plantLamps(scene: THREE.Scene, spots: [number, number][]): void {
+  const pole = new THREE.CylinderGeometry(0.09, 0.12, 4.2, 6);
+  const head = new THREE.SphereGeometry(0.28, 8, 6);
+  const poles = new THREE.InstancedMesh(pole, mat("#c8c4ba", 0.45), spots.length);
+  const heads = new THREE.InstancedMesh(head, mat("#fff6d8", 0.35), spots.length);
+  const dummy = new THREE.Object3D();
+  spots.forEach(([x, z], i) => {
+    dummy.position.set(x, 2.1, z);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    poles.setMatrixAt(i, dummy.matrix);
+    dummy.position.set(x, 4.35, z);
+    dummy.updateMatrix();
+    heads.setMatrixAt(i, dummy.matrix);
+  });
+  scene.add(poles, heads);
+}
+
+function plantCrowd(scene: THREE.Scene, spots: [number, number][]): void {
+  const body = new THREE.CapsuleGeometry(0.28, 0.7, 3, 6);
+  const shirts = new THREE.InstancedMesh(body, mat("#d8d4cc", 0.7), spots.length);
+  const dummy = new THREE.Object3D();
+  spots.forEach(([x, z], i) => {
+    dummy.position.set(x, 0.85, z);
+    dummy.rotation.y = (i * 1.7) % Math.PI;
+    dummy.updateMatrix();
+    shirts.setMatrixAt(i, dummy.matrix);
+  });
+  scene.add(shirts);
+}
+
 export function buildCampus(scene: THREE.Scene, world: SiteWorld): void {
   const sky = new THREE.Mesh(
-    new THREE.SphereGeometry(520, 32, 20),
-    new THREE.MeshBasicMaterial({ color: "#9eb6c6", side: THREE.BackSide }),
+    new THREE.SphereGeometry(1600, 28, 16),
+    new THREE.MeshBasicMaterial({ color: SKY, side: THREE.BackSide }),
   );
   scene.add(sky);
 
-  scene.add(disk(300, GRASS_DARK, 0));
-  scene.add(disk(240, GRASS, 0.01));
-  scene.add(disk(70, PARK, 0.015));
-  for (const n of world.nodes) {
-    const w = n.kind === "center" ? 86 : n.kind === "court" ? 48 : n.kind === "practice" ? 72 : 32;
-    const d = n.kind === "practice" ? 48 : w;
-    const color = n.kind === "gate" || n.id === "south-plaza" || n.id === "food-village" ? PLAZA : PAVING;
-    scene.add(pad(n.x, n.z, w, d, color, 0.04));
-  }
-  scene.add(pad(-140, 10, 70, 42, "#6a6862", 0.05));
-  const lake = disk(22, WATER, 0.04);
-  lake.position.set(42, 0.04, 210);
-  scene.add(lake);
+  scene.add(disk(340, GRASS_DARK, 0));
+  scene.add(disk(280, GRASS, 0.012));
+  scene.add(hexPad(80, 0.04));
+  scene.add(hexPad(46, 0.055));
 
-  const extraRoads: [number, number, number, number, number][] = [
-    [0, 92, 0, 0, 9],
-    [0, 0, 18, -95, 8],
-    [0, 0, 110, 8, 7],
-    [0, 0, -48, -36, 7],
-    [-48, -36, -78, -8, 6],
-    [18, -95, 8, -188, 8],
-    [0, 0, -78, 48, 7],
-    [-48, -36, -175, -42, 10],
-    [0, 92, 42, 210, 8],
-    [-175, -42, -175, 20, 8],
-    [-140, 10, -48, -36, 7],
-    [110, 8, 148, -10, 6],
-    [8, -188, 40, -188, 6],
-    [0, 40, 70, 40, 6],
-    [-40, 40, 0, 40, 6],
-  ];
-  for (const [ax, az, bx, bz, w] of extraRoads) {
-    scene.add(strip(ax, az, bx, bz, w, ROAD, 0.07));
-    scene.add(strip(ax, az, bx, bz, 0.45, ROAD_LINE, 0.13));
+  const plazaAt: Record<string, [number, number]> = {
+    "food-village": [50, 38],
+    armstrong: [68, 50],
+    grandstand: [54, 46],
+    court17: [50, 42],
+    practice: [78, 36],
+  };
+  for (const [id, [w, d]] of Object.entries(plazaAt)) {
+    const n = nodeById(world, id);
+    if (n) scene.add(pad(n.x, n.z, w, d, PLAZA, 0.035));
   }
+
+  const gate = nodeById(world, "south-gate");
+  if (gate) scene.add(pad(gate.x, gate.z - 18, 230, 22, STREET, 0.03));
+  const arm = nodeById(world, "armstrong");
+  if (arm) scene.add(pad(arm.x, arm.z - 28, 96, 14, STREET, 0.03));
+  const main = nodeById(world, "east-gate");
+  if (main) scene.add(pad(main.x + 8, main.z, 16, 90, STREET, 0.03));
+  const willets = nodeById(world, "willets");
+  const dink = nodeById(world, "dinkins");
+  if (willets && dink) {
+    scene.add(strip(willets.x, willets.z, dink.x, dink.z, 11, "#c4b49a", 0.05));
+  }
+  scene.add(streetSign("United Nations Avenue North", 0, 152, 0));
+  scene.add(streetSign("Avenue of the Americas", 198, 16, Math.PI / 2));
+  scene.add(streetSign("Meridian Road", 82, -150, 0));
+  scene.add(streetSign("New York Avenue", 36, -72, Math.PI / 2));
+  scene.add(streetSign("David Dinkins Circle", -196, -8, 0));
+  scene.add(streetSign("Boardwalk", -170, -28, 0));
+  scene.add(streetSign("To Mets–Willets Point  ·  7 / LIRR", -220, 8, Math.PI / 2));
+  scene.add(wayTotem(["Champion's Entry", "Unisphere"], 18, 188));
+  scene.add(wayTotem(["Main Entry", "Lot B"], 220, 28));
+  scene.add(wayTotem(["President's Entry", "Lot A · Practice 1–5"], 8, -168));
+
   for (const p of world.paths) {
     const a = nodeById(world, p.from);
     const b = nodeById(world, p.to);
     if (!a || !b) continue;
-    scene.add(strip(a.x, a.z, b.x, b.z, 6.5, PAVING, 0.09));
+    scene.add(strip(a.x, a.z, b.x, b.z, 8.2, WALK, 0.07));
   }
 
-  const ring: [number, number][] = [];
-  for (let i = 0; i < 16; i++) {
-    const a = (i / 16) * Math.PI * 2;
-    ring.push([Math.cos(a) * 38, Math.sin(a) * 38]);
+  const trees: [number, number, number?][] = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2 - Math.PI / 14;
+    trees.push([Math.cos(a) * 86, Math.sin(a) * 86, 0.68]);
   }
-  for (let i = 0; i < ring.length; i++) {
-    const [ax, az] = ring[i];
-    const [bx, bz] = ring[(i + 1) % ring.length];
-    scene.add(strip(ax, az, bx, bz, 7.5, PAVING, 0.08));
+  for (let i = -2; i <= 2; i++) {
+    trees.push([56 + i * 19, 52, 0.58]);
+    trees.push([20 + i * 19, 118, 0.62]);
+    trees.push([-168, -18 + i * 16, 0.64]);
+    trees.push([188, -6 + i * 14, 0.64]);
+    trees.push([24 + i * 16, -148, 0.6]);
   }
+  trees.push(
+    [-72, 72, 0.66], [72, 72, 0.66], [-72, -72, 0.66], [48, -62, 0.6],
+    [118, -48, 0.6], [-124, 88, 0.66], [148, 68, 0.62], [0, 148, 0.7],
+  );
+  plantTrees(scene, trees);
 
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 4; col++) {
-      const cx = 148 + col * 14;
-      const cz = -10 + row * 28;
-      scene.add(courtTile(cx, cz));
-      scene.add(fence(cx, cz, 12.4, 25));
-    }
+  const lamps: [number, number][] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    lamps.push([Math.cos(a) * 52, Math.sin(a) * 52]);
   }
-  for (let i = 0; i < 6; i++) {
-    const cx = -10 + i * 14;
-    scene.add(courtTile(cx, -188));
-    scene.add(fence(cx, -188, 12.4, 25));
-  }
-  scene.add(fence(110, 8, 18, 34));
-  scene.add(scoreboard(0, 36));
-  scene.add(scoreboard(18, -72));
-  scene.add(bleachers(110, 28, Math.PI));
-  scene.add(bleachers(128, 8, -Math.PI / 2));
-  scene.add(flag(-8, 88, "#c43b3b"));
-  scene.add(flag(8, 88, "#2a4a92"));
-  const carColors = ["#c43b3b", "#2a3340", "#d8d2c4", "#4a6b8a", "#8a8074"];
-  for (let i = 0; i < 6; i++) {
-    scene.add(car(-158 + (i % 3) * 16, 4 + Math.floor(i / 3) * 14, Math.PI / 2, carColors[i % 5]));
-  }
+  lamps.push([0, 140], [-90, 8], [90, -8], [56, 50], [94, 50]);
+  plantLamps(scene, lamps);
 
-  const kiosk = (x: number, z: number, color: string) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(7, 4.2, 7), mat(color, 0.65));
-    m.position.set(x, 2.1, z);
-    m.castShadow = true;
-    scene.add(m);
-  };
-  kiosk(32, 48, "#efe6d6");
-  kiosk(48, 36, "#e4d3c2");
-  kiosk(-28, 48, "#efe6d6");
-  kiosk(24, -40, "#d9c8b4");
-  kiosk(64, -20, "#efe6d6");
-  const stallColors = ["#efe6d6", "#e8d7c4", "#f3eee4", "#dcc9b2", "#efe6d6"];
-  for (let i = 0; i < 5; i++) scene.add(stall(38 + i * 7, 58, stallColors[i]));
-  for (let i = 0; i < 4; i++) scene.add(stall(-36 - i * 7, 52, stallColors[i]));
-
-  for (let i = 0; i < 6; i++) {
-    scene.add(pad(-158 + (i % 3) * 16, 4 + Math.floor(i / 3) * 14, 12, 5.5, "#5a5854", 0.08));
+  const crowd: [number, number][] = [];
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2 + 0.2;
+    crowd.push([Math.cos(a) * 48 + (i % 3) * 1.4, Math.sin(a) * 48]);
   }
-  scene.add(hedge(-40, 18, 18, 1.2));
-  scene.add(hedge(40, 18, 18, 1.2));
-  scene.add(hedge(-95, -8, 1.2, 36));
-  scene.add(hedge(70, -40, 1.2, 28));
-  scene.add(hedge(20, 105, 22, 1.2));
+  plantCrowd(scene, crowd);
 
-  const trees: [number, number, number?][] = [
-    [-40, 40], [36, 46], [70, -20], [-90, -70], [50, -140], [-30, -150],
-    [140, -40], [-120, 20], [20, 140], [-55, 70], [55, 70], [90, 20],
-    [-20, -60], [40, -50], [70, -110], [-70, -110], [20, -220], [-20, -220],
-    [60, 180], [20, 190], [70, 220], [-10, 160], [-160, -10], [-160, -70],
-    [160, 20], [170, -60], [100, -160], [-50, -200], [130, -120],
-  ];
-  for (const [x, z, s] of trees) scene.add(tree(x, z, s ?? 1));
-  for (let i = -4; i <= 4; i++) {
-    if (i === 0) continue;
-    scene.add(tree(-12, i * 18, 0.85));
-    scene.add(tree(12, i * 18, 0.85));
-  }
-  for (let i = 0; i < 8; i++) {
-    scene.add(tree(-155 + i * 12, 28, 0.75));
-    scene.add(tree(-90 + i * 14, -55, 0.8));
-  }
-
-  const lamps: [number, number][] = [
-    [8, 70], [-8, 70], [8, 40], [-8, 40], [8, 12], [-8, 12],
-    [10, -40], [28, -70], [50, -80], [70, -60], [90, -20],
-    [-30, -20], [-70, -30], [-110, -38], [-150, -40],
-    [0, -130], [20, -160], [40, 120], [30, 170],
-  ];
-  for (const [x, z] of lamps) scene.add(lamp(x, z));
+  const lake = disk(20, "#4e9bb4", 0.04);
+  lake.position.set(36, 0.04, 268);
+  scene.add(lake);
 }
 
 export function highlightPath(ids: string[], world: SiteWorld): THREE.Group {
   const g = new THREE.Group();
+  const mark = (x: number, z: number, y: number) => {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(1.15, 16, 12),
+      new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.28, metalness: 0.08 }),
+    );
+    m.position.set(x, y, z);
+    g.add(m);
+  };
   for (let i = 0; i < ids.length - 1; i++) {
     const a = nodeById(world, ids[i]);
     const b = nodeById(world, ids[i + 1]);
     if (!a || !b) continue;
-    g.add(strip(a.x, a.z, b.x, b.z, 3.2, "#f4f0e4", 0.22));
+    g.add(strip(a.x, a.z, b.x, b.z, 2.5, ROUTE, 0.22));
   }
+  const start = nodeById(world, ids[0]);
+  const end = nodeById(world, ids[ids.length - 1]);
+  if (start) mark(start.x, start.z, 0.7);
+  if (end && end !== start) mark(end.x, end.z, 0.7);
   return g;
 }

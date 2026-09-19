@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isOnCampus, pathBetween, projectAround, worldMatchesTournament, type SiteWorld } from "./siteWorld";
+import { isAmenityKind, isOnCampus, nodeHasFlag, pathBetween, projectAround, worldMatchesTournament, type SiteWorld } from "./siteWorld";
 
 const world: SiteWorld = {
   id: "us-open",
@@ -33,6 +33,25 @@ describe("pathBetween", () => {
   });
   it("liefert leer wenn unverbunden", () => {
     expect(pathBetween(world, "ashe", "fehlt")).toEqual([]);
+  });
+});
+
+describe("isAmenityKind", () => {
+  it("trennt Service-Knoten von Courts", () => {
+    expect(isAmenityKind("restroom")).toBe(true);
+    expect(isAmenityKind("access")).toBe(true);
+    expect(isAmenityKind("baggage")).toBe(true);
+    expect(isAmenityKind("atm")).toBe(true);
+    expect(isAmenityKind("boxoffice")).toBe(true);
+    expect(isAmenityKind("court")).toBe(false);
+  });
+});
+
+describe("nodeHasFlag", () => {
+  it("liest nur gesetzte Flags", () => {
+    const n = world.nodes[0];
+    expect(nodeHasFlag(n, "accessible")).toBe(false);
+    expect(nodeHasFlag({ ...n, flags: ["accessible", "nursing"] }, "nursing")).toBe(true);
   });
 });
 

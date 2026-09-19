@@ -11,6 +11,8 @@ import { nodeById } from "@/domain/tour/siteWorld";
 import { authoredWorlds, worldById } from "@/app/tour2/worlds/catalog";
 import SiteWorld from "@/app/tour2/components/world/SiteWorld";
 import SiteCard from "@/app/tour2/components/world/SiteCard";
+import AmenityBar, { type AmenityFilter } from "@/app/tour2/components/world/AmenityBar";
+import { useSiteWeather } from "@/app/tour2/components/world/loadWeather";
 import { loadAround, type AroundHit } from "@/app/tour2/components/world/loadAround";
 import PlaceMap, { type PlacePin } from "@/app/tour2/components/home/PlaceMap";
 
@@ -23,7 +25,9 @@ export default function GroundsView() {
   const [nodeId, setNodeId] = useState("ashe");
   const [yearOn, setYearOn] = useState<Record<number, boolean>>({ 2026: true, 2027: true });
   const [around, setAround] = useState<AroundHit[]>([]);
+  const [filter, setFilter] = useState<AmenityFilter>("all");
   const world = worldId ? worldById(worldId) : null;
+  const weather = useSiteWeather(world);
   const node = world ? (nodeById(world, nodeId) ?? world.nodes[0]) : null;
 
   const pins: PlacePin[] = authoredWorlds()
@@ -46,7 +50,7 @@ export default function GroundsView() {
   return (
     <div className="t2-place relative min-h-0 flex-1 overflow-hidden">
       {world ? (
-        <SiteWorld world={world} focusId={node?.id ?? null} onFocus={setNodeId} />
+        <SiteWorld world={world} focusId={node?.id ?? null} onFocus={setNodeId} weather={weather} filter={filter} />
       ) : (
         <PlaceMap
           pins={pins}
@@ -67,6 +71,7 @@ export default function GroundsView() {
                 {t("tour.t2worldBackMap")}
               </button>
               <p className="t2-place-pill is-soft">{t("tour.t2worldTitle", { title: world.title, year: world.year })}</p>
+              <AmenityBar filter={filter} onFilter={setFilter} weather={weather} />
             </>
           ) : (
             YEAR_FILTERS.map((y) => (
