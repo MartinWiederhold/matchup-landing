@@ -126,10 +126,10 @@ export default function SiteWorld({
 
       const camera = new THREE.PerspectiveCamera(40, 1, 0.8, 3600);
       const introFrom = new THREE.Vector3(36, 620, 540);
-      const introMid = new THREE.Vector3(16, 310, 360);
-      const introTo = new THREE.Vector3(8, 278, 318);
+      const introMid = new THREE.Vector3(22, 210, 260);
+      const introTo = new THREE.Vector3(28, 108, 158);
       const lookFrom = new THREE.Vector3(8, 0, -12);
-      const lookTo = new THREE.Vector3(12, 2, 4);
+      const lookTo = new THREE.Vector3(14, 6, 18);
       camera.position.copy(introFrom);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -372,7 +372,7 @@ export default function SiteWorld({
       ro.observe(host);
       resize();
 
-      applyPath(pathBetween(world, "south-gate", "ashe"));
+      applyPath([]);
       let raf = 0;
       let t0 = performance.now();
       let lastTick = t0;

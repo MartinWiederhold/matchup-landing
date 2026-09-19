@@ -86,6 +86,48 @@ export function pad(x: number, z: number, w: number, d: number, color: string, y
   return m;
 }
 
+function hexTileTex(): THREE.CanvasTexture {
+  const key = "hex-tile";
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const size = 256;
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = PLAZA;
+    ctx.fillRect(0, 0, size, size);
+    ctx.strokeStyle = "#b4a894";
+    ctx.lineWidth = 5;
+    const s = 28;
+    const h = s * Math.sqrt(3);
+    for (let row = -1; row < 12; row++) {
+      for (let col = -1; col < 12; col++) {
+        const ox = col * s * 1.5 + (row % 2 === 0 ? 0 : s * 0.75);
+        const oy = row * (h * 0.5);
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          const x = ox + Math.cos(a) * s * 0.52;
+          const y = oy + Math.sin(a) * s * 0.52;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(8, 8);
+  texCache.set(key, tex);
+  return tex;
+}
+
 function hexPad(r: number, y: number): THREE.Mesh {
   const shape = new THREE.Shape();
   for (let i = 0; i < 6; i++) {
@@ -97,7 +139,15 @@ function hexPad(r: number, y: number): THREE.Mesh {
   }
   shape.closePath();
   const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.12, bevelEnabled: false });
-  const m = new THREE.Mesh(geo, mat("#ffffff", 0.84, speckTex(PLAZA, "#c4bba8", 6)));
+  const m = new THREE.Mesh(geo, mat("#ffffff", 0.84, hexTileTex()));
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = y;
+  m.receiveShadow = true;
+  return m;
+}
+
+function ringPad(inner: number, outer: number, y: number, color: string): THREE.Mesh {
+  const m = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 64), mat(color, 0.8));
   m.rotation.x = -Math.PI / 2;
   m.position.y = y;
   m.receiveShadow = true;
@@ -167,9 +217,9 @@ function wayTotem(lines: string[], x: number, z: number): THREE.Group {
 }
 
 function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): void {
-  const crownGeo = new THREE.SphereGeometry(1.15, 8, 6);
+  const crownGeo = new THREE.SphereGeometry(1.75, 8, 6);
   const crownMat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
-  const trunkGeo = new THREE.CylinderGeometry(0.16, 0.22, 1.7, 6);
+  const trunkGeo = new THREE.CylinderGeometry(0.2, 0.28, 2.2, 6);
   const trunkMat = mat("#6a5340", 0.88);
   const blobs = spots.length * 3;
   const crowns = new THREE.InstancedMesh(crownGeo, crownMat, blobs);
@@ -181,23 +231,23 @@ function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): voi
   const ink = new THREE.Color();
   const LEAF = ["#1f7a28", "#2a8c32", "#176622", "#24802c"];
   spots.forEach(([x, z, s], i) => {
-    const sc = s ?? 1;
+    const sc = (s ?? 1) * 1.45;
     const shade = new THREE.Mesh(
-      new THREE.CircleGeometry(1.7 * sc, 12),
+      new THREE.CircleGeometry(2.4 * sc, 12),
       mat("#1a4a1e", 0.96),
     );
     shade.rotation.x = -Math.PI / 2;
     shade.position.set(x, 0.03, z);
     scene.add(shade);
-    dummy.position.set(x, 0.85 * sc, z);
+    dummy.position.set(x, 1.1 * sc, z);
     dummy.scale.set(sc, sc, sc);
     dummy.updateMatrix();
     trunks.setMatrixAt(i, dummy.matrix);
     for (let k = 0; k < 3; k++) {
       const idx = i * 3 + k;
       dummy.position.set(
-        x + (k - 1) * 0.62 * sc,
-        (2.05 + (k % 2) * 0.42) * sc,
+        x + (k - 1) * 0.85 * sc,
+        (2.55 + (k % 2) * 0.55) * sc,
         z + (k === 2 ? 0.38 : -0.18) * sc,
       );
       dummy.scale.set(sc * (1.05 + k * 0.12), sc * (0.88 + k * 0.08), sc * (1.0 + k * 0.1));
@@ -353,7 +403,7 @@ type WalkSeg = { ax: number; az: number; bx: number; bz: number };
 const HUBS: { id: string; n: number; r: number }[] = [
   { id: "food-village", n: 28, r: 16 },
   { id: "south-gate", n: 16, r: 11 },
-  { id: "south-plaza", n: 16, r: 14 },
+  { id: "south-plaza", n: 24, r: 18 },
   { id: "east-gate", n: 12, r: 11 },
   { id: "president-gate", n: 8, r: 10 },
   { id: "lot-b", n: 8, r: 12 },
@@ -561,6 +611,10 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
     [-120, -40, 22, "#267828", "#185820"],
     [40, -90, 14, "#2c8c34", "#1c6424"],
     [180, -20, 18, "#216a26", "#15501c"],
+    [0, 88, 26, "#2a8a32", "#1a6422"],
+    [28, 70, 14, "#267828", "#185820"],
+    [-26, 72, 13, "#2c8c34", "#1c6424"],
+    [16, 108, 12, "#1f6a24", "#145018"],
   ];
   for (const [x, z, r, a, b] of patches) {
     const m = disk(r, a, 0.02, grassMat(a, b, 6));
@@ -569,6 +623,22 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   }
   scene.add(hexPad(80, 0.04));
   scene.add(hexPad(46, 0.055));
+  scene.add(ringPad(47.2, 53.6, 0.075, WALK));
+  const plazaRing = ringPad(9.2, 13.6, 0.085, WALK);
+  plazaRing.position.set(0, 0.085, 58);
+  scene.add(plazaRing);
+  const campusFloor = [
+    [0, 58, 72, 38],
+    [78, -8, 58, 42],
+    [-68, 12, 48, 36],
+  ] as const;
+  for (const [x, z, w, d] of campusFloor) {
+    const p = pad(x, z, w, d, PLAZA, 0.028);
+    (p.material as THREE.MeshStandardMaterial).map = speckTex(PLAZA, "#c4bba8", 8);
+    (p.material as THREE.MeshStandardMaterial).color.set("#ffffff");
+    (p.material as THREE.MeshStandardMaterial).needsUpdate = true;
+    scene.add(p);
+  }
   const north = streetSign("N", 0, -205, 0);
   scene.add(north);
 
@@ -653,6 +723,12 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
     [120, 110, 0.8], [136, 98, 0.74], [-100, 80, 0.7], [-88, 96, 0.76],
     [160, -40, 0.68], [40, 130, 0.7], [-40, 130, 0.7], [200, 60, 0.82],
   );
+  for (let i = 0; i < 16; i++) {
+    trees.push([-70 + (i % 8) * 11, 210 + Math.floor(i / 8) * 12, 0.78]);
+    trees.push([200 + (i % 4) * 10, -30 + Math.floor(i / 4) * 12, 0.74]);
+    trees.push([-200 + (i % 5) * 9, 20 + Math.floor(i / 5) * 11, 0.8]);
+    trees.push([-36 + (i % 6) * 14, 72 + Math.floor(i / 6) * 18, 1.15]);
+  }
   const planted: [number, number, number?][] = [];
   for (const t of trees) {
     const c = pushOffFootprints(world, t[0], t[1]);
@@ -685,6 +761,35 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   scene.add(bench(104, -8, -0.6));
   scene.add(bench(12, 188, 0));
   scene.add(bench(-14, 186, 0.15));
+  scene.add(bench(22, 96, 0.4));
+  scene.add(bench(-26, 94, -0.3));
+  scene.add(bench(8, 112, 0.1));
+
+  const potMat = mat("#6a5340", 0.8);
+  const potLeaf = mat("#22822c", 0.9);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const px = Math.cos(a) * 12;
+    const pz = 58 + Math.sin(a) * 12;
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.7, 0.7, 8), potMat);
+    pot.position.set(px, 0.38, pz);
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), potLeaf);
+    leaf.position.set(px, 1.05, pz);
+    leaf.castShadow = true;
+    scene.add(pot, leaf);
+  }
+
+  const hedgeMat = mat("#1c6a24", 0.9);
+  for (const [x, z, w, rot] of [
+    [48, 68, 22, 0], [-48, 68, 18, 0.15], [118, 8, 16, 1.2], [-70, 8, 14, -1.1],
+  ] as const) {
+    const h = new THREE.Mesh(new THREE.BoxGeometry(w, 1.15, 0.7), hedgeMat);
+    h.position.set(x, 0.6, z);
+    h.rotation.y = rot;
+    h.castShadow = true;
+    h.receiveShadow = true;
+    scene.add(h);
+  }
 
   const lake = disk(20, "#4e9bb4", 0.04);
   lake.position.set(36, 0.04, 268);
