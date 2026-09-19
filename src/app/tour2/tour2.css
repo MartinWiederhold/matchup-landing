@@ -752,12 +752,20 @@ a.t2-card:hover, .t2-card--hover:hover {
 .t2-workspace-main.is-bleed > * { flex: 1; min-height: 0; }
 
 .t2-place-pin {
-  width: 18px;
-  height: 18px;
+  border: 0;
   border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.28), 0 8px 22px rgba(0, 0, 0, 0.45);
+  padding: 0.28rem 0.7rem;
+  background: rgba(12, 12, 14, 0.78);
+  color: #fff;
+  font-size: var(--t2-text-micro);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
+.t2-place-pin.is-world { background: #fff; color: #111; }
+.t2-place-pin.is-on { box-shadow: 0 0 0 3px #fff, 0 8px 22px rgba(0, 0, 0, 0.45); }
+.t2-place-pin.is-world.is-on { box-shadow: 0 0 0 3px rgba(12, 12, 14, 0.85), 0 8px 22px rgba(0, 0, 0, 0.45); }
 .t2-place-pill {
   display: inline-flex;
   align-items: center;

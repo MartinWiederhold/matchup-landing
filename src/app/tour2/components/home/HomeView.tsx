@@ -687,6 +687,9 @@ export default function HomeView() {
         id: s.tournament.id,
         city: displayCity(s.tournament.city) || s.tournament.name || t("tour.fieldMissing"),
         monday: s.tournament.tournament_monday,
+        lat: s.tournament.latitude ?? null,
+        lng: s.tournament.longitude ?? null,
+        year: Number(s.tournament.tournament_monday.slice(0, 4)),
       }))}
       onFocus={setPlaceId}
       countryName={countryName}

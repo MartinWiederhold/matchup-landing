@@ -15,13 +15,23 @@ import { nodeById } from "@/domain/tour/siteWorld";
 import { tour2ActionHref, tour2PlannerTournamentHref, T2_FINDER, T2_SEASON } from "@/app/tour2/components/t2Action";
 import type { TourTournament } from "@/lib/types";
 import { loadPlayerMaster, type PlayerEquipment } from "@/lib/tourPlayerMaster";
-import { authoredWorlds, worldById, worldForTournament } from "@/app/tour2/worlds/catalog";
+import { authoredWorlds, worldById } from "@/app/tour2/worlds/catalog";
 import SiteWorld from "@/app/tour2/components/world/SiteWorld";
 import SiteCard from "@/app/tour2/components/world/SiteCard";
 import { loadAround, type AroundHit } from "@/app/tour2/components/world/loadAround";
-import PlaceMap from "./PlaceMap";
+import PlaceMap, { type PlacePin } from "./PlaceMap";
 
-export type PlaceStop = { id: string; city: string; monday: string };
+export type PlaceStop = {
+  id: string;
+  city: string;
+  monday: string;
+  lat: number | null;
+  lng: number | null;
+  year: number;
+};
+
+const YEAR_FILTERS = [2026, 2027] as const;
+const WORLD_PIN = "world:";
 
 function actionText(
   t: (k: string, v?: Record<string, string | number>) => string,
@@ -68,13 +78,38 @@ export default function PlaceStage({
 }) {
   const t = useT();
   const { user } = useAuth();
-  const [worldId, setWorldId] = useState<string | null>(() => (tournament ? null : authoredWorlds()[0]?.id ?? null));
+  const [worldId, setWorldId] = useState<string | null>(null);
   const [nodeId, setNodeId] = useState("ashe");
+  const [yearOn, setYearOn] = useState<Record<number, boolean>>({ 2026: true, 2027: true });
   const [around, setAround] = useState<AroundHit[]>([]);
   const [equipment, setEquipment] = useState<PlayerEquipment | null>(null);
-  const matched = tournament ? worldForTournament(tournament) : null;
-  const world = (worldId ? worldById(worldId) : null) ?? matched;
+  const world = worldId ? worldById(worldId) : null;
   const node = world ? (nodeById(world, nodeId) ?? world.nodes[0]) : null;
+
+  const pins: PlacePin[] = [];
+  for (const s of stops) {
+    if (!yearOn[s.year] || s.lat == null || s.lng == null) continue;
+    pins.push({ id: s.id, lat: s.lat, lng: s.lng, label: s.city, tone: "season" });
+  }
+  for (const w of authoredWorlds()) {
+    if (!yearOn[w.year]) continue;
+    pins.push({
+      id: `${WORLD_PIN}${w.id}`,
+      lat: w.origin.lat,
+      lng: w.origin.lng,
+      label: t("tour.t2worldTitle", { title: w.title, year: w.year }),
+      tone: "world",
+    });
+  }
+
+  const openWorld = (id: string) => {
+    setWorldId(id);
+    setNodeId("ashe");
+  };
+  const onMapSelect = (id: string) => {
+    if (id.startsWith(WORLD_PIN)) openWorld(id.slice(WORLD_PIN.length));
+    else onFocus(id);
+  };
 
   useEffect(() => {
     if (!world) return;
@@ -108,33 +143,35 @@ export default function PlaceStage({
     <div className="t2-place relative min-h-0 flex-1 overflow-hidden">
       {world ? (
         <SiteWorld world={world} focusId={node?.id ?? null} onFocus={setNodeId} />
-      ) : hasGeo ? (
-        <PlaceMap lat={tournament.latitude as number} lng={tournament.longitude as number} label={city} />
       ) : (
-        <div className="absolute inset-0 grid place-items-center bg-[var(--t2-ink)]">
-          <p className="t2-place-glass px-5 py-3 t2-fs-body text-white">{t("tour.t2placeNoGeo")}</p>
-        </div>
+        <PlaceMap pins={pins} selectedId={tournament?.id ?? null} onSelect={onMapSelect} />
       )}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
-        <div className="pointer-events-auto flex flex-wrap items-center gap-2">
-          <p className="t2-place-pill">{world ? t("tour.t2worldTitle", { title: world.title, year: world.year }) : city}</p>
-          {tournament?.category && <p className="t2-place-pill is-soft">{tournament.category}</p>}
-          {tournament && <p className="t2-place-pill is-soft">{fmtDate(tournament.tournament_monday)}</p>}
-          {authoredWorlds().map((w) => (
-            <button
-              key={w.id}
-              type="button"
-              className={`t2-place-pill ${world?.id === w.id ? "" : "is-soft"}`}
-              onClick={() => { setWorldId(w.id); setNodeId("ashe"); }}
-            >
-              {t("tour.t2worldSelect")} · {t("tour.t2worldTitle", { title: w.title, year: w.year })}
-            </button>
-          ))}
-          {world && tournament && !matched && (
-            <button type="button" className="t2-place-pill is-soft" onClick={() => setWorldId(null)}>
-              {t("tour.t2worldBackMap")}
-            </button>
+        <div className="pointer-events-auto flex flex-wrap items-center gap-2" aria-label={t("tour.t2mapYears")}>
+          {world ? (
+            <>
+              <button type="button" className="t2-place-pill" onClick={() => setWorldId(null)}>
+                {t("tour.t2worldBackMap")}
+              </button>
+              <p className="t2-place-pill is-soft">{t("tour.t2worldTitle", { title: world.title, year: world.year })}</p>
+            </>
+          ) : (
+            <>
+              {YEAR_FILTERS.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  aria-pressed={yearOn[y]}
+                  className={`t2-place-pill ${yearOn[y] ? "" : "is-soft"}`}
+                  onClick={() => setYearOn((cur) => ({ ...cur, [y]: !cur[y] }))}
+                >
+                  {t("tour.t2mapYear", { year: y })}
+                </button>
+              ))}
+              {tournament?.category && <p className="t2-place-pill is-soft">{tournament.category}</p>}
+              {tournament && <p className="t2-place-pill is-soft">{fmtDate(tournament.tournament_monday)}</p>}
+            </>
           )}
         </div>
 
@@ -150,7 +187,7 @@ export default function PlaceStage({
                   window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, "_blank", "noreferrer");
                 }}
               />
-            ) : (
+            ) : tournament ? (
             <div className="t2-place-card max-w-md">
               <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-white/55">{t("tour.t2placeHere")}</p>
               <h1 className="mt-1 t2-fs-h2 font-bold text-white">{city}</h1>
@@ -178,7 +215,7 @@ export default function PlaceStage({
                 )}
               </div>
             </div>
-            )}
+            ) : null}
 
             <div className="flex min-w-0 flex-col gap-2 md:max-w-sm">
               {[...here, ...rest].map((a, i) => {
