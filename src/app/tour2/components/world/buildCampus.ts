@@ -96,10 +96,10 @@ function hexTileTex(): THREE.CanvasTexture {
   c.height = size;
   const ctx = c.getContext("2d");
   if (ctx) {
-    ctx.fillStyle = PLAZA;
+    ctx.fillStyle = "#d8cbb4";
     ctx.fillRect(0, 0, size, size);
-    ctx.strokeStyle = "#b4a894";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#9a8c74";
+    ctx.lineWidth = 7;
     const s = 28;
     const h = s * Math.sqrt(3);
     for (let row = -1; row < 12; row++) {
@@ -627,6 +627,8 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   const plazaRing = ringPad(9.2, 13.6, 0.085, WALK);
   plazaRing.position.set(0, 0.085, 58);
   scene.add(plazaRing);
+  scene.add(strip(0, 42, 0, 118, 10.4, WALK, 0.08));
+  scene.add(strip(-28, 58, 28, 58, 7.2, WALK, 0.08));
   const campusFloor = [
     [0, 58, 72, 38],
     [78, -8, 58, 42],

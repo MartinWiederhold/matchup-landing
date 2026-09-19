@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { Nunito } from "next/font/google";
 import VisitorShell from "./components/VisitorShell";
 import "../tour2/tour2.css";
@@ -15,6 +16,15 @@ const nunito = Nunito({
 
 export const metadata = {
   robots: { index: false, follow: false },
+};
+
+/** Pinch gehört der Karte, nicht der Browser-Seite. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function TournamentsLayout({ children }: { children: React.ReactNode }) {

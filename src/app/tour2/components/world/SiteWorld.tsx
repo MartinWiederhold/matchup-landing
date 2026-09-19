@@ -145,6 +145,8 @@ export default function SiteWorld({
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
+      controls.enableZoom = true;
+      controls.enablePan = true;
       controls.minDistance = 14;
       controls.maxDistance = 1800;
       controls.minPolarAngle = 0.18;
@@ -284,17 +286,49 @@ export default function SiteWorld({
 
       const ray = new THREE.Raycaster();
       const ptr = new THREE.Vector2();
-      const onClick = (ev: PointerEvent) => {
+      let pointers = 0;
+      let pinchUntil = 0;
+      let tap: { id: number; x: number; y: number; t: number } | null = null;
+      const hitAt = (clientX: number, clientY: number) => {
         const r = renderer.domElement.getBoundingClientRect();
-        ptr.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
-        ptr.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+        ptr.x = ((clientX - r.left) / r.width) * 2 - 1;
+        ptr.y = -((clientY - r.top) / r.height) * 2 + 1;
         ray.setFromCamera(ptr, camera);
-        const hit = ray.intersectObjects(pickables, true)[0];
-        const id = hit?.object.userData.nodeId as string | undefined;
+        return ray.intersectObjects(pickables, true)[0]?.object.userData.nodeId as string | undefined;
+      };
+      const onPointerDown = (ev: PointerEvent) => {
+        pointers += 1;
+        if (pointers >= 2) {
+          pinchUntil = performance.now() + 480;
+          tap = null;
+          return;
+        }
+        tap = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, t: performance.now() };
+      };
+      const onPointerMove = (ev: PointerEvent) => {
+        if (!tap || tap.id !== ev.pointerId) return;
+        if (Math.hypot(ev.clientX - tap.x, ev.clientY - tap.y) > 14) tap = null;
+      };
+      const onPointerUp = (ev: PointerEvent) => {
+        pointers = Math.max(0, pointers - 1);
+        const start = tap;
+        tap = null;
+        if (pointers > 0 || performance.now() < pinchUntil) return;
+        if (!start || start.id !== ev.pointerId) return;
+        if (performance.now() - start.t > 360) return;
+        if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 14) return;
+        const id = hitAt(ev.clientX, ev.clientY);
         if (id) pick(id);
         else onMissRef.current?.();
       };
-      renderer.domElement.addEventListener("pointerdown", onClick);
+      const onPointerCancel = () => {
+        pointers = Math.max(0, pointers - 1);
+        tap = null;
+      };
+      renderer.domElement.addEventListener("pointerdown", onPointerDown);
+      renderer.domElement.addEventListener("pointermove", onPointerMove);
+      renderer.domElement.addEventListener("pointerup", onPointerUp);
+      renderer.domElement.addEventListener("pointercancel", onPointerCancel);
 
       const labelEls = new Map<string, HTMLButtonElement>();
       for (const n of world.nodes) {
@@ -439,7 +473,10 @@ export default function SiteWorld({
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      renderer.domElement.removeEventListener("pointerdown", onClick);
+      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      renderer.domElement.removeEventListener("pointermove", onPointerMove);
+      renderer.domElement.removeEventListener("pointerup", onPointerUp);
+      renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
       labelEls.forEach((el) => el.remove());
       controls.dispose();
       renderer.dispose();

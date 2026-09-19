@@ -185,11 +185,19 @@ export function whiteBank(w: number, d: number, h: number, x: number, z: number)
   return m;
 }
 
-function seatDecks(bowl: THREE.Group, r: number, tiers: number, bowlH: number, segs = 56): void {
+function seatDecks(
+  bowl: THREE.Group,
+  r: number,
+  tiers: number,
+  bowlH: number,
+  segs = 56,
+  ink = SEAT,
+  inkAlt = SEAT_ALT,
+): void {
   const seatGeo = new THREE.BoxGeometry(0.72, 0.52, 0.58);
   const seatMats = [
-    mat("#efebe3", { roughness: 0.48 }),
-    mat("#d8d2c6", { roughness: 0.48 }),
+    mat(ink, { roughness: 0.48 }),
+    mat(inkAlt, { roughness: 0.48 }),
   ];
   const dummy = new THREE.Object3D();
   for (let i = 0; i < tiers; i++) {
@@ -198,7 +206,7 @@ function seatDecks(bowl: THREE.Group, r: number, tiers: number, bowlH: number, s
     const y = 0.95 + i * (bowlH / (tiers + 0.2));
     const deck = new THREE.Mesh(
       new THREE.RingGeometry(inner, outer, segs),
-      mat(i % 2 ? SEAT : SEAT_ALT, { roughness: 0.48, side: THREE.DoubleSide }),
+      mat(i % 2 ? inkAlt : ink, { roughness: 0.48, side: THREE.DoubleSide }),
     );
     deck.rotation.x = -Math.PI / 2;
     deck.position.y = y - 0.22;
@@ -260,7 +268,7 @@ export function openBowl(id: string, r: number, tiers: number, ovalX = 1.28, bad
   seatDecks(bowl, r, tiers, bowlH);
   const lip = new THREE.Mesh(
     new THREE.TorusGeometry(r * 1.18, 0.95, 8, 56),
-    mat(WHITE, { roughness: 0.34 }),
+    mat("#1a46b0", { roughness: 0.34 }),
   );
   lip.rotation.x = Math.PI / 2;
   lip.position.y = bowlH;
@@ -385,7 +393,7 @@ export function asheStadium(): THREE.Group {
   shell.position.y = bowlH / 2;
   shell.castShadow = true;
   bowl.add(shell);
-  seatDecks(bowl, r, 5, bowlH, 64);
+  seatDecks(bowl, r, 5, bowlH, 64, "#2f5cb8", "#244a96");
   addSectionLabels(bowl, r * 0.74, 4.4, ["10", "18", "26", "34", "42", "50", "58", "2"]);
   const courtside = labelPlate("Courtside", 4.6, 1.05);
   courtside.position.set(0, 2.1, r * 0.56);
@@ -454,7 +462,7 @@ export function armstrongStadium(): THREE.Group {
   shell.position.y = bowlH / 2;
   shell.castShadow = true;
   bowl.add(shell);
-  seatDecks(bowl, r, 4, bowlH, 48);
+  seatDecks(bowl, r, 4, bowlH, 48, "#2f5cb8", "#244a96");
   addSectionLabels(bowl, r * 0.72, 3.8, ["1", "5", "9", "13", "101", "107", "113", "119"]);
   bowl.scale.set(1.18, 1, 1);
   g.add(bowl);
@@ -602,11 +610,11 @@ export function numberedCourt(id: string, num: string): THREE.Group {
   const poleMat = mat("#c8c4ba", { roughness: 0.42 });
   const lampMat = mat("#f4f2eb", { roughness: 0.35, emissive: "#fff4c8", emissiveIntensity: 0.18 });
   for (const [x, z] of [[-7.4, -14.2], [7.4, -14.2], [-7.4, 14.2], [7.4, 14.2]] as const) {
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 8.2, 6), poleMat);
-    pole.position.set(x, 4.1, z);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 10.4, 6), poleMat);
+    pole.position.set(x, 5.2, z);
     pole.castShadow = true;
-    const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.16, 0.38), lampMat);
-    lamp.position.set(x, 8.3, z);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.22, 0.5), lampMat);
+    lamp.position.set(x, 10.5, z);
     g.add(pole, lamp);
   }
   return g;
