@@ -155,3 +155,43 @@ const CAMPUS_M = 420;
 export function isOnCampus(world: SiteWorld, lat: number, lng: number): boolean {
   return projectAround(world, lat, lng).meters <= CAMPUS_M;
 }
+
+/** Gebäude-Radius in der Szene — Besucher laufen außen rum, nicht durchs Stadion. */
+const FOOTPRINT: Record<string, number> = {
+  ashe: 48,
+  armstrong: 34,
+  grandstand: 28,
+  court17: 26,
+  "citi-field": 46,
+  "nys-pavilion": 18,
+  practice: 40,
+};
+
+export function footprintRadius(node: SiteNode): number {
+  if (FOOTPRINT[node.id] != null) return FOOTPRINT[node.id];
+  if (node.kind === "court" && /^court\d+$/.test(node.id)) return 16;
+  return 0;
+}
+
+export function pushOffFootprints(world: SiteWorld, x: number, z: number): { x: number; z: number } {
+  let px = x;
+  let pz = z;
+  for (let pass = 0; pass < 3; pass++) {
+    for (const n of world.nodes) {
+      const r = footprintRadius(n);
+      if (r <= 0) continue;
+      const dx = px - n.x;
+      const dz = pz - n.z;
+      const d = Math.hypot(dx, dz);
+      if (d >= r) continue;
+      if (d < 0.05) {
+        pz = n.z + r + 0.9;
+        continue;
+      }
+      const k = (r + 0.9) / d;
+      px = n.x + dx * k;
+      pz = n.z + dz * k;
+    }
+  }
+  return { x: px, z: pz };
+}

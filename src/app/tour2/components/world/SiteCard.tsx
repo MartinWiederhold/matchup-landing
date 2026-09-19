@@ -34,9 +34,9 @@ export default function SiteCard({
     <div className="t2-place-card is-slim">
       <p className="t2-fs-meta font-semibold uppercase tracking-[0.16em] text-white/55">{t("tour.t2worldTitle", { title: world.title, year: world.year })}</p>
       <h1 className="mt-1 t2-fs-h2 font-bold text-white">{node.name}</h1>
-      <p className="mt-1 t2-fs-body-sm text-white/70">{kindLabel}</p>
+      <p className="mt-0.5 t2-fs-body-sm text-white/70">{kindLabel}</p>
       {node.flags && node.flags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
           {node.flags.map((f) => (
             <p key={f} className="t2-place-pill is-soft">{t(`tour.t2worldFlag_${f}`)}</p>
           ))}
@@ -58,9 +58,7 @@ export default function SiteCard({
         </div>
       )}
 
-      <p className="mt-3 t2-fs-micro text-white/45">{t("tour.t2worldSource")}: {node.source}</p>
-
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {maps && (
           <a href={maps} target="_blank" rel="noreferrer" className="t2-place-cta">
             {t("tour.t2worldGoAround")}

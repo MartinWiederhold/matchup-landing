@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isAmenityKind, isOnCampus, nodeHasFlag, pathBetween, projectAround, worldMatchesTournament, type SiteWorld } from "./siteWorld";
+import { footprintRadius, isAmenityKind, isOnCampus, nodeHasFlag, pathBetween, projectAround, pushOffFootprints, worldMatchesTournament, type SiteWorld } from "./siteWorld";
 
 const world: SiteWorld = {
   id: "us-open",
@@ -52,6 +52,17 @@ describe("nodeHasFlag", () => {
     const n = world.nodes[0];
     expect(nodeHasFlag(n, "accessible")).toBe(false);
     expect(nodeHasFlag({ ...n, flags: ["accessible", "nursing"] }, "nursing")).toBe(true);
+  });
+});
+
+describe("pushOffFootprints", () => {
+  it("lässt die Plaza frei und schiebt aus Ashe raus", () => {
+    expect(footprintRadius(world.nodes[0])).toBe(48);
+    const inside = pushOffFootprints(world, 0, 0);
+    expect(Math.hypot(inside.x, inside.z)).toBeGreaterThan(47);
+    const plaza = pushOffFootprints(world, 80, 80);
+    expect(plaza.x).toBeCloseTo(80, 5);
+    expect(plaza.z).toBeCloseTo(80, 5);
   });
 });
 

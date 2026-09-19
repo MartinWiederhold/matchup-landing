@@ -81,7 +81,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="t2-root t2-shell">
+    <div className="t2-root t2-shell is-dense">
       <aside className="t2-rail t2-rail-desk">
         <Link href="/tournaments" className="t2-rail-brand">
           <span className="t2-rail-mark" aria-hidden>M</span>
@@ -100,7 +100,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
       <div className="t2-workspace">
         <header className="t2-mhead md:hidden">
           <span className="t2-rail-mark" aria-hidden>M</span>
-          <p className="min-w-0 flex-1 truncate t2-fs-body font-semibold tracking-[-0.02em]">{t(`tournaments.${headerKey}`)}</p>
+          <p className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-[-0.02em]">{t(`tournaments.${headerKey}`)}</p>
         </header>
         <main
           className={bleed ? "t2-workspace-main is-bleed" : "t2-workspace-main"}
@@ -108,11 +108,11 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-        <Tour2TabBar tabs={tabs} active={current?.key ?? "overview"} compact={navCompact} onMore={() => setMoreOpen((o) => !o)} />
+        <Tour2TabBar tabs={tabs} active={current?.key ?? "overview"} compact={navCompact} dense onMore={() => setMoreOpen((o) => !o)} />
         {moreOpen && (
           <div className="fixed inset-0 z-[35] md:hidden" onClick={() => setMoreOpen(false)}>
             <div
-              className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--t2-on-accent)] px-5 pt-4 pb-[max(6.5rem,calc(5.5rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
+              className="absolute inset-x-0 bottom-0 rounded-t-3xl bg-[var(--t2-on-accent)] px-5 pt-4 pb-[max(5rem,calc(4rem+env(safe-area-inset-bottom)))] shadow-[0_-12px_40px_rgba(0,0,0,0.18)] ring-1 ring-black/10"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="t2-section-title">{t("tournaments.more")}</p>

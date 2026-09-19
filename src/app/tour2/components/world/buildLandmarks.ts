@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 
-const COURT = "#2176e8";
+const COURT = "#1568e6";
 const LINE = "#ffffff";
 const SEAT = "#f4f2eb";
 const SEAT_ALT = "#e8e4da";
@@ -56,11 +56,11 @@ export function tennisCourt(w: number, d: number, badge?: string): THREE.Group {
   g.add(net, postL, postR);
   if (badge) {
     const disc = new THREE.Mesh(
-      new THREE.CircleGeometry(1.7, 28),
+      new THREE.CircleGeometry(2.85, 32),
       new THREE.MeshBasicMaterial({ map: numberTex(badge) }),
     );
     disc.rotation.x = -Math.PI / 2;
-    disc.position.y = 0.23;
+    disc.position.y = 0.24;
     g.add(disc);
   }
   return g;
@@ -82,7 +82,7 @@ function numberTex(n: string): THREE.CanvasTexture {
     ctx.fillStyle = "#ffffff";
     ctx.fill();
     ctx.fillStyle = "#1a46b0";
-    ctx.font = "700 72px system-ui, sans-serif";
+    ctx.font = "800 86px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(n, 80, 86);
@@ -329,6 +329,9 @@ export function asheStadium(): THREE.Group {
   g.add(fascia);
   g.add(roofWithHole(44.2, 32, 44, 13.2, 2.6));
   g.add(hexRim(44.2, 15.85));
+  const brandRim = hexRim(44.8, 15.95);
+  (brandRim.material as THREE.LineBasicMaterial).color.set("#1a46b0");
+  g.add(brandRim);
   const ramp = accessRamp(22, 4.4, 3.2);
   ramp.position.set(0, 0, 38);
   g.add(ramp);
@@ -477,6 +480,10 @@ export function markedCourt(id: string, w: number, d: number): THREE.Group {
 export function numberedCourt(id: string, num: string): THREE.Group {
   const g = new THREE.Group();
   g.userData.nodeId = id;
+  const apron = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.08, 32.4), mat("#2f8a38", { roughness: 0.88 }));
+  apron.position.y = 0.04;
+  apron.receiveShadow = true;
+  g.add(apron);
   g.add(tennisCourt(11.4, 24.2, num));
   g.add(whiteBank(16.8, 7.6, 3.35, 0, -16.4));
   g.add(whiteBank(16.8, 7.6, 3.35, 0, 16.4));
@@ -505,15 +512,69 @@ export function parkingLot(id: string, letter: string): THREE.Group {
   floor.position.y = 0.08;
   floor.receiveShadow = true;
   g.add(floor);
+  const cars = ["#2a3a5c", "#c43c3c", "#f4f2eb", "#3a3f4a", "#2a7ab8", "#d8d4cc"];
   for (let i = -4; i <= 4; i++) {
     const line = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.04, 8.4), mat(LINE));
     line.position.set(i * 5.1, 0.16, -8);
     g.add(line);
+    if (i % 2 === 0) continue;
+    const car = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.72, 4.4), mat(cars[(i + 4) % cars.length], { roughness: 0.42 }));
+    car.position.set(i * 5.1, 0.48, -8);
+    car.castShadow = true;
+    g.add(car);
   }
   const plate = labelPlate(`Lot ${letter}`, 10.4, 2.4);
   plate.rotation.x = -Math.PI / 2;
   plate.position.set(0, 0.2, 6);
   g.add(plate);
+  return g;
+}
+
+/** New York State Pavilion — Getting There / Rideshare, stilisiert. */
+export function nysPavilion(): THREE.Group {
+  const g = new THREE.Group();
+  g.userData.nodeId = "nys-pavilion";
+  for (const x of [-11, 11]) {
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.45, 28, 10), mat("#d8d2c6", { roughness: 0.42 }));
+    tower.position.set(x, 14, 0);
+    tower.castShadow = true;
+    g.add(tower);
+  }
+  const tent = new THREE.Mesh(
+    new THREE.TorusGeometry(16, 0.55, 8, 40),
+    mat("#c8c4ba", { roughness: 0.38 }),
+  );
+  tent.rotation.x = Math.PI / 2;
+  tent.position.y = 7.2;
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(15, 36), mat("#efece4", { roughness: 0.86 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = 0.1;
+  const plate = labelPlate("NY State Pavilion", 14, 1.7);
+  plate.position.set(0, 22, 0);
+  g.add(tent, floor, plate);
+  return g;
+}
+
+/** Citi Field — Nachbar laut Grounds Map (Mets Stadium Parking), kein CAD. */
+export function citiField(): THREE.Group {
+  const g = new THREE.Group();
+  g.userData.nodeId = "citi-field";
+  const bowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(38, 44, 16, 40, 1, true),
+    mat("#c47848", { side: THREE.DoubleSide, roughness: 0.55 }),
+  );
+  bowl.position.y = 8;
+  bowl.castShadow = true;
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(41, 1.4, 8, 40), mat("#d8d2c6", { roughness: 0.4 }));
+  lip.rotation.x = Math.PI / 2;
+  lip.position.y = 16;
+  const field = new THREE.Mesh(new THREE.CircleGeometry(22, 36), mat("#46ad3e", { roughness: 0.7 }));
+  field.rotation.x = -Math.PI / 2;
+  field.position.y = 0.12;
+  const plate = labelPlate("Citi Field", 16, 2.2);
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.set(0, 0.22, 0);
+  g.add(bowl, lip, field, plate);
   return g;
 }
 
@@ -553,8 +614,16 @@ export function foodHall(): THREE.Group {
     umb.position.set(x, 3.05, z);
     const table = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.12, 12), mat(WHITE));
     table.position.set(x, 0.74, z);
-    g.add(pole, umb, table);
+    const chairA = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.46, 0.42), mat("#d8d2c6"));
+    chairA.position.set(x - 1.05, 0.28, z);
+    const chairB = chairA.clone();
+    chairB.position.set(x + 1.05, 0.28, z);
+    g.add(pole, umb, table, chairA, chairB);
   }
+  const plate = labelPlate("Food Village", 16, 2.2);
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.set(0, 0.22, 14);
+  g.add(plate);
   return g;
 }
 

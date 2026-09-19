@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
-import { nodeById } from "@/domain/tour/siteWorld";
+import { isOnCampus, nodeById } from "@/domain/tour/siteWorld";
 import { authoredWorlds, worldById } from "@/app/tour2/worlds/catalog";
 import SiteWorld from "@/app/tour2/components/world/SiteWorld";
 import SiteCard from "@/app/tour2/components/world/SiteCard";
@@ -22,13 +22,13 @@ const WORLD_PIN = "world:";
 export default function GroundsView() {
   const t = useT();
   const [worldId, setWorldId] = useState<string | null>(null);
-  const [nodeId, setNodeId] = useState("ashe");
+  const [nodeId, setNodeId] = useState<string | null>(null);
   const [yearOn, setYearOn] = useState<Record<number, boolean>>({ 2026: true, 2027: true });
   const [around, setAround] = useState<AroundHit[]>([]);
   const [filter, setFilter] = useState<AmenityFilter>("all");
   const world = worldId ? worldById(worldId) : null;
   const weather = useSiteWeather(world);
-  const node = world ? (nodeById(world, nodeId) ?? world.nodes[0]) : null;
+  const node = world && nodeId ? nodeById(world, nodeId) : null;
 
   const pins: PlacePin[] = authoredWorlds()
     .filter((w) => yearOn[w.year])
@@ -50,7 +50,14 @@ export default function GroundsView() {
   return (
     <div className="t2-place relative min-h-0 flex-1 overflow-hidden">
       {world ? (
-        <SiteWorld world={world} focusId={node?.id ?? null} onFocus={setNodeId} weather={weather} filter={filter} />
+        <SiteWorld
+          world={world}
+          focusId={nodeId}
+          onFocus={setNodeId}
+          onMiss={() => setNodeId(null)}
+          weather={weather}
+          filter={filter}
+        />
       ) : (
         <PlaceMap
           pins={pins}
@@ -58,13 +65,13 @@ export default function GroundsView() {
           onSelect={(id) => {
             if (!id.startsWith(WORLD_PIN)) return;
             setWorldId(id.slice(WORLD_PIN.length));
-            setNodeId("ashe");
+            setNodeId(null);
           }}
         />
       )}
 
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
-        <div className="pointer-events-auto flex flex-wrap items-center gap-2" aria-label={t("tour.t2mapYears")}>
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] md:p-4">
+        <div className="pointer-events-auto flex flex-wrap items-center gap-1.5" aria-label={t("tour.t2mapYears")}>
           {world ? (
             <>
               <button type="button" className="t2-place-pill" onClick={() => setWorldId(null)}>
@@ -94,7 +101,7 @@ export default function GroundsView() {
               world={world}
               node={node}
               equipment={null}
-              around={around}
+              around={around.filter((h) => isOnCampus(world, h.lat, h.lng))}
               onPickAround={(h) => {
                 window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, "_blank", "noreferrer");
               }}

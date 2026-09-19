@@ -10,16 +10,19 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { SiteNode, SiteWorld } from "@/domain/tour/siteWorld";
 import { isAmenityKind, nodeById, nodeHasFlag, pathBetween, SERVICE_KINDS } from "@/domain/tour/siteWorld";
-import { weatherLook } from "@/domain/tour/siteWeather";
-import { buildCampus, highlightPath } from "./buildCampus";
+import { sunDirScene, weatherLook } from "@/domain/tour/siteWeather";
+import { plantAtmosphere } from "./buildAtmosphere";
+import { buildCampus, highlightPath, plantWalkers } from "./buildCampus";
 import {
   amenityHut,
   armstrongStadium,
   asheStadium,
+  citiField,
   foodHall,
   gateHouse,
   grandstandHouse,
   numberedCourt,
+  nysPavilion,
   outerCourtNum,
   parkingLot,
   pavilion,
@@ -37,6 +40,7 @@ const LABEL_IDS = new Set([
   "ashe", "armstrong", "grandstand", "court17", "food-village",
   "east-gate", "south-gate", "president-gate", "box-office",
   "practice", "willets", "lot-a", "lot-b", "rideshare", "boardwalk",
+  "citi-field", "nys-pavilion", "unisphere",
 ]);
 const PIN_SHORT: Record<string, string> = {
   practice: "Practice 1–5",
@@ -45,6 +49,9 @@ const PIN_SHORT: Record<string, string> = {
   "lot-b": "Lot B",
   rideshare: "Rideshare",
   boardwalk: "Boardwalk",
+  "citi-field": "Citi Field",
+  "nys-pavilion": "NY State Pavilion",
+  unisphere: "Unisphere",
 };
 const AMENITY_SHORT: Record<string, string> = {
   restroom: "WC",
@@ -70,7 +77,7 @@ function pinVisible(n: SiteNode, filter: AmenityFilter, dist: number, focus: str
   if (focus === n.id) return true;
   if (filter === "all") {
     if (LABEL_IDS.has(n.id) || outerCourtNum(n.id)) return true;
-    return isAmenityKind(n.kind) && dist < 150;
+    return isAmenityKind(n.kind) && dist < 95;
   }
   if (filter === "food") return n.id === "food-village";
   if (filter === "access") {
@@ -85,12 +92,14 @@ export default function SiteWorld({
   world,
   focusId,
   onFocus,
+  onMiss,
   weather,
   filter,
 }: {
   world: SiteWorld;
   focusId: string | null;
   onFocus: (id: string) => void;
+  onMiss?: () => void;
   weather?: SiteWeatherNow | null;
   filter?: AmenityFilter;
 }) {
@@ -98,10 +107,12 @@ export default function SiteWorld({
   const labels = useRef<HTMLDivElement>(null);
   const focusRef = useRef(focusId);
   const onFocusRef = useRef(onFocus);
+  const onMissRef = useRef(onMiss);
   const weatherRef = useRef(weather ?? null);
   const filterRef = useRef(filter ?? "all");
   focusRef.current = focusId;
   onFocusRef.current = onFocus;
+  onMissRef.current = onMiss;
   weatherRef.current = weather ?? null;
   filterRef.current = filter ?? "all";
 
@@ -113,17 +124,18 @@ export default function SiteWorld({
       scene.background = new THREE.Color("#dce8d6");
       scene.fog = new THREE.Fog("#dce8d6", 460, 880);
 
-      const camera = new THREE.PerspectiveCamera(34, 1, 0.8, 3600);
+      const camera = new THREE.PerspectiveCamera(40, 1, 0.8, 3600);
       const introFrom = new THREE.Vector3(36, 620, 540);
-      const introTo = new THREE.Vector3(4, 34, 52);
+      const introMid = new THREE.Vector3(16, 310, 360);
+      const introTo = new THREE.Vector3(8, 278, 318);
       const lookFrom = new THREE.Vector3(8, 0, -12);
-      const lookTo = new THREE.Vector3(0, 5, 0);
+      const lookTo = new THREE.Vector3(12, 2, 4);
       camera.position.copy(introFrom);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.12;
+      renderer.toneMappingExposure = 1.02;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
       host.appendChild(renderer.domElement);
@@ -140,19 +152,30 @@ export default function SiteWorld({
       controls.target.copy(lookFrom);
       controls.enabled = false;
 
-      const hemi = new THREE.HemisphereLight("#f4f6f2", "#3a7e34", 0.95);
+      const hemi = new THREE.HemisphereLight("#f4f6f2", "#2a6a28", 0.82);
       scene.add(hemi);
-      const sun = new THREE.DirectionalLight("#fff3d6", 1.62);
-      sun.position.set(120, 180, 80);
+      const sun = new THREE.DirectionalLight("#fff1c4", 2.05);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(1024, 1024);
-      sun.shadow.camera.left = -220;
-      sun.shadow.camera.right = 220;
-      sun.shadow.camera.top = 220;
-      sun.shadow.camera.bottom = -220;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.camera.left = -260;
+      sun.shadow.camera.right = 260;
+      sun.shadow.camera.top = 260;
+      sun.shadow.camera.bottom = -260;
+      sun.shadow.bias = -0.0007;
       scene.add(sun);
+      const sunDisc = new THREE.Mesh(
+        new THREE.SphereGeometry(22, 20, 16),
+        new THREE.MeshBasicMaterial({ color: "#fff4c0" }),
+      );
+      const sunHalo = new THREE.Mesh(
+        new THREE.SphereGeometry(48, 20, 16),
+        new THREE.MeshBasicMaterial({ color: "#ffe08a", transparent: true, opacity: 0.22, depthWrite: false }),
+      );
+      scene.add(sunDisc, sunHalo);
 
-      buildCampus(scene, world);
+      const campus = buildCampus(scene, world);
+      const tickWalkers = plantWalkers(scene, world);
+      const tickSky = plantAtmosphere(scene);
 
       const pickables: THREE.Object3D[] = [];
       const amenityMeshes = new Map<string, THREE.Object3D>();
@@ -189,6 +212,8 @@ export default function SiteWorld({
           case "lot-a": return parkingLot("lot-a", "A");
           case "lot-b": return parkingLot("lot-b", "B");
           case "rideshare": return rideshareCanopy();
+          case "nys-pavilion": return nysPavilion();
+          case "citi-field": return citiField();
           default: return null;
         }
       };
@@ -231,11 +256,30 @@ export default function SiteWorld({
           look.set(n.x, 4, n.z);
           controls.target.set(n.x, 4, n.z);
           camera.position.set(n.x + 8, 28, n.z + 38);
+        } else if (n.id === "citi-field") {
+          camera.position.set(n.x + 40, 48, n.z + 70);
+        } else if (n.id === "nys-pavilion" || n.id === "unisphere") {
+          camera.position.set(n.x + 24, 28, n.z + 42);
         } else if (n.id === "lot-a" || n.id === "lot-b" || n.id === "rideshare") {
           camera.position.set(n.x + 22, 22, n.z + 30);
-        } else if (isAmenityKind(n.kind)) camera.position.set(n.x + 14, 16, n.z + 22);
-        else camera.position.set(n.x + 28, 18, n.z + 36);
+        } else if (n.id === "south-gate" || n.id === "east-gate" || n.id === "president-gate") {
+          camera.position.set(n.x + 12, 8.4, n.z + 20);
+        } else if (n.id === "food-village") {
+          camera.position.set(n.x + 16, 11, n.z + 20);
+        } else if (isAmenityKind(n.kind)) camera.position.set(n.x + 10, 8, n.z + 14);
+        else camera.position.set(n.x + 20, 12, n.z + 24);
         applyPath(pathBetween(world, "south-gate", n.id));
+      };
+
+      let lastFocus = "_overview";
+      let intro = 0;
+      const pick = (id: string) => {
+        onFocusRef.current(id);
+        if (intro < 1) return;
+        const n = nodeById(world, id);
+        if (!n) return;
+        lastFocus = id;
+        flyTo(n);
       };
 
       const ray = new THREE.Raycaster();
@@ -247,7 +291,8 @@ export default function SiteWorld({
         ray.setFromCamera(ptr, camera);
         const hit = ray.intersectObjects(pickables, true)[0];
         const id = hit?.object.userData.nodeId as string | undefined;
-        if (id) onFocusRef.current(id);
+        if (id) pick(id);
+        else onMissRef.current?.();
       };
       renderer.domElement.addEventListener("pointerdown", onClick);
 
@@ -262,7 +307,7 @@ export default function SiteWorld({
         b.textContent = amenity
           ? (nodeHasFlag(n, "accessible") ? "ADA" : (AMENITY_SHORT[n.kind] ?? n.name))
           : (PIN_SHORT[n.id] ?? courtNum ?? n.name);
-        b.addEventListener("click", () => onFocusRef.current(n.id));
+        b.addEventListener("click", () => pick(n.id));
         labelHost.appendChild(b);
         labelEls.set(n.id, b);
       }
@@ -287,19 +332,33 @@ export default function SiteWorld({
           el.style.pointerEvents = vis ? "auto" : "none";
           el.classList.toggle("is-on", focusRef.current === n.id);
           const mesh = amenityMeshes.get(n.id);
-          if (mesh) mesh.visible = mode === "all" || pinVisible(n, mode, 0, focusRef.current);
+          if (mesh) mesh.visible = pinVisible(n, mode, dist, focusRef.current);
         }
       };
 
-      const applyWeather = () => {
+      const applyWeather = (t: number) => {
         const wx = weatherRef.current;
-        const lookWx = weatherLook(wx?.code ?? 1);
+        const pose = sunDirScene(world.origin.lat, world.origin.lng, new Date());
+        const lookWx = weatherLook(wx?.code ?? 1, pose.elevation);
         scene.background = new THREE.Color(lookWx.sky);
-        scene.fog = new THREE.Fog(lookWx.fog, 460, 880);
+        const fogNear = Math.max(90, camera.position.y * 2.1);
+        const fogFar = Math.max(480, camera.position.y * 7.2);
+        scene.fog = new THREE.Fog(lookWx.fog, fogNear, fogFar);
+        hemi.color.set(lookWx.sky);
         hemi.intensity = lookWx.hemi;
+        sun.color.set(lookWx.sunColor);
         sun.intensity = lookWx.sun;
+        const reach = 420;
+        sun.position.set(pose.x * reach, Math.max(pose.y, 0.06) * reach, pose.z * reach);
+        sunDisc.position.copy(sun.position);
+        sunHalo.position.copy(sun.position);
+        (sunDisc.material as THREE.MeshBasicMaterial).color.set(lookWx.sunColor);
+        sunDisc.visible = pose.elevation > 0.02 && !lookWx.rain;
+        sunHalo.visible = sunDisc.visible;
         drops.visible = lookWx.rain;
-        renderer.toneMappingExposure = lookWx.rain ? 0.92 : 1.12;
+        campus.lampHeads.emissiveIntensity = pose.elevation < 0.18 ? 1.55 : 0.05;
+        renderer.toneMappingExposure = lookWx.rain ? 0.82 : pose.elevation < 0 ? 0.55 : 1.2;
+        tickSky(lookWx, t);
       };
 
       const resize = () => {
@@ -313,33 +372,41 @@ export default function SiteWorld({
       ro.observe(host);
       resize();
 
-      let lastFocus = focusRef.current ?? "ashe";
-      applyPath(pathBetween(world, "south-gate", lastFocus));
+      applyPath(pathBetween(world, "south-gate", "ashe"));
       let raf = 0;
       let t0 = performance.now();
       let lastTick = t0;
-      let intro = 0;
-      const INTRO_S = 0.82;
+      const INTRO_S = 1.12;
       const tick = () => {
         const now = performance.now();
         const dt = Math.min(0.05, (now - lastTick) / 1000);
         lastTick = now;
-        applyWeather();
+        const t = (now - t0) * 0.001;
+        applyWeather(t);
+        tickWalkers(dt, t);
+        campus.tickFlags(t);
         if (intro < 1) {
           intro = Math.min(1, intro + dt / INTRO_S);
           const e = 1 - (1 - intro) ** 3;
-          camera.position.lerpVectors(introFrom, introTo, e);
+          if (e < 0.48) {
+            const u = e / 0.48;
+            camera.position.lerpVectors(introFrom, introMid, u);
+          } else {
+            const u = (e - 0.48) / 0.52;
+            camera.position.lerpVectors(introMid, introTo, u);
+          }
           look.lerpVectors(lookFrom, lookTo, e);
           controls.target.copy(look);
           const fogFar = 880 + (1 - e) * 2200;
           scene.fog = new THREE.Fog((scene.fog as THREE.Fog).color, fogFar * 0.45, fogFar);
           if (intro >= 1) {
+            lastFocus = focusRef.current ?? "_overview";
             controls.maxDistance = 640;
             controls.enabled = true;
           }
         } else {
-          const want = focusRef.current ?? "ashe";
-          if (want !== lastFocus) {
+          const want = focusRef.current;
+          if (want && want !== lastFocus) {
             lastFocus = want;
             const n = nodeById(world, want);
             if (n) flyTo(n);

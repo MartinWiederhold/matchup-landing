@@ -2,10 +2,19 @@
   "id": "us-open",
   "title": "US Open",
   "year": 2027,
-  "origin": { "lat": 40.7505, "lng": -73.847 },
+  "origin": {
+    "lat": 40.7505,
+    "lng": -73.847
+  },
   "match": {
-    "nameIncludes": ["us open"],
-    "sourceRefIncludes": ["usopen", "us-open", "us_open"]
+    "nameIncludes": [
+      "us open"
+    ],
+    "sourceRefIncludes": [
+      "usopen",
+      "us-open",
+      "us_open"
+    ]
   },
   "nodes": [
     {
@@ -19,50 +28,58 @@
       "lng": -73.847,
       "source": "US Open Grounds Map — Arthur Ashe Stadium; Ränge Courtside/Loge/Promenade laut 2025 Arthur Ashe Seating Chart",
       "sourceUrl": "https://www.usopen.org/pdf/2025-Arthur-Ashe-Seating-Chart.pdf",
-      "flags": ["wheelchairSeating"]
+      "flags": [
+        "wheelchairSeating"
+      ]
     },
     {
       "id": "armstrong",
       "kind": "court",
       "name": "Louis Armstrong Stadium",
-      "x": 82,
+      "x": 52,
       "y": 0,
-      "z": -122,
+      "z": -68,
       "lat": 40.7519,
       "lng": -73.8458,
       "source": "US Open Grounds Map — Louis Armstrong Stadium; Abschnitte laut 2025 Louis Armstrong Seating Chart",
       "sourceUrl": "https://www.usopen.org/pdf/2025-Louis-Armstrong-Seating-Chart.pdf",
-      "flags": ["wheelchairSeating"]
+      "flags": [
+        "wheelchairSeating"
+      ]
     },
     {
       "id": "grandstand",
       "kind": "court",
       "name": "Grandstand",
-      "x": -152,
+      "x": -138,
       "y": 0,
-      "z": 4,
+      "z": 18,
       "source": "US Open Grounds Map — Grandstand, Westseite (seit 2016); Wheelchair Accessible seating laut Guest Amenities",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["wheelchairSeating"]
+      "flags": [
+        "wheelchairSeating"
+      ]
     },
     {
       "id": "court17",
       "kind": "court",
       "name": "Stadium 17",
-      "x": 168,
+      "x": 158,
       "y": 0,
-      "z": 10,
+      "z": 28,
       "source": "US Open Grounds Map — Stadium 17, Ostrand; barrierefreie Plätze laut Guests-with-Disabilities-Unterlagen",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["wheelchairSeating"]
+      "flags": [
+        "wheelchairSeating"
+      ]
     },
     {
       "id": "food-village",
       "kind": "landmark",
       "name": "Food Village",
-      "x": 92,
+      "x": 78,
       "y": 0,
-      "z": -32,
+      "z": -18,
       "source": "US Open Grounds Map — Food Village, Plaza östlich von Ashe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -72,7 +89,7 @@
       "name": "Arthur Ashe Sculpture Garden",
       "x": 0,
       "y": 0,
-      "z": 64,
+      "z": 58,
       "source": "US Open Grounds Map — Arthur Ashe Sculpture Garden, Südseite der Hex-Plaza",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -80,9 +97,9 @@
       "id": "practice",
       "kind": "practice",
       "name": "Practice courts 1–5",
-      "x": 48,
+      "x": 36,
       "y": 0,
-      "z": -178,
+      "z": -118,
       "source": "US Open Grounds Map — Practice Courts 1–5 nördlich von Armstrong, am President's Entry",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -90,9 +107,9 @@
       "id": "court4",
       "kind": "court",
       "name": "Court 4",
-      "x": -152,
+      "x": -138,
       "y": 0,
-      "z": -40,
+      "z": -26,
       "source": "US Open Grounds Map — Court 4, nördlich vom Grandstand",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -100,9 +117,9 @@
       "id": "court5",
       "kind": "court",
       "name": "Court 5",
-      "x": -106,
+      "x": -94,
       "y": 0,
-      "z": -18,
+      "z": -6,
       "source": "US Open Grounds Map — Court 5, zwischen Grandstand und Ashe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -110,9 +127,9 @@
       "id": "court6",
       "kind": "court",
       "name": "Court 6",
-      "x": -152,
+      "x": -138,
       "y": 0,
-      "z": 46,
+      "z": 60,
       "source": "US Open Grounds Map — Court 6, südlich vom Grandstand",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -120,9 +137,9 @@
       "id": "court7",
       "kind": "court",
       "name": "Court 7",
-      "x": -106,
+      "x": -94,
       "y": 0,
-      "z": 24,
+      "z": 28,
       "source": "US Open Grounds Map — Court 7, zwischen Grandstand und Ashe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -130,9 +147,9 @@
       "id": "court8",
       "kind": "court",
       "name": "Court 8",
-      "x": -48,
+      "x": -10,
       "y": 0,
-      "z": 86,
+      "z": 78,
       "source": "US Open Grounds Map — Court 8, Südwesten der Hex-Plaza",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -140,9 +157,9 @@
       "id": "court9",
       "kind": "court",
       "name": "Court 9",
-      "x": -34,
+      "x": -30,
       "y": 0,
-      "z": -86,
+      "z": -52,
       "source": "US Open Grounds Map — Court 9, nordwestlich von Ashe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -150,9 +167,9 @@
       "id": "court10",
       "kind": "court",
       "name": "Court 10",
-      "x": 24,
+      "x": 16,
       "y": 0,
-      "z": -86,
+      "z": -52,
       "source": "US Open Grounds Map — Court 10, nördlich von Ashe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -160,19 +177,19 @@
       "id": "court11",
       "kind": "court",
       "name": "Court 11",
-      "x": 56,
+      "x": 68,
       "y": 0,
-      "z": 18,
-      "source": "US Open Grounds Map — Court 11, östlich von Ashe, nördliche Reihe",
+      "z": 48,
+      "source": "US Open Grounds Map — Court 11, östlich von Ashe, Reihe zu Stadium 17",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
     {
       "id": "court12",
       "kind": "court",
       "name": "Court 12",
-      "x": 94,
+      "x": 104,
       "y": 0,
-      "z": 18,
+      "z": 48,
       "source": "US Open Grounds Map — Court 12, östlich von Ashe, neben Court 11",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -180,9 +197,9 @@
       "id": "court13",
       "kind": "court",
       "name": "Court 13",
-      "x": 132,
+      "x": 140,
       "y": 0,
-      "z": 18,
+      "z": 48,
       "source": "US Open Grounds Map — Court 13, westlich von Stadium 17",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -190,9 +207,9 @@
       "id": "court14",
       "kind": "court",
       "name": "Court 14",
-      "x": 20,
+      "x": 32,
       "y": 0,
-      "z": 86,
+      "z": 92,
       "source": "US Open Grounds Map — Court 14, Südreihe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -200,9 +217,9 @@
       "id": "court15",
       "kind": "court",
       "name": "Court 15",
-      "x": 58,
+      "x": 68,
       "y": 0,
-      "z": 86,
+      "z": 92,
       "source": "US Open Grounds Map — Court 15, Südreihe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -210,9 +227,9 @@
       "id": "court16",
       "kind": "court",
       "name": "Court 16",
-      "x": 96,
+      "x": 104,
       "y": 0,
-      "z": 86,
+      "z": 92,
       "source": "US Open Grounds Map — Court 16, Südreihe",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -220,9 +237,9 @@
       "id": "stringer",
       "kind": "stringer",
       "name": "On-site stringing",
-      "x": -58,
+      "x": -62,
       "y": 0,
-      "z": -30,
+      "z": -22,
       "source": "US Open Player Services / Grounds Map — Besaitung vor Ort; Lage stilisiert, keine Gehminuten",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -230,9 +247,9 @@
       "id": "player",
       "kind": "player",
       "name": "Player area",
-      "x": -80,
+      "x": -86,
       "y": 0,
-      "z": -54,
+      "z": -48,
       "source": "US Open Grounds Map — Spielerbereich westlich von Ashe, stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -242,7 +259,7 @@
       "name": "Champion's Entry",
       "x": 0,
       "y": 0,
-      "z": 172,
+      "z": 168,
       "source": "US Open — Champion's Entry (früher South Gate), am Unisphere / Flushing Meadows; Taxi und Rideshare",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -274,9 +291,9 @@
       "id": "wc-ashe-s",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 10,
+      "x": 14,
       "y": 0,
-      "z": 48,
+      "z": 54,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage an der Südplaza stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -284,9 +301,9 @@
       "id": "wc-ashe-e",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 42,
+      "x": 50,
       "y": 0,
-      "z": 6,
+      "z": 10,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage östlich von Ashe stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -294,9 +311,9 @@
       "id": "wc-ashe-w",
       "kind": "restroom",
       "name": "Restroom",
-      "x": -48,
+      "x": -50,
       "y": 0,
-      "z": 6,
+      "z": 10,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage westlich von Ashe stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -304,9 +321,9 @@
       "id": "wc-gs",
       "kind": "restroom",
       "name": "Restroom",
-      "x": -152,
+      "x": -138,
       "y": 0,
-      "z": 28,
+      "z": 42,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage am Grandstand stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -314,9 +331,9 @@
       "id": "wc-arm",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 82,
+      "x": 52,
       "y": 0,
-      "z": -88,
+      "z": -36,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage an Armstrong stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -324,9 +341,9 @@
       "id": "wc-fv",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 92,
+      "x": 78,
       "y": 0,
-      "z": -8,
+      "z": 2,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage am Food Village stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -334,9 +351,9 @@
       "id": "wc-17",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 148,
+      "x": 142,
       "y": 0,
-      "z": 36,
+      "z": 48,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms; Lage an Stadium 17 stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -344,9 +361,9 @@
       "id": "wc-east",
       "kind": "restroom",
       "name": "Restroom",
-      "x": 76,
+      "x": 86,
       "y": 0,
-      "z": 52,
+      "z": 68,
       "source": "US Open Grounds Map / Guest Amenities — Restrooms zwischen den Outer Courts; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -364,9 +381,9 @@
       "id": "aid-ashe-w",
       "kind": "firstaid",
       "name": "First aid",
-      "x": -22,
+      "x": -50,
       "y": 0,
-      "z": -18,
+      "z": -12,
       "source": "US Open Guest Amenities — First Aid Stations an Arthur Ashe Stadium; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -374,9 +391,9 @@
       "id": "aid-ashe-e",
       "kind": "firstaid",
       "name": "First aid",
-      "x": 24,
+      "x": 50,
       "y": 0,
-      "z": 18,
+      "z": 16,
       "source": "US Open Guest Amenities — First Aid Stations an Arthur Ashe Stadium; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -386,7 +403,7 @@
       "name": "First aid",
       "x": 0,
       "y": 0,
-      "z": 40,
+      "z": 52,
       "source": "US Open Guest Amenities — First Aid Stations an Arthur Ashe Stadium; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -394,23 +411,27 @@
       "id": "aid-arm",
       "kind": "firstaid",
       "name": "First aid",
-      "x": 70,
+      "x": 38,
       "y": 0,
-      "z": -100,
+      "z": -48,
       "source": "US Open Guest Amenities — First Aid an Armstrong; Stillraum an dieser First-Aid-Station",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["nursing"]
+      "flags": [
+        "nursing"
+      ]
     },
     {
       "id": "aid-gs",
       "kind": "firstaid",
       "name": "First aid",
-      "x": -132,
+      "x": -118,
       "y": 0,
-      "z": 4,
+      "z": 18,
       "source": "US Open Guest Amenities — First Aid am Grandstand; Stillraum an dieser First-Aid-Station",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["nursing"]
+      "flags": [
+        "nursing"
+      ]
     },
     {
       "id": "aid-south",
@@ -418,7 +439,7 @@
       "name": "First aid",
       "x": 148,
       "y": 0,
-      "z": 80,
+      "z": 72,
       "source": "US Open Guest Amenities — First Aid Station Südtor / Stadium 17; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -428,7 +449,7 @@
       "name": "Water",
       "x": 18,
       "y": 0,
-      "z": 36,
+      "z": 42,
       "source": "US Open Guest Amenities — Water Fountains (44 on the Grounds); hier eine Plaza-Stelle, stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -436,9 +457,9 @@
       "id": "water-fv",
       "kind": "water",
       "name": "Water",
-      "x": 72,
+      "x": 64,
       "y": 0,
-      "z": -32,
+      "z": -18,
       "source": "US Open Guest Amenities — Water Fountains; Food-Village-Stelle stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -446,9 +467,9 @@
       "id": "water-gs",
       "kind": "water",
       "name": "Water",
-      "x": -128,
+      "x": -114,
       "y": 0,
-      "z": 20,
+      "z": 32,
       "source": "US Open Guest Amenities — Water Fountains; Grandstand-Stelle stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -456,9 +477,9 @@
       "id": "water-17",
       "kind": "water",
       "name": "Water",
-      "x": 168,
+      "x": 158,
       "y": 0,
-      "z": 36,
+      "z": 48,
       "source": "US Open Guest Amenities — Water Fountains; Stadium-17-Stelle stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -468,7 +489,7 @@
       "name": "Guest information",
       "x": 14,
       "y": 0,
-      "z": 64,
+      "z": 62,
       "source": "US Open Guest Amenities — Guest Information; Südplaza stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -486,9 +507,9 @@
       "id": "east-gate",
       "kind": "gate",
       "name": "Main Entry",
-      "x": 208,
+      "x": 198,
       "y": 0,
-      "z": 48,
+      "z": 40,
       "source": "US Open — Main Entry (früher East Gate), an Parking Lot B / ÖPNV",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -498,7 +519,7 @@
       "name": "Wheelchair access",
       "x": 0,
       "y": 0,
-      "z": 52,
+      "z": 54,
       "source": "USTA / US Open Accessibility — Rollstuhlzugang zu Ashe und Outer Courts über die South Plaza; Lage stilisiert",
       "sourceUrl": "https://customercare.usta.com/hc/en-us/articles/4405053186708-US-Open-Accessibility-Information"
     },
@@ -506,9 +527,9 @@
       "id": "access-arm",
       "kind": "access",
       "name": "Wheelchair access",
-      "x": 58,
+      "x": 28,
       "y": 0,
-      "z": -100,
+      "z": -48,
       "source": "USTA / US Open Accessibility — Rollstuhlzugang zu Armstrong an New York Avenue; Lage stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/guests_with_disabilities.html"
     },
@@ -516,9 +537,9 @@
       "id": "access-gs",
       "kind": "access",
       "name": "Wheelchair access",
-      "x": -132,
+      "x": -118,
       "y": 0,
-      "z": 22,
+      "z": 34,
       "source": "US Open Grounds Map — Wheelchair Access am Grandstand; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -546,9 +567,9 @@
       "id": "lost-arm",
       "kind": "lostfound",
       "name": "Lost and found",
-      "x": 70,
+      "x": 40,
       "y": 0,
-      "z": -118,
+      "z": -64,
       "source": "US Open Guest Amenities — Lost and Found am Armstrong-Erdgeschoss; Lage stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -558,51 +579,59 @@
       "name": "Accessible restroom",
       "x": -12,
       "y": 0,
-      "z": 48,
+      "z": 54,
       "source": "US Open / USTA — Accessible restrooms throughout the grounds; Ashe/South Plaza stilisiert",
       "sourceUrl": "https://customercare.usta.com/hc/en-us/articles/4405053186708-US-Open-Accessibility-Information",
-      "flags": ["accessible"]
+      "flags": [
+        "accessible"
+      ]
     },
     {
       "id": "wc-ada-arm",
       "kind": "restroom",
       "name": "Accessible restroom",
-      "x": 94,
+      "x": 64,
       "y": 0,
-      "z": -88,
+      "z": -36,
       "source": "US Open / USTA — Accessible restrooms; Armstrong stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/guests_with_disabilities.html",
-      "flags": ["accessible"]
+      "flags": [
+        "accessible"
+      ]
     },
     {
       "id": "wc-ada-gs",
       "kind": "restroom",
       "name": "Accessible restroom",
-      "x": -152,
+      "x": -138,
       "y": 0,
-      "z": -16,
+      "z": -2,
       "source": "US Open / USTA — Accessible restrooms; Grandstand stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["accessible"]
+      "flags": [
+        "accessible"
+      ]
     },
     {
       "id": "wc-ada-17",
       "kind": "restroom",
       "name": "Accessible restroom",
-      "x": 168,
+      "x": 158,
       "y": 0,
-      "z": -12,
+      "z": 8,
       "source": "US Open / USTA — Accessible restrooms; Stadium 17 stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html",
-      "flags": ["accessible"]
+      "flags": [
+        "accessible"
+      ]
     },
     {
       "id": "president-gate",
       "kind": "gate",
       "name": "President's Entry",
-      "x": 20,
+      "x": 24,
       "y": 0,
-      "z": -158,
+      "z": -128,
       "source": "US Open — President's Entry an Practice Courts 1–5, für Courtside- und Suite-Tickets aus Parking A",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -612,7 +641,7 @@
       "name": "Player entrance",
       "x": 0,
       "y": 0,
-      "z": -36,
+      "z": -50,
       "source": "2025 Arthur Ashe Seating Chart — Player Entrance; Lage am Stadion stilisiert",
       "sourceUrl": "https://www.usopen.org/pdf/2025-Arthur-Ashe-Seating-Chart.pdf"
     },
@@ -660,9 +689,9 @@
       "id": "atm-fv",
       "kind": "atm",
       "name": "ATM",
-      "x": 104,
+      "x": 90,
       "y": 0,
-      "z": -32,
+      "z": -18,
       "source": "US Open Guest Amenities — ATMs; Stelle am Food Village stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -680,9 +709,9 @@
       "id": "charge-fv",
       "kind": "charger",
       "name": "Mobile charger rental",
-      "x": 80,
+      "x": 70,
       "y": 0,
-      "z": -8,
+      "z": -4,
       "source": "US Open Guest Amenities — Mobile Charger Rental; Stelle am Food Village stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -690,9 +719,9 @@
       "id": "lot-a",
       "kind": "landmark",
       "name": "Parking Lot A",
-      "x": 8,
+      "x": 12,
       "y": 0,
-      "z": -214,
+      "z": -168,
       "source": "US Open Grounds Map — Lot A an President's Entry / Practice Courts 1–5; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -700,9 +729,9 @@
       "id": "lot-b",
       "kind": "landmark",
       "name": "Parking Lot B",
-      "x": 248,
+      "x": 238,
       "y": 0,
-      "z": 48,
+      "z": 40,
       "source": "US Open Grounds Map — Lot B an Main Entry; ÖPNV und Mets Stadium Parking; Lage stilisiert, kein GPS",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     },
@@ -725,86 +754,354 @@
       "z": 220,
       "source": "US Open Getting There — Taxi und Rideshare am Champion's Entry / Unisphere / New York State Pavilion; Lage stilisiert",
       "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "nys-pavilion",
+      "kind": "landmark",
+      "name": "New York State Pavilion",
+      "x": 8,
+      "y": 0,
+      "z": 318,
+      "source": "US Open Getting There — New York State Pavilion / Rideshare am Champion's Entry; Lage stilisiert",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "citi-field",
+      "kind": "landmark",
+      "name": "Citi Field",
+      "x": -220,
+      "y": 0,
+      "z": -118,
+      "lat": 40.7571,
+      "lng": -73.8458,
+      "source": "US Open Grounds Map — To Mets Stadium Parking / Citi Field, westlich vom Tennis Center; Lage stilisiert",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
     }
   ],
   "paths": [
-    { "from": "south-gate", "to": "south-plaza" },
-    { "from": "south-plaza", "to": "ashe" },
-    { "from": "ashe", "to": "armstrong" },
-    { "from": "ashe", "to": "grandstand" },
-    { "from": "ashe", "to": "food-village" },
-    { "from": "food-village", "to": "court17" },
-    { "from": "ashe", "to": "stringer" },
-    { "from": "stringer", "to": "player" },
-    { "from": "armstrong", "to": "practice" },
-    { "from": "south-plaza", "to": "grandstand" },
-    { "from": "stringer", "to": "willets" },
-    { "from": "south-gate", "to": "unisphere" },
-    { "from": "grandstand", "to": "court4" },
-    { "from": "grandstand", "to": "court5" },
-    { "from": "grandstand", "to": "court6" },
-    { "from": "grandstand", "to": "court7" },
-    { "from": "south-plaza", "to": "court8" },
-    { "from": "ashe", "to": "court9" },
-    { "from": "ashe", "to": "court10" },
-    { "from": "ashe", "to": "court11" },
-    { "from": "court11", "to": "court12" },
-    { "from": "court12", "to": "court13" },
-    { "from": "food-village", "to": "court13" },
-    { "from": "south-plaza", "to": "court14" },
-    { "from": "court14", "to": "court15" },
-    { "from": "court15", "to": "court16" },
-    { "from": "court17", "to": "court13" },
-    { "from": "court11", "to": "food-village" },
-    { "from": "court12", "to": "court16" },
-    { "from": "south-plaza", "to": "wc-ashe-s" },
-    { "from": "ashe", "to": "wc-ashe-e" },
-    { "from": "ashe", "to": "wc-ashe-w" },
-    { "from": "grandstand", "to": "wc-gs" },
-    { "from": "armstrong", "to": "wc-arm" },
-    { "from": "food-village", "to": "wc-fv" },
-    { "from": "court17", "to": "wc-17" },
-    { "from": "court15", "to": "wc-east" },
-    { "from": "south-gate", "to": "wc-south" },
-    { "from": "ashe", "to": "aid-ashe-w" },
-    { "from": "ashe", "to": "aid-ashe-e" },
-    { "from": "south-plaza", "to": "aid-ashe-s" },
-    { "from": "armstrong", "to": "aid-arm" },
-    { "from": "grandstand", "to": "aid-gs" },
-    { "from": "court17", "to": "aid-south" },
-    { "from": "south-plaza", "to": "water-plaza" },
-    { "from": "food-village", "to": "water-fv" },
-    { "from": "grandstand", "to": "water-gs" },
-    { "from": "court17", "to": "water-17" },
-    { "from": "south-plaza", "to": "info-south" },
-    { "from": "south-gate", "to": "info-gate" },
-    { "from": "court17", "to": "east-gate" },
-    { "from": "south-plaza", "to": "access-ashe" },
-    { "from": "armstrong", "to": "access-arm" },
-    { "from": "grandstand", "to": "access-gs" },
-    { "from": "south-gate", "to": "bag-south" },
-    { "from": "east-gate", "to": "bag-east" },
-    { "from": "armstrong", "to": "lost-arm" },
-    { "from": "south-plaza", "to": "wc-ada-ashe" },
-    { "from": "armstrong", "to": "wc-ada-arm" },
-    { "from": "grandstand", "to": "wc-ada-gs" },
-    { "from": "court17", "to": "wc-ada-17" },
-    { "from": "practice", "to": "president-gate" },
-    { "from": "ashe", "to": "player-entrance" },
-    { "from": "ashe", "to": "photo-pit" },
-    { "from": "grandstand", "to": "box-office" },
-    { "from": "box-office", "to": "dinkins" },
-    { "from": "dinkins", "to": "willets" },
-    { "from": "south-gate", "to": "atm-south" },
-    { "from": "food-village", "to": "atm-fv" },
-    { "from": "south-gate", "to": "charge-south" },
-    { "from": "food-village", "to": "charge-fv" },
-    { "from": "practice", "to": "lot-a" },
-    { "from": "president-gate", "to": "lot-a" },
-    { "from": "east-gate", "to": "lot-b" },
-    { "from": "willets", "to": "boardwalk" },
-    { "from": "boardwalk", "to": "dinkins" },
-    { "from": "south-gate", "to": "rideshare" },
-    { "from": "rideshare", "to": "unisphere" }
+    {
+      "from": "south-gate",
+      "to": "south-plaza"
+    },
+    {
+      "from": "south-plaza",
+      "to": "ashe"
+    },
+    {
+      "from": "ashe",
+      "to": "armstrong"
+    },
+    {
+      "from": "ashe",
+      "to": "grandstand"
+    },
+    {
+      "from": "ashe",
+      "to": "food-village"
+    },
+    {
+      "from": "food-village",
+      "to": "court17"
+    },
+    {
+      "from": "ashe",
+      "to": "stringer"
+    },
+    {
+      "from": "stringer",
+      "to": "player"
+    },
+    {
+      "from": "armstrong",
+      "to": "practice"
+    },
+    {
+      "from": "south-plaza",
+      "to": "grandstand"
+    },
+    {
+      "from": "stringer",
+      "to": "willets"
+    },
+    {
+      "from": "south-gate",
+      "to": "unisphere"
+    },
+    {
+      "from": "grandstand",
+      "to": "court4"
+    },
+    {
+      "from": "grandstand",
+      "to": "court5"
+    },
+    {
+      "from": "grandstand",
+      "to": "court6"
+    },
+    {
+      "from": "grandstand",
+      "to": "court7"
+    },
+    {
+      "from": "south-plaza",
+      "to": "court8"
+    },
+    {
+      "from": "ashe",
+      "to": "court9"
+    },
+    {
+      "from": "ashe",
+      "to": "court10"
+    },
+    {
+      "from": "ashe",
+      "to": "court11"
+    },
+    {
+      "from": "court11",
+      "to": "court12"
+    },
+    {
+      "from": "court12",
+      "to": "court13"
+    },
+    {
+      "from": "food-village",
+      "to": "court13"
+    },
+    {
+      "from": "south-plaza",
+      "to": "court14"
+    },
+    {
+      "from": "court14",
+      "to": "court15"
+    },
+    {
+      "from": "court15",
+      "to": "court16"
+    },
+    {
+      "from": "court17",
+      "to": "court13"
+    },
+    {
+      "from": "court11",
+      "to": "food-village"
+    },
+    {
+      "from": "court12",
+      "to": "court16"
+    },
+    {
+      "from": "south-plaza",
+      "to": "wc-ashe-s"
+    },
+    {
+      "from": "ashe",
+      "to": "wc-ashe-e"
+    },
+    {
+      "from": "ashe",
+      "to": "wc-ashe-w"
+    },
+    {
+      "from": "grandstand",
+      "to": "wc-gs"
+    },
+    {
+      "from": "armstrong",
+      "to": "wc-arm"
+    },
+    {
+      "from": "food-village",
+      "to": "wc-fv"
+    },
+    {
+      "from": "court17",
+      "to": "wc-17"
+    },
+    {
+      "from": "court15",
+      "to": "wc-east"
+    },
+    {
+      "from": "south-gate",
+      "to": "wc-south"
+    },
+    {
+      "from": "ashe",
+      "to": "aid-ashe-w"
+    },
+    {
+      "from": "ashe",
+      "to": "aid-ashe-e"
+    },
+    {
+      "from": "south-plaza",
+      "to": "aid-ashe-s"
+    },
+    {
+      "from": "armstrong",
+      "to": "aid-arm"
+    },
+    {
+      "from": "grandstand",
+      "to": "aid-gs"
+    },
+    {
+      "from": "court17",
+      "to": "aid-south"
+    },
+    {
+      "from": "south-plaza",
+      "to": "water-plaza"
+    },
+    {
+      "from": "food-village",
+      "to": "water-fv"
+    },
+    {
+      "from": "grandstand",
+      "to": "water-gs"
+    },
+    {
+      "from": "court17",
+      "to": "water-17"
+    },
+    {
+      "from": "south-plaza",
+      "to": "info-south"
+    },
+    {
+      "from": "south-gate",
+      "to": "info-gate"
+    },
+    {
+      "from": "court17",
+      "to": "east-gate"
+    },
+    {
+      "from": "south-plaza",
+      "to": "access-ashe"
+    },
+    {
+      "from": "armstrong",
+      "to": "access-arm"
+    },
+    {
+      "from": "grandstand",
+      "to": "access-gs"
+    },
+    {
+      "from": "south-gate",
+      "to": "bag-south"
+    },
+    {
+      "from": "east-gate",
+      "to": "bag-east"
+    },
+    {
+      "from": "armstrong",
+      "to": "lost-arm"
+    },
+    {
+      "from": "south-plaza",
+      "to": "wc-ada-ashe"
+    },
+    {
+      "from": "armstrong",
+      "to": "wc-ada-arm"
+    },
+    {
+      "from": "grandstand",
+      "to": "wc-ada-gs"
+    },
+    {
+      "from": "court17",
+      "to": "wc-ada-17"
+    },
+    {
+      "from": "practice",
+      "to": "president-gate"
+    },
+    {
+      "from": "ashe",
+      "to": "player-entrance"
+    },
+    {
+      "from": "ashe",
+      "to": "photo-pit"
+    },
+    {
+      "from": "grandstand",
+      "to": "box-office"
+    },
+    {
+      "from": "box-office",
+      "to": "dinkins"
+    },
+    {
+      "from": "dinkins",
+      "to": "willets"
+    },
+    {
+      "from": "south-gate",
+      "to": "atm-south"
+    },
+    {
+      "from": "food-village",
+      "to": "atm-fv"
+    },
+    {
+      "from": "south-gate",
+      "to": "charge-south"
+    },
+    {
+      "from": "food-village",
+      "to": "charge-fv"
+    },
+    {
+      "from": "practice",
+      "to": "lot-a"
+    },
+    {
+      "from": "president-gate",
+      "to": "lot-a"
+    },
+    {
+      "from": "east-gate",
+      "to": "lot-b"
+    },
+    {
+      "from": "willets",
+      "to": "boardwalk"
+    },
+    {
+      "from": "boardwalk",
+      "to": "dinkins"
+    },
+    {
+      "from": "south-gate",
+      "to": "rideshare"
+    },
+    {
+      "from": "rideshare",
+      "to": "unisphere"
+    },
+    {
+      "from": "unisphere",
+      "to": "nys-pavilion"
+    },
+    {
+      "from": "rideshare",
+      "to": "nys-pavilion"
+    },
+    {
+      "from": "willets",
+      "to": "citi-field"
+    }
   ]
 }

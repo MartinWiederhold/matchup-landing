@@ -786,8 +786,8 @@ a.t2-card:hover, .t2-card--hover:hover {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 .t2-place-card.is-slim {
-  max-width: 20rem;
-  padding: 0.75rem 0.9rem 0.85rem;
+  max-width: 16.5rem;
+  padding: 0.6rem 0.75rem 0.7rem;
 }
 .t2-place-cta {
   display: inline-flex;
@@ -932,6 +932,32 @@ a.t2-card:hover, .t2-card--hover:hover {
 .t2-mhead .t2-rail-avatar-fallback {
   background: var(--t2-line);
   color: var(--t2-ink);
+}
+
+.t2-shell.is-dense .t2-mhead {
+  gap: 0.4rem;
+  padding: max(0.28rem, env(safe-area-inset-top)) 0.7rem 0.28rem;
+}
+.t2-shell.is-dense .t2-mhead .t2-rail-mark {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 9px;
+}
+.t2-shell.is-dense .t2-place-pill {
+  padding: 0.22rem 0.55rem;
+  font-size: 11px;
+}
+.t2-shell.is-dense .t2-world-pin {
+  padding: 0.12rem 0.42rem;
+  font-size: 0.58rem;
+}
+.t2-shell.is-dense .t2-place-card.is-slim {
+  max-width: 14.5rem;
+  padding: 0.5rem 0.65rem;
+}
+.t2-shell.is-dense .t2-place-cta {
+  padding: 0.32rem 0.65rem;
+  font-size: 11px;
 }
 
 @media (max-width: 767px) {
