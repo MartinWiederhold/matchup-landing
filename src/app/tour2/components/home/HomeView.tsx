@@ -33,12 +33,12 @@ import { deadlineCountdown } from "@/domain/tour/deadlineCountdown";
 import { displayCity } from "@/domain/tour/displayCity";
 import { seasonMetrics } from "@/domain/tour/finance";
 import { haversineKm } from "@/lib/utils/haversine";
-import { tour2PlannerTournamentHref, T2_FINDER, T2_SEASON } from "@/app/tour2/components/t2Action";
+import { T2_FINDER, T2_SEASON } from "@/app/tour2/components/t2Action";
 import { loadSetupState, type SetupState } from "@/lib/tourSetup";
 import { SETUP_SKIP_KEY } from "@/lib/tourOptPrefs";
 import SetupPanel from "@/app/tour2/components/setup/SetupPanel";
-import Tour2ActionList from "@/app/tour2/components/Tour2ActionList";
 import DayGlance from "@/app/tour2/components/home/DayGlance";
+import PlaceStage from "@/app/tour2/components/home/PlaceStage";
 import SeasonMap, { type SeasonStop, type SeasonStopState } from "@/app/tour2/components/home/SeasonMap";
 import SeasonTimeline from "@/app/tour2/components/home/SeasonTimeline";
 import { RouteStop, Drawer, EmptyState } from "@/app/tour2/components/ui";
@@ -196,6 +196,7 @@ export default function HomeView() {
   // selectedStopId öffnet die Detailschublade für einen Turnierstop.
   const [hoveredStopId, setHoveredStopId] = useState<string | null>(null);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [placeId, setPlaceId] = useState<string | null>(null);
   const [nowMs] = useState(() => Date.now());
   const [homeRise] = useState(() => {
     try { return typeof window !== "undefined" && sessionStorage.getItem("mu_t2_home_rise") !== "1"; } catch { return false; }
@@ -622,155 +623,77 @@ export default function HomeView() {
 
   const cpp = finance.costPerPoint?.[cur];
 
-  if (authLoading) return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
-  if (!user) return <TourLoginCard />;
-  if (state === "loading") return <HomeSkeleton />;
-  if (state === "error") return <p className="p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
+  if (authLoading) return <p className="min-h-0 flex-1 bg-[var(--t2-bg)] p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.t2authChecking")}</p>;
+  if (!user) return <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--t2-bg)]"><TourLoginCard /></div>;
+  if (state === "loading") return <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--t2-bg)]"><HomeSkeleton /></div>;
+  if (state === "error") return <p className="min-h-0 flex-1 bg-[var(--t2-bg)] p-6 t2-fs-body text-[var(--t2-muted)]">{t("tour.loadError")}</p>;
 
   const needsOnboarding = !!setup && !setup.complete && active.length === 0 && !forceHome;
   if (needsOnboarding) {
     return (
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--t2-bg)]">
       <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-8">
         <p className={`t2-eyebrow ${homeRise ? "t2-rise t2-rise-1" : ""}`}>Matchup Tour</p>
         <h1 className={`t2-display ${homeRise ? "t2-rise t2-rise-2" : ""} mt-3 t2-fs-display`}>{t("tour.t2onbHello")}</h1>
         <SetupPanel onExit={() => setForceHome(true)} />
       </div>
+      </div>
     );
   }
 
-  const seasonYear = active[0]?.tournament.tournament_monday.slice(0, 4) ?? String(new Date(nowMs).getUTCFullYear());
-  const nextActionCity = nextDeadline
-    ? (displayCity(nextDeadline.tournament.city) || nextDeadline.tournament.name || t("tour.fieldMissing"))
-    : null;
-  const setupSteps = [
-    { key: "home",   label: t("tour.t2cpSetupHome"),   done: !!profile?.city,                       href: "/tour2/profile" },
-    { key: "pass",   label: t("tour.t2cpSetupPass"),   done: (profile?.passports?.length ?? 0) > 0, href: "/tour2/profile" },
-    { key: "budget", label: t("tour.t2cpSetupBudget"), done: profile?.seasonBudget != null,         href: "/tour2/profile" },
-    { key: "rates",  label: t("tour.t2cpSetupRates"),  done: costRatesComplete(rates),              href: "/tour2/costs" },
-    { key: "season", label: t("tour.t2cpSetupSeason"), done: active.length > 0,                     href: T2_SEASON },
-  ];
-  const setupDoneN = setupSteps.filter((s) => s.done).length;
-  const setupPct = Math.round((setupDoneN / setupSteps.length) * 100);
-  const setupComplete = setupDoneN === setupSteps.length;
-  const statusLine = nextDeadline && nextActionCity && nextEntryDeadlineMs != null
-    ? t("tour.t2homeNextDl", { city: nextActionCity, when: countdown(nextEntryDeadlineMs) })
-    : nextStop
-      ? t("tour.t2homeNextStop", { city: displayCity(nextStop.tournament.city) || t("tour.fieldMissing"), date: fmtDate(nextStop.tournament.tournament_monday) })
-      : t("tour.t2homeNoSeason");
+  const placeEntry = active.find((s) => s.tournament.id === (placeId ?? nextStop?.tournament.id))
+    ?? active.find((s) => s.tournament.tournament_monday >= todayISO)
+    ?? active[active.length - 1]
+    ?? null;
+  const glanceEl = <DayGlance todayISO={todayISO} groups={glance} tone="place" />;
+
+  if (!placeEntry) {
+    return (
+      <PlaceStage
+        tournament={null}
+        deadlineLabel={null}
+        surfaceLabel={null}
+        countryLabel=""
+        actions={[]}
+        stops={[]}
+        onFocus={() => { /* keine Saison-Stops */ }}
+        countryName={countryName}
+        fmtDate={fmtDate}
+        money={(minor) => money(minor)}
+      >
+        {glanceEl}
+      </PlaceStage>
+    );
+  }
+
+  const tt = placeEntry.tournament;
+  const dl = tourDeadlines(new Date(tt.tournament_monday + "T00:00:00Z"), tt.series, tt.category);
+  const deadlineLabel = !dl.known
+    ? t("tour.entryUnknownShort")
+    : dl.entry
+      ? `${t("tour.t2ovDrawerDeadline")} · ${countdown(dl.entry.getTime())}`
+      : null;
+  const surfaceKey = tt.surface ? t(`tour.surface_${tt.surface}`) : null;
+  const surfaceLabel = surfaceKey && !surfaceKey.startsWith("tour.surface_") ? surfaceKey : (tt.surface ?? null);
 
   return (
-    <div>
-      <div className="mx-auto max-w-[800px] px-4 py-8 sm:px-8">
-        <header>
-          <p className="t2-label">{t("tour.t2navToday")} · {seasonYear}</p>
-          <h1 className="mt-1 t2-fs-h1 font-bold" style={{ color: "var(--t2-text)" }}>
-            {profile?.firstName ? `${t("tour.t2cpHello")}, ${profile.firstName}` : t("tour.t2cpHello")}
-          </h1>
-          <p className="mt-2 t2-fs-body" style={{ color: "var(--t2-text-soft)" }}>{statusLine}</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <Link href={T2_FINDER} className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>{t("tour.t2homeGoFind")} →</Link>
-            <Link href={T2_SEASON} className="t2-fs-body-sm font-semibold" style={{ color: "var(--t2-accent)" }}>{t("tour.t2homeGoSeason")} →</Link>
-          </div>
-        </header>
-
-        {!setupComplete && (
-          <section className="t2-dash-card mt-6">
-            <div className="flex items-center justify-between gap-3">
-              <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpSetupTitle")}</p>
-              <span className="t2-surface-chip is-accent">{t("tour.t2cpSetupProgress", { done: setupDoneN, total: setupSteps.length })}</span>
-            </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: "var(--t2-surface-muted)" }}>
-              <div className="h-full rounded-full" style={{ width: `${setupPct}%`, background: "var(--t2-accent)" }} />
-            </div>
-            <ul className="mt-4 flex flex-col gap-1.5">
-              {setupSteps.map((s) => (
-                <li key={s.key}>
-                  {s.done ? (
-                    <span className="flex items-center gap-2.5 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px]" style={{ background: "var(--t2-success-surface)", color: "var(--t2-success)" }} aria-hidden>✓</span>
-                      <span className="line-through">{s.label}</span>
-                    </span>
-                  ) : (
-                    <Link href={s.href} className="flex items-center gap-2.5 t2-fs-body-sm font-semibold" style={{ color: "var(--t2-text)" }}>
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border" style={{ borderColor: "var(--t2-line-strong)" }} aria-hidden />
-                      <span className="hover:underline">{s.label}</span>
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section id="t2-actions" className="t2-dash-card mt-6">
-          <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2action")}</h2>
-          <Tour2ActionList
-            actions={board.actions}
-            countryName={countryName}
-            fmtDate={fmtDate}
-            money={(minor) => money(minor)}
-          />
-        </section>
-
-        <div className="mt-6">
-          <DayGlance todayISO={todayISO} groups={glance} />
-        </div>
-
-        {active.length === 0 && (
-          <div className="t2-dash-card mt-6">
-            <p className="t2-fs-h3 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpEmptyRouteTitle")}</p>
-            <p className="mt-1 t2-fs-body-sm" style={{ color: "var(--t2-text-soft)" }}>{t("tour.t2cpEmptyRouteHint")}</p>
-            <Link href={T2_SEASON} className="t2-cta mt-4">{t("tour.t2cpEmptyRouteCTA")}<span aria-hidden>→</span></Link>
-          </div>
-        )}
-
-        {mapStops.length > 0 && (
-          <section className="mt-6">
-            <h2 className="t2-fs-h2 font-bold" style={{ color: "var(--t2-text)" }}>{t("tour.t2cpMapTitle")}</h2>
-            <div className="mt-3">
-              <SeasonMap
-                stops={mapStops}
-                variant="light"
-                heightClass="min-h-[28vh] md:min-h-[36vh]"
-                onMarkerClick={setSelectedStopId}
-                highlightId={hoveredStopId ?? selectedStopId}
-              />
-            </div>
-          </section>
-        )}
-
-        {selectedEntry && (
-          <Drawer
-            open
-            onClose={() => setSelectedStopId(null)}
-            title={displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || t("tour.fieldMissing")}
-          >
-            <dl className="space-y-4">
-              {selectedEntry.tournament.category && (
-                <div>
-                  <dt className="t2-label">{t("tour.t2ovDrawerCategory")}</dt>
-                  <dd className="mt-1 t2-fs-body">{selectedEntry.tournament.category}</dd>
-                </div>
-              )}
-              <div>
-                <dt className="t2-label">{t("tour.t2ovDrawerDate")}</dt>
-                <dd className="mt-1 t2-fs-body">
-                  {new Intl.DateTimeFormat(loc, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(selectedEntry.tournament.tournament_monday + "T00:00:00Z"))}
-                </dd>
-              </div>
-              {drawerDeadlineMs != null && (
-                <div>
-                  <dt className="t2-label">{t("tour.t2ovDrawerDeadline")}</dt>
-                  <dd className="mt-1 t2-fs-body">{countdown(drawerDeadlineMs)}</dd>
-                </div>
-              )}
-            </dl>
-            <Link href={tour2PlannerTournamentHref(selectedEntry.tournament.id)} className="t2-cta mt-6">
-              {t("tour.t2cpDrawerOpen", { name: displayCity(selectedEntry.tournament.city) || selectedEntry.tournament.name || "" })}<span aria-hidden>→</span>
-            </Link>
-          </Drawer>
-        )}
-      </div>
-    </div>
+    <PlaceStage
+      tournament={tt}
+      deadlineLabel={deadlineLabel}
+      surfaceLabel={surfaceLabel}
+      countryLabel={countryName(tt.country)}
+      actions={board.actions}
+      stops={active.map((s) => ({
+        id: s.tournament.id,
+        city: displayCity(s.tournament.city) || s.tournament.name || t("tour.fieldMissing"),
+        monday: s.tournament.tournament_monday,
+      }))}
+      onFocus={setPlaceId}
+      countryName={countryName}
+      fmtDate={fmtDate}
+      money={(minor) => money(minor)}
+    >
+      {glanceEl}
+    </PlaceStage>
   );
 }

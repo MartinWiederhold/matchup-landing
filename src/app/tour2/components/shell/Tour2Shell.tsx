@@ -126,7 +126,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
   const country = profile?.countryName || profile?.country || "";
   const ranking = profile?.ranking;
   const year = new Date().getFullYear();
-  const bleed = FULL_BLEED.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const bleed = pathname === "/tour2" || FULL_BLEED.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const currentPrimary = PRIMARY.find((a) => a.match(pathname));
   const currentMore = MORE.find((a) => a.match(pathname));
   const headerKey = currentPrimary?.label ?? currentMore?.label ?? "t2navToday";
@@ -190,7 +190,7 @@ export default function Tour2Shell({ children }: { children: ReactNode }) {
         )}
         <p className="t2-rail-season" title={t("tour.t2seasonCard")}>{year}</p>
         <div className="t2-rail-tools">
-          <Link href="/tour2#t2-actions" className="t2-rail-tool" aria-label={t("tour.t2action")} title={t("tour.t2action")}>
+          <Link href="/tour2" className="t2-rail-tool" aria-label={t("tour.t2action")} title={t("tour.t2action")}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5" /><path d="M10 17a2 2 0 0 0 4 0" /></svg>
           </Link>
           {user && (

@@ -1,0 +1,154 @@
+{
+  "id": "us-open",
+  "title": "US Open",
+  "year": 2027,
+  "origin": { "lat": 40.7505, "lng": -73.847 },
+  "match": {
+    "nameIncludes": ["us open"],
+    "sourceRefIncludes": ["usopen", "us-open", "us_open"]
+  },
+  "nodes": [
+    {
+      "id": "ashe",
+      "kind": "center",
+      "name": "Arthur Ashe Stadium",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "lat": 40.7505,
+      "lng": -73.847,
+      "source": "Wikipedia / OSM — Arthur Ashe Stadium, USTA Billie Jean King National Tennis Center",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Arthur_Ashe_Stadium"
+    },
+    {
+      "id": "armstrong",
+      "kind": "court",
+      "name": "Louis Armstrong Stadium",
+      "x": 18,
+      "y": 0,
+      "z": -95,
+      "lat": 40.7519,
+      "lng": -73.8458,
+      "source": "Wikipedia / OSM — Louis Armstrong Stadium",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Louis_Armstrong_Stadium"
+    },
+    {
+      "id": "grandstand",
+      "kind": "court",
+      "name": "Grandstand",
+      "x": -78,
+      "y": 0,
+      "z": 48,
+      "source": "US Open Grounds Map — Grandstand, Südwestecke des Campus (seit 2016)",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "court17",
+      "kind": "court",
+      "name": "Court 17",
+      "x": 110,
+      "y": 0,
+      "z": 8,
+      "source": "US Open Grounds Map — Court 17 (The Pit), Ostrand",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "practice",
+      "kind": "practice",
+      "name": "Practice courts",
+      "x": 8,
+      "y": 0,
+      "z": -188,
+      "source": "US Open Grounds Map — Practice Courts nördlich von Armstrong",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "stringer",
+      "kind": "stringer",
+      "name": "On-site stringing",
+      "x": -48,
+      "y": 0,
+      "z": -36,
+      "source": "US Open Player Services / Grounds Map — Besaitung vor Ort; Lage stilisiert, keine Gehminuten",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "player",
+      "kind": "player",
+      "name": "Player area",
+      "x": -78,
+      "y": 0,
+      "z": -8,
+      "source": "US Open Grounds Map — Spielerbereich westlich von Ashe, stilisiert",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "south-gate",
+      "kind": "gate",
+      "name": "South gate",
+      "x": 0,
+      "y": 0,
+      "z": 92,
+      "source": "US Open Grounds Map — South Gate",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "willets",
+      "kind": "transit",
+      "name": "Mets–Willets Point",
+      "x": -175,
+      "y": 0,
+      "z": -42,
+      "lat": 40.7546,
+      "lng": -73.8458,
+      "source": "MTA / OSM — Mets–Willets Point (7 / LIRR)",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Mets%E2%80%93Willets_Point_station"
+    },
+    {
+      "id": "unisphere",
+      "kind": "landmark",
+      "name": "Unisphere",
+      "x": 42,
+      "y": 0,
+      "z": 210,
+      "lat": 40.7463,
+      "lng": -73.8448,
+      "source": "Wikipedia / OSM — Unisphere, Flushing Meadows",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Unisphere"
+    },
+    {
+      "id": "food-village",
+      "kind": "landmark",
+      "name": "Food Village",
+      "x": 52,
+      "y": 0,
+      "z": 36,
+      "source": "US Open Grounds Map — Food Village",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    },
+    {
+      "id": "south-plaza",
+      "kind": "landmark",
+      "name": "South Plaza",
+      "x": 0,
+      "y": 0,
+      "z": 52,
+      "source": "US Open Grounds Map — South Plaza",
+      "sourceUrl": "https://www.usopen.org/en_US/visit/us-open-grounds-map.html"
+    }
+  ],
+  "paths": [
+    { "from": "south-gate", "to": "south-plaza" },
+    { "from": "south-plaza", "to": "ashe" },
+    { "from": "ashe", "to": "armstrong" },
+    { "from": "ashe", "to": "grandstand" },
+    { "from": "ashe", "to": "food-village" },
+    { "from": "food-village", "to": "court17" },
+    { "from": "ashe", "to": "stringer" },
+    { "from": "stringer", "to": "player" },
+    { "from": "armstrong", "to": "practice" },
+    { "from": "south-plaza", "to": "grandstand" },
+    { "from": "stringer", "to": "willets" },
+    { "from": "south-gate", "to": "unisphere" }
+  ]
+}

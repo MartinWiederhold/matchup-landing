@@ -12,9 +12,11 @@ import { displayCity } from "@/domain/tour/displayCity";
 export default function DayGlance({
   todayISO,
   groups,
+  tone = "card",
 }: {
   todayISO: string;
   groups: { date: string; rows: GlanceRow[] }[];
+  tone?: "card" | "place";
 }) {
   const t = useT();
   const kindLabel = (row: GlanceRow) => {
@@ -34,6 +36,36 @@ export default function DayGlance({
     if (row.title) return row.title;
     return kindLabel(row);
   };
+
+  const place = tone === "place";
+  if (place) {
+    const rows = groups.flatMap((g) => g.rows.map((row) => ({ row, date: g.date })));
+    return (
+      <section className="t2-place-glance">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="t2-fs-body font-semibold tracking-tight text-white">{t("tour.t2ovGlance")}</h2>
+          <Link href="/tour2/season?view=calendar" className="t2-place-cta is-ghost">
+            {t("tour.t2ovGlanceCal")}<span aria-hidden>→</span>
+          </Link>
+        </div>
+        <div className="t2-place-glance-rows">
+          {rows.length === 0 ? (
+            <p className="t2-fs-body-sm text-white/70">{t("tour.t2ovGlanceEmpty")}</p>
+          ) : (
+            rows.slice(0, 4).map(({ row, date }) => (
+              <Link key={row.id} href={row.href} className="min-w-0 truncate t2-fs-body-sm font-semibold text-white/90">
+                {date === todayISO ? t("tour.t2ovToday") : t("tour.t2ovTomorrow")}
+                {" · "}
+                {when(row)}
+                {" · "}
+                {title(row)}
+              </Link>
+            ))
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="t2-dash-card">
