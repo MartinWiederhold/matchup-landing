@@ -132,12 +132,18 @@ export default function SiteWorld({
       const lookTo = new THREE.Vector3(14, 6, 18);
       camera.position.copy(introFrom);
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        logarithmicDepthBuffer: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches ? 1.25 : 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.02;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
+      renderer.shadowMap.autoUpdate = false;
       host.appendChild(renderer.domElement);
       renderer.domElement.className = "absolute inset-0 h-full w-full";
       renderer.domElement.style.touchAction = "none";
@@ -379,41 +385,31 @@ export default function SiteWorld({
       };
 
       const pose = sunDirScene(world.origin.lat, world.origin.lng, new Date());
-      const fitCamera = () => {
-        const y = Math.max(12, camera.position.y);
-        const near = THREE.MathUtils.clamp(y * 0.08, 3, 36);
-        const far = THREE.MathUtils.clamp(y * 12 + 280, 720, 3200);
-        if (Math.abs(camera.near - near) > 0.8 || Math.abs(camera.far - far) > 40) {
-          camera.near = near;
-          camera.far = far;
-          camera.updateProjectionMatrix();
-        }
-      };
+      let lastWx = -1;
       const applyWeather = (t: number) => {
         const wx = weatherRef.current;
-        const lookWx = weatherLook(wx?.code ?? 1, pose.elevation);
-        scene.background = new THREE.Color(lookWx.sky);
-        const fogNear = Math.max(140, camera.position.y * 2.6);
-        const fogFar = Math.max(560, camera.position.y * 7.8);
-        const fog = scene.fog instanceof THREE.Fog ? scene.fog : new THREE.Fog(lookWx.fog, fogNear, fogFar);
-        fog.color.set(lookWx.fog);
-        fog.near = fogNear;
-        fog.far = fogFar;
-        scene.fog = fog;
-        hemi.color.set(lookWx.sky);
-        hemi.intensity = lookWx.hemi;
-        sun.color.set(lookWx.sunColor);
-        sun.intensity = lookWx.sun;
-        const reach = 420;
-        sun.position.set(pose.x * reach, Math.max(pose.y, 0.06) * reach, pose.z * reach);
-        sunDisc.position.copy(sun.position);
-        sunHalo.position.copy(sun.position);
-        (sunDisc.material as THREE.MeshBasicMaterial).color.set(lookWx.sunColor);
-        sunDisc.visible = pose.elevation > 0.02 && !lookWx.rain;
-        sunHalo.visible = sunDisc.visible;
-        drops.visible = lookWx.rain;
-        campus.lampHeads.emissiveIntensity = pose.elevation < 0.18 ? 1.55 : 0.05;
-        renderer.toneMappingExposure = lookWx.rain ? 0.82 : pose.elevation < 0 ? 0.55 : 1.2;
+        const code = wx?.code ?? 1;
+        const lookWx = weatherLook(code, pose.elevation);
+        if (code !== lastWx) {
+          lastWx = code;
+          scene.background = new THREE.Color(lookWx.sky);
+          if (scene.fog instanceof THREE.Fog) scene.fog.color.set(lookWx.fog);
+          hemi.color.set(lookWx.sky);
+          hemi.intensity = lookWx.hemi;
+          sun.color.set(lookWx.sunColor);
+          sun.intensity = lookWx.sun;
+          const reach = 420;
+          sun.position.set(pose.x * reach, Math.max(pose.y, 0.06) * reach, pose.z * reach);
+          sunDisc.position.copy(sun.position);
+          sunHalo.position.copy(sun.position);
+          (sunDisc.material as THREE.MeshBasicMaterial).color.set(lookWx.sunColor);
+          sunDisc.visible = pose.elevation > 0.02 && !lookWx.rain;
+          sunHalo.visible = sunDisc.visible;
+          drops.visible = lookWx.rain;
+          campus.lampHeads.emissiveIntensity = pose.elevation < 0.18 ? 1.55 : 0.05;
+          renderer.toneMappingExposure = lookWx.rain ? 0.82 : pose.elevation < 0 ? 0.55 : 1.2;
+          renderer.shadowMap.needsUpdate = true;
+        }
         tickSky(lookWx, t);
       };
 
@@ -438,7 +434,6 @@ export default function SiteWorld({
         const dt = Math.min(0.05, (now - lastTick) / 1000);
         lastTick = now;
         const t = (now - t0) * 0.001;
-        fitCamera();
         applyWeather(t);
         tickWalkers(dt, t);
         campus.tickFlags(t);
@@ -463,6 +458,7 @@ export default function SiteWorld({
             lastFocus = focusRef.current ?? "_overview";
             controls.maxDistance = 640;
             controls.enabled = true;
+            renderer.shadowMap.needsUpdate = true;
           }
         } else {
           const want = focusRef.current;
@@ -471,7 +467,6 @@ export default function SiteWorld({
             const n = nodeById(world, want);
             if (n) flyTo(n);
           }
-          controls.target.lerp(look, 0.06);
           controls.update();
         }
         if (drops.visible) {

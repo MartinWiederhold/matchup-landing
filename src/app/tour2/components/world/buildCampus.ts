@@ -517,12 +517,12 @@ export function plantWalkers(scene: THREE.Scene, world: SiteWorld): (dt: number,
     new THREE.MeshStandardMaterial({ roughness: 0.7 }),
     n,
   );
-  body.castShadow = true;
-  head.castShadow = true;
-  face.castShadow = true;
-  hair.castShadow = true;
-  leg.castShadow = true;
-  legR.castShadow = true;
+  body.castShadow = false;
+  head.castShadow = false;
+  face.castShadow = false;
+  hair.castShadow = false;
+  leg.castShadow = false;
+  legR.castShadow = false;
   const dummy = new THREE.Object3D();
   const ink = new THREE.Color();
   state.forEach((_, i) => {
