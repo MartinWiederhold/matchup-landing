@@ -1,0 +1,102 @@
+"use client";
+
+/**
+ * Besucher-Gelände: dieselbe Weltkarte und 3D-Welt wie auf /tour2 Heute,
+ * ohne Saison, ohne Login, ohne Wettkampf-Aktionen.
+ */
+
+import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
+import { nodeById } from "@/domain/tour/siteWorld";
+import { authoredWorlds, worldById } from "@/app/tour2/worlds/catalog";
+import SiteWorld from "@/app/tour2/components/world/SiteWorld";
+import SiteCard from "@/app/tour2/components/world/SiteCard";
+import { loadAround, type AroundHit } from "@/app/tour2/components/world/loadAround";
+import PlaceMap, { type PlacePin } from "@/app/tour2/components/home/PlaceMap";
+
+const YEAR_FILTERS = [2026, 2027] as const;
+const WORLD_PIN = "world:";
+
+export default function GroundsView() {
+  const t = useT();
+  const [worldId, setWorldId] = useState<string | null>(null);
+  const [nodeId, setNodeId] = useState("ashe");
+  const [yearOn, setYearOn] = useState<Record<number, boolean>>({ 2026: true, 2027: true });
+  const [around, setAround] = useState<AroundHit[]>([]);
+  const world = worldId ? worldById(worldId) : null;
+  const node = world ? (nodeById(world, nodeId) ?? world.nodes[0]) : null;
+
+  const pins: PlacePin[] = authoredWorlds()
+    .filter((w) => yearOn[w.year])
+    .map((w) => ({
+      id: `${WORLD_PIN}${w.id}`,
+      lat: w.origin.lat,
+      lng: w.origin.lng,
+      label: t("tour.t2worldTitle", { title: w.title, year: w.year }),
+      tone: "world" as const,
+    }));
+
+  useEffect(() => {
+    if (!world) return;
+    let stop = false;
+    loadAround(world).then((rows) => { if (!stop) setAround(rows); }).catch(() => { if (!stop) setAround([]); });
+    return () => { stop = true; };
+  }, [world]);
+
+  return (
+    <div className="t2-place relative min-h-0 flex-1 overflow-hidden">
+      {world ? (
+        <SiteWorld world={world} focusId={node?.id ?? null} onFocus={setNodeId} />
+      ) : (
+        <PlaceMap
+          pins={pins}
+          selectedId={null}
+          onSelect={(id) => {
+            if (!id.startsWith(WORLD_PIN)) return;
+            setWorldId(id.slice(WORLD_PIN.length));
+            setNodeId("ashe");
+          }}
+        />
+      )}
+
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
+        <div className="pointer-events-auto flex flex-wrap items-center gap-2" aria-label={t("tour.t2mapYears")}>
+          {world ? (
+            <>
+              <button type="button" className="t2-place-pill" onClick={() => setWorldId(null)}>
+                {t("tour.t2worldBackMap")}
+              </button>
+              <p className="t2-place-pill is-soft">{t("tour.t2worldTitle", { title: world.title, year: world.year })}</p>
+            </>
+          ) : (
+            YEAR_FILTERS.map((y) => (
+              <button
+                key={y}
+                type="button"
+                aria-pressed={yearOn[y]}
+                className={`t2-place-pill ${yearOn[y] ? "" : "is-soft"}`}
+                onClick={() => setYearOn((cur) => ({ ...cur, [y]: !cur[y] }))}
+              >
+                {t("tour.t2mapYear", { year: y })}
+              </button>
+            ))
+          )}
+        </div>
+
+        {world && node && (
+          <div className="pointer-events-auto mt-auto">
+            <SiteCard
+              world={world}
+              node={node}
+              equipment={null}
+              around={around}
+              onPickAround={(h) => {
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, "_blank", "noreferrer");
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

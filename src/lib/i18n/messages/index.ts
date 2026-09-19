@@ -26,6 +26,7 @@ import { waitlist } from "./waitlist";
 import { seo } from "./seo";
 import { tour } from "./tour";
 import { tour3 } from "./tour3";
+import { tournaments } from "./tournaments";
 import { catalog } from "./catalog";
 import { alcaraz } from "./alcaraz";
 
@@ -58,6 +59,7 @@ const namespaces: Record<string, Namespace> = {
   seo,
   tour,
   tour3,
+  tournaments,
   catalog,
   alcaraz,
 };

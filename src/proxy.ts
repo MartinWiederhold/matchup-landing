@@ -30,7 +30,17 @@ function ensureLocaleCookie(request: NextRequest, response: NextResponse) {
 }
 
 export function proxy(request: NextRequest) {
-  // Kein Zugangscode mehr: alles frei durchlassen, nur das Sprach-Cookie setzen.
+  // Linux ist case-sensitive: /Tournaments → /tournaments.
+  // Nicht über next.config redirects — auf macOS (case-insensitive) würde
+  // /tournaments sich selbst treffen und eine Schleife bauen.
+  const path = request.nextUrl.pathname;
+  if (path === "/Tournaments" || path.startsWith("/Tournaments/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/tournaments" + path.slice("/Tournaments".length);
+    const res = NextResponse.redirect(url);
+    ensureLocaleCookie(request, res);
+    return res;
+  }
   const res = NextResponse.next();
   ensureLocaleCookie(request, res);
   return res;
