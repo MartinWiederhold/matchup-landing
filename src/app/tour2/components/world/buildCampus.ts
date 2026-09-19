@@ -49,7 +49,14 @@ function mat(color: string, roughness = 0.88, map?: THREE.Texture): THREE.MeshSt
 }
 
 function grassMat(tint: string, dark: string, repeat: number): THREE.MeshStandardMaterial {
-  return mat("#ffffff", 0.94, speckTex(tint, dark, repeat));
+  return new THREE.MeshStandardMaterial({
+    color: "#ffffff",
+    roughness: 0.94,
+    map: speckTex(tint, dark, repeat),
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
+  });
 }
 
 export function disk(r: number, color: string, y = 0.02, material?: THREE.MeshStandardMaterial): THREE.Mesh {
@@ -237,7 +244,9 @@ function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): voi
       mat("#1a4a1e", 0.96),
     );
     shade.rotation.x = -Math.PI / 2;
-    shade.position.set(x, 0.03, z);
+    shade.position.set(x, 0.14, z);
+    shade.receiveShadow = false;
+    shade.castShadow = false;
     scene.add(shade);
     dummy.position.set(x, 1.1 * sc, z);
     dummy.scale.set(sc, sc, sc);
@@ -601,9 +610,13 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   lampHeads: THREE.MeshStandardMaterial;
   tickFlags: (t: number) => void;
 } {
-  scene.add(disk(340, GRASS_DARK, 0, grassMat(GRASS_DARK, "#1a5520", 28)));
-  scene.add(disk(280, GRASS, 0.012, grassMat(GRASS, "#1e6e24", 22)));
-  scene.add(disk(118, "#3d9a38", 0.016, grassMat("#3d9a38", "#247a2c", 12)));
+  const base = disk(340, GRASS_DARK, 0, grassMat(GRASS_DARK, "#1a5520", 28));
+  base.receiveShadow = false;
+  scene.add(base);
+  const mid = disk(280, GRASS, 0.04, grassMat(GRASS, "#1e6e24", 22));
+  mid.receiveShadow = false;
+  scene.add(mid);
+  scene.add(disk(118, "#3d9a38", 0.08, grassMat("#3d9a38", "#247a2c", 12)));
   const patches: [number, number, number, string, string][] = [
     [72, 110, 18, "#1f6a24", "#145018"],
     [-80, 90, 16, "#2a8a32", "#1a6020"],
@@ -617,25 +630,26 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
     [16, 108, 12, "#1f6a24", "#145018"],
   ];
   for (const [x, z, r, a, b] of patches) {
-    const m = disk(r, a, 0.02, grassMat(a, b, 6));
-    m.position.set(x, 0.02, z);
+    const m = disk(r, a, 0.11, grassMat(a, b, 6));
+    m.position.set(x, 0.11, z);
+    m.receiveShadow = false;
     scene.add(m);
   }
-  scene.add(hexPad(80, 0.04));
-  scene.add(hexPad(46, 0.055));
-  scene.add(ringPad(47.2, 53.6, 0.075, WALK));
-  const plazaRing = ringPad(9.2, 13.6, 0.085, WALK);
-  plazaRing.position.set(0, 0.085, 58);
+  scene.add(hexPad(80, 0.16));
+  scene.add(hexPad(46, 0.18));
+  scene.add(ringPad(47.2, 53.6, 0.2, WALK));
+  const plazaRing = ringPad(9.2, 13.6, 0.21, WALK);
+  plazaRing.position.set(0, 0.21, 58);
   scene.add(plazaRing);
-  scene.add(strip(0, 42, 0, 118, 10.4, WALK, 0.08));
-  scene.add(strip(-28, 58, 28, 58, 7.2, WALK, 0.08));
+  scene.add(strip(0, 42, 0, 118, 10.4, WALK, 0.22));
+  scene.add(strip(-28, 58, 28, 58, 7.2, WALK, 0.22));
   const campusFloor = [
     [0, 58, 72, 38],
     [78, -8, 58, 42],
     [-68, 12, 48, 36],
   ] as const;
   for (const [x, z, w, d] of campusFloor) {
-    const p = pad(x, z, w, d, PLAZA, 0.028);
+    const p = pad(x, z, w, d, PLAZA, 0.17);
     (p.material as THREE.MeshStandardMaterial).map = speckTex(PLAZA, "#c4bba8", 8);
     (p.material as THREE.MeshStandardMaterial).color.set("#ffffff");
     (p.material as THREE.MeshStandardMaterial).needsUpdate = true;
@@ -654,7 +668,7 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   for (const [id, [w, d]] of Object.entries(plazaAt)) {
     const n = nodeById(world, id);
     if (n) {
-      const p = pad(n.x, n.z, w, d, PLAZA, 0.035);
+      const p = pad(n.x, n.z, w, d, PLAZA, 0.17);
       (p.material as THREE.MeshStandardMaterial).map = speckTex(PLAZA, "#c4bba8", 4);
       (p.material as THREE.MeshStandardMaterial).color.set("#ffffff");
       (p.material as THREE.MeshStandardMaterial).needsUpdate = true;
@@ -663,11 +677,11 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   }
 
   const gate = nodeById(world, "south-gate");
-  if (gate) scene.add(pad(gate.x, gate.z - 18, 230, 22, STREET, 0.03));
+  if (gate) scene.add(pad(gate.x, gate.z - 18, 230, 22, STREET, 0.16));
   const arm = nodeById(world, "armstrong");
-  if (arm) scene.add(pad(arm.x, arm.z - 28, 96, 14, STREET, 0.03));
+  if (arm) scene.add(pad(arm.x, arm.z - 28, 96, 14, STREET, 0.16));
   const main = nodeById(world, "east-gate");
-  if (main) scene.add(pad(main.x + 8, main.z, 16, 90, STREET, 0.03));
+  if (main) scene.add(pad(main.x + 8, main.z, 16, 90, STREET, 0.16));
   const willets = nodeById(world, "willets");
   const dink = nodeById(world, "dinkins");
   if (willets && dink) {

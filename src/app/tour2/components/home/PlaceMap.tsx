@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Weltkarte von oben, rausgezoomt: Satellit (Esri), Pins für Saison-Stops
- * und autorisierte Welten. Welt-Pins fliegen schnell ins Gelände, bevor 3D übernimmt.
+ * Weltkarte von oben: Esri-Satellit auf Globus, scharf (2x).
+ * Welt-Pins öffnen sofort die 3D-Welt — kein Flug ins Luftbild.
  */
 
 import { useEffect, useRef } from "react";
@@ -11,15 +11,23 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 const SATELLITE_STYLE: maplibregl.StyleSpecification = {
   version: 8,
+  projection: { type: "vertical-perspective" },
+  sky: { "atmosphere-blend": 0.85 },
   sources: {
     esri: {
       type: "raster",
       tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
       tileSize: 256,
+      maxzoom: 19,
       attribution: "Esri, Maxar, Earthstar Geographics",
     },
   },
-  layers: [{ id: "sat", type: "raster", source: "esri" }],
+  layers: [{
+    id: "sat",
+    type: "raster",
+    source: "esri",
+    paint: { "raster-fade-duration": 0, "raster-resampling": "linear" },
+  }],
 };
 
 export type PlacePin = {
@@ -43,9 +51,6 @@ export default function PlaceMap({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markers = useRef(new Map<string, maplibregl.Marker>());
   const selectRef = useRef(onSelect);
-  const flyingId = useRef<string | null>(null);
-  const onMoveEnd = useRef<(() => void) | null>(null);
-  const flyTimer = useRef<number>(0);
   selectRef.current = onSelect;
 
   useEffect(() => {
@@ -53,12 +58,18 @@ export default function PlaceMap({
     const map = new maplibregl.Map({
       container: box.current,
       style: SATELLITE_STYLE,
-      center: [0, 18],
-      zoom: 1.35,
+      center: [0, 16],
+      zoom: 1.55,
       attributionControl: { compact: true },
+      pixelRatio: Math.min(2, window.devicePixelRatio || 2),
+      fadeDuration: 0,
+      canvasContextAttributes: { antialias: true },
     });
     mapRef.current = map;
-    const resize = () => map.resize();
+    const resize = () => {
+      map.resize();
+      map.setPixelRatio(Math.min(2, window.devicePixelRatio || 2));
+    };
     map.on("load", resize);
     const ro = new ResizeObserver(resize);
     ro.observe(box.current);
@@ -66,8 +77,6 @@ export default function PlaceMap({
     const later = [80, 400, 1200].map((ms) => window.setTimeout(resize, ms));
     return () => {
       later.forEach((id) => window.clearTimeout(id));
-      if (onMoveEnd.current) map.off("moveend", onMoveEnd.current);
-      if (flyTimer.current) window.clearTimeout(flyTimer.current);
       ro.disconnect();
       markers.current.forEach((m) => m.remove());
       markers.current.clear();
@@ -92,40 +101,7 @@ export default function PlaceMap({
         el.type = "button";
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
-          const map = mapRef.current;
-          if (!map || pin.tone !== "world") {
-            selectRef.current?.(pin.id);
-            return;
-          }
-          if (onMoveEnd.current) map.off("moveend", onMoveEnd.current);
-          flyingId.current = pin.id;
-          el.classList.add("is-on");
-          const finish = () => {
-            if (flyingId.current !== pin.id) return;
-            flyingId.current = null;
-            if (onMoveEnd.current) {
-              map.off("moveend", onMoveEnd.current);
-              onMoveEnd.current = null;
-            }
-            selectRef.current?.(pin.id);
-          };
-          const onEnd = () => {
-            if (map.getZoom() < 10) return;
-            finish();
-          };
-          onMoveEnd.current = onEnd;
-          map.on("moveend", onEnd);
-          if (flyTimer.current) window.clearTimeout(flyTimer.current);
-          flyTimer.current = window.setTimeout(finish, 1100);
-          map.flyTo({
-            center: [pin.lng, pin.lat],
-            zoom: 15.5,
-            pitch: 54,
-            bearing: -22,
-            duration: 820,
-            essential: true,
-            easing: (t) => 1 - (1 - t) ** 3,
-          });
+          selectRef.current?.(pin.id);
         });
         m = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([pin.lng, pin.lat]).addTo(map);
         markers.current.set(pin.id, m);

@@ -124,7 +124,7 @@ export default function SiteWorld({
       scene.background = new THREE.Color("#dce8d6");
       scene.fog = new THREE.Fog("#dce8d6", 460, 880);
 
-      const camera = new THREE.PerspectiveCamera(40, 1, 0.8, 3600);
+      const camera = new THREE.PerspectiveCamera(40, 1, 4, 2400);
       const introFrom = new THREE.Vector3(36, 620, 540);
       const introMid = new THREE.Vector3(22, 210, 260);
       const introTo = new THREE.Vector3(28, 108, 158);
@@ -158,13 +158,19 @@ export default function SiteWorld({
       scene.add(hemi);
       const sun = new THREE.DirectionalLight("#fff1c4", 2.05);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(2048, 2048);
-      sun.shadow.camera.left = -260;
-      sun.shadow.camera.right = 260;
-      sun.shadow.camera.top = 260;
-      sun.shadow.camera.bottom = -260;
-      sun.shadow.bias = -0.0007;
+      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.camera.left = -220;
+      sun.shadow.camera.right = 220;
+      sun.shadow.camera.top = 220;
+      sun.shadow.camera.bottom = -220;
+      sun.shadow.camera.near = 40;
+      sun.shadow.camera.far = 780;
+      sun.shadow.bias = -0.0012;
+      sun.shadow.normalBias = 1.15;
+      sun.shadow.camera.updateProjectionMatrix();
+      sun.target.position.set(0, 0, 0);
       scene.add(sun);
+      scene.add(sun.target);
       const sunDisc = new THREE.Mesh(
         new THREE.SphereGeometry(22, 20, 16),
         new THREE.MeshBasicMaterial({ color: "#fff4c0" }),
@@ -348,6 +354,8 @@ export default function SiteWorld({
 
       const v = new THREE.Vector3();
       const camAt = new THREE.Vector3();
+      const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+      let lastLabel = 0;
       const paintLabels = () => {
         const r = host.getBoundingClientRect();
         const mode = filterRef.current;
@@ -363,21 +371,35 @@ export default function SiteWorld({
           const vis = show && v.z < 1;
           el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
           el.style.opacity = vis ? "1" : "0";
-          el.style.pointerEvents = vis ? "auto" : "none";
+          el.style.pointerEvents = coarsePointer && vis ? "none" : vis ? "auto" : "none";
           el.classList.toggle("is-on", focusRef.current === n.id);
           const mesh = amenityMeshes.get(n.id);
           if (mesh) mesh.visible = pinVisible(n, mode, dist, focusRef.current);
         }
       };
 
+      const pose = sunDirScene(world.origin.lat, world.origin.lng, new Date());
+      const fitCamera = () => {
+        const y = Math.max(12, camera.position.y);
+        const near = THREE.MathUtils.clamp(y * 0.08, 3, 36);
+        const far = THREE.MathUtils.clamp(y * 12 + 280, 720, 3200);
+        if (Math.abs(camera.near - near) > 0.8 || Math.abs(camera.far - far) > 40) {
+          camera.near = near;
+          camera.far = far;
+          camera.updateProjectionMatrix();
+        }
+      };
       const applyWeather = (t: number) => {
         const wx = weatherRef.current;
-        const pose = sunDirScene(world.origin.lat, world.origin.lng, new Date());
         const lookWx = weatherLook(wx?.code ?? 1, pose.elevation);
         scene.background = new THREE.Color(lookWx.sky);
-        const fogNear = Math.max(90, camera.position.y * 2.1);
-        const fogFar = Math.max(480, camera.position.y * 7.2);
-        scene.fog = new THREE.Fog(lookWx.fog, fogNear, fogFar);
+        const fogNear = Math.max(140, camera.position.y * 2.6);
+        const fogFar = Math.max(560, camera.position.y * 7.8);
+        const fog = scene.fog instanceof THREE.Fog ? scene.fog : new THREE.Fog(lookWx.fog, fogNear, fogFar);
+        fog.color.set(lookWx.fog);
+        fog.near = fogNear;
+        fog.far = fogFar;
+        scene.fog = fog;
         hemi.color.set(lookWx.sky);
         hemi.intensity = lookWx.hemi;
         sun.color.set(lookWx.sunColor);
@@ -416,6 +438,7 @@ export default function SiteWorld({
         const dt = Math.min(0.05, (now - lastTick) / 1000);
         lastTick = now;
         const t = (now - t0) * 0.001;
+        fitCamera();
         applyWeather(t);
         tickWalkers(dt, t);
         campus.tickFlags(t);
@@ -432,7 +455,10 @@ export default function SiteWorld({
           look.lerpVectors(lookFrom, lookTo, e);
           controls.target.copy(look);
           const fogFar = 880 + (1 - e) * 2200;
-          scene.fog = new THREE.Fog((scene.fog as THREE.Fog).color, fogFar * 0.45, fogFar);
+          if (scene.fog instanceof THREE.Fog) {
+            scene.fog.near = fogFar * 0.45;
+            scene.fog.far = fogFar;
+          }
           if (intro >= 1) {
             lastFocus = focusRef.current ?? "_overview";
             controls.maxDistance = 640;
@@ -465,7 +491,10 @@ export default function SiteWorld({
           drops.instanceMatrix.needsUpdate = true;
         }
         renderer.render(scene, camera);
-        paintLabels();
+        if (now - lastLabel > 48) {
+          lastLabel = now;
+          paintLabels();
+        }
         raf = requestAnimationFrame(tick);
       };
       tick();
