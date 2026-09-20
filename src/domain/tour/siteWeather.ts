@@ -65,6 +65,19 @@ export function sunDirScene(lat: number, lng: number, at: Date): SunDir {
   };
 }
 
+/**
+ * Licht für die Spiel-Welt: echte Sonne, solange sie über dem Horizont steht.
+ * Nachts würde weatherLook den Himmel schwarz machen — die Karte wäre leer.
+ * Dann gilt der Sonnenstand desselben Kalendertags um 16:00 UTC (Flushing-Mittag),
+ * kein erfundener Winkel.
+ */
+export function campusSunDir(lat: number, lng: number, at: Date): SunDir {
+  const now = sunDirScene(lat, lng, at);
+  if (now.elevation >= 0.22) return now;
+  const midday = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate(), 16, 0, 0));
+  return sunDirScene(lat, lng, midday);
+}
+
 export function weatherKindFromCode(code: number): WeatherKind {
   if (code <= 1) return "sun";
   if (code <= 3) return "cloudsun";

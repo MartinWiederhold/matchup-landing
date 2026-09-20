@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { SiteNode, SiteWorld } from "@/domain/tour/siteWorld";
 import { isAmenityKind, nodeById, nodeHasFlag, pathBetween, SERVICE_KINDS } from "@/domain/tour/siteWorld";
-import { sunDirScene, weatherLook } from "@/domain/tour/siteWeather";
+import { campusSunDir, weatherLook } from "@/domain/tour/siteWeather";
 import { plantAtmosphere } from "./buildAtmosphere";
 import { buildCampus, highlightPath, plantWalkers } from "./buildCampus";
 import {
@@ -153,7 +153,7 @@ export default function SiteWorld({
       controls.dampingFactor = 0.06;
       controls.enableZoom = true;
       controls.enablePan = true;
-      controls.minDistance = 14;
+      controls.minDistance = 28;
       controls.maxDistance = 1800;
       controls.minPolarAngle = 0.18;
       controls.maxPolarAngle = 1.32;
@@ -281,7 +281,7 @@ export default function SiteWorld({
         } else if (n.id === "food-village") {
           camera.position.set(n.x + 16, 11, n.z + 20);
         } else if (isAmenityKind(n.kind)) camera.position.set(n.x + 10, 8, n.z + 14);
-        else camera.position.set(n.x + 20, 12, n.z + 24);
+        else camera.position.set(n.x + 28, 22, n.z + 36);
         applyPath(pathBetween(world, "south-gate", n.id));
       };
 
@@ -384,7 +384,7 @@ export default function SiteWorld({
         }
       };
 
-      const pose = sunDirScene(world.origin.lat, world.origin.lng, new Date());
+      const pose = campusSunDir(world.origin.lat, world.origin.lng, new Date());
       let lastWx = -1;
       const applyWeather = (t: number) => {
         const wx = weatherRef.current;
@@ -407,7 +407,7 @@ export default function SiteWorld({
           sunHalo.visible = sunDisc.visible;
           drops.visible = lookWx.rain;
           campus.lampHeads.emissiveIntensity = pose.elevation < 0.18 ? 1.55 : 0.05;
-          renderer.toneMappingExposure = lookWx.rain ? 0.82 : pose.elevation < 0 ? 0.55 : 1.2;
+          renderer.toneMappingExposure = lookWx.rain ? 0.82 : 1.2;
           renderer.shadowMap.needsUpdate = true;
         }
         tickSky(lookWx, t);

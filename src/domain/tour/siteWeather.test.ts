@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sunDirScene, weatherKindFromCode, weatherLook } from "./siteWeather";
+import { campusSunDir, sunDirScene, weatherKindFromCode, weatherLook } from "./siteWeather";
 
 describe("weatherKindFromCode", () => {
   it("ordnet WMO-Codes wie Open-Meteo", () => {
@@ -35,5 +35,13 @@ describe("sunDirScene", () => {
     const night = sunDirScene(40.7505, -73.847, new Date("2026-06-21T04:00:00Z"));
     expect(night.elevation).toBeLessThan(0);
     expect(weatherLook(0, night.elevation).sun).toBeLessThan(0.2);
+  });
+});
+
+describe("campusSunDir", () => {
+  it("lässt Flushing-Mitternacht nicht schwarz werden", () => {
+    const lit = campusSunDir(40.7505, -73.847, new Date("2026-06-21T04:00:00Z"));
+    expect(lit.elevation).toBeGreaterThan(0.8);
+    expect(weatherLook(2, lit.elevation).sky).not.toMatch(/^#1/);
   });
 });
