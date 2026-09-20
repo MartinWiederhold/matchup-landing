@@ -224,23 +224,27 @@ function wayTotem(lines: string[], x: number, z: number): THREE.Group {
 }
 
 function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): void {
-  const crownGeo = new THREE.SphereGeometry(1.75, 8, 6);
-  const crownMat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
-  const trunkGeo = new THREE.CylinderGeometry(0.2, 0.28, 2.2, 6);
+  const crownGeo = new THREE.SphereGeometry(1.7, 7, 5);
+  const crownMat = new THREE.MeshStandardMaterial({ roughness: 0.94 });
+  const coneGeo = new THREE.ConeGeometry(1.55, 3.4, 7);
+  const coneMat = new THREE.MeshStandardMaterial({ roughness: 0.94 });
+  const trunkGeo = new THREE.CylinderGeometry(0.22, 0.32, 3.4, 6);
   const trunkMat = mat("#6a5340", 0.88);
-  const blobs = spots.length * 3;
+  const blobs = spots.length * 5;
   const crowns = new THREE.InstancedMesh(crownGeo, crownMat, blobs);
+  const cones = new THREE.InstancedMesh(coneGeo, coneMat, spots.length);
   const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, spots.length);
   crowns.castShadow = true;
   crowns.receiveShadow = true;
+  cones.castShadow = true;
   trunks.castShadow = true;
   const dummy = new THREE.Object3D();
   const ink = new THREE.Color();
-  const LEAF = ["#1f7a28", "#2a8c32", "#176622", "#24802c"];
+  const LEAF = ["#1f7a28", "#2a8c32", "#176622", "#24802c", "#3a9a38"];
   spots.forEach(([x, z, s], i) => {
-    const sc = (s ?? 1) * 1.45;
+    const sc = (s ?? 1) * 1.85;
     const shade = new THREE.Mesh(
-      new THREE.CircleGeometry(2.4 * sc, 12),
+      new THREE.CircleGeometry(3.4 * sc, 12),
       mat("#1a4a1e", 0.96),
     );
     shade.rotation.x = -Math.PI / 2;
@@ -248,26 +252,38 @@ function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): voi
     shade.receiveShadow = false;
     shade.castShadow = false;
     scene.add(shade);
-    dummy.position.set(x, 1.1 * sc, z);
-    dummy.scale.set(sc, sc, sc);
+    dummy.position.set(x, 1.55 * sc, z);
+    dummy.scale.set(sc, sc * 1.2, sc);
     dummy.updateMatrix();
     trunks.setMatrixAt(i, dummy.matrix);
-    for (let k = 0; k < 3; k++) {
-      const idx = i * 3 + k;
-      dummy.position.set(
-        x + (k - 1) * 0.85 * sc,
-        (2.55 + (k % 2) * 0.55) * sc,
-        z + (k === 2 ? 0.38 : -0.18) * sc,
-      );
-      dummy.scale.set(sc * (1.05 + k * 0.12), sc * (0.88 + k * 0.08), sc * (1.0 + k * 0.1));
+    dummy.position.set(x, 4.1 * sc, z);
+    dummy.scale.set(sc * 1.35, sc * 1.15, sc * 1.35);
+    dummy.updateMatrix();
+    cones.setMatrixAt(i, dummy.matrix);
+    ink.set(LEAF[i % LEAF.length]);
+    cones.setColorAt(i, ink);
+    const spin = (i % 7) * 0.4;
+    const off = [
+      [Math.cos(spin) * 1.6, 3.4, Math.sin(spin) * 1.6, 1.35, 0.95, 1.25],
+      [Math.cos(spin + 2.1) * 1.8, 2.7, Math.sin(spin + 2.1) * 1.8, 1.05, 0.82, 1.15],
+      [Math.cos(spin + 4.1) * 1.5, 3.9, Math.sin(spin + 4.1) * 1.5, 0.95, 0.78, 1.0],
+      [0.15, 5.1, 0.2, 0.82, 0.7, 0.78],
+      [-0.4, 2.35, 0.55, 0.88, 0.7, 0.92],
+    ] as const;
+    for (let k = 0; k < 5; k++) {
+      const idx = i * 5 + k;
+      const [ox, oy, oz, sx, sy, sz] = off[k];
+      dummy.position.set(x + ox * sc, oy * sc, z + oz * sc);
+      dummy.scale.set(sc * sx, sc * sy, sc * sz);
       dummy.updateMatrix();
       crowns.setMatrixAt(idx, dummy.matrix);
-      ink.set(LEAF[(i + k) % LEAF.length]);
+      ink.set(LEAF[(i + k + 1) % LEAF.length]);
       crowns.setColorAt(idx, ink);
     }
   });
   if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
-  scene.add(trunks, crowns);
+  if (cones.instanceColor) cones.instanceColor.needsUpdate = true;
+  scene.add(trunks, cones, crowns);
 }
 
 function plantLamps(scene: THREE.Scene, spots: [number, number][]): THREE.MeshStandardMaterial {
@@ -628,6 +644,11 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
     [28, 70, 14, "#267828", "#185820"],
     [-26, 72, 13, "#2c8c34", "#1c6424"],
     [16, 108, 12, "#1f6a24", "#145018"],
+    [-18, 78, 11, "#267828", "#185820"],
+    [22, 82, 10, "#2c8c34", "#1c6424"],
+    [118, 28, 16, "#1f6a24", "#145018"],
+    [-118, 22, 15, "#216a26", "#15501c"],
+    [8, -48, 12, "#2a8a32", "#1a6020"],
   ];
   for (const [x, z, r, a, b] of patches) {
     const m = disk(r, a, 0.11, grassMat(a, b, 6));
@@ -644,9 +665,9 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   scene.add(strip(0, 42, 0, 118, 10.4, WALK, 0.22));
   scene.add(strip(-28, 58, 28, 58, 7.2, WALK, 0.22));
   const campusFloor = [
-    [0, 58, 72, 38],
-    [78, -8, 58, 42],
-    [-68, 12, 48, 36],
+    [0, 58, 42, 22],
+    [78, -8, 44, 28],
+    [-68, 12, 32, 24],
   ] as const;
   for (const [x, z, w, d] of campusFloor) {
     const p = pad(x, z, w, d, PLAZA, 0.17);
@@ -745,6 +766,18 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
     trees.push([-200 + (i % 5) * 9, 20 + Math.floor(i / 5) * 11, 0.8]);
     trees.push([-36 + (i % 6) * 14, 72 + Math.floor(i / 6) * 18, 1.15]);
   }
+  // Zwischen Outer-Court-Reihen, offizielle Lage, stilisiert.
+  for (const x of [50, 86, 122]) {
+    trees.push([x, 68, 0.52]);
+    trees.push([x, 76, 0.48]);
+  }
+  for (const x of [16, 50, 86]) {
+    trees.push([x, 114, 0.54]);
+  }
+  trees.push(
+    [-116, 4, 0.5], [-116, 42, 0.52], [-72, 12, 0.48], [-72, 44, 0.5],
+    [-48, -28, 0.46], [32, -28, 0.46], [86, -4, 0.5], [58, 28, 0.48],
+  );
   const planted: [number, number, number?][] = [];
   for (const t of trees) {
     const c = pushOffFootprints(world, t[0], t[1]);
@@ -798,6 +831,9 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   const hedgeMat = mat("#1c6a24", 0.9);
   for (const [x, z, w, rot] of [
     [48, 68, 22, 0], [-48, 68, 18, 0.15], [118, 8, 16, 1.2], [-70, 8, 14, -1.1],
+    [86, 70, 28, 0], [122, 70, 24, 0], [50, 70, 22, 0],
+    [68, 114, 26, 0], [36, 114, 22, 0], [100, 114, 24, 0],
+    [-116, 22, 18, Math.PI / 2], [-72, 28, 16, Math.PI / 2],
   ] as const) {
     const h = new THREE.Mesh(new THREE.BoxGeometry(w, 1.15, 0.7), hedgeMat);
     h.position.set(x, 0.6, z);

@@ -265,7 +265,7 @@ export function openBowl(id: string, r: number, tiers: number, ovalX = 1.28, bad
   shell.position.y = bowlH / 2;
   shell.castShadow = true;
   bowl.add(shell);
-  seatDecks(bowl, r, tiers, bowlH);
+  seatDecks(bowl, r, tiers, bowlH, 56, "#efe6d4", "#d4cbb8");
   const lip = new THREE.Mesh(
     new THREE.TorusGeometry(r * 1.18, 0.95, 8, 56),
     mat("#1a46b0", { roughness: 0.34 }),
@@ -275,6 +275,11 @@ export function openBowl(id: string, r: number, tiers: number, ovalX = 1.28, bad
   bowl.add(lip);
   bowl.scale.set(ovalX, 1, 1);
   g.add(bowl);
+  g.add(facadeColumns(r * 1.22, bowlH, 12));
+  g.add(ledRibbon(r * 1.16, bowlH * 0.58));
+  const ramp = accessRamp(14, 3.4, 2.2);
+  ramp.position.set(0, 0, r * 1.28);
+  g.add(ramp);
   return g;
 }
 
@@ -328,8 +333,8 @@ function roofRibs(outer: number, inner: number, y: number): THREE.Group {
     const dz = z1 - z0;
     const len = Math.hypot(dx, dz);
     const rib = new THREE.Mesh(
-      new THREE.BoxGeometry(2.4, 1.8, len),
-      mat("#6a6458", { roughness: 0.42 }),
+      new THREE.BoxGeometry(3.6, 2.4, len),
+      mat("#3e3a34", { roughness: 0.4 }),
     );
     rib.position.set((x0 + x1) / 2, y, (z0 + z1) / 2);
     rib.rotation.y = Math.atan2(dx, dz);
@@ -591,11 +596,17 @@ export function markedCourt(id: string, w: number, d: number): THREE.Group {
 export function numberedCourt(id: string, num: string): THREE.Group {
   const g = new THREE.Group();
   g.userData.nodeId = id;
+  const yard = new THREE.Mesh(new THREE.BoxGeometry(22.4, 0.1, 38.6), mat("#1f6e28", { roughness: 0.9 }));
+  yard.position.y = 0.14;
+  yard.receiveShadow = true;
+  g.add(yard);
   const apron = new THREE.Mesh(new THREE.BoxGeometry(16.2, 0.08, 32.4), mat("#2f8a38", { roughness: 0.88 }));
-  apron.position.y = 0.04;
+  apron.position.y = 0.2;
   apron.receiveShadow = true;
   g.add(apron);
-  g.add(tennisCourt(11.4, 24.2, num));
+  const court = tennisCourt(11.4, 24.2, num);
+  court.position.y = 0.16;
+  g.add(court);
   g.add(whiteBank(16.8, 7.6, 3.35, 0, -16.4));
   g.add(whiteBank(16.8, 7.6, 3.35, 0, 16.4));
   g.add(whiteBank(3.6, 22.4, 2.55, -9.2, 0));
@@ -607,6 +618,16 @@ export function numberedCourt(id: string, num: string): THREE.Group {
     fence.castShadow = true;
     g.add(fence);
   }
+  for (const x of [-10.6, 10.6]) {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.1, 18.4), screen);
+    side.position.set(x, 1.15, 0);
+    side.castShadow = true;
+    g.add(side);
+  }
+  const hedge = new THREE.Mesh(new THREE.BoxGeometry(20.8, 0.85, 0.55), mat("#1c6a24", { roughness: 0.9 }));
+  hedge.position.set(0, 0.52, 19.4);
+  hedge.castShadow = true;
+  g.add(hedge);
   const poleMat = mat("#c8c4ba", { roughness: 0.42 });
   const lampMat = mat("#f4f2eb", { roughness: 0.35, emissive: "#fff4c8", emissiveIntensity: 0.18 });
   for (const [x, z] of [[-7.4, -14.2], [7.4, -14.2], [-7.4, 14.2], [7.4, 14.2]] as const) {
@@ -624,12 +645,23 @@ export function numberedCourt(id: string, num: string): THREE.Group {
 export function practiceYard(): THREE.Group {
   const g = new THREE.Group();
   g.userData.nodeId = "practice";
+  const yard = new THREE.Mesh(new THREE.BoxGeometry(86, 0.1, 42), mat("#1f6e28", { roughness: 0.9 }));
+  yard.position.y = 0.12;
+  yard.receiveShadow = true;
+  g.add(yard);
+  const screen = mat("#1a3a28", { roughness: 0.7 });
   for (let i = 0; i < 5; i++) {
     const x = -32 + i * 16;
     const c = tennisCourt(11.2, 23.8, String(i + 1));
-    c.position.x = x;
+    c.position.set(x, 0.12, 0);
     g.add(c);
     g.add(whiteBank(12.4, 5.8, 2.6, x, -15.2));
+    if (i < 4) {
+      const fence = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.2, 22), screen);
+      fence.position.set(x + 8, 1.2, 0);
+      fence.castShadow = true;
+      g.add(fence);
+    }
   }
   return g;
 }
@@ -730,14 +762,23 @@ export function rideshareCanopy(): THREE.Group {
 export function foodHall(): THREE.Group {
   const g = new THREE.Group();
   g.userData.nodeId = "food-village";
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(46, 0.12, 34), mat("#f2f0ea", { roughness: 0.8 }));
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(52, 0.12, 38), mat("#efe8dc", { roughness: 0.82 }));
   floor.position.y = 0.08;
   floor.receiveShadow = true;
   g.add(floor);
+  const hall = new THREE.Mesh(new THREE.BoxGeometry(18, 4.6, 10), mat(WHITE, { roughness: 0.48 }));
+  hall.position.set(0, 2.3, 0);
+  hall.castShadow = true;
+  const hallRoof = new THREE.Mesh(new THREE.BoxGeometry(20.4, 0.36, 12.2), mat(ROOF, { roughness: 0.32 }));
+  hallRoof.position.set(0, 4.75, 0);
+  hallRoof.castShadow = true;
+  const awning = new THREE.Mesh(new THREE.BoxGeometry(19.2, 0.12, 3.4), mat("#1a46b0", { roughness: 0.4 }));
+  awning.position.set(0, 3.55, 6.4);
+  g.add(hall, hallRoof, awning);
   const colors = ["#d94a4a", "#2176e8", "#f3eee4", "#d94a4a"];
   for (let i = 0; i < 8; i++) {
-    const x = -16 + (i % 4) * 11;
-    const z = i < 4 ? -8 : 9;
+    const x = -18 + (i % 4) * 12;
+    const z = i < 4 ? -12 : 12;
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 3.4, 6), mat("#8a8074"));
     pole.position.set(x, 1.7, z);
     const umb = new THREE.Mesh(new THREE.ConeGeometry(4.4, 0.62, 12), mat(colors[i % 4], { roughness: 0.46 }));
@@ -753,15 +794,27 @@ export function foodHall(): THREE.Group {
   }
   const plate = labelPlate("Food Village", 16, 2.2);
   plate.rotation.x = -Math.PI / 2;
-  plate.position.set(0, 0.22, 14);
+  plate.position.set(0, 0.22, 16);
   g.add(plate);
-  for (const [x, z] of [[-20, -14], [20, -14], [-20, 14], [20, 14]] as const) {
-    const hut = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.8, 3.4), mat(WHITE, { roughness: 0.5 }));
-    hut.position.set(x, 1.4, z);
+  for (const [x, z] of [[-22, -16], [22, -16], [-22, 16], [22, 16]] as const) {
+    const hut = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.1, 4.2), mat(WHITE, { roughness: 0.5 }));
+    hut.position.set(x, 1.55, z);
     hut.castShadow = true;
-    const top = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.22, 3.8), mat(ROOF, { roughness: 0.34 }));
-    top.position.set(x, 2.9, z);
-    g.add(hut, top);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.22, 4.6), mat(ROOF, { roughness: 0.34 }));
+    top.position.set(x, 3.2, z);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.28, 0.12), mat("#1a46b0", { roughness: 0.4 }));
+    stripe.position.set(x, 2.35, z + (z > 0 ? 2.16 : -2.16));
+    g.add(hut, top, stripe);
+  }
+  const potMat = mat("#6a5340", { roughness: 0.8 });
+  const leafMat = mat("#22822c", { roughness: 0.9 });
+  for (const [x, z] of [[-8, -5], [8, -5], [-8, 5], [8, 5]] as const) {
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.68, 0.62, 8), potMat);
+    pot.position.set(x, 0.42, z);
+    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.72, 8, 6), leafMat);
+    leaf.position.set(x, 1.08, z);
+    leaf.castShadow = true;
+    g.add(pot, leaf);
   }
   return g;
 }
