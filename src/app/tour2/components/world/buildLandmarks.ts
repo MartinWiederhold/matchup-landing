@@ -158,7 +158,51 @@ function hexShape(r: number): THREE.Shape {
   return s;
 }
 
-function roofWithHole(r: number, holeW: number, holeD: number, y: number, thick = 2.35): THREE.Mesh {
+function roofPanelTex(): THREE.CanvasTexture {
+  const key = "roof-panel";
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const size = 512;
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#ece8df";
+    ctx.fillRect(0, 0, size, size);
+    ctx.strokeStyle = "#8a8478";
+    ctx.lineWidth = 5;
+    const cx = size / 2;
+    const cy = size / 2;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * 280, cy + Math.sin(a) * 280);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "#b0aaa0";
+    ctx.lineWidth = 3;
+    for (const rad of [70, 130, 190, 250]) {
+      ctx.beginPath();
+      for (let i = 0; i <= 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + Math.PI / 2;
+        const x = cx + Math.cos(a) * rad;
+        const y = cy + Math.sin(a) * rad;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
+function roofWithHole(r: number, holeW: number, holeD: number, y: number, thick = 2.35, mapped = false): THREE.Mesh {
   const shape = hexShape(r);
   const hole = new THREE.Path();
   hole.moveTo(-holeW / 2, -holeD / 2);
@@ -168,7 +212,10 @@ function roofWithHole(r: number, holeW: number, holeD: number, y: number, thick 
   hole.closePath();
   shape.holes.push(hole);
   const geo = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: false });
-  const m = new THREE.Mesh(geo, mat(ROOF, { roughness: 0.28, metalness: 0.1 }));
+  const m = new THREE.Mesh(
+    geo,
+    mat(ROOF, mapped ? { roughness: 0.32, metalness: 0.08, map: roofPanelTex() } : { roughness: 0.28, metalness: 0.1 }),
+  );
   m.rotation.x = -Math.PI / 2;
   m.position.y = y;
   m.castShadow = true;
@@ -362,7 +409,13 @@ function ledRibbon(r: number, y: number): THREE.Mesh {
 function facadeColumns(r: number, h: number, count: number): THREE.Group {
   const g = new THREE.Group();
   const col = mat(WHITE, { roughness: 0.42 });
-  const glass = mat("#6a7a88", { roughness: 0.22, metalness: 0.28 });
+  const glass = mat("#6a7a88", { roughness: 0.18, metalness: 0.32, transparent: true, opacity: 0.62 });
+  const band = new THREE.Mesh(
+    new THREE.CylinderGeometry(r * 1.01, r * 1.01, h * 0.42, 48, 1, true),
+    glass,
+  );
+  band.position.y = h * 0.62;
+  g.add(band);
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
     const x = Math.cos(a) * r;
@@ -371,13 +424,30 @@ function facadeColumns(r: number, h: number, count: number): THREE.Group {
     post.position.set(x, h / 2, z);
     post.castShadow = true;
     g.add(post);
-    if (i % 2 === 0) {
-      const pane = new THREE.Mesh(new THREE.BoxGeometry(2.6, h * 0.38, 0.18), glass);
-      pane.position.set(x * 1.02, h * 0.62, z * 1.02);
-      pane.lookAt(0, h * 0.62, 0);
-      g.add(pane);
-    }
+    const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.16, h * 0.4, 0.16), mat("#3a4248", { roughness: 0.35 }));
+    mullion.position.set(x * 1.015, h * 0.62, z * 1.015);
+    g.add(mullion);
   }
+  return g;
+}
+
+/** Südportal — stilisiert, kein CAD, Lage Richtung Champion's Entry. */
+function entryPortal(x: number, z: number, rotY: number): THREE.Group {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const ink = mat("#1c1c1e", { roughness: 0.45 });
+  const white = mat(WHITE, { roughness: 0.42 });
+  const voidPlane = new THREE.Mesh(new THREE.BoxGeometry(7.2, 4.6, 0.2), ink);
+  voidPlane.position.set(0, 2.4, 0.2);
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.55, 1.6), white);
+  lintel.position.set(0, 4.85, 0);
+  lintel.castShadow = true;
+  const jambL = new THREE.Mesh(new THREE.BoxGeometry(0.7, 4.8, 1.4), white);
+  jambL.position.set(-3.9, 2.4, 0);
+  const jambR = jambL.clone();
+  jambR.position.x = 3.9;
+  g.add(voidPlane, lintel, jambL, jambR);
   return g;
 }
 
@@ -426,13 +496,36 @@ export function asheStadium(): THREE.Group {
   const fascia = roofWithHole(44.5, 34, 46, 12.15, 1.2);
   fascia.material = mat("#e6e2d8", { roughness: 0.4 });
   g.add(fascia);
-  g.add(roofWithHole(44.2, 32, 44, 13.2, 2.6));
+  g.add(roofWithHole(44.2, 32, 44, 13.2, 2.6, true));
   g.add(hexRim(44.2, 15.85));
   g.add(hexFrame(44.4, 15.55, 2.15, 1.35, "#1a46b0"));
   g.add(hexFrame(33.2, 16.55, 1.35, 0.95, "#9a9488"));
   g.add(roofRibs(43.2, 17.5, 16.85));
+  const well = new THREE.Mesh(
+    new THREE.RingGeometry(16.4, 18.6, 6),
+    mat("#2a2e34", { roughness: 0.4, side: THREE.DoubleSide }),
+  );
+  well.rotation.x = -Math.PI / 2;
+  well.position.y = 16.05;
+  g.add(well);
+  const plinth = new THREE.Mesh(
+    new THREE.CylinderGeometry(41.8, 44.2, 2.6, 48),
+    mat("#b8b2a6", { roughness: 0.74 }),
+  );
+  plinth.position.y = 1.3;
+  plinth.scale.set(1.18, 1, 1);
+  plinth.castShadow = true;
+  g.add(plinth);
+  const belt = new THREE.Mesh(
+    new THREE.CylinderGeometry(41.2, 41.6, 1.15, 48, 1, true),
+    mat("#3a4048", { roughness: 0.48, side: THREE.DoubleSide }),
+  );
+  belt.position.y = 3.35;
+  belt.scale.set(1.18, 1, 1);
+  g.add(belt);
   g.add(facadeColumns(40.6, 12.6, 18));
   g.add(ledRibbon(39.4, 9.4));
+  g.add(hexFrame(38.8, 16.15, 1.05, 0.72, "#4a463e"));
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + Math.PI / 2;
     const leg = new THREE.Mesh(new THREE.BoxGeometry(2.55, 13.8, 2.55), mat(WHITE, { roughness: 0.44 }));
@@ -447,6 +540,9 @@ export function asheStadium(): THREE.Group {
   const ramp = accessRamp(22, 4.4, 3.2);
   ramp.position.set(0, 0, 38);
   g.add(ramp);
+  g.add(entryPortal(0, 41.2, 0));
+  g.add(entryPortal(28, 30, -0.75));
+  g.add(entryPortal(-28, 30, 0.75));
   return g;
 }
 
@@ -472,7 +568,7 @@ export function armstrongStadium(): THREE.Group {
   bowl.scale.set(1.18, 1, 1);
   g.add(bowl);
   addOuterLabels(g, 32, 6.2, ["1", "5", "9", "13", "101", "107", "113", "119"]);
-  g.add(roofWithHole(29.4, 22, 34, 11.2, 2.2));
+  g.add(roofWithHole(29.4, 22, 34, 11.2, 2.2, true));
   g.add(hexRim(29.4, 13.45));
   g.add(hexFrame(29.6, 13.25, 1.55, 0.95, "#1a46b0"));
   g.add(roofRibs(28.6, 12.4, 14.55));

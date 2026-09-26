@@ -103,10 +103,10 @@ function hexTileTex(): THREE.CanvasTexture {
   c.height = size;
   const ctx = c.getContext("2d");
   if (ctx) {
-    ctx.fillStyle = "#d8cbb4";
+    ctx.fillStyle = "#cfc3ae";
     ctx.fillRect(0, 0, size, size);
-    ctx.strokeStyle = "#9a8c74";
-    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#6e6456";
+    ctx.lineWidth = 10;
     const s = 28;
     const h = s * Math.sqrt(3);
     for (let row = -1; row < 12; row++) {
@@ -224,66 +224,55 @@ function wayTotem(lines: string[], x: number, z: number): THREE.Group {
 }
 
 function plantTrees(scene: THREE.Scene, spots: [number, number, number?][]): void {
-  const crownGeo = new THREE.SphereGeometry(1.7, 7, 5);
-  const crownMat = new THREE.MeshStandardMaterial({ roughness: 0.94 });
-  const coneGeo = new THREE.ConeGeometry(1.55, 3.4, 7);
-  const coneMat = new THREE.MeshStandardMaterial({ roughness: 0.94 });
-  const trunkGeo = new THREE.CylinderGeometry(0.22, 0.32, 3.4, 6);
+  const crownGeo = new THREE.SphereGeometry(2.2, 8, 6);
+  const crownMat = new THREE.MeshStandardMaterial({ roughness: 0.96 });
+  const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 2.4, 6);
   const trunkMat = mat("#6a5340", 0.88);
-  const blobs = spots.length * 5;
+  const blobs = spots.length * 3;
   const crowns = new THREE.InstancedMesh(crownGeo, crownMat, blobs);
-  const cones = new THREE.InstancedMesh(coneGeo, coneMat, spots.length);
   const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, spots.length);
+  const shades = new THREE.InstancedMesh(
+    new THREE.CircleGeometry(1, 10),
+    mat("#1a4a1e", 0.96),
+    spots.length,
+  );
   crowns.castShadow = true;
   crowns.receiveShadow = true;
-  cones.castShadow = true;
   trunks.castShadow = true;
   const dummy = new THREE.Object3D();
   const ink = new THREE.Color();
   const LEAF = ["#1f7a28", "#2a8c32", "#176622", "#24802c", "#3a9a38"];
   spots.forEach(([x, z, s], i) => {
-    const sc = (s ?? 1) * 1.85;
-    const shade = new THREE.Mesh(
-      new THREE.CircleGeometry(3.4 * sc, 12),
-      mat("#1a4a1e", 0.96),
-    );
-    shade.rotation.x = -Math.PI / 2;
-    shade.position.set(x, 0.14, z);
-    shade.receiveShadow = false;
-    shade.castShadow = false;
-    scene.add(shade);
-    dummy.position.set(x, 1.55 * sc, z);
-    dummy.scale.set(sc, sc * 1.2, sc);
+    const sc = (s ?? 1) * 2.15;
+    dummy.position.set(x, 0.14, z);
+    dummy.rotation.set(-Math.PI / 2, 0, 0);
+    dummy.scale.set(3.8 * sc, 3.8 * sc, 1);
+    dummy.updateMatrix();
+    shades.setMatrixAt(i, dummy.matrix);
+    dummy.rotation.set(0, 0, 0);
+    dummy.position.set(x, 1.15 * sc, z);
+    dummy.scale.set(sc, sc, sc);
     dummy.updateMatrix();
     trunks.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(x, 4.1 * sc, z);
-    dummy.scale.set(sc * 1.35, sc * 1.15, sc * 1.35);
-    dummy.updateMatrix();
-    cones.setMatrixAt(i, dummy.matrix);
-    ink.set(LEAF[i % LEAF.length]);
-    cones.setColorAt(i, ink);
-    const spin = (i % 7) * 0.4;
+    const spin = (i % 7) * 0.5;
     const off = [
-      [Math.cos(spin) * 1.6, 3.4, Math.sin(spin) * 1.6, 1.35, 0.95, 1.25],
-      [Math.cos(spin + 2.1) * 1.8, 2.7, Math.sin(spin + 2.1) * 1.8, 1.05, 0.82, 1.15],
-      [Math.cos(spin + 4.1) * 1.5, 3.9, Math.sin(spin + 4.1) * 1.5, 0.95, 0.78, 1.0],
-      [0.15, 5.1, 0.2, 0.82, 0.7, 0.78],
-      [-0.4, 2.35, 0.55, 0.88, 0.7, 0.92],
+      [0, 2.55, 0, 2.15, 0.58, 1.95],
+      [Math.cos(spin) * 1.15, 2.35, Math.sin(spin) * 1.15, 1.45, 0.48, 1.35],
+      [Math.cos(spin + 2.2) * 0.85, 2.85, Math.sin(spin + 2.2) * 0.85, 1.15, 0.42, 1.05],
     ] as const;
-    for (let k = 0; k < 5; k++) {
-      const idx = i * 5 + k;
+    for (let k = 0; k < 3; k++) {
+      const idx = i * 3 + k;
       const [ox, oy, oz, sx, sy, sz] = off[k];
       dummy.position.set(x + ox * sc, oy * sc, z + oz * sc);
       dummy.scale.set(sc * sx, sc * sy, sc * sz);
       dummy.updateMatrix();
       crowns.setMatrixAt(idx, dummy.matrix);
-      ink.set(LEAF[(i + k + 1) % LEAF.length]);
+      ink.set(LEAF[(i + k) % LEAF.length]);
       crowns.setColorAt(idx, ink);
     }
   });
   if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
-  if (cones.instanceColor) cones.instanceColor.needsUpdate = true;
-  scene.add(trunks, cones, crowns);
+  scene.add(shades, trunks, crowns);
 }
 
 function plantLamps(scene: THREE.Scene, spots: [number, number][]): THREE.MeshStandardMaterial {
@@ -482,7 +471,7 @@ export function plantWalkers(scene: THREE.Scene, world: SiteWorld): (dt: number,
         u: 0,
         speed: 0,
         flip: 1,
-        scale: 1.22 + (k % 5) * 0.07,
+        scale: 1.58 + (k % 5) * 0.08,
         hx: parked.x,
         hz: parked.z,
         yaw: a + Math.PI,
@@ -495,7 +484,7 @@ export function plantWalkers(scene: THREE.Scene, world: SiteWorld): (dt: number,
     u: (i * 0.137) % 1,
     speed: 0.075 + (i % 7) * 0.013,
     flip: i % 2 === 0 ? 1 : -1,
-    scale: 1.22 + (i % 5) * 0.07,
+    scale: 1.58 + (i % 5) * 0.08,
     hx: 0,
     hz: 0,
     yaw: 0,
@@ -659,13 +648,15 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   scene.add(hexPad(80, 0.16));
   scene.add(hexPad(46, 0.18));
   scene.add(ringPad(47.2, 53.6, 0.2, WALK));
+  scene.add(ringPad(62, 68, 0.19, WALK));
   const plazaRing = ringPad(9.2, 13.6, 0.21, WALK);
   plazaRing.position.set(0, 0.21, 58);
   scene.add(plazaRing);
   scene.add(strip(0, 42, 0, 118, 10.4, WALK, 0.22));
   scene.add(strip(-28, 58, 28, 58, 7.2, WALK, 0.22));
+  scene.add(strip(-36, 42, -22, 92, 5.4, WALK, 0.21));
+  scene.add(strip(36, 42, 22, 92, 5.4, WALK, 0.21));
   const campusFloor = [
-    [0, 58, 42, 22],
     [78, -8, 44, 28],
     [-68, 12, 32, 24],
   ] as const;
@@ -813,6 +804,8 @@ export function buildCampus(scene: THREE.Scene, world: SiteWorld): {
   scene.add(bench(22, 96, 0.4));
   scene.add(bench(-26, 94, -0.3));
   scene.add(bench(8, 112, 0.1));
+  scene.add(bench(-10, 48, 0.2));
+  scene.add(bench(12, 48, -0.15));
 
   const potMat = mat("#6a5340", 0.8);
   const potLeaf = mat("#22822c", 0.9);
