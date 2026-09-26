@@ -47,6 +47,9 @@ export const app = {
     mapBadge: "Karte",
     searchingWorldwide: "Suche weltweit…",
     clubBeingAdded: "Club wird übernommen…",
+    earthBackGlobe: "Weltkugel",
+    earthCityClubs: "{n} Clubs",
+    earthOpenClub: "Öffnen",
     cancel: "Abbrechen",
   },
   en: {
@@ -96,6 +99,9 @@ export const app = {
     mapBadge: "Map",
     searchingWorldwide: "Searching worldwide…",
     clubBeingAdded: "Adding club…",
+    earthBackGlobe: "Globe",
+    earthCityClubs: "{n} clubs",
+    earthOpenClub: "Open",
     cancel: "Cancel",
   },
 };

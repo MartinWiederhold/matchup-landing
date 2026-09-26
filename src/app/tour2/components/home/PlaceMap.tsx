@@ -8,27 +8,7 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-
-const SATELLITE_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  projection: { type: "vertical-perspective" },
-  sky: { "atmosphere-blend": 0.85 },
-  sources: {
-    esri: {
-      type: "raster",
-      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: "Esri, Maxar, Earthstar Geographics",
-    },
-  },
-  layers: [{
-    id: "sat",
-    type: "raster",
-    source: "esri",
-    paint: { "raster-fade-duration": 0, "raster-resampling": "linear" },
-  }],
-};
+import { GLOBE_CENTER, GLOBE_STYLE, GLOBE_ZOOM } from "@/app/map/globeStyle";
 
 export type PlacePin = {
   id: string;
@@ -57,9 +37,9 @@ export default function PlaceMap({
     if (!box.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: box.current,
-      style: SATELLITE_STYLE,
-      center: [0, 16],
-      zoom: 1.55,
+      style: GLOBE_STYLE,
+      center: GLOBE_CENTER,
+      zoom: GLOBE_ZOOM,
       attributionControl: { compact: true },
       pixelRatio: Math.min(2, window.devicePixelRatio || 2),
       fadeDuration: 0,

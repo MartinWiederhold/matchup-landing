@@ -22,7 +22,7 @@ import TabBar, { type TabDef } from "./TabBar";
 
 // Weltkarte (Play) als eingebetteter Tab — nur im Browser (Leaflet, kein SSR),
 // mit weißem Tennisball-Loader statt schwarzem „Lädt…"-Screen.
-const MapEmbed = dynamic(() => import("@/app/map/MapView"), {
+const MapEmbed = dynamic(() => import("@/app/map/PlayEarthMap"), {
   ssr: false,
   loading: () => <AppLoader label="Karte lädt …" />,
 });
@@ -348,7 +348,7 @@ export default function AppShell({ profile }: { profile: Profile }) {
               className="absolute inset-x-0 top-0 z-0 overflow-hidden bg-white"
               style={{ bottom: "calc(74px + env(safe-area-inset-bottom))" }}
             >
-              <MapEmbed embedded />
+              <MapEmbed />
             </div>
           )}
 
